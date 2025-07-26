@@ -24,6 +24,7 @@
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php endif; ?>
+        <?php if (in_array('tags', $columns, true)): ?><th><?= __('Tags') ?></th><?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?><th><?= __('Clusters') ?></th><?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?><th title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?><th title="<?= __('Correlation Count')  ?>"><?= __('#Corr.') ?></th><?php endif; ?>
@@ -117,6 +118,21 @@
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
         <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
             <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?>
+        </td>
+        <?php endif; ?>
+        <?php if (in_array('tags', $columns, true)): ?>
+        <td class="shortish">
+            <?= $this->element('ajaxTags', [
+                'event' => $event,
+                'tags' => [],
+                'highlightedTags' => $event['Event']['highlightedTags'] ?? [],
+                'tagAccess' => false,
+                'localTagAccess' => false,
+                'missingTaxonomies' => false,
+                'static_tags_only' => 1,
+                'tag_display_style' => 2,
+            ]);
+            ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
