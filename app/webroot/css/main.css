@@ -1,6 +1,23 @@
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap');
+
+/* CSS Custom Properties */
+:root {
+    --primary-font: 'Manrope', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --primary-color: #0088cc;
+    --secondary-color: #f9f9f9;
+    --border-color: #e5e5e5;
+    --hover-color: #CFEFFF;
+    --shadow-light: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-medium: 0 4px 8px rgba(0,0,0,0.15);
+    --border-radius: 8px;
+    --transition: all 0.2s ease;
+}
+
 /* bootstrap changes */
 body {
     font-size: 12px;
+    font-family: var(--primary-font);
 }
 
 #topBar {
@@ -463,6 +480,226 @@ table.fullwidth th:hover{
 .table-hover tbody tr:hover > td,
 .table-hover tbody tr:hover > th {
     background-color: #CFEFFF;
+}
+
+/* Modern Event Index Grid Layout */
+.event-index-grid {
+    display: grid;
+    grid-template-columns: 
+        40px /* checkbox */
+        40px /* published */
+        80px /* org */
+        80px /* owner org */
+        80px /* id */
+        120px /* clusters */
+        150px /* tags */
+        60px /* attr count */
+        60px /* correlations */
+        60px /* reports */
+        60px /* sightings */
+        60px /* proposals */
+        60px /* posts */
+        120px /* creator */
+        100px /* date */
+        100px /* timestamp */
+        100px /* publish timestamp */
+        1fr /* info */
+        100px /* distribution */
+        120px; /* actions */
+    gap: 8px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    overflow: hidden;
+}
+
+.event-index-header {
+    display: contents;
+}
+
+.event-index-header > div {
+    background: var(--primary-color);
+    color: white;
+    padding: 12px 8px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.event-index-header > div:first-child {
+    border-top-left-radius: var(--border-radius);
+}
+
+.event-index-header > div:last-child {
+    border-top-right-radius: var(--border-radius);
+}
+
+.event-index-row {
+    display: contents;
+    transition: var(--transition);
+}
+
+.event-index-row > div {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.event-index-row:hover > div {
+    background-color: var(--hover-color);
+}
+
+.event-index-row:nth-child(even) > div {
+    background-color: #fafafa;
+}
+
+.event-index-row:nth-child(even):hover > div {
+    background-color: var(--hover-color);
+}
+
+/* Mobile Responsive Design */
+@media screen and (max-width: 1200px) {
+    .event-index-grid {
+        grid-template-columns: 
+            40px /* checkbox */
+            40px /* published */
+            80px /* org */
+            80px /* id */
+            150px /* tags */
+            60px /* attr count */
+            100px /* date */
+            1fr /* info */
+            100px /* distribution */
+            120px; /* actions */
+    }
+    
+    .event-index-grid .hide-tablet {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .event-index-grid {
+        display: block;
+        gap: 16px;
+    }
+    
+    .event-index-header {
+        display: none;
+    }
+    
+    .event-index-row {
+        display: block;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-light);
+        margin-bottom: 16px;
+        padding: 16px;
+        transition: var(--transition);
+    }
+    
+    .event-index-row:hover {
+        box-shadow: var(--shadow-medium);
+        transform: translateY(-2px);
+    }
+    
+    .event-index-row > div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+        background: transparent !important;
+    }
+    
+    .event-index-row > div:last-child {
+        border-bottom: none;
+    }
+    
+    .event-index-row > div::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #666;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        min-width: 100px;
+    }
+    
+    .event-index-row .mobile-hide {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .event-index-row {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .event-index-row > div {
+        padding: 6px 0;
+        font-size: 11px;
+    }
+    
+    .event-index-row > div::before {
+        min-width: 80px;
+        font-size: 10px;
+    }
+}
+
+/* Enhanced styling for specific elements */
+.event-index-row .threat-level-high,
+.event-index-row .threat-level-medium,
+.event-index-row .threat-level-low,
+.event-index-row .threat-level-undefined {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.event-index-row .action-links {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.event-index-row .action-links a {
+    padding: 4px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.event-index-row .action-links a:hover {
+    background-color: rgba(0, 136, 204, 0.1);
+}
+
+/* Checkbox styling */
+.event-index-row input[type="checkbox"] {
+    transform: scale(1.2);
+    margin: 0;
+}
+
+/* Tag styling improvements */
+.event-index-row .tag {
+    margin: 2px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+/* Organization logo styling */
+.event-index-row .org-logo {
+    max-width: 24px;
+    max-height: 24px;
+    border-radius: 4px;
 }
 
 

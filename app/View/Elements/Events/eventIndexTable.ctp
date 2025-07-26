@@ -1,66 +1,66 @@
-<table class="table table-striped table-hover table-condensed">
-    <tr>
-        <th>
+<div class="event-index-grid">
+    <div class="event-index-header">
+        <div>
             <input class="select_all select" type="checkbox" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all events on current page');?>" onclick="toggleAllCheckboxes();">
-        </th>
-        <th class="filter" title="<?= __('Published') ?>"><?= $this->Paginator->sort('published', '<i class="fa fa-upload"></i>', ['escape' => false]) ?></th>
+        </div>
+        <div class="filter" title="<?= __('Published') ?>"><?= $this->Paginator->sort('published', '<i class="fa fa-upload"></i>', ['escape' => false]) ?></div>
         <?php
             if (Configure::read('MISP.showorgalternate') && Configure::read('MISP.showorg')):
         ?>
-            <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Source org')); ?></th>
-            <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Member org')); ?></th>
+            <div class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Source org')); ?></div>
+            <div class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Member org')); ?></div>
         <?php
             elseif (Configure::read('MISP.showorg') || $isAdmin):
         ?>
-            <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Creator org')); ?></th>
+            <div class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Creator org')); ?></div>
         <?php
                 endif;
             $date = time();
             $day = 86400;
         ?> 
-        <?php if (in_array('owner_org', $columns, true)): ?><th class="filter"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></th><?php endif; ?>
-        <th><?= $this->Paginator->sort('id', __('ID'), ['direction' => 'desc']) ?></th>
-        <?php if (in_array('clusters', $columns, true)): ?><th><?= __('Clusters') ?></th><?php endif; ?>
-        <?php if (in_array('tags', $columns, true)): ?><th><?= __('Tags') ?></th><?php endif; ?>
-        <?php if (in_array('attribute_count', $columns, true)): ?><th title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
-        <?php if (in_array('correlations', $columns, true)): ?><th title="<?= __('Correlation Count')  ?>"><?= __('#Corr.') ?></th><?php endif; ?>
-        <?php if (in_array('report_count', $columns, true)): ?><th title="<?= __('Report Count') ?>"><?= $this->Paginator->sort('report_count', __('#Reports')) ?></th><?php endif; ?>
-        <?php if (in_array('sightings', $columns, true)): ?><th title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></th><?php endif; ?>
-        <?php if (in_array('proposals', $columns, true)): ?><th title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
-        <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
-        <?php if (in_array('creator_user', $columns, true)): ?><th><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
-        <th class="filter"><?= $this->Paginator->sort('date', null, array('direction' => 'desc'));?></th>
-        <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last modified at')) ?></th><?php endif; ?>
-        <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
-        <th class="filter"><?= $this->Paginator->sort('info');?></th>
-        <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution');?></th>
-        <th class="actions"><?php echo __('Actions');?></th>
-    </tr>
+        <?php if (in_array('owner_org', $columns, true)): ?><div class="filter hide-tablet"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></div><?php endif; ?>
+        <div><?= $this->Paginator->sort('id', __('ID'), ['direction' => 'desc']) ?></div>
+        <?php if (in_array('clusters', $columns, true)): ?><div class="hide-tablet"><?= __('Clusters') ?></div><?php endif; ?>
+        <?php if (in_array('tags', $columns, true)): ?><div><?= __('Tags') ?></div><?php endif; ?>
+        <?php if (in_array('attribute_count', $columns, true)): ?><div title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></div><?php endif; ?>
+        <?php if (in_array('correlations', $columns, true)): ?><div class="hide-tablet" title="<?= __('Correlation Count')  ?>"><?= __('#Corr.') ?></div><?php endif; ?>
+        <?php if (in_array('report_count', $columns, true)): ?><div class="hide-tablet" title="<?= __('Report Count') ?>"><?= $this->Paginator->sort('report_count', __('#Reports')) ?></div><?php endif; ?>
+        <?php if (in_array('sightings', $columns, true)): ?><div class="hide-tablet" title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></div><?php endif; ?>
+        <?php if (in_array('proposals', $columns, true)): ?><div class="hide-tablet" title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></div><?php endif; ?>
+        <?php if (in_array('discussion', $columns, true)): ?><div class="hide-tablet" title="<?= __('Post Count') ?>"><?= __('#Posts') ?></div><?php endif; ?>
+        <?php if (in_array('creator_user', $columns, true)): ?><div class="hide-tablet"><?= $this->Paginator->sort('user_id', __('Creator user')) ?></div><?php endif; ?>
+        <div class="filter"><?= $this->Paginator->sort('date', null, array('direction' => 'desc'));?></div>
+        <?php if (in_array('timestamp', $columns, true)): ?><div class="hide-tablet" title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last modified at')) ?></div><?php endif; ?>
+        <?php if (in_array('publish_timestamp', $columns, true)): ?><div class="hide-tablet" title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></div><?php endif; ?>
+        <div class="filter"><?= $this->Paginator->sort('info');?></div>
+        <div title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution');?></div>
+        <div class="actions"><?php echo __('Actions');?></div>
+    </div>
     <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
-    <tr id="event_<?= $eventId ?>">
-        <td style="width:10px">
+    <div class="event-index-row" id="event_<?= $eventId ?>">
+        <div data-label="Select">
             <input class="select" type="checkbox" data-id="<?= $eventId ?>" data-can-modify="<?= $this->Acl->canModifyEvent($event) ? 1 : 0 ?>">
-        </td>
-        <td class="dblclickElement" style="width:30px">
+        </div>
+        <div class="dblclickElement" data-label="Published">
             <a href="<?= "$baseurl/events/view/$eventId" ?>" title="<?= __('View') ?>" aria-label="<?= __('View') ?>">
                 <i class="fa <?= $event['Event']['published'] ? 'fa-check green' : 'fa-times grey' ?>"></i>
             </a>
-        </td>
+        </div>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
-        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
-            <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?>
-        </td>
+        <div class="short" data-label="Creator Org" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
+            <div class="org-logo"><?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?></div>
+        </div>
         <?php endif;?>
         <?php if (in_array('owner_org', $columns, true) || (Configure::read('MISP.showorgalternate') && Configure::read('MISP.showorg'))): ?>
-        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
-            <?= $this->OrgImg->getOrgLogo($event['Org'], 24) ?>
-        </td>
+        <div class="short hide-tablet" data-label="Owner Org" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
+            <div class="org-logo"><?= $this->OrgImg->getOrgLogo($event['Org'], 24) ?></div>
+        </div>
         <?php endif; ?>
-        <td class="short">
+        <div class="short" data-label="ID">
             <span><a href="<?= $baseurl."/events/view/".$eventId ?>" class="dblclickActionElement threat-level-<?= strtolower(h($event['ThreatLevel']['name'])) ?>" title="<?= h($event['Event']['info']) ?>"><?= $eventId ?></a> <?= !empty($event['Event']['protected']) ? sprintf('<i class="fas fa-lock" title="%s"></i>', __('Protected event')) : ''?></span>
-        </td>
+        </div>
         <?php if (in_array('clusters', $columns, true)): ?>
-        <td class="short">
+        <div class="short hide-tablet" data-label="Clusters">
             <?php
                 $galaxies = array();
                 if (!empty($event['GalaxyCluster'])) {
@@ -81,10 +81,10 @@
                     ));
                 }
             ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?>
-        <td class="shortish">
+        <div class="shortish" data-label="Tags">
             <?= $this->element('ajaxTags', [
                 'event' => $event,
                 'tags' => $event['EventTag'],
@@ -97,43 +97,43 @@
                 'highlightedTags' => $event['Event']['highlightedTags'] ?? [],
             ]);
             ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?>
-        <td class="dblclickElement" style="width:30px">
+        <div class="dblclickElement" data-label="Attributes">
             <?= $event['Event']['attribute_count']; ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?>
-        <td class="bold" style="width:30px">
+        <div class="bold hide-tablet" data-label="Correlations">
             <?php if (!empty($event['Event']['correlation_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/correlation:1" ?>" title="<?= __n('%s correlation', '%s correlations', $event['Event']['correlation_count'], $event['Event']['correlation_count']), '. ' . __('Show filtered event with correlation only.');?>">
                     <?= intval($event['Event']['correlation_count']); ?>
                 </a>
             <?php endif; ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php if (in_array('report_count', $columns, true)): ?>
-        <td class="bold" style="width:30px">
+        <div class="bold hide-tablet" data-label="Reports">
             <?= $event['Event']['report_count']; ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php if (in_array('sightings', $columns, true)): ?>
-        <td class="bold" style="width:30px">
+        <div class="bold hide-tablet" data-label="Sightings">
             <?php if (!empty($event['Event']['sightings_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/sighting:1" ?>" title="<?= __n("1 sighting. Show filtered event with sighting only.", "%s sightings. Show filtered event with sightings only.", $event['Event']['sightings_count'], intval($event['Event']['sightings_count'])) ?>">
                     <?= intval($event['Event']['sightings_count']) ?>
                 </a>
             <?php endif; ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php if (in_array('proposals', $columns, true)): ?>
-        <td class="bold dblclickElement" style="width:30px" title="<?= __n('%s proposal', '%s proposals', $event['Event']['proposals_count'], $event['Event']['proposals_count']) ?>">
+        <div class="bold dblclickElement hide-tablet" data-label="Proposals" title="<?= __n('%s proposal', '%s proposals', $event['Event']['proposals_count'], $event['Event']['proposals_count']) ?>">
             <?= !empty($event['Event']['proposals_count']) ? intval($event['Event']['proposals_count']) : ''; ?>
-        </td>
+        </div>
         <?php endif;?>
         <?php if (in_array('discussion', $columns, true)): ?>
-        <td class="bold dblclickElement" style="width:30px">
+        <div class="bold dblclickElement hide-tablet" data-label="Posts">
             <?php
                 if (!empty($event['Event']['post_count'])) {
                     $post_count = h($event['Event']['post_count']);
@@ -145,25 +145,25 @@
                 }
             ?>
             <span style=" white-space: nowrap;"><?php echo $post_count?></span>
-        </td>
+        </div>
         <?php endif;?>
         <?php if (in_array('creator_user', $columns, true)): ?>
-        <td class="short dblclickElement">
+        <div class="short dblclickElement hide-tablet" data-label="Creator">
             <?php echo h($event['User']['email']); ?>
-        </td>
+        </div>
         <?php endif; ?>
-        <td class="short dblclickElement">
+        <div class="short dblclickElement" data-label="Date">
             <time><?= $event['Event']['date'] ?></time>
-        </td>
+        </div>
         <?php if (in_array('timestamp', $columns, true)): ?>
-        <td class="short dblclickElement">
+        <div class="short dblclickElement hide-tablet" data-label="Modified">
             <?= $this->Time->time($event['Event']['timestamp']) ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?>
-        <td class="short dblclickElement">
+        <div class="short dblclickElement hide-tablet" data-label="Published">
             <?= $this->Time->time($event['Event']['publish_timestamp']) ?>
-        </td>
+        </div>
         <?php endif; ?>
         <?php
             $extends_uuid = $event['Event']['extends_uuid'] ?? null;
@@ -173,7 +173,7 @@
             $extends_id = $extendedEventsIdByUuid[$extends_uuid] ?? null;
         ?>
 
-        <td class="dblclickElement" style="min-width: 20vi; white-space: normal;">
+        <div class="dblclickElement" data-label="Info" style="min-width: 20vi; white-space: normal;">
             <?= nl2br(h($event['Event']['info']), false) ?>
 
             <?php if ($extends_info): ?>
@@ -199,8 +199,8 @@
                     </a>
                 <?php endif; ?>
             <?php endif; ?>
-        </td>
-        <td class="short dblclickElement<?php if ($event['Event']['distribution'] == 0) echo ' privateRedText';?>" title="<?= $event['Event']['distribution'] != 3 ? $distributionLevels[$event['Event']['distribution']] : __('All');?>">
+        </div>
+        <div class="short dblclickElement<?php if ($event['Event']['distribution'] == 0) echo ' privateRedText';?>" data-label="Distribution" title="<?= $event['Event']['distribution'] != 3 ? $distributionLevels[$event['Event']['distribution']] : __('All');?>">
             <?php if ($event['Event']['distribution'] == 4):?>
                 <a href="<?php echo $baseurl;?>/sharingGroups/view/<?= intval($event['SharingGroup']['id']); ?>"><?= h($event['SharingGroup']['name']) ?></a>
             <?php else:
@@ -217,8 +217,8 @@
                 $eventId
             )
             ?>
-        </td>
-        <td class="short action-links">
+        </div>
+        <div class="short action-links" data-label="Actions">
             <?php
                 if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)) {
                     echo sprintf('<a class="useCursorPointer fa fa-upload" title="%s" aria-label="%s" onclick="event.preventDefault();publishPopup(%s)"></a>', __('Publish Event'), __('Publish Event'), $eventId);
@@ -232,10 +232,10 @@
                 endif;
             ?>
             <a href="<?php echo $baseurl."/events/view/".$eventId ?>" title="<?php echo __('View');?>" aria-label="<?php echo __('View');?>"><i class="fa black fa-eye"></i></a>
-        </td>
-    </tr>
+        </div>
+    </div>
     <?php endforeach; ?>
-</table>
+</div>
 <script>
     var lastSelected = false;
     $(function() {
