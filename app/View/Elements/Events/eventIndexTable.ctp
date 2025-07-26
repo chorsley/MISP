@@ -210,19 +210,23 @@
             ?>
         </td>
         <td class="actions-cell action-links">
-            <?php
-                if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)) {
-                    echo sprintf('<a class="useCursorPointer fa fa-upload" title="%s" aria-label="%s" onclick="event.preventDefault();publishPopup(%s)"></a>', __('Publish Event'), __('Publish Event'), $eventId);
-                }
-
-                if ($this->Acl->canModifyEvent($event)):
-            ?>
-                    <a href="<?php echo $baseurl."/events/edit/".$eventId ?>" title="<?php echo __('Edit');?>" aria-label="<?php echo __('Edit');?>"><i class="black fa fa-edit"></i></a>
-            <?php
-                    echo sprintf('<a class="useCursorPointer fa fa-trash" title="%s" aria-label="%s" onclick="event.preventDefault();deleteEventPopup(%s)"></a>', __('Delete'), __('Delete'), $eventId);
-                endif;
-            ?>
-            <a href="<?php echo $baseurl."/events/view/".$eventId ?>" title="<?php echo __('View');?>" aria-label="<?php echo __('View');?>"><i class="fa black fa-eye"></i></a>
+            <div class="btn-group">
+                <a class="btn btn-mini dropdown-toggle" data-toggle="dropdown" href="#" title="<?= __('Actions') ?>" aria-label="<?= __('Actions') ?>">
+                    ⋮
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu pull-right">
+                    <li><a href="<?= $baseurl."/events/view/".$eventId ?>" title="<?= __('View') ?>" aria-label="<?= __('View') ?>"><i class="fa fa-eye"></i> <?= __('View') ?></a></li>
+                    <?php if ($this->Acl->canModifyEvent($event)): ?>
+                        <li><a href="<?= $baseurl."/events/edit/".$eventId ?>" title="<?= __('Edit') ?>" aria-label="<?= __('Edit') ?>"><i class="fa fa-edit"></i> <?= __('Edit') ?></a></li>
+                        <li><a class="useCursorPointer" title="<?= __('Delete') ?>" aria-label="<?= __('Delete') ?>" onclick="event.preventDefault();deleteEventPopup(<?= $eventId ?>)"><i class="fa fa-trash"></i> <?= __('Delete') ?></a></li>
+                    <?php endif; ?>
+                    <?php if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)): ?>
+                        <li class="divider"></li>
+                        <li><a class="useCursorPointer" title="<?= __('Publish Event') ?>" aria-label="<?= __('Publish Event') ?>" onclick="event.preventDefault();publishPopup(<?= $eventId ?>)"><i class="fa fa-upload"></i> <?= __('Publish Event') ?></a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
         </td>
     </tr>
     <?php endforeach; ?>

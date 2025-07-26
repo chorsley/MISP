@@ -604,6 +604,41 @@ td.action-links {
     }
 }
 
+/* Actions dropdown styling for event index table */
+.event-index-table .actions-cell .btn-group {
+    position: relative;
+}
+
+.event-index-table .actions-cell .dropdown-toggle {
+    padding: 4px 8px;
+    font-size: 16px;
+    line-height: 1;
+    border: none;
+    background: transparent;
+    color: #333;
+}
+
+.event-index-table .actions-cell .dropdown-toggle:hover {
+    background: #f5f5f5;
+    color: #000;
+}
+
+.event-index-table .actions-cell .dropdown-menu {
+    min-width: 120px;
+    right: 0;
+    left: auto;
+}
+
+.event-index-table .actions-cell .dropdown-menu li a {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.event-index-table .actions-cell .dropdown-menu li a i {
+    width: 16px;
+    margin-right: 6px;
+}
+
 /** Scaffold View **/
 dl {
     line-height: 2em;
