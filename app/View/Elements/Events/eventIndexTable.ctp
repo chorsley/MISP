@@ -83,26 +83,30 @@
             <time><?= $event['Event']['date'] ?></time>
             <?php
                 $timestamp = $event['Event']['timestamp'];
-                if (date('Ymd') == date('Ymd', $timestamp)) {
-                    $offset = time() - $timestamp;
-                    $unit = 'second(s)';
-                    $colour = 'red';
+                $offset = time() - $timestamp;
+                $unit = 'second(s)';
+                $colour = 'red';
+                if ($offset >= 60) {
+                    $offset = ceil($offset / 60);
+                    $unit = 'minute(s)';
+                    $colour = 'orange';
                     if ($offset >= 60) {
                         $offset = ceil($offset / 60);
-                        $unit = 'minute(s)';
-                        $colour = 'orange';
-                        if ($offset >= 60) {
-                            $offset = ceil($offset / 60);
-                            $unit = 'hour(s)';
-                            $colour = 'green';
-                            if ($offset >= 24) {
-                                $offset = floor($offset / 24);
-                                $unit = 'day(s)';
+                        $unit = 'hour(s)';
+                        $colour = 'green';
+                        if ($offset >= 24) {
+                            $offset = floor($offset / 24);
+                            $unit = 'day(s)';
+                            $colour = 'blue';
+                            if ($offset >= 365) {
+                                $offset = floor($offset / 365);
+                                $unit = 'year(s)';
+                                $colour = 'grey';
                             }
                         }
                     }
-                    echo sprintf(' <span class="bold %s">(%s %s ago)</span>', $colour, $offset, $unit);
                 }
+                echo sprintf(' <span class="bold %s">(%s %s ago)</span>', $colour, $offset, $unit);
             ?>
         </td>
         <td class="published-cell dblclickElement">
