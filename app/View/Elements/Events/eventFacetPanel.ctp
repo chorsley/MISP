@@ -59,10 +59,55 @@ arsort($facetData['orgs']);
 arsort($facetData['galaxyClusters']);
 ?>
 
-<div class="event-facet-panel" id="eventFacetPanel">
+<!-- Thin sidebar trigger -->
+<div class="facet-sidebar-trigger" id="facetSidebarTrigger" onclick="toggleFacetSidebar()" title="<?= __('Toggle filters') ?>">
+    <div class="sidebar-trigger-content">
+        <i class="fa fa-filter"></i>
+        <span class="sidebar-trigger-text"><?= __('Filters') ?></span>
+    </div>
+</div>
+
+<script>
+function toggleFacetSidebar() {
+    var panel = document.getElementById('eventFacetPanel');
+    var eventsContainer = document.querySelector('.events.index');
+    
+    if (panel && eventsContainer) {
+        if (panel.classList.contains('collapsed')) {
+            panel.classList.remove('collapsed');
+            eventsContainer.classList.add('with-facet-panel');
+            eventsContainer.classList.remove('facet-collapsed');
+        } else {
+            panel.classList.add('collapsed');
+            eventsContainer.classList.remove('with-facet-panel');
+            eventsContainer.classList.add('facet-collapsed');
+        }
+    }
+}
+
+// Initialize panel as collapsed on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var panel = document.getElementById('eventFacetPanel');
+    var eventsContainer = document.querySelector('.events.index');
+    
+    if (panel && eventsContainer) {
+        panel.classList.add('collapsed');
+        eventsContainer.classList.add('facet-collapsed');
+        eventsContainer.classList.remove('with-facet-panel');
+    }
+});
+</script>
+
+<!-- Collapsible facet panel -->
+<div class="event-facet-panel collapsed" id="eventFacetPanel">
     <div class="facet-panel-header">
         <h4><?= __('Filters') ?></h4>
-        <button class="btn btn-mini" onclick="clearAllFacets()" title="<?= __('Clear all active filters') ?>"><?= __('Clear All') ?></button>
+        <div class="facet-panel-controls">
+            <button class="btn btn-mini" onclick="clearAllFacets()" title="<?= __('Clear all active filters') ?>"><?= __('Clear All') ?></button>
+            <button class="btn btn-mini facet-panel-close" onclick="toggleFacetSidebar()" title="<?= __('Close filters') ?>">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
     </div>
     
     <?php if (!empty($facetData['tlp'])): ?>

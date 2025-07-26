@@ -5258,6 +5258,23 @@ function clearAllFacets() {
     window.location.href = here;
 }
 
+window.toggleFacetSidebar = function() {
+    var panel = document.getElementById('eventFacetPanel');
+    var eventsContainer = document.querySelector('.events.index');
+    
+    if (panel && eventsContainer) {
+        if (panel.classList.contains('collapsed')) {
+            panel.classList.remove('collapsed');
+            eventsContainer.classList.add('with-facet-panel');
+            eventsContainer.classList.remove('facet-collapsed');
+        } else {
+            panel.classList.add('collapsed');
+            eventsContainer.classList.remove('with-facet-panel');
+            eventsContainer.classList.add('facet-collapsed');
+        }
+    }
+};
+
 function toggleFacetPanel() {
     var $panel = $('.event-facet-panel');
     var $content = $('.events.index');
@@ -5305,8 +5322,18 @@ $(document.body).on('keydown', '.facet-item, .facet-title', function(e) {
 });
 
 $(document).ready(function() {
-    if (localStorage.getItem('misp-facet-panel-hidden') === 'true') {
-        toggleFacetPanel();
+    var panel = document.getElementById('eventFacetPanel');
+    var eventsContainer = document.querySelector('.events.index');
+    
+    if (panel && eventsContainer) {
+        panel.classList.add('collapsed');
+        eventsContainer.classList.add('facet-collapsed');
+        eventsContainer.classList.remove('with-facet-panel');
+        
+        var trigger = document.querySelector('.facet-sidebar-trigger');
+        if (trigger) {
+            trigger.style.display = 'flex';
+        }
     }
     
     var currentUrl = window.location.href;
