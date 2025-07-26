@@ -4,9 +4,11 @@
     <div class="pagination">
         <ul>
         <?php
-            $pagination = $this->Paginator->prev('&laquo; ' . __('previous'), array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'prev disabled', 'escape' => false, 'disabledTag' => 'span'));
-            $pagination .= $this->Paginator->numbers(array('modulus' => 20, 'separator' => '', 'tag' => 'li', 'currentClass' => 'active', 'currentTag' => 'span'));
-            $pagination .= $this->Paginator->next(__('next') . ' &raquo;', array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'next disabled', 'escape' => false, 'disabledTag' => 'span'));
+            $pagination = $this->Paginator->first('&laquo;&laquo;', array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'first disabled', 'escape' => false, 'disabledTag' => 'span'));
+            $pagination .= $this->Paginator->prev('&laquo;', array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'prev disabled', 'escape' => false, 'disabledTag' => 'span'));
+            $pagination .= $this->Paginator->numbers(array('modulus' => 2, 'separator' => '', 'tag' => 'li', 'currentClass' => 'active', 'currentTag' => 'span', 'first' => 1, 'last' => 1, 'ellipsis' => '...'));
+            $pagination .= $this->Paginator->next('&raquo;', array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'next disabled', 'escape' => false, 'disabledTag' => 'span'));
+            $pagination .= $this->Paginator->last('&raquo;&raquo;', array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'last disabled', 'escape' => false, 'disabledTag' => 'span'));
             echo $pagination;
         ?>
         </ul>
