@@ -20,6 +20,8 @@
         ?> 
         <?php if (in_array('owner_org', $columns, true)): ?><th class="filter"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></th><?php endif; ?>
         <th><?= $this->Paginator->sort('id', __('ID'), ['direction' => 'desc']) ?></th>
+        <th class="filter"><?= $this->Paginator->sort('info');?></th>
+        <th><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th>
         <?php if (in_array('clusters', $columns, true)): ?><th><?= __('Clusters') ?></th><?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?><th><?= __('Tags') ?></th><?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?><th title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
@@ -28,11 +30,9 @@
         <?php if (in_array('sightings', $columns, true)): ?><th title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></th><?php endif; ?>
         <?php if (in_array('proposals', $columns, true)): ?><th title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
         <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
-        <?php if (in_array('creator_user', $columns, true)): ?><th><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
         <th class="filter"><?= $this->Paginator->sort('date', null, array('direction' => 'desc'));?></th>
         <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last modified at')) ?></th><?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
-        <th class="filter"><?= $this->Paginator->sort('info');?></th>
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution');?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
@@ -58,6 +58,44 @@
         <?php endif; ?>
         <td class="short">
             <span><a href="<?= $baseurl."/events/view/".$eventId ?>" class="dblclickActionElement threat-level-<?= strtolower(h($event['ThreatLevel']['name'])) ?>" title="<?= h($event['Event']['info']) ?>"><?= $eventId ?></a> <?= !empty($event['Event']['protected']) ? sprintf('<i class="fas fa-lock" title="%s"></i>', __('Protected event')) : ''?></span>
+        </td>
+        <?php
+            $extends_uuid = $event['Event']['extends_uuid'] ?? null;
+            $extendedEventsInfoByUuid = array_column($extendedEvents, 'info', 'uuid');
+            $extendedEventsIdByUuid = array_column($extendedEvents, 'id', 'uuid');
+            $extends_info = $extendedEventsInfoByUuid[$extends_uuid] ?? null;
+            $extends_id = $extendedEventsIdByUuid[$extends_uuid] ?? null;
+        ?>
+
+        <td class="dblclickElement" style="min-width: 20vi; white-space: normal;">
+            <?= nl2br(h($event['Event']['info']), false) ?>
+
+            <?php if ($extends_info): ?>
+                <?php if (in_array('is_extension', $columns, true)): ?>
+                    <div style="padding-left: 1em;">
+                        <span class="apply_css_arrow">
+                            <p style="display: inline;">
+                                Extends 
+                                <a href="<?= h($baseurl) ?>/events/view/<?= h($extends_id) ?>" 
+                                title="<?= __('See extended event') ?>" 
+                                aria-label="<?= __('See extended event') ?>">
+                                    <?= h($extends_id)?>
+                                </a>
+                                : <?= h($extends_info) ?>
+                            </p>
+                        </span>
+                    </div>
+                <?php else: ?>
+                    <a href="<?= h($baseurl) ?>/events/view/<?= h($extends_id) ?>" 
+                    title="<?= __('Extends event %s', h($extends_id)) ?>"
+                    aria-label="<?= __('Extends event %s', h($extends_id)) ?>">
+                        <i class="fas fa-external-link-square-alt"></i>
+                    </a>
+                <?php endif; ?>
+            <?php endif; ?>
+        </td>
+        <td class="short dblclickElement">
+            <?php echo h($event['User']['email']); ?>
         </td>
         <?php if (in_array('clusters', $columns, true)): ?>
         <td class="short">
@@ -147,11 +185,6 @@
             <span style=" white-space: nowrap;"><?php echo $post_count?></span>
         </td>
         <?php endif;?>
-        <?php if (in_array('creator_user', $columns, true)): ?>
-        <td class="short dblclickElement">
-            <?php echo h($event['User']['email']); ?>
-        </td>
-        <?php endif; ?>
         <td class="short dblclickElement">
             <time><?= $event['Event']['date'] ?></time>
         </td>
@@ -165,41 +198,6 @@
             <?= $this->Time->time($event['Event']['publish_timestamp']) ?>
         </td>
         <?php endif; ?>
-        <?php
-            $extends_uuid = $event['Event']['extends_uuid'] ?? null;
-            $extendedEventsInfoByUuid = array_column($extendedEvents, 'info', 'uuid');
-            $extendedEventsIdByUuid = array_column($extendedEvents, 'id', 'uuid');
-            $extends_info = $extendedEventsInfoByUuid[$extends_uuid] ?? null;
-            $extends_id = $extendedEventsIdByUuid[$extends_uuid] ?? null;
-        ?>
-
-        <td class="dblclickElement" style="min-width: 20vi; white-space: normal;">
-            <?= nl2br(h($event['Event']['info']), false) ?>
-
-            <?php if ($extends_info): ?>
-                <?php if (in_array('is_extension', $columns, true)): ?>
-                    <div style="padding-left: 1em;">
-                        <span class="apply_css_arrow">
-                            <p style="display: inline;">
-                                Extends 
-                                <a href="<?= h($baseurl) ?>/events/view/<?= h($extends_id) ?>" 
-                                title="<?= __('See extended event') ?>" 
-                                aria-label="<?= __('See extended event') ?>">
-                                    <?= h($extends_id)?>
-                                </a>
-                                : <?= h($extends_info) ?>
-                            </p>
-                        </span>
-                    </div>
-                <?php else: ?>
-                    <a href="<?= h($baseurl) ?>/events/view/<?= h($extends_id) ?>" 
-                    title="<?= __('Extends event %s', h($extends_id)) ?>"
-                    aria-label="<?= __('Extends event %s', h($extends_id)) ?>">
-                        <i class="fas fa-external-link-square-alt"></i>
-                    </a>
-                <?php endif; ?>
-            <?php endif; ?>
-        </td>
         <td class="short dblclickElement<?php if ($event['Event']['distribution'] == 0) echo ' privateRedText';?>" title="<?= $event['Event']['distribution'] != 3 ? $distributionLevels[$event['Event']['distribution']] : __('All');?>">
             <?php if ($event['Event']['distribution'] == 4):?>
                 <a href="<?php echo $baseurl;?>/sharingGroups/view/<?= intval($event['SharingGroup']['id']); ?>"><?= h($event['SharingGroup']['name']) ?></a>
