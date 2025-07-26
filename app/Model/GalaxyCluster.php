@@ -1574,16 +1574,26 @@ class GalaxyCluster extends AppModel
         }
 
         foreach ($events as $k => $event) {
+            $galaxyClusterCount = 0;
+            $galaxyLimit = Configure::read('MISP.galaxy_tags_on_event_index_limit');
+            $galaxyLimit = is_numeric($galaxyLimit) ? (int)$galaxyLimit : 0;
+            
             foreach ($event['EventTag'] as $k2 => $eventTag) {
                 if (!$eventTag['Tag']['is_galaxy']) {
                     continue;
                 }
+                
+                if ($galaxyLimit > 0 && $galaxyClusterCount >= $galaxyLimit) {
+                    break;
+                }
+                
                 $tagName = strtolower($eventTag['Tag']['name']);
                 if (isset($clustersByTagName[$tagName])) {
                     $cluster = $this->postprocess($clustersByTagName[$tagName], $eventTag['Tag']['id']);
                     $cluster['GalaxyCluster']['local'] = $eventTag['local'];
                     $cluster['GalaxyCluster']['relationship_type'] = $eventTag['relationship_type'];
                     $events[$k]['GalaxyCluster'][] = $cluster['GalaxyCluster'];
+                    $galaxyClusterCount++;
                     if ($replace) {
                         unset($events[$k]['EventTag'][$k2]);
                     }

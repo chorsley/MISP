@@ -45,6 +45,7 @@ $config = array(
         'default_attribute_distribution' => 'event',
         'tagging'                        => true,
         'full_tags_on_event_index'       => true,
+        'galaxy_tags_on_event_index_limit' => 5,
         'attribute_tagging'              => true,
         'full_tags_on_attribute_index'   => true,
         'footer_logo'                    => '',
