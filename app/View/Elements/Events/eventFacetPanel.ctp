@@ -85,6 +85,76 @@ function toggleFacetSidebar() {
     }
 }
 
+function toggleFacetGroup(element) {
+    var $title = $(element);
+    var $items = $title.siblings('.facet-items');
+    var $icon = $title.find('i');
+    
+    if ($items.is(':visible')) {
+        $items.slideUp(200);
+        $title.addClass('collapsed');
+        $icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+        $title.attr('aria-expanded', 'false');
+    } else {
+        $items.slideDown(200);
+        $title.removeClass('collapsed');
+        $icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+        $title.attr('aria-expanded', 'true');
+    }
+}
+
+function applyTagFacet(tagName) {
+    var currentUrl = window.location.href;
+    var baseUrl = currentUrl.split('/events/index')[0] + '/events/index';
+    var newUrl = baseUrl + '/searchtag:' + encodeURIComponent(tagName);
+    window.location.href = newUrl;
+}
+
+function applyOrgFacet(orgName) {
+    var currentUrl = window.location.href;
+    var baseUrl = currentUrl.split('/events/index')[0] + '/events/index';
+    var newUrl = baseUrl + '/searchorg:' + encodeURIComponent(orgName);
+    window.location.href = newUrl;
+}
+
+function applyClusterFacet(clusterName) {
+    var currentUrl = window.location.href;
+    var baseUrl = currentUrl.split('/events/index')[0] + '/events/index';
+    var newUrl = baseUrl + '/searchgalaxyCluster:' + encodeURIComponent(clusterName);
+    window.location.href = newUrl;
+}
+
+function applyDateFacet(dateRange) {
+    var currentUrl = window.location.href;
+    var baseUrl = currentUrl.split('/events/index')[0] + '/events/index';
+    var today = new Date();
+    var fromDate = new Date();
+    
+    switch(dateRange) {
+        case 'last_24h':
+            fromDate.setDate(today.getDate() - 1);
+            break;
+        case 'last_week':
+            fromDate.setDate(today.getDate() - 7);
+            break;
+        case 'last_month':
+            fromDate.setMonth(today.getMonth() - 1);
+            break;
+        case 'last_year':
+            fromDate.setFullYear(today.getFullYear() - 1);
+            break;
+    }
+    
+    var newUrl = baseUrl + '/searchdatefrom:' + fromDate.toISOString().split('T')[0] + '/searchdateuntil:' + today.toISOString().split('T')[0];
+    window.location.href = newUrl;
+}
+
+function clearAllFacets() {
+    var currentUrl = window.location.href;
+    var baseUrl = currentUrl.split('/events/index')[0] + '/events/index';
+    window.location.href = baseUrl;
+}
+
 // Initialize panel as collapsed on page load
 document.addEventListener('DOMContentLoaded', function() {
     var panel = document.getElementById('eventFacetPanel');
@@ -117,8 +187,8 @@ document.addEventListener('DOMContentLoaded', function() {
         </h5>
         <div class="facet-items">
             <?php foreach ($facetData['tlp'] as $tlpTag): ?>
-            <div class="facet-item" onclick="applyTagFacet('<?= h($tlpTag['name']) ?>')" tabindex="0" role="button" aria-label="Filter by <?= h($tlpTag['name']) ?>">
-                <span class="tag" style="background-color: <?= h($tlpTag['color']) ?>; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
+            <div class="facet-item" onclick="applyTagFacet('<?= h($tlpTag['name']) ?>')" tabindex="0" role="button" aria-label="Filter by <?= h($tlpTag['name']) ?>" style="cursor: pointer;">
+                <span class="tag" style="background-color: <?= h($tlpTag['color']) ?>; color: black !important; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
                     <?= h($tlpTag['name']) ?>
                 </span>
                 <span class="facet-count">(<?= $tlpTag['count'] ?>)</span>
@@ -135,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </h5>
         <div class="facet-items">
             <?php foreach (array_slice($facetData['orgs'], 0, 10, true) as $org): ?>
-            <div class="facet-item" onclick="applyOrgFacet('<?= h($org['name']) ?>')" tabindex="0" role="button" aria-label="Filter by organization <?= h($org['name']) ?>">
+            <div class="facet-item" onclick="applyOrgFacet('<?= h($org['name']) ?>')" tabindex="0" role="button" aria-label="Filter by organization <?= h($org['name']) ?>" style="cursor: pointer;">
                 <span class="facet-name"><?= h($org['name']) ?></span>
                 <span class="facet-count">(<?= $org['count'] ?>)</span>
             </div>
@@ -151,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </h5>
         <div class="facet-items">
             <?php foreach (array_slice($facetData['galaxyClusters'], 0, 10, true) as $cluster): ?>
-            <div class="facet-item" onclick="applyClusterFacet('<?= h($cluster['name']) ?>')" tabindex="0" role="button" aria-label="Filter by galaxy cluster <?= h($cluster['name']) ?>">
+            <div class="facet-item" onclick="applyClusterFacet('<?= h($cluster['name']) ?>')" tabindex="0" role="button" aria-label="Filter by galaxy cluster <?= h($cluster['name']) ?>" style="cursor: pointer;">
                 <span class="facet-name"><?= h($cluster['name']) ?></span>
                 <span class="facet-count">(<?= $cluster['count'] ?>)</span>
             </div>
@@ -166,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </h5>
         <div class="facet-items">
             <?php foreach ($facetData['dateRanges'] as $key => $label): ?>
-            <div class="facet-item" onclick="applyDateFacet('<?= h($key) ?>')" tabindex="0" role="button" aria-label="Filter by <?= h($label) ?>">
+            <div class="facet-item" onclick="applyDateFacet('<?= h($key) ?>')" tabindex="0" role="button" aria-label="Filter by <?= h($label) ?>" style="cursor: pointer;">
                 <span class="facet-name"><?= h($label) ?></span>
             </div>
             <?php endforeach; ?>
@@ -181,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="facet-items" style="display: none;">
             <?php foreach (array_slice($facetData['tags'], 0, 20, true) as $tag): ?>
             <?php if (strpos($tag['name'], 'tlp:') !== 0): ?>
-            <div class="facet-item" onclick="applyTagFacet('<?= h($tag['name']) ?>')" tabindex="0" role="button" aria-label="Filter by tag <?= h($tag['name']) ?>">
+            <div class="facet-item" onclick="applyTagFacet('<?= h($tag['name']) ?>')" tabindex="0" role="button" aria-label="Filter by tag <?= h($tag['name']) ?>" style="cursor: pointer;">
                 <span class="tag" style="background-color: <?= h($tag['color']) ?>; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
                     <?= h($tag['name']) ?>
                 </span>
