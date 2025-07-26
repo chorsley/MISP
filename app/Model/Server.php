@@ -5875,6 +5875,13 @@ class Server extends AppModel
                     'type' => 'string',
                     'options' => array(0 => 'Minimal tags', 1 => 'Full tags', 2 => 'Shortened tags'),
                 ),
+                'galaxy_tags_on_event_index_limit' => array(
+                    'level' => 2,
+                    'description' => __('Limit the number of Galaxy tags displayed per event in the event index. Set to 0 for no limit.'),
+                    'value' => 5,
+                    'test' => 'testForNumeric',
+                    'type' => 'numeric',
+                ),
                 'disable_taxonomy_consistency_checks' => array(
                     'level' => 0,
                     'description' => __('*WARNING* This will disable taxonomy tags conflict checks when browsing attributes and objects, does not impact checks when adding tags. It can dramatically increase the performance when loading events with lots of tagged attributes or objects.'),
