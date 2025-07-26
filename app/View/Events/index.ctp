@@ -1,4 +1,5 @@
-<div class="events <?php if (!$ajax) echo 'index'; ?>">
+<?= $this->element('Events/eventFacetPanel', ['events' => $events]) ?>
+<div class="events <?php if (!$ajax) echo 'index with-facet-panel'; ?>">
     <h2><?php echo __('Events');?></h2>
     <div class="pagination">
         <ul>
@@ -64,6 +65,12 @@
             'children' => array(
                 array(
                     'children' => array(
+                        array(
+                            'id' => 'toggle-facet-panel',
+                            'title' => __('Toggle filter panel'),
+                            'fa-icon' => 'filter',
+                            'onClick' => 'toggleFacetPanel'
+                        ),
                         array(
                             'id' => 'create-button',
                             'title' => __('Modify filters'),

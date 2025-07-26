@@ -103,16 +103,43 @@
         }
     }
 
-    foreach ($tags as $tag) {
-        $tagData .= $this->element('rich_tag', [
-            'tag' => $tag,
-            'tagAccess' => $tagAccess,
-            'localTagAccess' => $localTagAccess,
-            'searchUrl' => $searchUrl,
-            'scope' => $scope,
-            'id' => $id ?? null,
-            'tag_display_style' => $tag_display_style
-        ]);
+    if (!empty($tags)) {
+        $visibleTags = array_slice($tags, 0, 5);
+        $hiddenTags = array_slice($tags, 5);
+        
+        foreach ($visibleTags as $tag) {
+            $tagData .= $this->element('rich_tag', [
+                'tag' => $tag,
+                'tagAccess' => $tagAccess,
+                'localTagAccess' => $localTagAccess,
+                'searchUrl' => $searchUrl,
+                'scope' => $scope,
+                'id' => $id ?? null,
+                'tag_display_style' => $tag_display_style
+            ]);
+        }
+        
+        if (!empty($hiddenTags)) {
+            $hiddenTagsData = "";
+            foreach ($hiddenTags as $tag) {
+                $hiddenTagsData .= $this->element('rich_tag', [
+                    'tag' => $tag,
+                    'tagAccess' => $tagAccess,
+                    'localTagAccess' => $localTagAccess,
+                    'searchUrl' => $searchUrl,
+                    'scope' => $scope,
+                    'id' => $id ?? null,
+                    'tag_display_style' => $tag_display_style
+                ]);
+            }
+            $tagData .= sprintf(
+                '<span class="tag-expand-toggle" onclick="toggleHiddenTags(this)" data-hidden-count="%d" tabindex="0" role="button" aria-label="Show %d more tags">+%d more</span>',
+                count($hiddenTags),
+                count($hiddenTags),
+                count($hiddenTags)
+            );
+            $tagData .= sprintf('<span class="hidden-tags" style="display: none;">%s</span>', $hiddenTagsData);
+        }
     }
     if (!empty($buttonData)) {
         $tagData .= '<span style="white-space:nowrap">' . implode('', $buttonData) . '</span>';

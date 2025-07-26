@@ -5160,6 +5160,168 @@ $(document.body).on('keydown', 'textarea, select', function(e) {
     }
 });
 
+function toggleHiddenTags(element) {
+    var $toggle = $(element);
+    var $hiddenTags = $toggle.siblings('.hidden-tags');
+    var hiddenCount = $toggle.data('hidden-count');
+    
+    if ($hiddenTags.is(':visible')) {
+        $hiddenTags.hide();
+        $toggle.text('+' + hiddenCount + ' more');
+        $toggle.attr('aria-label', 'Show ' + hiddenCount + ' more tags');
+    } else {
+        $hiddenTags.show();
+        $toggle.text('- show less');
+        $toggle.attr('aria-label', 'Show fewer tags');
+    }
+}
+
+$(document.body).on('keydown', '.tag-expand-toggle', function(e) {
+    if (e.keyCode === 13 || e.keyCode === 32) { // ENTER or SPACE
+        e.preventDefault();
+        toggleHiddenTags(this);
+    }
+});
+
+function toggleFacetGroup(element) {
+    var $title = $(element);
+    var $items = $title.siblings('.facet-items');
+    var $icon = $title.find('i');
+    
+    if ($items.is(':visible')) {
+        $items.slideUp(200);
+        $title.addClass('collapsed');
+        $icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
+        $title.attr('aria-expanded', 'false');
+    } else {
+        $items.slideDown(200);
+        $title.removeClass('collapsed');
+        $icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+        $title.attr('aria-expanded', 'true');
+    }
+}
+
+function applyTagFacet(tagName) {
+    var currentFilters = passedArgsArray || {};
+    currentFilters['searchtag'] = tagName;
+    applyFacetFilter(currentFilters);
+}
+
+function applyOrgFacet(orgName) {
+    var currentFilters = passedArgsArray || {};
+    currentFilters['searchorg'] = orgName;
+    applyFacetFilter(currentFilters);
+}
+
+function applyClusterFacet(clusterName) {
+    var currentFilters = passedArgsArray || {};
+    currentFilters['searchgalaxyCluster'] = clusterName;
+    applyFacetFilter(currentFilters);
+}
+
+function applyDateFacet(dateRange) {
+    var currentFilters = passedArgsArray || {};
+    var today = new Date();
+    var fromDate = new Date();
+    
+    switch(dateRange) {
+        case 'last_24h':
+            fromDate.setDate(today.getDate() - 1);
+            break;
+        case 'last_week':
+            fromDate.setDate(today.getDate() - 7);
+            break;
+        case 'last_month':
+            fromDate.setMonth(today.getMonth() - 1);
+            break;
+        case 'last_year':
+            fromDate.setFullYear(today.getFullYear() - 1);
+            break;
+    }
+    
+    currentFilters['searchdatefrom'] = fromDate.toISOString().split('T')[0];
+    currentFilters['searchdateuntil'] = today.toISOString().split('T')[0];
+    applyFacetFilter(currentFilters);
+}
+
+function applyFacetFilter(filters) {
+    var url = here;
+    for (var key in filters) {
+        if (filters[key] !== '' && filters[key] !== null) {
+            url += "/" + key + ":" + encodeURIComponent(filters[key]);
+        }
+    }
+    window.location.href = url;
+}
+
+function clearAllFacets() {
+    window.location.href = here;
+}
+
+function toggleFacetPanel() {
+    var $panel = $('.event-facet-panel');
+    var $content = $('.events.index');
+    
+    if ($panel.is(':visible')) {
+        $panel.hide();
+        $content.removeClass('with-facet-panel');
+        localStorage.setItem('misp-facet-panel-hidden', 'true');
+    } else {
+        $panel.show();
+        $content.addClass('with-facet-panel');
+        localStorage.setItem('misp-facet-panel-hidden', 'false');
+    }
+}
+
+$(document.body).on('keydown', '.facet-item, .facet-title', function(e) {
+    var $current = $(this);
+    var $items = $current.hasClass('facet-title') ? 
+        $current.closest('.facet-group').find('.facet-item, .facet-title') :
+        $current.parent().find('.facet-item');
+    var currentIndex = $items.index($current);
+    
+    switch(e.keyCode) {
+        case 38: // UP arrow
+            e.preventDefault();
+            if (currentIndex > 0) {
+                $items.eq(currentIndex - 1).focus();
+            }
+            break;
+        case 40: // DOWN arrow
+            e.preventDefault();
+            if (currentIndex < $items.length - 1) {
+                $items.eq(currentIndex + 1).focus();
+            }
+            break;
+        case 13: // ENTER
+            e.preventDefault();
+            $current.click();
+            break;
+        case 27: // ESC
+            e.preventDefault();
+            $current.blur();
+            break;
+    }
+});
+
+$(document).ready(function() {
+    if (localStorage.getItem('misp-facet-panel-hidden') === 'true') {
+        toggleFacetPanel();
+    }
+    
+    var currentUrl = window.location.href;
+    $('.facet-item').each(function() {
+        var $item = $(this);
+        var onclick = $item.attr('onclick');
+        if (onclick) {
+            var match = onclick.match(/'([^']+)'/);
+            if (match && currentUrl.indexOf(encodeURIComponent(match[1])) !== -1) {
+                $item.addClass('active');
+            }
+        }
+    });
+});
+
 // Clicking on an element with this class will select all of its contents in a single click
 $(document.body).on('click', '.quickSelect', function() {
     var range = document.createRange();
