@@ -1,4 +1,5 @@
-<table class="table table-striped table-hover table-condensed">
+<div class="event-index-container">
+<table class="table table-striped table-hover event-index-table">
     <tr>
         <th>
             <input class="select_all select" type="checkbox" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all events on current page');?>" onclick="toggleAllCheckboxes();">
@@ -247,3 +248,5 @@
         });
     });
 </script>
+</table>
+</div>
