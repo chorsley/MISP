@@ -25,7 +25,6 @@
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?><th><?= __('Clusters') ?></th><?php endif; ?>
-        <?php if (in_array('tags', $columns, true)): ?><th><?= __('Tags') ?></th><?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?><th title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?><th title="<?= __('Correlation Count')  ?>"><?= __('#Corr.') ?></th><?php endif; ?>
         <?php if (in_array('report_count', $columns, true)): ?><th title="<?= __('Report Count') ?>"><?= $this->Paginator->sort('report_count', __('#Reports')) ?></th><?php endif; ?>
@@ -34,7 +33,7 @@
         <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
         <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last modified at')) ?></th><?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
-        <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution');?></th>
+        <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
     <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
@@ -82,6 +81,29 @@
         </td>
         <td class="date-cell dblclickElement">
             <time><?= $event['Event']['date'] ?></time>
+            <?php
+                $timestamp = $event['Event']['timestamp'];
+                if (date('Ymd') == date('Ymd', $timestamp)) {
+                    $offset = time() - $timestamp;
+                    $unit = 'second(s)';
+                    $colour = 'red';
+                    if ($offset >= 60) {
+                        $offset = ceil($offset / 60);
+                        $unit = 'minute(s)';
+                        $colour = 'orange';
+                        if ($offset >= 60) {
+                            $offset = ceil($offset / 60);
+                            $unit = 'hour(s)';
+                            $colour = 'green';
+                            if ($offset >= 24) {
+                                $offset = floor($offset / 24);
+                                $unit = 'day(s)';
+                            }
+                        }
+                    }
+                    echo sprintf(' <span class="bold %s">(%s %s ago)</span>', $colour, $offset, $unit);
+                }
+            ?>
         </td>
         <td class="published-cell dblclickElement">
             <a href="<?= "$baseurl/events/view/$eventId" ?>" title="<?= __('View') ?>" aria-label="<?= __('View') ?>">
@@ -114,22 +136,6 @@
                       'static_tags_only' => true,
                     ));
                 }
-            ?>
-        </td>
-        <?php endif; ?>
-        <?php if (in_array('tags', $columns, true)): ?>
-        <td class="shortish">
-            <?= $this->element('ajaxTags', [
-                'event' => $event,
-                'tags' => $event['EventTag'],
-                'tagAccess' => false,
-                'localTagAccess' => false,
-                'missingTaxonomies' => false,
-                'columnised' => true,
-                'static_tags_only' => 1,
-                'tag_display_style' => Configure::check('MISP.full_tags_on_event_index') ? Configure::read('MISP.full_tags_on_event_index') : 1,
-                'highlightedTags' => $event['Event']['highlightedTags'] ?? [],
-            ]);
             ?>
         </td>
         <?php endif; ?>
