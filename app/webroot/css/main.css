@@ -1,6 +1,7 @@
 /* bootstrap changes */
 body {
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 #topBar {
@@ -479,6 +480,77 @@ td.action-links {
 
 .showspaces {
 
+}
+
+/* Enhanced Event Index Table Design */
+.event-index-container {
+    max-width: calc(100% - 120px);
+    margin: 0 60px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.event-index-table {
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+.event-index-table th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #0088CC;
+    color: #fff;
+    padding: 12px 8px;
+    font-weight: 600;
+    border-bottom: 2px solid #006699;
+}
+
+.event-index-table td {
+    padding: 10px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.event-index-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.event-index-table tbody tr:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 12px rgba(0, 136, 204, 0.15);
+    transform: translateY(-1px);
+}
+
+.event-index-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.event-index-table tbody tr:nth-child(even):hover {
+    background: #f8f9fa;
+}
+
+/* Responsive adjustments for event index table */
+@media (max-width: 1200px) {
+    .event-index-container {
+        margin: 0 30px;
+        max-width: calc(100% - 60px);
+    }
+}
+
+@media (max-width: 768px) {
+    .event-index-container {
+        margin: 0 15px;
+        max-width: calc(100% - 30px);
+    }
+    
+    .event-index-table th,
+    .event-index-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
 }
 
 /** Scaffold View **/
