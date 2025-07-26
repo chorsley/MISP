@@ -12,16 +12,16 @@
         <?php
             elseif (Configure::read('MISP.showorg') || $isAdmin):
         ?>
-            <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Creator org')); ?></th>
+            <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?></th>
         <?php
                 endif;
             $date = time();
             $day = 86400;
         ?> 
-        <?php if (in_array('owner_org', $columns, true)): ?><th class="filter"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></th><?php endif; ?>
-        <th><?= $this->Paginator->sort('id', __('ID'), ['direction' => 'desc']) ?></th>
-        <th class="filter"><?= $this->Paginator->sort('info');?></th>
-        <th><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th>
+        <th><?= $this->Paginator->sort('id', __('ID'), ['direction' => 'desc']) ?> <?= $this->Paginator->sortKey() == 'Event.id' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
+        <th class="filter"><?= $this->Paginator->sort('info') ?> <?= $this->Paginator->sortKey() == 'Event.info' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
+        <?php if (in_array('owner_org', $columns, true)): ?><th class="filter"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?> <?= $this->Paginator->sortKey() == 'Org.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th><?php endif; ?>
+        <th><?= $this->Paginator->sort('user_id', __('Creator user')) ?> <?= $this->Paginator->sortKey() == 'Event.user_id' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php if (in_array('clusters', $columns, true)): ?><th><?= __('Clusters') ?></th><?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?><th><?= __('Tags') ?></th><?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?><th title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
@@ -51,13 +51,8 @@
             <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?>
         </td>
         <?php endif;?>
-        <?php if (in_array('owner_org', $columns, true) || (Configure::read('MISP.showorgalternate') && Configure::read('MISP.showorg'))): ?>
-        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
-            <?= $this->OrgImg->getOrgLogo($event['Org'], 24) ?>
-        </td>
-        <?php endif; ?>
         <td class="short">
-            <span><a href="<?= $baseurl."/events/view/".$eventId ?>" class="dblclickActionElement threat-level-<?= strtolower(h($event['ThreatLevel']['name'])) ?>" title="<?= h($event['Event']['info']) ?>"><?= $eventId ?></a> <?= !empty($event['Event']['protected']) ? sprintf('<i class="fas fa-lock" title="%s"></i>', __('Protected event')) : ''?></span>
+            <span class="threat-level-<?= strtolower(h($event['ThreatLevel']['name'])) ?>"><?= $eventId ?></span> <?= !empty($event['Event']['protected']) ? sprintf('<i class="fas fa-lock" title="%s"></i>', __('Protected event')) : ''?>
         </td>
         <?php
             $extends_uuid = $event['Event']['extends_uuid'] ?? null;
@@ -68,7 +63,7 @@
         ?>
 
         <td class="dblclickElement" style="min-width: 20vi; white-space: normal;">
-            <?= nl2br(h($event['Event']['info']), false) ?>
+            <a href="<?= $baseurl."/events/view/".$eventId ?>" class="dblclickActionElement" title="<?= h($event['Event']['info']) ?>"><?= nl2br(h($event['Event']['info']), false) ?></a>
 
             <?php if ($extends_info): ?>
                 <?php if (in_array('is_extension', $columns, true)): ?>
@@ -94,6 +89,11 @@
                 <?php endif; ?>
             <?php endif; ?>
         </td>
+        <?php if (in_array('owner_org', $columns, true) || (Configure::read('MISP.showorgalternate') && Configure::read('MISP.showorg'))): ?>
+        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
+            <?= $this->OrgImg->getOrgLogo($event['Org'], 24) ?>
+        </td>
+        <?php endif; ?>
         <td class="short dblclickElement">
             <?php echo h($event['User']['email']); ?>
         </td>
