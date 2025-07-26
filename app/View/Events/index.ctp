@@ -77,24 +77,53 @@
                             'fa-icon' => 'search',
                             'onClick' => 'getPopup',
                             'onClickParams' => array(h($urlparams), 'events', 'filterEventIndex')
-                        )
-                    )
-                ),
-                array(
-                    'children' => array(
-                        array(
-                            'id' => 'multi-delete-button',
-                            'title' => __('Delete selected events'),
-                            'fa-icon' => 'trash',
-                            'class' => 'hidden mass-delete',
-                            'onClick' => 'multiSelectDeleteEvents'
                         ),
                         array(
-                            'id' => 'multi-export-button',
-                            'title' => __('Export selected events'),
-                            'fa-icon' => 'file-export',
-                            'class' => 'hidden mass-export',
-                            'onClick' => 'multiSelectExportEvents'
+                            'id' => 'more-options',
+                            'type' => 'group',
+                            'title' => __('More options'),
+                            'fa-icon' => 'ellipsis-h',
+                            'children' => array(
+                                array(
+                                    'title' => __('My events only'),
+                                    'text' => __('My Events'),
+                                    'data' => array(
+                                        'searchemail' => h($me['email'])
+                                    ),
+                                    'class' => 'searchFilterButton',
+                                    'active' => isset($passedArgsArray['email']) && $passedArgsArray['email'] === $me['email']
+                                ),
+                                array(
+                                    'title' => __('My organisation\'s events only'),
+                                    'text' => __('Org Events'),
+                                    'data' => array(
+                                        'searchorg' => h($me['org_id'])
+                                    ),
+                                    'class' => 'searchFilterButton',
+                                    'active' => isset($passedArgsArray['org']) && $passedArgsArray['org'] === $me['org_id']
+                                ),
+                                array(
+                                    'id' => 'simple_filter',
+                                    'type' => 'group',
+                                    'title' => __('Choose columns to show'),
+                                    'fa-icon' => 'columns',
+                                    'children' => $columnsMenu,
+                                ),
+                                array(
+                                    'id' => 'multi-delete-button',
+                                    'title' => __('Delete selected events'),
+                                    'fa-icon' => 'trash',
+                                    'class' => 'hidden mass-delete',
+                                    'onClick' => 'multiSelectDeleteEvents'
+                                ),
+                                array(
+                                    'id' => 'multi-export-button',
+                                    'title' => __('Export selected events'),
+                                    'fa-icon' => 'file-export',
+                                    'class' => 'hidden mass-export',
+                                    'onClick' => 'multiSelectExportEvents'
+                                )
+                            )
                         )
                     )
                 ),
@@ -115,40 +144,6 @@
                             'fa-icon' => 'times'
                         )
                     )
-                ),
-                array(
-                    'children' => array(
-                        array(
-                            'title' => __('My events only'),
-                            'text' => __('My Events'),
-                            'data' => array(
-                                'searchemail' => h($me['email'])
-                            ),
-                            'class' => 'searchFilterButton',
-                            'active' => isset($passedArgsArray['email']) && $passedArgsArray['email'] === $me['email']
-                        ),
-                        array(
-                            'title' => __('My organisation\'s events only'),
-                            'text' => __('Org Events'),
-                            'data' => array(
-                                'searchorg' => h($me['org_id'])
-                            ),
-                            'class' => 'searchFilterButton',
-                            'active' => isset($passedArgsArray['org']) && $passedArgsArray['org'] === $me['org_id']
-                        )
-                    )
-                ),
-                array(
-                    'children' => array(
-                        array(
-                            'id' => 'simple_filter',
-                            'type' => 'group',
-                            'class' => 'last',
-                            'title' => __('Choose columns to show'),
-                            'fa-icon' => 'columns',
-                            'children' => $columnsMenu,
-                        ),
-                    ),
                 ),
                 array(
                     'type' => 'search',

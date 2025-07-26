@@ -687,7 +687,7 @@ td.action-links {
 
 /* Adjust main content when facet panel is visible */
 .events.index.with-facet-panel {
-    margin-left: 300px;
+    margin-left: 285px;
 }
 
 .events.index.with-facet-panel .event-index-container {
@@ -702,7 +702,7 @@ td.action-links {
     }
     
     .events.index.with-facet-panel {
-        margin-left: 270px;
+        margin-left: 255px;
     }
 }
 
@@ -717,6 +717,28 @@ td.action-links {
     .events.index.with-facet-panel {
         margin-left: 0;
     }
+}
+
+/* Improved menu organization */
+.btn-toolbar {
+    margin: 0 10px 10px 10px;
+}
+
+.btn-toolbar .btn-group {
+    margin-right: 5px;
+}
+
+.btn-toolbar .btn-group:last-child {
+    margin-right: 0;
+}
+
+/* More options dropdown styling */
+#more-options .dropdown-menu {
+    min-width: 200px;
+}
+
+#more-options .dropdown-menu li a {
+    padding: 8px 12px;
 }
 
 /** Scaffold View **/
