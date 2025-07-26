@@ -483,7 +483,7 @@ td.action-links {
 }
 
 /* Enhanced Event Index Table Design */
-.event-index-container {
+.events.index .event-index-container {
     max-width: calc(100% - 120px);
     margin: 0 60px;
     background: #ffffff;
