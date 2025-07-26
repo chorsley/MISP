@@ -39,10 +39,10 @@
     </tr>
     <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
     <tr id="event_<?= $eventId ?>">
-        <td style="width:10px">
+        <td class="checkbox-cell">
             <input class="select" type="checkbox" data-id="<?= $eventId ?>" data-can-modify="<?= $this->Acl->canModifyEvent($event) ? 1 : 0 ?>">
         </td>
-        <td class="short">
+        <td class="id-cell">
             <span class="threat-level-<?= strtolower(h($event['ThreatLevel']['name'])) ?>"><?= $eventId ?></span> <?= !empty($event['Event']['protected']) ? sprintf('<i class="fas fa-lock" title="%s"></i>', __('Protected event')) : ''?>
         </td>
         <?php
@@ -80,10 +80,10 @@
                 <?php endif; ?>
             <?php endif; ?>
         </td>
-        <td class="short dblclickElement">
+        <td class="date-cell dblclickElement">
             <time><?= $event['Event']['date'] ?></time>
         </td>
-        <td class="dblclickElement" style="width:30px">
+        <td class="published-cell dblclickElement">
             <a href="<?= "$baseurl/events/view/$eventId" ?>" title="<?= __('View') ?>" aria-label="<?= __('View') ?>">
                 <i class="fa <?= $event['Event']['published'] ? 'fa-check green' : 'fa-times grey' ?>"></i>
             </a>
@@ -134,12 +134,12 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?>
-        <td class="dblclickElement" style="width:30px">
+        <td class="dblclickElement">
             <?= $event['Event']['attribute_count']; ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?>
-        <td class="bold" style="width:30px">
+        <td class="bold">
             <?php if (!empty($event['Event']['correlation_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/correlation:1" ?>" title="<?= __n('%s correlation', '%s correlations', $event['Event']['correlation_count'], $event['Event']['correlation_count']), '. ' . __('Show filtered event with correlation only.');?>">
                     <?= intval($event['Event']['correlation_count']); ?>
@@ -148,12 +148,12 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('report_count', $columns, true)): ?>
-        <td class="bold" style="width:30px">
+        <td class="bold">
             <?= $event['Event']['report_count']; ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('sightings', $columns, true)): ?>
-        <td class="bold" style="width:30px">
+        <td class="bold">
             <?php if (!empty($event['Event']['sightings_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/sighting:1" ?>" title="<?= __n("1 sighting. Show filtered event with sighting only.", "%s sightings. Show filtered event with sightings only.", $event['Event']['sightings_count'], intval($event['Event']['sightings_count'])) ?>">
                     <?= intval($event['Event']['sightings_count']) ?>
@@ -162,12 +162,12 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('proposals', $columns, true)): ?>
-        <td class="bold dblclickElement" style="width:30px" title="<?= __n('%s proposal', '%s proposals', $event['Event']['proposals_count'], $event['Event']['proposals_count']) ?>">
+        <td class="bold dblclickElement" title="<?= __n('%s proposal', '%s proposals', $event['Event']['proposals_count'], $event['Event']['proposals_count']) ?>">
             <?= !empty($event['Event']['proposals_count']) ? intval($event['Event']['proposals_count']) : ''; ?>
         </td>
         <?php endif;?>
         <?php if (in_array('discussion', $columns, true)): ?>
-        <td class="bold dblclickElement" style="width:30px">
+        <td class="bold dblclickElement">
             <?php
                 if (!empty($event['Event']['post_count'])) {
                     $post_count = h($event['Event']['post_count']);
@@ -209,7 +209,7 @@
             )
             ?>
         </td>
-        <td class="short action-links">
+        <td class="actions-cell action-links">
             <?php
                 if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)) {
                     echo sprintf('<a class="useCursorPointer fa fa-upload" title="%s" aria-label="%s" onclick="event.preventDefault();publishPopup(%s)"></a>', __('Publish Event'), __('Publish Event'), $eventId);
