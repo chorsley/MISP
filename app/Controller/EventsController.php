@@ -1033,9 +1033,7 @@ class EventsController extends AppController
             $possibleColumns[] = 'discussion';
         }
 
-        if ($this->_isSiteAdmin()) {
-            $possibleColumns[] = 'creator_user';
-        }
+        $possibleColumns[] = 'creator_user';
  
         $possibleColumns[] = 'timestamp';
         $possibleColumns[] = 'publish_timestamp';
