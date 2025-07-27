@@ -5873,7 +5873,7 @@ class Server extends AppModel
                     'value' => '',
                     'test' => 'testForEmpty',
                     'type' => 'string',
-                    'options' => array(0 => 'Minimal tags', 1 => 'Full tags', 2 => 'Shortened tags'),
+                    'options' => array(0 => 'Minimal tags', 1 => 'Full tags', 2 => 'Shortened tags', 3 => 'Highlight tags only'),
                 ),
                 'disable_taxonomy_consistency_checks' => array(
                     'level' => 0,

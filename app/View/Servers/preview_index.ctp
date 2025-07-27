@@ -117,18 +117,43 @@
             </td>
             <?php if (Configure::read('MISP.tagging')): ?>
             <td style="max-width: 200px;width:10px;">
-                <?php foreach ($event['Event']['EventTag'] as $tag):
-                    if (empty($tag['Tag'])) continue;
-                    $tagText = "";
-                    if (Configure::read('MISP.full_tags_on_event_index') == 1) {
-                        $tagText = $tag['Tag']['name'];
-                    } else if (Configure::read('MISP.full_tags_on_event_index') == 2) {
-                        if (strpos($tag['Tag']['name'], '=')) {
-                            $tagText = explode('=', $tag['Tag']['name']);
-                            $tagText = h(trim(end($tagText), "\""));
+                <?php 
+                    $highlightedTaxonomies = array();
+                    $taxonomyModel = null;
+                    $tagDisplayMode = Configure::read('MISP.full_tags_on_event_index');
+                    
+                    if ($tagDisplayMode == 3) {
+                        $taxonomyModel = ClassRegistry::init('Taxonomy');
+                        $highlightedTaxonomiesData = $taxonomyModel->getHighlightedTaxonomies();
+                        foreach ($highlightedTaxonomiesData as $taxonomy) {
+                            $highlightedTaxonomies[] = $taxonomy['Taxonomy']['namespace'];
                         }
-                        else $tagText = $tag['Tag']['name'];
                     }
+                    
+                    foreach ($event['Event']['EventTag'] as $tag):
+                        if (empty($tag['Tag'])) continue;
+                        
+                        if ($tagDisplayMode == 3) {
+                            $splits = $taxonomyModel->splitTagToComponents($tag['Tag']['name']);
+                            $isHighlighted = false;
+                            if (!empty($splits) && in_array($splits['namespace'], $highlightedTaxonomies)) {
+                                $isHighlighted = true;
+                            }
+                            if (!$isHighlighted) {
+                                continue;
+                            }
+                        }
+                        
+                        $tagText = "";
+                        if ($tagDisplayMode == 1) {
+                            $tagText = $tag['Tag']['name'];
+                        } else if ($tagDisplayMode == 2 || $tagDisplayMode == 3) {
+                            if (strpos($tag['Tag']['name'], '=')) {
+                                $tagText = explode('=', $tag['Tag']['name']);
+                                $tagText = h(trim(end($tagText), "\""));
+                            }
+                            else $tagText = $tag['Tag']['name'];
+                        }
                 ?>
                     <span class=tag style="margin-bottom:3px;background-color:<?= h($tag['Tag']['colour']);?>;color:<?= $this->TextColour->getTextColour($tag['Tag']['colour']);?>;" title="<?= h($tag['Tag']['name']); ?>"><?= h($tagText); ?></span>
                 <?php endforeach; ?>
