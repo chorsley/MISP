@@ -346,6 +346,13 @@ td.actions {
     white-space: nowrap;
 }
 
+td.truncate {
+    max-width: 150px;      /* Adjust as needed */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 td.short {
     width:5%;
     white-space: nowrap;
@@ -502,7 +509,7 @@ td.action-links {
     top: 0;
     z-index: 10;
     background: #0088CC;
-    color: #fff;
+    color: #000;
     padding: 12px 8px;
     font-weight: 600;
     border-bottom: 2px solid #006699;
@@ -535,12 +542,12 @@ td.action-links {
 /* Flexible table cell sizing */
 .event-index-table .checkbox-cell {
     width: 40px;
-    min-width: 40px;
+    min-width: 30px;
 }
 
 .event-index-table .id-cell {
     width: 80px;
-    min-width: 80px;
+    min-width: 20px;
 }
 
 .event-index-table .date-cell {
@@ -549,14 +556,14 @@ td.action-links {
 }
 
 .event-index-table .published-cell {
-    width: 80px;
-    min-width: 80px;
+    width: 20px;
+    min-width: 20px;
     text-align: center;
 }
 
 .event-index-table .actions-cell {
     width: 120px;
-    min-width: 120px;
+    min-width: 10px;
 }
 
 /* Responsive column management for event index table */
