@@ -20,8 +20,8 @@
         <th><?= $this->Paginator->sort('id', __('ID'), ['direction' => 'desc']) ?> <?= $this->Paginator->sortKey() == 'Event.id' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th class="filter"><?= $this->Paginator->sort('info') ?> <?= $this->Paginator->sortKey() == 'Event.info' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th class="filter"><?= $this->Paginator->sort('date', null, array('direction' => 'desc')) ?> <?= $this->Paginator->sortKey() == 'Event.date' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
-        <th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?> <?= $this->Paginator->sortKey() == 'Event.timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
-        <th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?> <?= $this->Paginator->sortKey() == 'Event.publish_timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
+        <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?> <?= $this->Paginator->sortKey() == 'Event.timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th><?php endif; ?>
+        <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?> <?= $this->Paginator->sortKey() == 'Event.publish_timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th><?php endif; ?>
         <th class="filter" title="<?= __('Published') ?>"><?= $this->Paginator->sort('published', __('Published'), ['escape' => false]) ?> <?= $this->Paginator->sortKey() == 'Event.published' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
@@ -83,6 +83,7 @@
         <td class="date-cell dblclickElement">
             <time><?= $event['Event']['date'] ?></time>
         </td>
+        <?php if (in_array('timestamp', $columns, true)): ?>
         <td class="short">
             <?php
                 $timestamp = $event['Event']['timestamp'];
@@ -113,6 +114,8 @@
                 echo sprintf('<span class="bold %s" title="%s">%s %s ago</span>', $colour, $absoluteTime, $offset, $unit);
             ?>
         </td>
+        <?php endif; ?>
+        <?php if (in_array('publish_timestamp', $columns, true)): ?>
         <td class="short">
             <?php
                 $publishTimestamp = $event['Event']['publish_timestamp'];
@@ -147,6 +150,7 @@
                 }
             ?>
         </td>
+        <?php endif; ?>
         <td class="published-cell dblclickElement">
             <a href="<?= "$baseurl/events/view/$eventId" ?>" title="<?= __('View') ?>" aria-label="<?= __('View') ?>">
                 <i class="fa <?= $event['Event']['published'] ? 'fa-check green' : 'fa-times grey' ?>"></i>
