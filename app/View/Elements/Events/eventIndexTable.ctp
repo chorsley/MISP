@@ -20,7 +20,8 @@
         <th><?= $this->Paginator->sort('id', __('ID'), ['direction' => 'desc']) ?> <?= $this->Paginator->sortKey() == 'Event.id' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th class="filter"><?= $this->Paginator->sort('info') ?> <?= $this->Paginator->sortKey() == 'Event.info' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th class="filter"><?= $this->Paginator->sort('date', null, array('direction' => 'desc')) ?> <?= $this->Paginator->sortKey() == 'Event.date' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
-        <th title="<?= __('Last modified at') ?>"><?= __('Last mod') ?></th>
+        <th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?> <?= $this->Paginator->sortKey() == 'Event.timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
+        <th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?> <?= $this->Paginator->sortKey() == 'Event.publish_timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th class="filter" title="<?= __('Published') ?>"><?= $this->Paginator->sort('published', __('Published'), ['escape' => false]) ?> <?= $this->Paginator->sortKey() == 'Event.published' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
@@ -35,7 +36,6 @@
         <?php if (in_array('proposals', $columns, true)): ?><th title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
         <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
         <?php if (in_array('creator_user', $columns, true)): ?><th><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
-        <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
@@ -112,7 +112,42 @@
                         }
                     }
                 }
-                echo sprintf('<span class="bold %s">%s %s ago</span>', $colour, $offset, $unit);
+                $absoluteTime = date('Y-m-d H:i:s', $timestamp);
+                echo sprintf('<span class="bold %s" title="%s">%s %s ago</span>', $colour, $absoluteTime, $offset, $unit);
+            ?>
+        </td>
+        <td class="short">
+            <?php
+                $publishTimestamp = $event['Event']['publish_timestamp'];
+                if ($publishTimestamp && $publishTimestamp != '0') {
+                    $offset = time() - $publishTimestamp;
+                    $unit = 'second(s)';
+                    $colour = 'red';
+                    if ($offset >= 60) {
+                        $offset = ceil($offset / 60);
+                        $unit = 'minute(s)';
+                        $colour = 'orange';
+                        if ($offset >= 60) {
+                            $offset = ceil($offset / 60);
+                            $unit = 'hour(s)';
+                            $colour = 'green';
+                            if ($offset >= 24) {
+                                $offset = floor($offset / 24);
+                                $unit = 'day(s)';
+                                $colour = 'blue';
+                                if ($offset >= 365) {
+                                    $offset = floor($offset / 365);
+                                    $unit = 'year(s)';
+                                    $colour = 'grey';
+                                }
+                            }
+                        }
+                    }
+                    $absoluteTime = date('Y-m-d H:i:s', $publishTimestamp);
+                    echo sprintf('<span class="bold %s" title="%s">%s %s ago</span>', $colour, $absoluteTime, $offset, $unit);
+                } else {
+                    echo '<span class="grey">Not published</span>';
+                }
             ?>
         </td>
         <td class="published-cell dblclickElement">
@@ -221,16 +256,6 @@
         <?php if (in_array('creator_user', $columns, true)): ?>
         <td class="short dblclickElement">
             <?php echo h($event['User']['email']); ?>
-        </td>
-        <?php endif; ?>
-        <?php if (in_array('timestamp', $columns, true)): ?>
-        <td class="short dblclickElement">
-            <?= $this->Time->time($event['Event']['timestamp']) ?>
-        </td>
-        <?php endif; ?>
-        <?php if (in_array('publish_timestamp', $columns, true)): ?>
-        <td class="short dblclickElement">
-            <?= $this->Time->time($event['Event']['publish_timestamp']) ?>
         </td>
         <?php endif; ?>
         <td class="short dblclickElement<?php if ($event['Event']['distribution'] == 0) echo ' privateRedText';?>" title="<?= $event['Event']['distribution'] != 3 ? $distributionLevels[$event['Event']['distribution']] : __('All');?>">
