@@ -21,7 +21,7 @@
         <th class="filter"><?= $this->Paginator->sort('info') ?> <?= $this->Paginator->sortKey() == 'Event.info' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th class="filter"><?= $this->Paginator->sort('date', null, array('direction' => 'desc')) ?> <?= $this->Paginator->sortKey() == 'Event.date' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th title="<?= __('Last modified at') ?>"><?= __('Last mod') ?></th>
-        <th class="filter" title="<?= __('Published') ?>"><?= $this->Paginator->sort('published', __('Published'), ['escape' => false]) ?> <?= $this->Paginator->sortKey() == 'Event.published' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
+        <th class="filter" title="<?= __('Pub?') ?>"><?= $this->Paginator->sort('published', __('Pub?'), ['escape' => false]) ?> <?= $this->Paginator->sortKey() == 'Event.published' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php endif; ?>
@@ -40,9 +40,11 @@
     </tr>
     <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
     <tr id="event_<?= $eventId ?>">
+        <!-- Checkbox for selecting events -->
         <td class="checkbox-cell">
             <input class="select" type="checkbox" data-id="<?= $eventId ?>" data-can-modify="<?= $this->Acl->canModifyEvent($event) ? 1 : 0 ?>">
         </td>
+        <!-- Event ID -->
         <td class="id-cell">
             <span class="threat-level-<?= strtolower(h($event['ThreatLevel']['name'])) ?>"><?= $eventId ?></span> <?= !empty($event['Event']['protected']) ? sprintf('<i class="fas fa-lock" title="%s"></i>', __('Protected event')) : ''?>
         </td>
@@ -54,6 +56,7 @@
             $extends_id = $extendedEventsIdByUuid[$extends_uuid] ?? null;
         ?>
 
+        <!-- Event info -->
         <td class="dblclickElement" style="min-width: 15vi; white-space: normal;">
             <a href="<?= $baseurl."/events/view/".$eventId ?>" class="dblclickActionElement" title="<?= h($event['Event']['info']) ?>"><?= nl2br(h($event['Event']['info']), false) ?></a>
 
@@ -81,9 +84,11 @@
                 <?php endif; ?>
             <?php endif; ?>
         </td>
+        <!-- Event date -->
         <td class="date-cell dblclickElement">
             <time><?= $event['Event']['date'] ?></time>
         </td>
+        <!-- Last modified at -->
         <td class="short">
             <?php
                 $timestamp = $event['Event']['timestamp'];
@@ -113,18 +118,21 @@
                 echo sprintf('<span class="bold %s">%s %s ago</span>', $colour, $offset, $unit);
             ?>
         </td>
+        <!-- Published status -->
         <td class="published-cell dblclickElement">
             <a href="<?= "$baseurl/events/view/$eventId" ?>" title="<?= __('View') ?>" aria-label="<?= __('View') ?>">
                 <i class="fa <?= $event['Event']['published'] ? 'fa-check green' : 'fa-times grey' ?>"></i>
             </a>
         </td>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
-        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
+        <!-- Organisation logo or name, keep compact -->
+        <td class="truncate" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
             <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?>
-        <td class="shortish">
+        <!-- depending on the tag display style, show all tags / minimal tags / highlight tags only -->
+        <td class="short" style="width: 2em;">
             <?php if (!empty($event['Event']['highlightedTags'])): ?>
                 <?= $this->element('ajaxTags', [
                     'event' => $event,
@@ -141,6 +149,7 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
+        <!-- Galaxies associated with the event, keep compact -->
         <td class="truncate">
             <?php
                 $galaxies = array();
@@ -165,11 +174,13 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?>
+        <!-- Attribute count for the event -->
         <td class="dblclickElement">
             <?= $event['Event']['attribute_count']; ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?>
+        <!-- Correlation count for the event -->
         <td class="bold">
             <?php if (!empty($event['Event']['correlation_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/correlation:1" ?>" title="<?= __n('%s correlation', '%s correlations', $event['Event']['correlation_count'], $event['Event']['correlation_count']), '. ' . __('Show filtered event with correlation only.');?>">
@@ -179,11 +190,13 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('report_count', $columns, true)): ?>
+        <!-- Report count for the event -->
         <td class="bold">
             <?= $event['Event']['report_count']; ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('sightings', $columns, true)): ?>
+        <!-- Sighting count for the event -->
         <td class="bold">
             <?php if (!empty($event['Event']['sightings_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/sighting:1" ?>" title="<?= __n("1 sighting. Show filtered event with sighting only.", "%s sightings. Show filtered event with sightings only.", $event['Event']['sightings_count'], intval($event['Event']['sightings_count'])) ?>">

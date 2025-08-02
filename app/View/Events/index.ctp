@@ -138,7 +138,7 @@
                             'type' => 'group',
                             'class' => 'last',
                             'title' => __('Choose columns to show'),
-                            'fa-icon' => 'columns',
+                            'fa-icon' => 'bars',
                             'children' => $columnsMenu,
                         ),
                     ),
