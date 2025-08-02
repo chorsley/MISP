@@ -25,6 +25,7 @@
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php endif; ?>
+        <?php if (in_array('owner_org', $columns, true)): ?><th class="filter"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></th><?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?><th><?= __('Tags') ?></th><?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?><th><?= __('Galaxies') ?></th><?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?><th title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
@@ -33,6 +34,7 @@
         <?php if (in_array('sightings', $columns, true)): ?><th title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></th><?php endif; ?>
         <?php if (in_array('proposals', $columns, true)): ?><th title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
         <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
+        <?php if (in_array('creator_user', $columns, true)): ?><th><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
         <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
@@ -123,21 +125,25 @@
             <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?>
         </td>
         <?php endif; ?>
+        <?php if (in_array('owner_org', $columns, true) || (Configure::read('MISP.showorgalternate') && Configure::read('MISP.showorg'))): ?>
+        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
+            <?= $this->OrgImg->getOrgLogo($event['Org'], 24) ?>
+        </td>
+        <?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?>
         <td class="shortish">
-            <?php if (!empty($event['Event']['highlightedTags'])): ?>
-                <?= $this->element('ajaxTags', [
-                    'event' => $event,
-                    'tags' => [],
-                    'highlightedTags' => $event['Event']['highlightedTags'],
-                    'tagAccess' => false,
-                    'localTagAccess' => false,
-                    'missingTaxonomies' => false,
-                    'static_tags_only' => 1,
-                    'tag_display_style' => 2,
-                ]);
-                ?>
-            <?php endif; ?>
+            <?= $this->element('ajaxTags', [
+                'event' => $event,
+                'tags' => $event['EventTag'],
+                'tagAccess' => false,
+                'localTagAccess' => false,
+                'missingTaxonomies' => false,
+                'columnised' => true,
+                'static_tags_only' => 1,
+                'tag_display_style' => Configure::check('MISP.full_tags_on_event_index') ? Configure::read('MISP.full_tags_on_event_index') : 1,
+                'highlightedTags' => $event['Event']['highlightedTags'] ?? [],
+            ]);
+            ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
@@ -212,6 +218,11 @@
             <span style=" white-space: nowrap;"><?php echo $post_count?></span>
         </td>
         <?php endif;?>
+        <?php if (in_array('creator_user', $columns, true)): ?>
+        <td class="short dblclickElement">
+            <?php echo h($event['User']['email']); ?>
+        </td>
+        <?php endif; ?>
         <?php if (in_array('timestamp', $columns, true)): ?>
         <td class="short dblclickElement">
             <?= $this->Time->time($event['Event']['timestamp']) ?>
