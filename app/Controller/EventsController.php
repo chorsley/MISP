@@ -1009,6 +1009,7 @@ class EventsController extends AppController
         if (Configure::read('MISP.tagging')) {
             $possibleColumns[] = 'clusters';
             $possibleColumns[] = 'tags';
+            $possibleColumns[] = 'summary_tags';
         }
 
         $possibleColumns[] = 'attribute_count';
@@ -1033,9 +1034,7 @@ class EventsController extends AppController
             $possibleColumns[] = 'discussion';
         }
 
-        if ($this->_isSiteAdmin()) {
-            $possibleColumns[] = 'creator_user';
-        }
+        $possibleColumns[] = 'creator_user';
  
         $possibleColumns[] = 'timestamp';
         $possibleColumns[] = 'publish_timestamp';
@@ -1058,7 +1057,7 @@ class EventsController extends AppController
 
         $user = $this->Auth->user();
 
-        if (in_array('tags', $columns, true) || in_array('clusters', $columns, true)) {
+        if (in_array('tags', $columns, true) || in_array('clusters', $columns, true) || in_array('summary_tags', $columns, true)) {
             $events = $this->Event->attachTagsToEvents($events);
             $events = $this->GalaxyCluster->attachClustersToEventIndex($user, $events, true);
             $events = $this->__attachHighlightedTagsToEvents($events);
