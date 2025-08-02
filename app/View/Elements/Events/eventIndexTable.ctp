@@ -40,7 +40,82 @@
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
-    <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
+    <?php 
+    // Helper function to find and extract tag by prefix
+    if (!function_exists('findTagByPrefix')) {
+        function findTagByPrefix($tag_list, $tag_prefix) {
+            foreach ($tag_list as $tag) {
+                if (substr($tag['Tag']['name'], 0, strlen($tag_prefix)) == $tag_prefix) {
+                    return $tag['Tag']['name'];
+                }
+            }
+            return '';
+        }
+    }
+
+    // Helper function to get most sensitive TLP tag
+    if (!function_exists('getMostSensitiveTlp')) {
+        function getMostSensitiveTlp($tag_list) {
+            $tlp_sensitivity = [
+                'tlp:white' => 1,
+                'tlp:clear' => 2,
+                'tlp:green' => 3,
+                'tlp:amber' => 4,
+                'tlp:amber+strict' => 5,
+                'tlp:red' => 6
+            ];
+            
+            $found_tlp = '';
+            $max_sensitivity = 0;
+            
+            foreach ($tag_list as $tag) {
+                $tag_name = strtolower($tag['Tag']['name']);
+                if (strpos($tag_name, 'tlp:') === 0) {
+                    $sensitivity = $tlp_sensitivity[$tag_name] ?? 0;
+                    if ($sensitivity > $max_sensitivity) {
+                        $max_sensitivity = $sensitivity;
+                        $found_tlp = $tag['Tag']['name'];
+                    }
+                }
+            }
+            
+            return $found_tlp;
+        }
+    }
+
+    // Helper function to extract galaxy cluster values by type
+    if (!function_exists('getGalaxyClusterByType')) {
+        function getGalaxyClusterByType($galaxy_clusters, $types) {
+            if (!is_array($types)) {
+                $types = [$types];
+            }
+            
+            foreach ($galaxy_clusters as $cluster) {
+                if (isset($cluster['Galaxy']['type']) && in_array($cluster['Galaxy']['type'], $types)) {
+                    return $cluster['value'] ?? '';
+                }
+            }
+            return '';
+        }
+    }
+
+    foreach ($events as $event): 
+        $eventId = (int)$event['Event']['id']; 
+        
+        // Extract tags for the predictable tag bar
+        $tlpTag = getMostSensitiveTlp($event['EventTag']);
+        $workflowTag = findTagByPrefix($event['EventTag'], 'workflow:');
+        
+        $threatActorTag = '';
+        $sectorTag = '';
+        $malwareTag = '';
+        
+        if (!empty($event['GalaxyCluster'])) {
+            $threatActorTag = getGalaxyClusterByType($event['GalaxyCluster'], 'threat-actor');
+            $sectorTag = getGalaxyClusterByType($event['GalaxyCluster'], 'sector');
+            $malwareTag = getGalaxyClusterByType($event['GalaxyCluster'], ['malpedia', 'ransomware', 'banker']);
+        }
+    ?>
     <tr id="event_<?= $eventId ?>">
         <td class="checkbox-cell">
             <input class="select" type="checkbox" data-id="<?= $eventId ?>" data-can-modify="<?= $this->Acl->canModifyEvent($event) ? 1 : 0 ?>">
@@ -82,6 +157,58 @@
                     </a>
                 <?php endif; ?>
             <?php endif; ?>
+
+            <div class="predictable-tag-bar">
+                <?php if ($tlpTag): ?>
+                    <div class="tag-column tlp-column">
+                        <span class="tag" style="background-color: <?= $tlpTag === 'tlp:red' ? '#d9534f' : ($tlpTag === 'tlp:amber' || $tlpTag === 'tlp:amber+strict' ? '#f0ad4e' : ($tlpTag === 'tlp:green' ? '#5cb85c' : '#5bc0de')) ?>; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;">
+                            <?= h(strtoupper(str_replace('tlp:', '', $tlpTag))) ?>
+                        </span>
+                    </div>
+                <?php else: ?>
+                    <div class="tag-column tlp-column"></div>
+                <?php endif; ?>
+
+                <?php if ($threatActorTag): ?>
+                    <div class="tag-column threat-actor-column">
+                        <span class="tag" style="background-color: #337ab7; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($threatActorTag) ?>">
+                            <?= h($threatActorTag) ?>
+                        </span>
+                    </div>
+                <?php else: ?>
+                    <div class="tag-column threat-actor-column"></div>
+                <?php endif; ?>
+
+                <?php if ($sectorTag): ?>
+                    <div class="tag-column sector-column">
+                        <span class="tag" style="background-color: #5cb85c; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($sectorTag) ?>">
+                            <?= h($sectorTag) ?>
+                        </span>
+                    </div>
+                <?php else: ?>
+                    <div class="tag-column sector-column"></div>
+                <?php endif; ?>
+
+                <?php if ($workflowTag): ?>
+                    <div class="tag-column workflow-column">
+                        <span class="tag" style="background-color: #f0ad4e; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($workflowTag) ?>">
+                            <?= h(str_replace('workflow:', '', $workflowTag)) ?>
+                        </span>
+                    </div>
+                <?php else: ?>
+                    <div class="tag-column workflow-column"></div>
+                <?php endif; ?>
+
+                <?php if ($malwareTag): ?>
+                    <div class="tag-column malware-column">
+                        <span class="tag" style="background-color: #d9534f; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($malwareTag) ?>">
+                            <?= h($malwareTag) ?>
+                        </span>
+                    </div>
+                <?php else: ?>
+                    <div class="tag-column malware-column"></div>
+                <?php endif; ?>
+            </div>
         </td>
         <td class="date-cell dblclickElement">
             <time><?= $event['Event']['date'] ?></time>
@@ -319,5 +446,58 @@
         });
     });
 </script>
+
+<style>
+.predictable-tag-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 10px;
+    flex-wrap: nowrap;
+}
+
+.tag-column {
+    min-width: 70px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tag-column .tag {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tlp-column {
+    min-width: 50px;
+    max-width: 80px;
+}
+
+.threat-actor-column {
+    min-width: 80px;
+    max-width: 140px;
+}
+
+.sector-column {
+    min-width: 70px;
+    max-width: 120px;
+}
+
+.workflow-column {
+    min-width: 60px;
+    max-width: 100px;
+}
+
+.malware-column {
+    min-width: 70px;
+    max-width: 120px;
+}
+</style>
+
 </table>
 </div>
