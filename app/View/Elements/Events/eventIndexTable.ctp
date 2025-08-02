@@ -40,17 +40,6 @@
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
-    <?php if (isset($summaryTagsVisible)): ?>
-    <tr class="summary-tags-header">
-        <td colspan="<?= count($columns) + 6 ?>" style="padding: 0; border: none;">
-            <div class="summary-tags-toggle">
-                <button onclick="toggleSummaryTags()" class="btn btn-xs btn-default">
-                    <i class="fa fa-<?= $summaryTagsVisible ? 'eye' : 'eye-slash' ?>"></i> Summary Tags
-                </button>
-            </div>
-        </td>
-    </tr>
-    <?php endif; ?>
     <?php 
     // Helper function to find and extract tag by prefix
     if (!function_exists('findTagByPrefix')) {
@@ -216,23 +205,17 @@
                 <?php endif; ?>
             <?php endif; ?>
 
-            <?php if ($summaryTagsVisible): ?>
+            <?php if (in_array('summary_tags', $columns, true)): ?>
             <div class="predictable-tag-bar">
-                <div class="tag-headers">
-                    <div class="tag-column-header tlp-header">TLP</div>
-                    <div class="tag-column-header threat-actor-header">Actor</div>
-                    <div class="tag-column-header sector-header">Sector</div>
-                    <div class="tag-column-header workflow-header">Workflow</div>
-                    <div class="tag-column-header malware-header">Malware</div>
-                    <div class="tag-column-header country-header">Country</div>
-                </div>
                 <div class="tag-values">
                     <div class="tag-column tlp-column">
                         <?php if ($tlpTag): ?>
                             <div class="tag-value">
-                                <span class="tag tlp-tag" style="background-color: <?= getTlpColor($tlpTag) ?>; color: <?= getTlpTextColor($tlpTag) ?>;">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tlpTag) ?>" 
+                                   style="background-color: <?= getTlpColor($tlpTag) ?>; color: <?= getTlpTextColor($tlpTag) ?>;" 
+                                   class="tag tlp-tag">
                                     <?= h(strtoupper(str_replace('tlp:', '', $tlpTag))) ?>
-                                </span>
+                                </a>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -240,9 +223,11 @@
                     <div class="tag-column threat-actor-column">
                         <?php foreach ($threatActorTags as $tag): ?>
                             <div class="tag-value">
-                                <span class="tag" style="background-color: #337ab7; color: white;" title="<?= h($tag) ?>">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                   style="background-color: #337ab7; color: white;" 
+                                   class="tag" title="<?= h($tag) ?>">
                                     <?= h($tag) ?>
-                                </span>
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -250,9 +235,11 @@
                     <div class="tag-column sector-column">
                         <?php foreach ($sectorTags as $tag): ?>
                             <div class="tag-value">
-                                <span class="tag" style="background-color: #5cb85c; color: white;" title="<?= h($tag) ?>">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                   style="background-color: #5cb85c; color: white;" 
+                                   class="tag" title="<?= h($tag) ?>">
                                     <?= h($tag) ?>
-                                </span>
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -260,9 +247,11 @@
                     <div class="tag-column workflow-column">
                         <?php foreach ($workflowTags as $tag): ?>
                             <div class="tag-value">
-                                <span class="tag" style="background-color: #f0ad4e; color: white;" title="<?= h($tag) ?>">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:workflow:<?= urlencode($tag) ?>" 
+                                   style="background-color: #f0ad4e; color: white;" 
+                                   class="tag" title="<?= h($tag) ?>">
                                     <?= h($tag) ?>
-                                </span>
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -270,9 +259,11 @@
                     <div class="tag-column malware-column">
                         <?php foreach ($malwareTags as $tag): ?>
                             <div class="tag-value">
-                                <span class="tag" style="background-color: #d9534f; color: white;" title="<?= h($tag) ?>">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                   style="background-color: #d9534f; color: white;" 
+                                   class="tag" title="<?= h($tag) ?>">
                                     <?= h($tag) ?>
-                                </span>
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -280,9 +271,11 @@
                     <div class="tag-column country-column">
                         <?php foreach ($countryTags as $tag): ?>
                             <div class="tag-value">
-                                <span class="tag" style="background-color: #6f42c1; color: white;" title="<?= h($tag) ?>">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                   style="background-color: #6f42c1; color: white;" 
+                                   class="tag" title="<?= h($tag) ?>">
                                     <?= h($tag) ?>
-                                </span>
+                                </a>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -528,26 +521,9 @@
 </script>
 
 <style>
-.summary-tags-toggle {
-    text-align: right;
-    padding: 2px 5px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-
 .predictable-tag-bar {
     margin-top: 4px;
     font-size: 10px;
-}
-
-.tag-headers {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 2px;
-    font-weight: bold;
-    color: #666;
-    font-size: 9px;
-    text-transform: uppercase;
 }
 
 .tag-values {
@@ -559,14 +535,6 @@
     min-width: 70px;
     max-width: 120px;
     flex-shrink: 0;
-}
-
-.tag-column-header {
-    min-width: 70px;
-    max-width: 120px;
-    flex-shrink: 0;
-    text-align: center;
-    padding: 1px 2px;
 }
 
 .tag-value {
@@ -586,53 +554,44 @@
     font-size: 10px;
     padding: 1px 4px;
     border-radius: 2px;
+    text-decoration: none;
 }
 
-.tlp-column, .tlp-header {
+.tag:hover {
+    opacity: 0.8;
+}
+
+.tlp-column {
     min-width: 50px;
     max-width: 80px;
 }
 
-.threat-actor-column, .threat-actor-header {
+.threat-actor-column {
     min-width: 80px;
     max-width: 140px;
 }
 
-.sector-column, .sector-header {
+.sector-column {
     min-width: 70px;
     max-width: 120px;
 }
 
-.workflow-column, .workflow-header {
+.workflow-column {
     min-width: 60px;
     max-width: 100px;
 }
 
-.malware-column, .malware-header {
+.malware-column {
     min-width: 70px;
     max-width: 120px;
 }
 
-.country-column, .country-header {
+.country-column {
     min-width: 70px;
     max-width: 120px;
 }
 </style>
 
-<script>
-function toggleSummaryTags() {
-    $.ajax({
-        url: '<?= $baseurl ?>/user_settings/summaryTagsToggle',
-        type: 'POST',
-        success: function(response) {
-            location.reload();
-        },
-        error: function() {
-            alert('Failed to toggle Summary tags visibility');
-        }
-    });
-}
-</script>
 
 </table>
 </div>

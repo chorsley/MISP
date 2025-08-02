@@ -32,7 +32,6 @@ class UserSettingsController extends AppController
     {
         parent::beforeFilter();
         $this->Security->unlockedActions[] = 'eventIndexColumnToggle';
-        $this->Security->unlockedActions[] = 'summaryTagsToggle';
     }
 
     public function index()
@@ -402,25 +401,5 @@ class UserSettingsController extends AppController
         ];
         $this->UserSetting->setSetting($this->Auth->user(), $setting);
         return $this->RestResponse->saveSuccessResponse('UserSettings', 'eventIndexColumnToggle', false, 'json', 'Column visibility switched');
-    }
-
-    public function summaryTagsToggle()
-    {
-        if (!$this->request->is('post')) {
-            throw new MethodNotAllowedException(__('Expecting POST request.'));
-        }
-
-        $currentValue = $this->UserSetting->getValueForUser($this->Auth->user()['id'], 'summary_tags_visible');
-        $newValue = !$currentValue;
-
-        $setting = [
-            'UserSetting' => [
-                'user_id' => $this->Auth->user()['id'],
-                'setting' => 'summary_tags_visible',
-                'value' => $newValue,
-            ]
-        ];
-        $this->UserSetting->setSetting($this->Auth->user(), $setting);
-        return $this->RestResponse->saveSuccessResponse('UserSettings', 'summaryTagsToggle', false, 'json', 'Summary tags visibility toggled');
     }
 }
