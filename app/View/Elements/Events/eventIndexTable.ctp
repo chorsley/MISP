@@ -53,7 +53,7 @@
         }
     }
 
-    // Helper function to get most sensitive TLP tag
+    // Helper function to get most sensitive TLP tag with ID
     if (!function_exists('getMostSensitiveTlp')) {
         function getMostSensitiveTlp($tag_list) {
             $tlp_sensitivity = [
@@ -65,7 +65,7 @@
                 'tlp:red' => 6
             ];
             
-            $found_tlp = '';
+            $found_tlp = null;
             $max_sensitivity = 0;
             
             foreach ($tag_list as $tag) {
@@ -74,7 +74,10 @@
                     $sensitivity = $tlp_sensitivity[$tag_name] ?? 0;
                     if ($sensitivity > $max_sensitivity) {
                         $max_sensitivity = $sensitivity;
-                        $found_tlp = $tag['Tag']['name'];
+                        $found_tlp = [
+                            'name' => $tag['Tag']['name'],
+                            'id' => $tag['Tag']['id']
+                        ];
                     }
                 }
             }
@@ -83,7 +86,7 @@
         }
     }
 
-    // Helper function to extract multiple galaxy cluster values by type
+    // Helper function to extract multiple galaxy cluster values by type with tag IDs
     if (!function_exists('getGalaxyClustersByType')) {
         function getGalaxyClustersByType($galaxy_clusters, $types) {
             if (!is_array($types)) {
@@ -93,10 +96,15 @@
             $values = [];
             foreach ($galaxy_clusters as $cluster) {
                 if (isset($cluster['Galaxy']['type']) && in_array($cluster['Galaxy']['type'], $types)) {
-                    $values[] = $cluster['value'] ?? '';
+                    $values[] = [
+                        'name' => $cluster['value'] ?? '',
+                        'id' => $cluster['tag_id'] ?? null
+                    ];
                 }
             }
-            return array_filter($values);
+            return array_filter($values, function($item) {
+                return !empty($item['name']);
+            });
         }
     }
 
@@ -107,13 +115,16 @@
         }
     }
 
-    // Helper function to extract multiple workflow tags
+    // Helper function to extract multiple workflow tags with IDs
     if (!function_exists('getWorkflowTags')) {
         function getWorkflowTags($tag_list) {
             $workflows = [];
             foreach ($tag_list as $tag) {
                 if (substr($tag['Tag']['name'], 0, 9) == 'workflow:') {
-                    $workflows[] = str_replace(['workflow:', 'State='], '', $tag['Tag']['name']);
+                    $workflows[] = [
+                        'name' => str_replace(['workflow:', 'State='], '', $tag['Tag']['name']),
+                        'id' => $tag['Tag']['id']
+                    ];
                 }
             }
             return $workflows;
@@ -160,7 +171,7 @@
             $threatActorTags = getGalaxyClustersByType($event['GalaxyCluster'], 'threat-actor');
             $sectorTags = getGalaxyClustersByType($event['GalaxyCluster'], 'sector');
             $malwareTags = getGalaxyClustersByType($event['GalaxyCluster'], ['malpedia', 'ransomware', 'banker', 'botnet', 'tool']);
-            $countryTags = getCountryTags($event['GalaxyCluster']);
+            $countryTags = getGalaxyClustersByType($event['GalaxyCluster'], 'country');
         }
     ?>
     <tr id="event_<?= $eventId ?>">
@@ -211,10 +222,10 @@
                     <div class="tag-column tlp-column">
                         <?php if ($tlpTag): ?>
                             <div class="tag-value">
-                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tlpTag) ?>" 
-                                   style="background-color: <?= getTlpColor($tlpTag) ?>; color: <?= getTlpTextColor($tlpTag) ?>;" 
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tlpTag['id'] ?>" 
+                                   style="background-color: <?= getTlpColor($tlpTag['name']) ?>; color: <?= getTlpTextColor($tlpTag['name']) ?>;" 
                                    class="tag tlp-tag">
-                                    <?= h(strtoupper(str_replace('tlp:', '', $tlpTag))) ?>
+                                    <?= h(strtoupper(str_replace('tlp:', '', $tlpTag['name']))) ?>
                                 </a>
                             </div>
                         <?php endif; ?>
@@ -223,10 +234,10 @@
                     <div class="tag-column threat-actor-column">
                         <?php foreach ($threatActorTags as $tag): ?>
                             <div class="tag-value">
-                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
                                    style="background-color: #337ab7; color: white;" 
-                                   class="tag" title="<?= h($tag) ?>">
-                                    <?= h($tag) ?>
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
                                 </a>
                             </div>
                         <?php endforeach; ?>
@@ -235,10 +246,10 @@
                     <div class="tag-column sector-column">
                         <?php foreach ($sectorTags as $tag): ?>
                             <div class="tag-value">
-                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
                                    style="background-color: #5cb85c; color: white;" 
-                                   class="tag" title="<?= h($tag) ?>">
-                                    <?= h($tag) ?>
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
                                 </a>
                             </div>
                         <?php endforeach; ?>
@@ -247,10 +258,10 @@
                     <div class="tag-column workflow-column">
                         <?php foreach ($workflowTags as $tag): ?>
                             <div class="tag-value">
-                                <a href="<?= $baseurl ?>/events/index/searchtag:workflow:<?= urlencode($tag) ?>" 
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
                                    style="background-color: #f0ad4e; color: white;" 
-                                   class="tag" title="<?= h($tag) ?>">
-                                    <?= h($tag) ?>
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
                                 </a>
                             </div>
                         <?php endforeach; ?>
@@ -259,10 +270,10 @@
                     <div class="tag-column malware-column">
                         <?php foreach ($malwareTags as $tag): ?>
                             <div class="tag-value">
-                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
                                    style="background-color: #d9534f; color: white;" 
-                                   class="tag" title="<?= h($tag) ?>">
-                                    <?= h($tag) ?>
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
                                 </a>
                             </div>
                         <?php endforeach; ?>
@@ -271,10 +282,10 @@
                     <div class="tag-column country-column">
                         <?php foreach ($countryTags as $tag): ?>
                             <div class="tag-value">
-                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= urlencode($tag) ?>" 
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
                                    style="background-color: #6f42c1; color: white;" 
-                                   class="tag" title="<?= h($tag) ?>">
-                                    <?= h($tag) ?>
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
                                 </a>
                             </div>
                         <?php endforeach; ?>
