@@ -26,6 +26,7 @@
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php endif; ?>
+        <?php if (in_array('owner_org', $columns, true)): ?><th class="filter"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?> <?= $this->Paginator->sortKey() == 'Org.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th><?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?><th><?= __('Tags') ?></th><?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?><th><?= __('Galaxies') ?></th><?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?><th title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
@@ -34,6 +35,7 @@
         <?php if (in_array('sightings', $columns, true)): ?><th title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></th><?php endif; ?>
         <?php if (in_array('proposals', $columns, true)): ?><th title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
         <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
+        <?php if (in_array('creator_user', $columns, true)): ?><th><?= $this->Paginator->sort('user_id', __('Creator user')) ?> <?= $this->Paginator->sortKey() == 'Event.user_id' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th><?php endif; ?>
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
@@ -161,6 +163,11 @@
             <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?>
         </td>
         <?php endif; ?>
+        <?php if (in_array('owner_org', $columns, true)): ?>
+        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
+            <?= $this->OrgImg->getOrgLogo($event['Org'], 24) ?>
+        </td>
+        <?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?>
         <td class="shortish">
             <?php if (!empty($event['Event']['highlightedTags'])): ?>
@@ -250,6 +257,11 @@
             <span style=" white-space: nowrap;"><?php echo $post_count?></span>
         </td>
         <?php endif;?>
+        <?php if (in_array('creator_user', $columns, true)): ?>
+        <td class="short dblclickElement">
+            <?= h($event['User']['email']); ?>
+        </td>
+        <?php endif; ?>
         <td class="short dblclickElement<?php if ($event['Event']['distribution'] == 0) echo ' privateRedText';?>" title="<?= $event['Event']['distribution'] != 3 ? $distributionLevels[$event['Event']['distribution']] : __('All');?>">
             <?php if ($event['Event']['distribution'] == 4):?>
                 <a href="<?php echo $baseurl;?>/sharingGroups/view/<?= intval($event['SharingGroup']['id']); ?>"><?= h($event['SharingGroup']['name']) ?></a>
