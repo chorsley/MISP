@@ -40,6 +40,7 @@
             'creator_user' => __('Creator user'),
             'tags' => __('Tags'),
             'clusters' => __('Clusters'),
+            'summary_tags' => __('Summary Tags'),
             'correlations' => __('Correlations'),
             'sightings' => __('Sightings'),
             'proposals' => __('Proposals'),

@@ -22,7 +22,7 @@
         <th class="filter"><?= $this->Paginator->sort('date', null, array('direction' => 'desc')) ?> <?= $this->Paginator->sortKey() == 'Event.date' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?> <?= $this->Paginator->sortKey() == 'Event.timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?> <?= $this->Paginator->sortKey() == 'Event.publish_timestamp' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
-        <th class="filter" title="<?= __('Published') ?>"><?= $this->Paginator->sort('published', __('Published'), ['escape' => false]) ?> <?= $this->Paginator->sortKey() == 'Event.published' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
+        <th class="filter" title="<?= __('Published') ?>"><?= $this->Paginator->sort('published', __('Pub?'), ['escape' => false]) ?> <?= $this->Paginator->sortKey() == 'Event.published' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
             <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Orgc')); ?> <?= $this->Paginator->sortKey() == 'Orgc.name' ? ($this->Paginator->sortDir() == 'asc' ? '<i class="fa fa-sort-up"></i>' : '<i class="fa fa-sort-down"></i>') : '<i class="fa fa-sort"></i>' ?></th>
         <?php endif; ?>
@@ -36,11 +36,143 @@
         <?php if (in_array('proposals', $columns, true)): ?><th title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
         <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
         <?php if (in_array('creator_user', $columns, true)): ?><th><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
-        <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
-    <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
+    <?php 
+    // Helper function to find and extract tag by prefix
+    if (!function_exists('findTagByPrefix')) {
+        function findTagByPrefix($tag_list, $tag_prefix) {
+            foreach ($tag_list as $tag) {
+                if (substr($tag['Tag']['name'], 0, strlen($tag_prefix)) == $tag_prefix) {
+                    return $tag['Tag']['name'];
+                }
+            }
+            return '';
+        }
+    }
+
+    // Helper function to get most sensitive TLP tag with ID
+    if (!function_exists('getMostSensitiveTlp')) {
+        function getMostSensitiveTlp($tag_list) {
+            $tlp_sensitivity = [
+                'tlp:white' => 1,
+                'tlp:clear' => 2,
+                'tlp:green' => 3,
+                'tlp:amber' => 4,
+                'tlp:amber+strict' => 5,
+                'tlp:red' => 6
+            ];
+            
+            $found_tlp = null;
+            $max_sensitivity = 0;
+            
+            foreach ($tag_list as $tag) {
+                $tag_name = strtolower($tag['Tag']['name']);
+                if (strpos($tag_name, 'tlp:') === 0) {
+                    $sensitivity = $tlp_sensitivity[$tag_name] ?? 0;
+                    if ($sensitivity > $max_sensitivity) {
+                        $max_sensitivity = $sensitivity;
+                        $found_tlp = [
+                            'name' => $tag['Tag']['name'],
+                            'id' => $tag['Tag']['id']
+                        ];
+                    }
+                }
+            }
+            
+            return $found_tlp;
+        }
+    }
+
+    // Helper function to extract multiple galaxy cluster values by type with tag IDs
+    if (!function_exists('getGalaxyClustersByType')) {
+        function getGalaxyClustersByType($galaxy_clusters, $types) {
+            if (!is_array($types)) {
+                $types = [$types];
+            }
+            
+            $values = [];
+            foreach ($galaxy_clusters as $cluster) {
+                if (isset($cluster['Galaxy']['type']) && in_array($cluster['Galaxy']['type'], $types)) {
+                    $values[] = [
+                        'name' => $cluster['value'] ?? '',
+                        'id' => $cluster['tag_id'] ?? null
+                    ];
+                }
+            }
+            return array_filter($values, function($item) {
+                return !empty($item['name']);
+            });
+        }
+    }
+
+    // Helper function to extract country from galaxy clusters
+    if (!function_exists('getCountryTags')) {
+        function getCountryTags($galaxy_clusters) {
+            return getGalaxyClustersByType($galaxy_clusters, 'country');
+        }
+    }
+
+    // Helper function to extract multiple workflow tags with IDs
+    if (!function_exists('getWorkflowTags')) {
+        function getWorkflowTags($tag_list) {
+            $workflows = [];
+            foreach ($tag_list as $tag) {
+                if (substr($tag['Tag']['name'], 0, 9) == 'workflow:') {
+                    $workflows[] = [
+                        'name' => str_replace(['workflow:', 'State='], '', $tag['Tag']['name']),
+                        'id' => $tag['Tag']['id']
+                    ];
+                }
+            }
+            return $workflows;
+        }
+    }
+
+    // Helper function to get TLP background color
+    if (!function_exists('getTlpColor')) {
+        function getTlpColor($tlpTag) {
+            $tag = strtolower($tlpTag);
+            switch ($tag) {
+                case 'tlp:red': return '#d9534f';
+                case 'tlp:amber':
+                case 'tlp:amber+strict': return '#f0ad4e';
+                case 'tlp:green': return '#5cb85c';
+                case 'tlp:clear': return '#ffffff';
+                case 'tlp:white': return '#f8f9fa';
+                default: return '#5bc0de';
+            }
+        }
+    }
+
+    // Helper function to get TLP text color
+    if (!function_exists('getTlpTextColor')) {
+        function getTlpTextColor($tlpTag) {
+            $tag = strtolower($tlpTag);
+            return ($tag === 'tlp:clear' || $tag === 'tlp:white') ? '#000000' : '#ffffff';
+        }
+    }
+
+    foreach ($events as $event): 
+        $eventId = (int)$event['Event']['id']; 
+        
+        // Extract tags for the predictable tag bar
+        $tlpTag = getMostSensitiveTlp($event['EventTag']);
+        $workflowTags = getWorkflowTags($event['EventTag']);
+        
+        $threatActorTags = [];
+        $sectorTags = [];
+        $malwareTags = [];
+        $countryTags = [];
+        
+        if (!empty($event['GalaxyCluster'])) {
+            $threatActorTags = getGalaxyClustersByType($event['GalaxyCluster'], 'threat-actor');
+            $sectorTags = getGalaxyClustersByType($event['GalaxyCluster'], 'sector');
+            $malwareTags = getGalaxyClustersByType($event['GalaxyCluster'], ['malpedia', 'ransomware', 'banker', 'botnet', 'tool']);
+            $countryTags = getGalaxyClustersByType($event['GalaxyCluster'], 'country');
+        }
+    ?>
     <tr id="event_<?= $eventId ?>">
         <td class="checkbox-cell">
             <input class="select" type="checkbox" data-id="<?= $eventId ?>" data-can-modify="<?= $this->Acl->canModifyEvent($event) ? 1 : 0 ?>">
@@ -81,6 +213,84 @@
                         <i class="fas fa-external-link-square-alt"></i>
                     </a>
                 <?php endif; ?>
+            <?php endif; ?>
+
+            <?php if (in_array('summary_tags', $columns, true)): ?>
+            <div class="predictable-tag-bar">
+                <div class="tag-values">
+                    <div class="tag-column tlp-column">
+                        <?php if ($tlpTag): ?>
+                            <div class="tag-value">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tlpTag['id'] ?>" 
+                                   style="background-color: <?= getTlpColor($tlpTag['name']) ?>; color: <?= getTlpTextColor($tlpTag['name']) ?>;" 
+                                   class="tag tlp-tag">
+                                    <?= h(strtoupper(str_replace('tlp:', '', $tlpTag['name']))) ?>
+                                </a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <div class="tag-column threat-actor-column">
+                        <?php foreach ($threatActorTags as $tag): ?>
+                            <div class="tag-value">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
+                                   style="background-color: #337ab7; color: white;" 
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <div class="tag-column sector-column">
+                        <?php foreach ($sectorTags as $tag): ?>
+                            <div class="tag-value">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
+                                   style="background-color: #5cb85c; color: white;" 
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <div class="tag-column workflow-column">
+                        <?php foreach ($workflowTags as $tag): ?>
+                            <div class="tag-value">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
+                                   style="background-color: #f0ad4e; color: white;" 
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <div class="tag-column malware-column">
+                        <?php foreach ($malwareTags as $tag): ?>
+                            <div class="tag-value">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
+                                   style="background-color: #d9534f; color: white;" 
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <div class="tag-column country-column">
+                        <?php foreach ($countryTags as $tag): ?>
+                            <div class="tag-value">
+                                <a href="<?= $baseurl ?>/events/index/searchtag:<?= $tag['id'] ?>" 
+                                   style="background-color: #6f42c1; color: white;" 
+                                   class="tag" title="<?= h($tag['name']) ?>">
+                                    <?= h($tag['name']) ?>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
             <?php endif; ?>
         </td>
         <td class="date-cell dblclickElement">
@@ -319,5 +529,79 @@
         });
     });
 </script>
+
+<style>
+.predictable-tag-bar {
+    margin-top: 4px;
+    font-size: 10px;
+}
+
+.tag-values {
+    display: flex;
+    gap: 4px;
+}
+
+.tag-column {
+    min-width: 70px;
+    max-width: 120px;
+    flex-shrink: 0;
+}
+
+.tag-value {
+    margin-bottom: 1px;
+}
+
+.tag-value:last-child {
+    margin-bottom: 0;
+}
+
+.tag {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    text-decoration: none;
+}
+
+.tag:hover {
+    opacity: 0.8;
+}
+
+.tlp-column {
+    min-width: 50px;
+    max-width: 80px;
+}
+
+.threat-actor-column {
+    min-width: 80px;
+    max-width: 140px;
+}
+
+.sector-column {
+    min-width: 70px;
+    max-width: 120px;
+}
+
+.workflow-column {
+    min-width: 60px;
+    max-width: 100px;
+}
+
+.malware-column {
+    min-width: 70px;
+    max-width: 120px;
+}
+
+.country-column {
+    min-width: 70px;
+    max-width: 120px;
+}
+</style>
+
+
 </table>
 </div>
