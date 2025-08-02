@@ -774,6 +774,8 @@ class EventsController extends AppController
         $this->set('events', $events);
         $this->set('possibleColumns', $possibleColumns);
         $this->set('columns', $enabledColumns);
+        $summaryTagsVisible = $this->User->UserSetting->getValueForUser($this->Auth->user()['id'], 'summary_tags_visible');
+        $this->set('summaryTagsVisible', $summaryTagsVisible !== false);
         $this->set('eventDescriptions', $this->Event->fieldDescriptions);
         $this->set('analysisLevels', $this->Event->analysisLevels);
         $this->set('distributionLevels', $this->Event->distributionLevels);

@@ -40,6 +40,17 @@
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
+    <?php if (isset($summaryTagsVisible)): ?>
+    <tr class="summary-tags-header">
+        <td colspan="<?= count($columns) + 6 ?>" style="padding: 0; border: none;">
+            <div class="summary-tags-toggle">
+                <button onclick="toggleSummaryTags()" class="btn btn-xs btn-default">
+                    <i class="fa fa-<?= $summaryTagsVisible ? 'eye' : 'eye-slash' ?>"></i> Summary Tags
+                </button>
+            </div>
+        </td>
+    </tr>
+    <?php endif; ?>
     <?php 
     // Helper function to find and extract tag by prefix
     if (!function_exists('findTagByPrefix')) {
@@ -83,19 +94,64 @@
         }
     }
 
-    // Helper function to extract galaxy cluster values by type
-    if (!function_exists('getGalaxyClusterByType')) {
-        function getGalaxyClusterByType($galaxy_clusters, $types) {
+    // Helper function to extract multiple galaxy cluster values by type
+    if (!function_exists('getGalaxyClustersByType')) {
+        function getGalaxyClustersByType($galaxy_clusters, $types) {
             if (!is_array($types)) {
                 $types = [$types];
             }
             
+            $values = [];
             foreach ($galaxy_clusters as $cluster) {
                 if (isset($cluster['Galaxy']['type']) && in_array($cluster['Galaxy']['type'], $types)) {
-                    return $cluster['value'] ?? '';
+                    $values[] = $cluster['value'] ?? '';
                 }
             }
-            return '';
+            return array_filter($values);
+        }
+    }
+
+    // Helper function to extract country from galaxy clusters
+    if (!function_exists('getCountryTags')) {
+        function getCountryTags($galaxy_clusters) {
+            return getGalaxyClustersByType($galaxy_clusters, 'country');
+        }
+    }
+
+    // Helper function to extract multiple workflow tags
+    if (!function_exists('getWorkflowTags')) {
+        function getWorkflowTags($tag_list) {
+            $workflows = [];
+            foreach ($tag_list as $tag) {
+                if (substr($tag['Tag']['name'], 0, 9) == 'workflow:') {
+                    $workflows[] = str_replace(['workflow:', 'State='], '', $tag['Tag']['name']);
+                }
+            }
+            return $workflows;
+        }
+    }
+
+    // Helper function to get TLP background color
+    if (!function_exists('getTlpColor')) {
+        function getTlpColor($tlpTag) {
+            $tag = strtolower($tlpTag);
+            switch ($tag) {
+                case 'tlp:red': return '#d9534f';
+                case 'tlp:amber':
+                case 'tlp:amber+strict': return '#f0ad4e';
+                case 'tlp:green': return '#5cb85c';
+                case 'tlp:clear': return '#ffffff';
+                case 'tlp:white': return '#f8f9fa';
+                default: return '#5bc0de';
+            }
+        }
+    }
+
+    // Helper function to get TLP text color
+    if (!function_exists('getTlpTextColor')) {
+        function getTlpTextColor($tlpTag) {
+            $tag = strtolower($tlpTag);
+            return ($tag === 'tlp:clear' || $tag === 'tlp:white') ? '#000000' : '#ffffff';
         }
     }
 
@@ -104,16 +160,18 @@
         
         // Extract tags for the predictable tag bar
         $tlpTag = getMostSensitiveTlp($event['EventTag']);
-        $workflowTag = findTagByPrefix($event['EventTag'], 'workflow:');
+        $workflowTags = getWorkflowTags($event['EventTag']);
         
-        $threatActorTag = '';
-        $sectorTag = '';
-        $malwareTag = '';
+        $threatActorTags = [];
+        $sectorTags = [];
+        $malwareTags = [];
+        $countryTags = [];
         
         if (!empty($event['GalaxyCluster'])) {
-            $threatActorTag = getGalaxyClusterByType($event['GalaxyCluster'], 'threat-actor');
-            $sectorTag = getGalaxyClusterByType($event['GalaxyCluster'], 'sector');
-            $malwareTag = getGalaxyClusterByType($event['GalaxyCluster'], ['malpedia', 'ransomware', 'banker']);
+            $threatActorTags = getGalaxyClustersByType($event['GalaxyCluster'], 'threat-actor');
+            $sectorTags = getGalaxyClustersByType($event['GalaxyCluster'], 'sector');
+            $malwareTags = getGalaxyClustersByType($event['GalaxyCluster'], ['malpedia', 'ransomware', 'banker', 'botnet', 'tool']);
+            $countryTags = getCountryTags($event['GalaxyCluster']);
         }
     ?>
     <tr id="event_<?= $eventId ?>">
@@ -158,57 +216,79 @@
                 <?php endif; ?>
             <?php endif; ?>
 
+            <?php if ($summaryTagsVisible): ?>
             <div class="predictable-tag-bar">
-                <?php if ($tlpTag): ?>
+                <div class="tag-headers">
+                    <div class="tag-column-header tlp-header">TLP</div>
+                    <div class="tag-column-header threat-actor-header">Actor</div>
+                    <div class="tag-column-header sector-header">Sector</div>
+                    <div class="tag-column-header workflow-header">Workflow</div>
+                    <div class="tag-column-header malware-header">Malware</div>
+                    <div class="tag-column-header country-header">Country</div>
+                </div>
+                <div class="tag-values">
                     <div class="tag-column tlp-column">
-                        <span class="tag" style="background-color: <?= $tlpTag === 'tlp:red' ? '#d9534f' : ($tlpTag === 'tlp:amber' || $tlpTag === 'tlp:amber+strict' ? '#f0ad4e' : ($tlpTag === 'tlp:green' ? '#5cb85c' : '#5bc0de')) ?>; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;">
-                            <?= h(strtoupper(str_replace('tlp:', '', $tlpTag))) ?>
-                        </span>
+                        <?php if ($tlpTag): ?>
+                            <div class="tag-value">
+                                <span class="tag tlp-tag" style="background-color: <?= getTlpColor($tlpTag) ?>; color: <?= getTlpTextColor($tlpTag) ?>;">
+                                    <?= h(strtoupper(str_replace('tlp:', '', $tlpTag))) ?>
+                                </span>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                <?php else: ?>
-                    <div class="tag-column tlp-column"></div>
-                <?php endif; ?>
-
-                <?php if ($threatActorTag): ?>
+                    
                     <div class="tag-column threat-actor-column">
-                        <span class="tag" style="background-color: #337ab7; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($threatActorTag) ?>">
-                            <?= h($threatActorTag) ?>
-                        </span>
+                        <?php foreach ($threatActorTags as $tag): ?>
+                            <div class="tag-value">
+                                <span class="tag" style="background-color: #337ab7; color: white;" title="<?= h($tag) ?>">
+                                    <?= h($tag) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php else: ?>
-                    <div class="tag-column threat-actor-column"></div>
-                <?php endif; ?>
-
-                <?php if ($sectorTag): ?>
+                    
                     <div class="tag-column sector-column">
-                        <span class="tag" style="background-color: #5cb85c; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($sectorTag) ?>">
-                            <?= h($sectorTag) ?>
-                        </span>
+                        <?php foreach ($sectorTags as $tag): ?>
+                            <div class="tag-value">
+                                <span class="tag" style="background-color: #5cb85c; color: white;" title="<?= h($tag) ?>">
+                                    <?= h($tag) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php else: ?>
-                    <div class="tag-column sector-column"></div>
-                <?php endif; ?>
-
-                <?php if ($workflowTag): ?>
+                    
                     <div class="tag-column workflow-column">
-                        <span class="tag" style="background-color: #f0ad4e; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($workflowTag) ?>">
-                            <?= h(str_replace('workflow:', '', $workflowTag)) ?>
-                        </span>
+                        <?php foreach ($workflowTags as $tag): ?>
+                            <div class="tag-value">
+                                <span class="tag" style="background-color: #f0ad4e; color: white;" title="<?= h($tag) ?>">
+                                    <?= h($tag) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php else: ?>
-                    <div class="tag-column workflow-column"></div>
-                <?php endif; ?>
-
-                <?php if ($malwareTag): ?>
+                    
                     <div class="tag-column malware-column">
-                        <span class="tag" style="background-color: #d9534f; color: white; font-size: 10px; padding: 1px 4px; border-radius: 2px;" title="<?= h($malwareTag) ?>">
-                            <?= h($malwareTag) ?>
-                        </span>
+                        <?php foreach ($malwareTags as $tag): ?>
+                            <div class="tag-value">
+                                <span class="tag" style="background-color: #d9534f; color: white;" title="<?= h($tag) ?>">
+                                    <?= h($tag) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php else: ?>
-                    <div class="tag-column malware-column"></div>
-                <?php endif; ?>
+                    
+                    <div class="tag-column country-column">
+                        <?php foreach ($countryTags as $tag): ?>
+                            <div class="tag-value">
+                                <span class="tag" style="background-color: #6f42c1; color: white;" title="<?= h($tag) ?>">
+                                    <?= h($tag) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
+            <?php endif; ?>
         </td>
         <td class="date-cell dblclickElement">
             <time><?= $event['Event']['date'] ?></time>
@@ -448,56 +528,111 @@
 </script>
 
 <style>
+.summary-tags-toggle {
+    text-align: right;
+    padding: 2px 5px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
 .predictable-tag-bar {
-    display: flex;
-    gap: 4px;
     margin-top: 4px;
     font-size: 10px;
-    flex-wrap: nowrap;
+}
+
+.tag-headers {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 2px;
+    font-weight: bold;
+    color: #666;
+    font-size: 9px;
+    text-transform: uppercase;
+}
+
+.tag-values {
+    display: flex;
+    gap: 4px;
 }
 
 .tag-column {
     min-width: 70px;
     max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     flex-shrink: 0;
 }
 
-.tag-column .tag {
+.tag-column-header {
+    min-width: 70px;
+    max-width: 120px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 1px 2px;
+}
+
+.tag-value {
+    margin-bottom: 1px;
+}
+
+.tag-value:last-child {
+    margin-bottom: 0;
+}
+
+.tag {
     display: inline-block;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 2px;
 }
 
-.tlp-column {
+.tlp-column, .tlp-header {
     min-width: 50px;
     max-width: 80px;
 }
 
-.threat-actor-column {
+.threat-actor-column, .threat-actor-header {
     min-width: 80px;
     max-width: 140px;
 }
 
-.sector-column {
+.sector-column, .sector-header {
     min-width: 70px;
     max-width: 120px;
 }
 
-.workflow-column {
+.workflow-column, .workflow-header {
     min-width: 60px;
     max-width: 100px;
 }
 
-.malware-column {
+.malware-column, .malware-header {
+    min-width: 70px;
+    max-width: 120px;
+}
+
+.country-column, .country-header {
     min-width: 70px;
     max-width: 120px;
 }
 </style>
+
+<script>
+function toggleSummaryTags() {
+    $.ajax({
+        url: '<?= $baseurl ?>/user_settings/summaryTagsToggle',
+        type: 'POST',
+        success: function(response) {
+            location.reload();
+        },
+        error: function() {
+            alert('Failed to toggle Summary tags visibility');
+        }
+    });
+}
+</script>
 
 </table>
 </div>

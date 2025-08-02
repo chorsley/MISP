@@ -97,6 +97,9 @@ class UserSetting extends AppModel
         'event_index_hide_columns' => [
             'placeholder' => ['clusters'],
         ],
+        'summary_tags_visible' => [
+            'placeholder' => true,
+        ],
         'oidc' => [ // Data saved by OIDC plugin
             'internal' => true,
         ],
