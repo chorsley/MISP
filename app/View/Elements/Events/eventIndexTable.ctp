@@ -34,8 +34,6 @@
         <?php if (in_array('sightings', $columns, true)): ?><th title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></th><?php endif; ?>
         <?php if (in_array('proposals', $columns, true)): ?><th title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
         <?php if (in_array('discussion', $columns, true)): ?><th title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
-        <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
-        <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', __('Dist'));?></th>
         <th class="actions"><?php echo __('Actions');?></th>
     </tr>
@@ -248,16 +246,6 @@
             <span style=" white-space: nowrap;"><?php echo $post_count?></span>
         </td>
         <?php endif;?>
-        <?php if (in_array('timestamp', $columns, true)): ?>
-        <td class="short dblclickElement">
-            <?= $this->Time->time($event['Event']['timestamp']) ?>
-        </td>
-        <?php endif; ?>
-        <?php if (in_array('publish_timestamp', $columns, true)): ?>
-        <td class="short dblclickElement">
-            <?= $this->Time->time($event['Event']['publish_timestamp']) ?>
-        </td>
-        <?php endif; ?>
         <td class="short dblclickElement<?php if ($event['Event']['distribution'] == 0) echo ' privateRedText';?>" title="<?= $event['Event']['distribution'] != 3 ? $distributionLevels[$event['Event']['distribution']] : __('All');?>">
             <?php if ($event['Event']['distribution'] == 4):?>
                 <a href="<?php echo $baseurl;?>/sharingGroups/view/<?= intval($event['SharingGroup']['id']); ?>"><?= h($event['SharingGroup']['name']) ?></a>
