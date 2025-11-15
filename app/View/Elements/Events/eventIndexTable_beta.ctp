@@ -283,5 +283,14 @@
                 distributionData: <?= json_encode($distributionData, JSON_UNESCAPED_UNICODE); ?>,
             });
         });
+
+        // Fix z-index stacking: add class to row when dropdown opens
+        // Support both Bootstrap 2 and 3 event names
+        $(document).on('shown.bs.dropdown shown', '.beta-actions-dropdown', function() {
+            $(this).closest('tr').addClass('beta-dropdown-open');
+        });
+        $(document).on('hidden.bs.dropdown hidden', '.beta-actions-dropdown', function() {
+            $(this).closest('tr').removeClass('beta-dropdown-open');
+        });
     });
 </script>
