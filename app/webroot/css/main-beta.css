@@ -432,12 +432,11 @@
 
 .beta-checkbox-actions-wrapper {
     display: inline-flex;
-    align-items: stretch;
+    align-items: center;
     height: 28px;
     border: 1px solid #dee2e6;
     border-radius: 4px;
     background-color: #ffffff;
-    overflow: hidden;
     transition: all 0.15s ease-in-out;
 }
 
@@ -447,20 +446,20 @@
 }
 
 .beta-checkbox-actions-wrapper input[type="checkbox"] {
-    margin: 0;
-    padding: 0 8px;
+    width: 16px;
+    height: 16px;
+    margin: 0 8px;
     cursor: pointer;
     flex-shrink: 0;
     border: none;
     background: transparent;
-    display: flex;
-    align-items: center;
 }
 
 .beta-actions-dropdown {
     display: inline-flex;
     position: relative;
     z-index: 3;
+    height: 100%;
 }
 
 .beta-dropdown-toggle {
