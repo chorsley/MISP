@@ -156,7 +156,7 @@
         if (!$ajax) {
             echo $this->element('/genericElements/ListTopBar/scaffold', array('data' => $data));
         }
-        App::uses('BetaUiHelper', 'Tools');
+        App::uses('BetaUiHelper', 'Lib/Tools');
         $elementPath = BetaUiHelper::getElementPath(!empty($uiBetaEnabled) ? $uiBetaEnabled : false, 'Events/eventIndexTable');
         echo $this->element($elementPath);
     ?>
