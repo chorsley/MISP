@@ -51,7 +51,6 @@
         <?php if (in_array('timestamp', $columns, true)): ?><th title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last modified at')) ?></th><?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?><th title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
         <th title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution');?></th>
-        <th class="actions"><?php echo __('Actions');?></th>
     </tr>
     <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
     <tr id="event_<?= $eventId ?>">
@@ -257,15 +256,17 @@
             )
             ?>
         </td>
-        <td class="short action-links beta-actions-placeholder">
-            <!-- Actions moved to dropdown menu next to checkbox -->
-        </td>
     </tr>
     <?php endforeach; ?>
 </table>
 <script>
     var lastSelected = false;
     $(function() {
+        // Prevent checkbox clicks from toggling the dropdown menu
+        $('.beta-checkbox-actions-wrapper input.select').on('click', function(e) {
+            e.stopPropagation();
+        });
+
         $('.select').on('change', function() {
             listCheckboxesCheckedEventIndex();
         }).click(function(e) {

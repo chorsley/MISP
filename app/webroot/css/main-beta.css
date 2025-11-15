@@ -424,26 +424,43 @@
 
 
 
-/* Beta Checkbox + Actions Dropdown */
+/* Beta Checkbox + Actions Dropdown - Gmail-style unified control */
 .beta-checkbox-actions-cell {
     width: 60px !important;
     padding: 0.5rem !important;
 }
 
 .beta-checkbox-actions-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    display: inline-flex;
+    align-items: stretch;
+    height: 28px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #ffffff;
+    overflow: hidden;
+    transition: all 0.15s ease-in-out;
+}
+
+.beta-checkbox-actions-wrapper:hover {
+    border-color: #adb5bd;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .beta-checkbox-actions-wrapper input[type="checkbox"] {
     margin: 0;
+    padding: 0 8px;
+    cursor: pointer;
     flex-shrink: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
 }
 
 .beta-actions-dropdown {
-    display: inline-block;
+    display: inline-flex;
     position: relative;
+    z-index: 3;
 }
 
 .beta-dropdown-toggle {
@@ -451,11 +468,11 @@
     align-items: center;
     justify-content: center;
     width: 24px;
-    height: 24px;
+    height: 100%;
     padding: 0;
-    border-radius: 4px;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
+    border: none;
+    border-left: 1px solid #dee2e6;
+    background-color: transparent;
     color: #495057;
     text-decoration: none;
     transition: all 0.15s ease-in-out;
@@ -463,19 +480,18 @@
 }
 
 .beta-dropdown-toggle:hover {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
+    background-color: #f8f9fa;
     color: #212529;
     text-decoration: none;
 }
 
 .beta-dropdown-toggle:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    box-shadow: inset 0 0 0 2px rgba(102, 126, 234, 0.25);
 }
 
 .beta-dropdown-toggle i {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     margin: 0;
 }
 
@@ -488,7 +504,8 @@
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     background-color: #ffffff;
-    z-index: 1000;
+    position: absolute;
+    z-index: 10000 !important;
 }
 
 .beta-actions-menu li {
@@ -551,11 +568,6 @@
 .beta-actions-menu li a.beta-publish-action:hover {
     background-color: #f1f8f4;
     color: #1e7e34;
-}
-
-/* Hide the old actions column content */
-.beta-actions-placeholder {
-    display: none;
 }
 
 /* Responsive improvements */
