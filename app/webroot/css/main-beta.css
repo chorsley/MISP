@@ -462,6 +462,11 @@
     height: 100%;
 }
 
+/* Ensure open dropdown is above all other row elements */
+.beta-actions-dropdown.open {
+    z-index: 10001;
+}
+
 .beta-dropdown-toggle {
     display: inline-flex;
     align-items: center;
