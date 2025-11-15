@@ -297,16 +297,8 @@
 
 /* Beta Info Column Link Styling */
 .beta-info-link {
-    color: #495057;
-    text-decoration: none;
     font-weight: 500;
-    transition: color 0.15s ease-in-out;
     display: block;
-}
-
-.beta-info-link:hover {
-    color: #667eea;
-    text-decoration: none;
 }
 
 .beta-info-cell {
@@ -318,7 +310,6 @@
 .beta-events-table .short a {
     font-weight: 600;
     color: #667eea;
-    text-decoration: none;
     transition: all 0.15s ease-in-out;
 }
 
@@ -341,13 +332,7 @@
 /* Improved action links */
 .beta-events-table .action-links a {
     margin: 0 0.35rem;
-    transition: all 0.15s ease-in-out;
     opacity: 0.7;
-}
-
-.beta-events-table .action-links a:hover {
-    opacity: 1;
-    transform: scale(1.15);
 }
 
 /* Better spacing for org logos */
@@ -371,22 +356,11 @@
 }
 
 .beta-events-table .bold a {
-    color: #667eea;
-    text-decoration: none;
     transition: color 0.15s ease-in-out;
-}
-
-.beta-events-table .bold a:hover {
-    color: #5568d3;
     text-decoration: underline;
 }
 
-/* Better date/time display */
-.beta-events-table time {
-    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-    font-size: 0.875rem;
-    color: #6c757d;
-}
+
 
 /* Responsive improvements */
 @media (max-width: 1200px) {
