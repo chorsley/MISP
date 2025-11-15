@@ -19,6 +19,12 @@
         if (Configure::read('MISP.custom_css')) {
             $css[] = preg_replace('/\.css$/i', '', Configure::read('MISP.custom_css'));
         }
+        if (!empty($uiBetaEnabled)) {
+            App::uses('BetaUiHelper', 'Lib/Tools');
+            foreach (BetaUiHelper::getBetaCssFiles(true) as $betaCssFile) {
+                $css[] = [$betaCssFile, ['preload' => true]];
+            }
+        }
         $js = [
             ['jquery', ['preload' => true]],
             ['chosen.jquery.min', ['preload' => true]],
