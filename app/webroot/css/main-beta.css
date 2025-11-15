@@ -277,6 +277,7 @@
     padding: 1rem 0.75rem;
     border-bottom: 2px solid #dee2e6;
     color: #495057;
+    vertical-align: middle;
 }
 
 .beta-events-table tbody tr {
@@ -293,52 +294,72 @@
 .beta-events-table tbody td {
     padding: 1rem 0.75rem;
     vertical-align: middle;
+    font-size: 0.875rem;
+}
+
+/* Consistent link colors throughout the table */
+.beta-events-table a {
+    color: #0066cc;
+    text-decoration: none;
+    transition: all 0.15s ease-in-out;
+}
+
+.beta-events-table a:hover {
+    color: #0052a3;
+    text-decoration: underline;
 }
 
 /* Beta Info Column Link Styling */
 .beta-info-link {
     font-weight: 500;
     display: block;
+    font-size: 0.875rem;
 }
 
 .beta-info-cell {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     line-height: 1.5;
 }
 
-/* Enhanced ID column styling */
+/* Enhanced ID column styling - consistent with other links */
 .beta-events-table .short a {
     font-weight: 600;
-    color: #667eea;
-    transition: all 0.15s ease-in-out;
+    color: #0066cc;
+    font-size: 0.875rem;
 }
 
 .beta-events-table .short a:hover {
-    color: #5568d3;
+    color: #0052a3;
     text-decoration: underline;
 }
 
 /* Modern publish status icons */
 .beta-events-table .fa-check.green {
     color: #28a745;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .beta-events-table .fa-times.grey {
     color: #6c757d;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 /* Improved action links */
 .beta-events-table .action-links a {
     margin: 0 0.35rem;
     opacity: 0.7;
+    font-size: 0.875rem;
+}
+
+.beta-events-table .action-links a:hover {
+    opacity: 1;
 }
 
 /* Better spacing for org logos */
 .beta-events-table .short img {
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    vertical-align: middle;
 }
 
 /* Modern checkbox styling */
@@ -347,17 +368,58 @@
     height: 18px;
     cursor: pointer;
     border-radius: 4px;
+    vertical-align: middle;
 }
 
-/* Improved number badges */
+/* Inverted number badges with background colors */
 .beta-events-table .bold {
     font-weight: 600;
-    color: #495057;
+    font-size: 0.875rem;
 }
 
 .beta-events-table .bold a {
-    transition: color 0.15s ease-in-out;
-    text-decoration: underline;
+    display: inline-block;
+    background-color: #0066cc;
+    color: #ffffff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.beta-events-table .bold a:hover {
+    background-color: #0052a3;
+    text-decoration: none;
+}
+
+/* Non-linked numbers in bold cells */
+.beta-events-table td.bold {
+    color: #495057;
+}
+
+/* Ensure consistent font size for all text elements */
+.beta-events-table td,
+.beta-events-table td span,
+.beta-events-table td time,
+.beta-events-table td p {
+    font-size: 0.875rem;
+}
+
+/* Ensure vertical alignment for all inline elements */
+.beta-events-table td * {
+    vertical-align: middle;
+}
+
+/* Fix for threat level links in ID column */
+.beta-events-table .short a.dblclickActionElement {
+    color: #0066cc;
+}
+
+.beta-events-table .short a.dblclickActionElement:hover {
+    color: #0052a3;
 }
 
 
