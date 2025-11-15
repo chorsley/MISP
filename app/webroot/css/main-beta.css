@@ -257,3 +257,145 @@
 .transition-beta-slow {
     transition: all 0.3s ease-in-out;
 }
+
+/* Beta Events Table - Modern Styling */
+.beta-events-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+}
+
+.beta-events-table thead th {
+    background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 1rem 0.75rem;
+    border-bottom: 2px solid #dee2e6;
+    color: #495057;
+}
+
+.beta-events-table tbody tr {
+    transition: all 0.2s ease-in-out;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.beta-events-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.001);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.beta-events-table tbody td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+}
+
+/* Beta Info Column Link Styling */
+.beta-info-link {
+    color: #495057;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease-in-out;
+    display: block;
+}
+
+.beta-info-link:hover {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.beta-info-cell {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Enhanced ID column styling */
+.beta-events-table .short a {
+    font-weight: 600;
+    color: #667eea;
+    text-decoration: none;
+    transition: all 0.15s ease-in-out;
+}
+
+.beta-events-table .short a:hover {
+    color: #5568d3;
+    text-decoration: underline;
+}
+
+/* Modern publish status icons */
+.beta-events-table .fa-check.green {
+    color: #28a745;
+    font-size: 1.1rem;
+}
+
+.beta-events-table .fa-times.grey {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Improved action links */
+.beta-events-table .action-links a {
+    margin: 0 0.35rem;
+    transition: all 0.15s ease-in-out;
+    opacity: 0.7;
+}
+
+.beta-events-table .action-links a:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+/* Better spacing for org logos */
+.beta-events-table .short img {
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern checkbox styling */
+.beta-events-table input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* Improved number badges */
+.beta-events-table .bold {
+    font-weight: 600;
+    color: #495057;
+}
+
+.beta-events-table .bold a {
+    color: #667eea;
+    text-decoration: none;
+    transition: color 0.15s ease-in-out;
+}
+
+.beta-events-table .bold a:hover {
+    color: #5568d3;
+    text-decoration: underline;
+}
+
+/* Better date/time display */
+.beta-events-table time {
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Responsive improvements */
+@media (max-width: 1200px) {
+    .beta-events-table {
+        font-size: 0.875rem;
+    }
+    
+    .beta-events-table thead th,
+    .beta-events-table tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+}

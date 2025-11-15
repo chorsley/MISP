@@ -12,7 +12,7 @@
  * @since 2.5.x (beta)
  */
 ?>
-<table class="table table-striped table-hover table-condensed">
+<table class="table table-striped table-hover table-condensed beta-events-table">
     <tr>
         <th>
             <input class="select_all select" type="checkbox" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all events on current page');?>" onclick="toggleAllCheckboxes();">
@@ -70,8 +70,10 @@
             $extends_info = $extendedEventsInfoByUuid[$extends_uuid] ?? null;
             $extends_id = $extendedEventsIdByUuid[$extends_uuid] ?? null;
         ?>
-        <td class="dblclickElement" style="min-width: 20vi; white-space: normal;">
-            <?= nl2br(h($event['Event']['info']), false) ?>
+        <td class="dblclickElement beta-info-cell" style="min-width: 20vi; white-space: normal;">
+            <a href="<?= $baseurl."/events/view/".$eventId ?>" class="beta-info-link" title="<?= h($event['Event']['info']) ?>">
+                <?= nl2br(h($event['Event']['info']), false) ?>
+            </a>
 
             <?php if ($extends_info): ?>
                 <?php if (in_array('is_extension', $columns, true)): ?>
