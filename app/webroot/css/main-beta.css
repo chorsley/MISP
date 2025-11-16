@@ -732,21 +732,16 @@ pre {
 
 /* Beta Events Index - Header Layout */
 .beta-events-index {
-    /* Remove left sidebar margin */
     margin-left: 0 !important;
+    padding-left: 0 !important;
 }
 
 .beta-events-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 1rem;
 }
 
 .beta-events-header h2 {
-    margin: 0;
+    margin: 0 0 1rem 0;
     font-size: 1.75rem;
     font-weight: 600;
     color: #212529;
@@ -756,6 +751,9 @@ pre {
     display: flex;
     gap: 0.75rem;
     align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
 }
 
 /* Event Collections Link */
@@ -857,6 +855,18 @@ pre {
 /* Adjust main content area when sidebar is hidden */
 body.beta-ui-enabled #content {
     margin-left: 0 !important;
+}
+
+/* Remove container padding for beta events index */
+body.beta-ui-enabled .beta-events-index {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Override container-fluid padding for beta UI */
+body.beta-ui-enabled .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Responsive improvements */
