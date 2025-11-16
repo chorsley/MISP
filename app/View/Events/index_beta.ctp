@@ -26,18 +26,6 @@
                 </button>
             </div>
         </div>
-        <div class="btn-group beta-create-event-group">
-            <a href="<?= $baseurl ?>/events/add" class="btn btn-primary">
-                <i class="fa fa-plus"></i> <?= __('Create Event') ?>
-            </a>
-            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="caret"></span>
-                <span class="sr-only"><?= __('Toggle Dropdown') ?></span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-right">
-                <li><a href="<?= $baseurl ?>/events/add_misp_export"><i class="fa fa-file-import"></i> <?= __('Create event from import') ?></a></li>
-            </ul>
-        </div>
     </div>
     <?php
         $searchScopes = [
@@ -182,4 +170,7 @@ echo $this->element('genericElements/assetLoader', [
     'js' => ['vis', 'jquery-ui.min', 'network-distribution-graph'],
 ]);
 // Beta version: No sidebar navigation
+if (!$ajax) {
+    echo $this->element('/genericElements/SideMenu/side_menu', array('menuList' => 'event-collection-beta', 'menuItem' => 'index'));
+}
 ?>
