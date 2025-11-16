@@ -123,12 +123,14 @@
             </a>
         </td>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
-        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
+        <td class="short beta-org-cell" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
+            <span class="beta-org-name"><?= h($event['Orgc']['name']) ?></span>
             <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24) ?>
         </td>
         <?php endif;?>
         <?php if (in_array('owner_org', $columns, true) || (Configure::read('MISP.showorgalternate') && Configure::read('MISP.showorg'))): ?>
-        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
+        <td class="short beta-org-cell" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
+            <span class="beta-org-name"><?= h($event['Org']['name']) ?></span>
             <?= $this->OrgImg->getOrgLogo($event['Org'], 24) ?>
         </td>
         <?php endif; ?>

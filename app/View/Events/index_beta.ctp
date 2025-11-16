@@ -11,10 +11,8 @@
  */
 ?>
 <div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index">
-    <div class="beta-events-header">
+    <div class="beta-events-header-row">
         <h2><?php echo __('Events');?></h2>
-    </div>
-    <div class="beta-events-actions">
         <div class="btn-group beta-create-event-group">
             <a href="<?= $baseurl ?>/events/add" class="btn btn-primary">
                 <i class="fa fa-plus"></i> <?= __('Create Event') ?>
@@ -27,19 +25,17 @@
                 <li><a href="<?= $baseurl ?>/events/add_misp_export"><i class="fa fa-file-import"></i> <?= __('Create event from import') ?></a></li>
             </ul>
         </div>
-        <a href="<?= $baseurl ?>/collections/index" class="btn btn-default beta-collections-link">
+    </div>
+    <div class="beta-events-filter-row">
+        <a href="<?= $baseurl ?>/collections/index" class="btn btn-default beta-filter-button">
             <i class="fa fa-folder-open"></i> <?= __('Event Collections') ?>
         </a>
-    </div>
-    <div class="pagination">
-        <ul>
-        <?php
-            $pagination = $this->Paginator->prev('&laquo; ' . __('previous'), array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'prev disabled', 'escape' => false, 'disabledTag' => 'span'));
-            $pagination .= $this->Paginator->numbers(array('modulus' => 20, 'separator' => '', 'tag' => 'li', 'currentClass' => 'active', 'currentTag' => 'span'));
-            $pagination .= $this->Paginator->next(__('next') . ' &raquo;', array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'next disabled', 'escape' => false, 'disabledTag' => 'span'));
-            echo $pagination;
-        ?>
-        </ul>
+        <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My events only') ?>" data-searchemail="<?= h($me['email']) ?>">
+            <?= __('My Events') ?>
+        </button>
+        <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My organisation\'s events only') ?>" data-searchorg="<?= h($me['org_id']) ?>">
+            <?= __('Org Events') ?>
+        </button>
     </div>
     <?php
         $searchScopes = [
@@ -90,103 +86,53 @@
                 'onClickParams' => [$possibleColumn],
             ];
         }
-
-        $data = array(
-            'children' => array(
-                array(
-                    'children' => array(
-                        array(
-                            'id' => 'create-button',
-                            'title' => __('Modify filters'),
-                            'fa-icon' => 'search',
-                            'onClick' => 'getPopup',
-                            'onClickParams' => array(h($urlparams), 'events', 'filterEventIndex')
-                        )
-                    )
-                ),
-                array(
-                    'children' => array(
-                        array(
-                            'id' => 'multi-delete-button',
-                            'title' => __('Delete selected events'),
-                            'fa-icon' => 'trash',
-                            'class' => 'hidden mass-delete',
-                            'onClick' => 'multiSelectDeleteEvents'
-                        ),
-                        array(
-                            'id' => 'multi-export-button',
-                            'title' => __('Export selected events'),
-                            'fa-icon' => 'file-export',
-                            'class' => 'hidden mass-export',
-                            'onClick' => 'multiSelectExportEvents'
-                        )
-                    )
-                ),
-                array(
-                    'children' => array(
-                        array(
-                            'requirement' => count($passedArgsArray) > 0,
-                            'html' => sprintf(
-                                '<span class="bold">%s</span>: %s',
-                                __('Filters'),
-                                $filterParamsString
-                            )
-                        ),
-                        array(
-                            'requirement' => count($passedArgsArray) > 0,
-                            'url' => $baseurl . '/events/index',
-                            'title' => __('Remove filters'),
-                            'fa-icon' => 'times'
-                        )
-                    )
-                ),
-                array(
-                    'children' => array(
-                        array(
-                            'title' => __('My events only'),
-                            'text' => __('My Events'),
-                            'data' => array(
-                                'searchemail' => h($me['email'])
-                            ),
-                            'class' => 'searchFilterButton',
-                            'active' => isset($passedArgsArray['email']) && $passedArgsArray['email'] === $me['email']
-                        ),
-                        array(
-                            'title' => __('My organisation\'s events only'),
-                            'text' => __('Org Events'),
-                            'data' => array(
-                                'searchorg' => h($me['org_id'])
-                            ),
-                            'class' => 'searchFilterButton',
-                            'active' => isset($passedArgsArray['org']) && $passedArgsArray['org'] === $me['org_id']
-                        )
-                    )
-                ),
-                array(
-                    'children' => array(
-                        array(
-                            'id' => 'simple_filter',
-                            'type' => 'group',
-                            'class' => 'last',
-                            'title' => __('Choose columns to show'),
-                            'fa-icon' => 'columns',
-                            'children' => $columnsMenu,
-                        ),
-                    ),
-                ),
-                array(
-                    'type' => 'search',
-                    'button' => __('Filter'),
-                    'placeholder' => __('Enter value to search'),
-                    'data' => '',
-                    'searchScopes' => $searchScopes,
-                    'searchKey' => $searchKey,
-                )
-            )
-        );
-        if (!$ajax) {
-            echo $this->element('/genericElements/ListTopBar/scaffold', array('data' => $data));
-        }
+    ?>
+    <div class="beta-search-controls">
+        <div class="beta-search-input-group">
+            <select id="quickFilterScopeSelector" class="form-control beta-search-scope">
+                <?php foreach ($searchScopes as $key => $value): ?>
+                    <option value="<?= h($key) ?>" <?= $searchKey === $key ? 'selected' : '' ?>><?= h($value) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <input type="text" id="quickFilterField" class="form-control beta-search-input" placeholder="<?= __('Enter value to search') ?>" data-searchkey="<?= h($searchKey) ?>">
+            <button id="quickFilterButton" class="btn btn-primary beta-search-button"><?= __('Filter') ?></button>
+            <button class="btn btn-default beta-advanced-filter-button" onclick="getPopup('<?= h($urlparams) ?>', 'events', 'filterEventIndex')">
+                <i class="fa fa-search"></i> <?= __('Advanced Filter...') ?>
+            </button>
+        </div>
+        <div class="beta-toolbar-actions">
+            <button id="multi-delete-button" class="btn btn-default hidden mass-delete" onclick="multiSelectDeleteEvents()" title="<?= __('Delete selected events') ?>">
+                <i class="fa fa-trash"></i>
+            </button>
+            <button id="multi-export-button" class="btn btn-default hidden mass-export" onclick="multiSelectExportEvents()" title="<?= __('Export selected events') ?>">
+                <i class="fa fa-file-export"></i>
+            </button>
+            <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="<?= __('Choose columns to show') ?>">
+                    <i class="fa fa-columns"></i> <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right beta-columns-menu">
+                    <?php foreach ($possibleColumns as $possibleColumn): ?>
+                        <li>
+                            <a href="#" onclick="eventIndexColumnsToggle('<?= h($possibleColumn) ?>'); return false;">
+                                <i class="fa fa-check" style="<?= in_array($possibleColumn, $columns, true) ? '' : 'visibility: hidden' ?>"></i>
+                                <?= h($columnsDescription[$possibleColumn]) ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <?php if (count($passedArgsArray) > 0): ?>
+        <div class="beta-active-filters">
+            <span class="bold"><?= __('Filters') ?>:</span> <?= h($filterParamsString) ?>
+            <a href="<?= $baseurl ?>/events/index" class="btn btn-xs btn-default" title="<?= __('Remove filters') ?>">
+                <i class="fa fa-times"></i> <?= __('Clear') ?>
+            </a>
+        </div>
+    <?php endif; ?>
+    <?php
         App::uses('BetaUiHelper', 'Lib/Tools');
         $elementPath = BetaUiHelper::getElementPath(!empty($uiBetaEnabled) ? $uiBetaEnabled : false, 'Events/eventIndexTable');
         echo $this->element($elementPath);

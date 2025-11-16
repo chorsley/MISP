@@ -430,7 +430,7 @@ pre {
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
-    padding: 1rem 0.75rem;
+    padding: 0.75rem;
     border-bottom: 2px solid #dee2e6;
     color: #495057;
     vertical-align: top !important;
@@ -448,7 +448,7 @@ pre {
 }
 
 .beta-events-table tbody td {
-    padding: 1rem 0.75rem;
+    padding: 0.75rem;
     vertical-align: top !important;
     font-size: 0.875rem;
 }
@@ -511,11 +511,26 @@ pre {
     opacity: 1;
 }
 
+/* Org cell with name and icon */
+.beta-org-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.beta-org-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #495057;
+}
+
 /* Better spacing for org logos */
-.beta-events-table .short img {
+.beta-events-table .short img,
+.beta-org-cell img {
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     vertical-align: middle;
+    flex-shrink: 0;
 }
 
 /* Modern checkbox styling */
@@ -736,28 +751,32 @@ pre {
     padding-left: 0 !important;
 }
 
-.beta-events-header {
+/* Header row with title and Create Event button */
+.beta-events-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 1rem;
 }
 
-.beta-events-header h2 {
-    margin: 0 0 1rem 0;
+.beta-events-header-row h2 {
+    margin: 0;
     font-size: 1.75rem;
     font-weight: 600;
     color: #212529;
 }
 
-.beta-events-actions {
+/* Filter row with Event Collections, My Events, Org Events */
+.beta-events-filter-row {
     display: flex;
     gap: 0.75rem;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 2px solid #e9ecef;
 }
 
-/* Event Collections Link */
-.beta-collections-link {
+.beta-filter-button {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -772,15 +791,101 @@ pre {
     transition: all 0.15s ease-in-out;
 }
 
-.beta-collections-link:hover {
+.beta-filter-button:hover {
     background-color: #f8f9fa;
     border-color: #adb5bd;
     color: #212529;
     text-decoration: none;
 }
 
-.beta-collections-link i {
+.beta-filter-button i {
     font-size: 0.875rem;
+}
+
+/* Search controls above table */
+.beta-search-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.beta-search-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex: 1;
+}
+
+.beta-search-scope {
+    width: 150px;
+    font-size: 0.875rem;
+}
+
+.beta-search-input {
+    flex: 1;
+    max-width: 400px;
+    font-size: 0.875rem;
+}
+
+.beta-search-button {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+}
+
+.beta-advanced-filter-button {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.beta-toolbar-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.beta-toolbar-actions .btn {
+    font-size: 0.875rem;
+}
+
+.beta-columns-menu {
+    min-width: 200px;
+}
+
+.beta-columns-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.beta-columns-menu li a i {
+    width: 16px;
+}
+
+/* Active filters display */
+.beta-active-filters {
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #e7f3ff;
+    border-left: 4px solid #0066cc;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.beta-active-filters .bold {
+    font-weight: 600;
+    margin-right: 0.5rem;
 }
 
 /* Create Event Button Group */
