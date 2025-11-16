@@ -730,6 +730,135 @@ pre {
     color: #1e7e34;
 }
 
+/* Beta Events Index - Header Layout */
+.beta-events-index {
+    /* Remove left sidebar margin */
+    margin-left: 0 !important;
+}
+
+.beta-events-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.beta-events-header h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.beta-events-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* Event Collections Link */
+.beta-collections-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #495057;
+    text-decoration: none;
+    transition: all 0.15s ease-in-out;
+}
+
+.beta-collections-link:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #212529;
+    text-decoration: none;
+}
+
+.beta-collections-link i {
+    font-size: 0.875rem;
+}
+
+/* Create Event Button Group */
+.beta-create-event-group {
+    display: inline-flex;
+}
+
+.beta-create-event-group .btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.15s ease-in-out;
+}
+
+.beta-create-event-group .btn-primary {
+    background-color: #0066cc;
+    border-color: #0066cc;
+    color: #ffffff;
+}
+
+.beta-create-event-group .btn-primary:hover {
+    background-color: #0052a3;
+    border-color: #0052a3;
+}
+
+.beta-create-event-group .dropdown-toggle {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.beta-create-event-group .dropdown-menu {
+    min-width: 200px;
+    padding: 0.5rem 0;
+    margin-top: 0.25rem;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.beta-create-event-group .dropdown-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    color: #495057;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.15s ease-in-out;
+}
+
+.beta-create-event-group .dropdown-menu li a:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+    text-decoration: none;
+}
+
+.beta-create-event-group .dropdown-menu li a i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+/* Hide sidebar for beta events index */
+.beta-events-index + #SideMenu,
+.beta-events-index ~ #SideMenu {
+    display: none !important;
+}
+
+/* Adjust main content area when sidebar is hidden */
+body.beta-ui-enabled #content {
+    margin-left: 0 !important;
+}
+
 /* Responsive improvements */
 @media (max-width: 1200px) {
     .beta-events-table {
@@ -748,5 +877,16 @@ pre {
     .beta-dropdown-toggle {
         width: 22px;
         height: 22px;
+    }
+    
+    .beta-events-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .beta-events-actions {
+        width: 100%;
+        flex-wrap: wrap;
     }
 }

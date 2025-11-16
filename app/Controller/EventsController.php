@@ -799,6 +799,12 @@ class EventsController extends AppController
             $this->autoRender = false;
             $this->layout = false;
             $this->render('ajax/index');
+        } else {
+            App::uses('BetaUiHelper', 'Lib/Tools');
+            $viewPath = BetaUiHelper::getViewPath(!empty($this->viewVars['uiBetaEnabled']) ? $this->viewVars['uiBetaEnabled'] : false, 'index');
+            if ($viewPath !== 'index') {
+                $this->render($viewPath);
+            }
         }
     }
 
