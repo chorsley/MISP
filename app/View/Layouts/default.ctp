@@ -41,7 +41,7 @@
         ]);
     ?>
 </head>
-<body data-controller="<?= h($this->params['controller']) ?>" data-action="<?= h($this->params['action']) ?>">
+<body data-controller="<?= h($this->params['controller']) ?>" data-action="<?= h($this->params['action']) ?>"<?= !empty($uiBetaEnabled) ? ' class="beta-ui-enabled"' : '' ?>>
     <div id="popover_form" class="ajax_popover_form"></div>
     <div id="popover_form_large" class="ajax_popover_form ajax_popover_form_large"></div>
     <div id="popover_form_x_large" class="ajax_popover_form ajax_popover_form_x_large"></div>
