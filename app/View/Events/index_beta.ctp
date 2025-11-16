@@ -12,7 +12,20 @@
 ?>
 <div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index">
     <div class="beta-events-header-row">
-        <h2><?php echo __('Events');?></h2>
+        <div class="beta-header-left">
+            <h2><?php echo __('Events');?></h2>
+            <div class="beta-header-filters">
+                <a href="<?= $baseurl ?>/collections/index" class="btn btn-default beta-filter-button">
+                    <i class="fa fa-folder-open"></i> <?= __('Event Collections') ?>
+                </a>
+                <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My events only') ?>" data-searchemail="<?= h($me['email']) ?>">
+                    <?= __('My Events') ?>
+                </button>
+                <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My organisation\'s events only') ?>" data-searchorg="<?= h($me['org_id']) ?>">
+                    <?= __('Org Events') ?>
+                </button>
+            </div>
+        </div>
         <div class="btn-group beta-create-event-group">
             <a href="<?= $baseurl ?>/events/add" class="btn btn-primary">
                 <i class="fa fa-plus"></i> <?= __('Create Event') ?>
@@ -25,17 +38,6 @@
                 <li><a href="<?= $baseurl ?>/events/add_misp_export"><i class="fa fa-file-import"></i> <?= __('Create event from import') ?></a></li>
             </ul>
         </div>
-    </div>
-    <div class="beta-events-filter-row">
-        <a href="<?= $baseurl ?>/collections/index" class="btn btn-default beta-filter-button">
-            <i class="fa fa-folder-open"></i> <?= __('Event Collections') ?>
-        </a>
-        <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My events only') ?>" data-searchemail="<?= h($me['email']) ?>">
-            <?= __('My Events') ?>
-        </button>
-        <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My organisation\'s events only') ?>" data-searchorg="<?= h($me['org_id']) ?>">
-            <?= __('Org Events') ?>
-        </button>
     </div>
     <?php
         $searchScopes = [
@@ -87,7 +89,7 @@
             ];
         }
     ?>
-    <div class="beta-search-and-columns-row">
+    <div class="beta-search-row">
         <fieldset class="beta-search-controls">
             <legend><?= __('Search') ?></legend>
             <div class="beta-search-input-group">
@@ -101,8 +103,6 @@
                 <button class="btn btn-default beta-advanced-filter-button" onclick="getPopup('<?= h($urlparams) ?>', 'events', 'filterEventIndex')">
                     <i class="fa fa-search"></i> <?= __('Advanced Filter...') ?>
                 </button>
-            </div>
-            <div class="beta-search-toolbar-actions">
                 <button id="multi-delete-button" class="btn btn-default hidden mass-delete" onclick="multiSelectDeleteEvents()" title="<?= __('Delete selected events') ?>">
                     <i class="fa fa-trash"></i>
                 </button>
