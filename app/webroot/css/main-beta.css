@@ -447,7 +447,7 @@ pre {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.beta-events-table tbody td {
+.beta-events-table tbody td, .beta-events-table tbody th {
     padding: 0.75rem;
     vertical-align: top !important;
     font-size: 0.875rem;
@@ -1036,7 +1036,7 @@ body.beta-ui-enabled .container-fluid {
         font-size: 0.875rem;
     }
     
-    .beta-events-table thead th,
+    .beta-events-table th,
     .beta-events-table tbody td {
         padding: 0.75rem 0.5rem;
     }
