@@ -87,29 +87,34 @@
             ];
         }
     ?>
-    <div class="beta-search-controls">
-        <div class="beta-search-input-group">
-            <select id="quickFilterScopeSelector" class="form-control beta-search-scope">
-                <?php foreach ($searchScopes as $key => $value): ?>
-                    <option value="<?= h($key) ?>" <?= $searchKey === $key ? 'selected' : '' ?>><?= h($value) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <input type="text" id="quickFilterField" class="form-control beta-search-input" placeholder="<?= __('Enter value to search') ?>" data-searchkey="<?= h($searchKey) ?>">
-            <button id="quickFilterButton" class="btn btn-primary beta-search-button"><?= __('Filter') ?></button>
-            <button class="btn btn-default beta-advanced-filter-button" onclick="getPopup('<?= h($urlparams) ?>', 'events', 'filterEventIndex')">
-                <i class="fa fa-search"></i> <?= __('Advanced Filter...') ?>
-            </button>
-        </div>
-        <div class="beta-toolbar-actions">
-            <button id="multi-delete-button" class="btn btn-default hidden mass-delete" onclick="multiSelectDeleteEvents()" title="<?= __('Delete selected events') ?>">
-                <i class="fa fa-trash"></i>
-            </button>
-            <button id="multi-export-button" class="btn btn-default hidden mass-export" onclick="multiSelectExportEvents()" title="<?= __('Export selected events') ?>">
-                <i class="fa fa-file-export"></i>
-            </button>
+    <div class="beta-search-and-columns-row">
+        <fieldset class="beta-search-controls">
+            <legend><?= __('Search') ?></legend>
+            <div class="beta-search-input-group">
+                <select id="quickFilterScopeSelector" class="form-control beta-search-scope">
+                    <?php foreach ($searchScopes as $key => $value): ?>
+                        <option value="<?= h($key) ?>" <?= $searchKey === $key ? 'selected' : '' ?>><?= h($value) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <input type="text" id="quickFilterField" class="form-control beta-search-input" placeholder="<?= __('Enter value to search') ?>" data-searchkey="<?= h($searchKey) ?>">
+                <button id="quickFilterButton" class="btn btn-primary beta-search-button"><?= __('Filter') ?></button>
+                <button class="btn btn-default beta-advanced-filter-button" onclick="getPopup('<?= h($urlparams) ?>', 'events', 'filterEventIndex')">
+                    <i class="fa fa-search"></i> <?= __('Advanced Filter...') ?>
+                </button>
+            </div>
+            <div class="beta-search-toolbar-actions">
+                <button id="multi-delete-button" class="btn btn-default hidden mass-delete" onclick="multiSelectDeleteEvents()" title="<?= __('Delete selected events') ?>">
+                    <i class="fa fa-trash"></i>
+                </button>
+                <button id="multi-export-button" class="btn btn-default hidden mass-export" onclick="multiSelectExportEvents()" title="<?= __('Export selected events') ?>">
+                    <i class="fa fa-file-export"></i>
+                </button>
+            </div>
+        </fieldset>
+        <div class="beta-columns-control">
             <div class="btn-group">
                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="<?= __('Choose columns to show') ?>">
-                    <i class="fa fa-columns"></i> <span class="caret"></span>
+                    <i class="fa fa-columns"></i> <?= __('Columns') ?> <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-right beta-columns-menu">
                     <?php foreach ($possibleColumns as $possibleColumn): ?>
@@ -137,17 +142,24 @@
         $elementPath = BetaUiHelper::getElementPath(!empty($uiBetaEnabled) ? $uiBetaEnabled : false, 'Events/eventIndexTable');
         echo $this->element($elementPath);
     ?>
-    <p>
-    <?php
-    echo $this->Paginator->counter(array(
-    'format' => __('Page {:page} of {:pages}, showing {:current} records out of {:count} total, starting on record {:start}, ending on {:end}')
-    ));
-    ?>
-    </p>
-    <div class="pagination">
-        <ul>
-        <?= $pagination ?>
-        </ul>
+    <div class="beta-pagination-bottom">
+        <p>
+        <?php
+        echo $this->Paginator->counter(array(
+        'format' => __('Page {:page} of {:pages}, showing {:current} records out of {:count} total, starting on record {:start}, ending on {:end}')
+        ));
+        ?>
+        </p>
+        <div class="pagination">
+            <ul>
+            <?php
+                $pagination = $this->Paginator->prev('&laquo; ' . __('previous'), array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'prev disabled', 'escape' => false, 'disabledTag' => 'span'));
+                $pagination .= $this->Paginator->numbers(array('modulus' => 20, 'separator' => '', 'tag' => 'li', 'currentClass' => 'active', 'currentTag' => 'span'));
+                $pagination .= $this->Paginator->next(__('next') . ' &raquo;', array('tag' => 'li', 'escape' => false), null, array('tag' => 'li', 'class' => 'next disabled', 'escape' => false, 'disabledTag' => 'span'));
+                echo $pagination;
+            ?>
+            </ul>
+        </div>
     </div>
 </div>
 <script>
