@@ -13,6 +13,162 @@
  * - Document significant changes
  */
 
+/* Global Beta Font Styling - Apply consistent font size throughout application */
+body {
+    font-size: 0.875rem !important; /* 14px - matches beta table body text */
+    line-height: 1.5;
+}
+
+/* Navigation and header elements */
+.navbar,
+.navbar-inner,
+.navbar .nav,
+.navbar .nav > li > a,
+#global-menu,
+#global-menu a,
+.side-menu,
+.side-menu a {
+    font-size: 0.875rem !important;
+}
+
+/* Page headers and titles */
+h1 {
+    font-size: 1.75rem !important; /* 28px */
+}
+
+h2 {
+    font-size: 1.5rem !important; /* 24px */
+}
+
+h3 {
+    font-size: 1.25rem !important; /* 20px */
+}
+
+h4 {
+    font-size: 1.125rem !important; /* 18px */
+}
+
+h5 {
+    font-size: 1rem !important; /* 16px */
+}
+
+h6 {
+    font-size: 0.875rem !important; /* 14px */
+}
+
+/* Form elements */
+input,
+textarea,
+select,
+button,
+.btn,
+label {
+    font-size: 0.875rem !important;
+}
+
+/* Tables throughout the application */
+table,
+table th,
+table td,
+.table,
+.table th,
+.table td {
+    font-size: 0.875rem !important;
+}
+
+/* Table headers - slightly smaller and uppercase like beta table */
+table thead th,
+.table thead th {
+    font-size: 0.75rem !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dropdown menus */
+.dropdown-menu,
+.dropdown-menu li,
+.dropdown-menu li a {
+    font-size: 0.875rem !important;
+}
+
+/* Modals and dialogs */
+.modal,
+.modal-header,
+.modal-body,
+.modal-footer {
+    font-size: 0.875rem !important;
+}
+
+/* Alerts and messages */
+.alert,
+.message,
+.flash {
+    font-size: 0.875rem !important;
+}
+
+/* Breadcrumbs */
+.breadcrumb,
+.breadcrumb li,
+.breadcrumb a {
+    font-size: 0.875rem !important;
+}
+
+/* Pagination */
+.pagination,
+.pagination li,
+.pagination a {
+    font-size: 0.875rem !important;
+}
+
+/* Tabs */
+.nav-tabs,
+.nav-tabs li,
+.nav-tabs a,
+.tab-content {
+    font-size: 0.875rem !important;
+}
+
+/* Panels and cards */
+.panel,
+.panel-heading,
+.panel-body,
+.panel-footer {
+    font-size: 0.875rem !important;
+}
+
+/* Lists */
+ul,
+ol,
+dl,
+dt,
+dd {
+    font-size: 0.875rem !important;
+}
+
+/* Paragraphs and text elements - more specific selectors to avoid breaking specific components */
+p {
+    font-size: 0.875rem !important;
+}
+
+/* Code and pre elements */
+code,
+pre {
+    font-size: 0.8125rem !important; /* 13px - slightly smaller for code */
+}
+
+/* Badges and labels */
+.badge,
+.label {
+    font-size: 0.75rem !important; /* 12px */
+}
+
+/* Tooltips */
+.tooltip,
+.tooltip-inner {
+    font-size: 0.8125rem !important; /* 13px */
+}
+
 /* Example: Beta-specific event list styling */
 .events.index--beta {
     /* Enhanced spacing and modern layout */
