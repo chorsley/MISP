@@ -78,8 +78,8 @@
         }
     ?>
     <div class="beta-search-row">
-        <fieldset class="beta-search-controls">
-            <legend><?= __('Search') ?></legend>
+        <div class="beta-search-controls">
+            <div class="beta-search-label"><?= __('Search') ?></div>
             <div class="beta-search-input-group">
                 <select id="quickFilterScopeSelector" class="form-control beta-search-scope">
                     <?php foreach ($searchScopes as $key => $value): ?>
@@ -98,7 +98,7 @@
                     <i class="fa fa-file-export"></i>
                 </button>
             </div>
-        </fieldset>
+        </div>
         <div class="beta-columns-control">
             <div class="btn-group">
                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="<?= __('Choose columns to show') ?>">

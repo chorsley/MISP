@@ -31,7 +31,7 @@
         <?php
             elseif (Configure::read('MISP.showorg') || $isAdmin):
         ?>
-            <th class="filter"><?php echo $this->Paginator->sort('Orgc.name', __('Creator org')); ?></th>
+            <th class="filter col-creator-org"><?php echo $this->Paginator->sort('Orgc.name', __('Creator org')); ?></th>
         <?php
                 endif;
             $date = time();
@@ -123,10 +123,16 @@
             </a>
         </td>
         <?php if (Configure::read('MISP.showorg') || $isAdmin): ?>
-        <td class="short" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
+        <td class="short col-creator-org" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Orgc']['id'];?>'">
             <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Orgc']['id'] ?>" class="beta-org-link">
+
                 <span class="beta-org-name"><?= h($event['Orgc']['name']) ?></span>
-                <?= $this->OrgImg->getOrgLogo($event['Orgc'], 24, false) ?>
+                <?php
+                    $orgLogo = $this->OrgImg->getOrgLogo($event['Orgc'], 24, false);
+                    if (strpos($orgLogo, '<img') !== false): // Check if the output contains an image tag
+                        echo $orgLogo;
+                    endif;
+            ?>
             </a>
         </td>
         <?php endif;?>
