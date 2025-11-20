@@ -566,6 +566,8 @@ pre {
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
+    max-width: 100%;
+    /* Ensure it doesn't overflow parent if parent is constrained */
 }
 
 .beta-org-link:hover {
@@ -576,6 +578,15 @@ pre {
     font-size: 0.875rem;
     font-weight: 500;
     color: #0066cc;
+
+    /* Truncation */
+    display: inline-block;
+    max-width: 15ch;
+    /* Limit to approx 15 characters */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
 }
 
 .beta-org-link:hover .beta-org-name {
