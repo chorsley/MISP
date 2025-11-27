@@ -799,6 +799,93 @@ pre {
     color: #dc3545;
 }
 
+/* Responsive Events Table Improvements */
+
+/* Ensure table fits within container */
+.beta-events-table {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Truncation and sizing for Info column */
+.beta-info-cell {
+    max-width: 30vw;
+    min-width: 150px;
+    /* Override inline style if needed, though inline style has high specificity. 
+       We might need !important if the inline style 'min-width: 20vi' causes issues, 
+       but 20vi is usually fine. The issue is likely max-width. */
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Truncation for Tags column */
+.col-tags {
+    max-width: 15vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Hide columns on smaller screens to prevent horizontal scrolling */
+
+/* Large Laptop / Desktop ( < 1400px ) */
+@media (max-width: 1400px) {
+
+    .col-creator-user,
+    .col-distribution,
+    .col-publish-timestamp {
+        display: none !important;
+    }
+}
+
+/* Laptop ( < 1200px ) */
+@media (max-width: 1200px) {
+
+    .col-timestamp,
+    /* Last modified */
+    .col-report-count,
+    .col-sightings-count,
+    .col-prop-count,
+    .col-post-count {
+        display: none !important;
+    }
+}
+
+/* Tablet Landscape ( < 992px ) */
+@media (max-width: 992px) {
+
+    .col-owner-org,
+    .col-creator-org,
+    .col-clusters {
+        display: none !important;
+    }
+
+    .beta-info-cell {
+        max-width: 40vw;
+    }
+}
+
+/* Tablet Portrait / Mobile ( < 768px ) */
+@media (max-width: 768px) {
+
+    .col-attr-count,
+    .col-corr-count,
+    .col-tags {
+        display: none !important;
+    }
+
+    /* At this point, we only have: Checkbox, ID, Info, Publish, Date */
+    .beta-info-cell {
+        max-width: 50vw;
+    }
+
+    /* Reduce padding on small screens */
+    .beta-events-table td,
+    .beta-events-table th {
+        padding: 0.5rem !important;
+    }
+}
+
 .beta-actions-menu li a.beta-delete-action:hover {
     background-color: #fff5f5;
     color: #c82333;
@@ -1136,4 +1223,97 @@ body.beta-ui-enabled .container-fluid {
     margin-bottom: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* Compact Checkbox + Actions */
+.beta-checkbox-actions-cell {
+    width: 40px !important;
+    padding: 0.25rem !important;
+}
+
+.beta-checkbox-actions-wrapper {
+    height: 24px;
+}
+
+.beta-checkbox-actions-wrapper input[type="checkbox"] {
+    margin: 0 4px;
+}
+
+.beta-dropdown-toggle {
+    width: 20px;
+}
+
+/* Compact Creator Org with Truncation */
+.col-creator-org {
+    max-width: 10vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+    .col-creator-org {
+        max-width: 15vw;
+    }
+}
+
+/* Distribution Graphic Widget */
+.dist-widget {
+    display: inline-block;
+    width: 24px;
+    height: 8px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 0.5rem;
+}
+
+/* 0: Your organisation only - Red */
+.dist-0 {
+    background-color: #ff0000;
+}
+
+/* 1: This community only - Orange */
+.dist-1 {
+    background-color: #ff9900;
+}
+
+/* 2: Connected communities - Dark Gold/Olive */
+.dist-2 {
+    background-color: #b8860b;
+}
+
+/* 3: All communities - Green */
+.dist-3 {
+    background-color: #008000;
+}
+
+/* 4: Sharing group - Blue/SlateBlue */
+.dist-4 {
+    background-color: #6a5acd;
+}
+
+/* Ensure the cell content aligns nicely */
+.col-distribution {
+    white-space: nowrap;
+}
+
+.dist-text {
+    display: none;
+    /* Hide text by default, show on hover or large screens if needed? User asked to replace. */
+}
+
+/* Make distribution widget clickable */
+.dist-widget {
+    cursor: pointer;
+}
+
+/* Reduce padding for Create Event button group */
+.beta-create-event-group .btn {
+    padding: 0.5rem 0.75rem;
+    /* Reduced horizontal padding from 1rem */
+}
+
+.beta-create-event-group .dropdown-toggle {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
