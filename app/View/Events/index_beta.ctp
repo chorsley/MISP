@@ -11,22 +11,6 @@
  */
 ?>
 <div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index">
-    <div class="beta-events-header-row">
-        <div class="beta-header-left">
-            <h2><?php echo __('Events');?></h2>
-            <div class="beta-header-filters">
-                <a href="<?= $baseurl ?>/collections/index" class="btn btn-default beta-filter-button">
-                    <i class="fa fa-folder-open"></i> <?= __('Event Collections') ?>
-                </a>
-                <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My events only') ?>" data-searchemail="<?= h($me['email']) ?>">
-                    <?= __('My Events') ?>
-                </button>
-                <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My organisation\'s events only') ?>" data-searchorg="<?= h($me['org_id']) ?>">
-                    <?= __('Org Events') ?>
-                </button>
-            </div>
-        </div>
-    </div>
     <?php
         $searchScopes = [
             'searcheventinfo' => __('Event info'),
@@ -77,6 +61,39 @@
             ];
         }
     ?>
+    <div class="beta-events-header-row">
+        <div class="beta-header-left">
+            <h2><?php echo __('Events');?></h2>
+            <div class="beta-header-filters">
+                <a href="<?= $baseurl ?>/collections/index" class="btn btn-default beta-filter-button">
+                    <i class="fa fa-folder-open"></i> <?= __('Event Collections') ?>
+                </a>
+                <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My events only') ?>" data-searchemail="<?= h($me['email']) ?>">
+                    <?= __('My Events') ?>
+                </button>
+                <button class="btn btn-default beta-filter-button searchFilterButton" title="<?= __('My organisation\'s events only') ?>" data-searchorg="<?= h($me['org_id']) ?>">
+                    <?= __('Org Events') ?>
+                </button>
+            </div>
+        </div>
+        <div class="beta-columns-control">
+            <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="<?= __('Choose columns to show') ?>">
+                    <i class="fa fa-columns"></i> <?= __('Columns') ?> <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu beta-columns-menu">
+                    <?php foreach ($possibleColumns as $possibleColumn): ?>
+                        <li>
+                            <a href="#" onclick="eventIndexColumnsToggle('<?= h($possibleColumn) ?>'); return false;">
+                                <i class="fa fa-check" style="<?= in_array($possibleColumn, $columns, true) ? '' : 'visibility: hidden' ?>"></i>
+                                <?= h($columnsDescription[$possibleColumn]) ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
+    </div>
     <div class="beta-search-row">
         <div class="beta-search-controls">
             <div class="beta-search-label"><?= __('Search') ?></div>
@@ -99,23 +116,7 @@
                 </button>
             </div>
         </div>
-        <div class="beta-columns-control">
-            <div class="btn-group">
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="<?= __('Choose columns to show') ?>">
-                    <i class="fa fa-columns"></i> <?= __('Columns') ?> <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-right beta-columns-menu">
-                    <?php foreach ($possibleColumns as $possibleColumn): ?>
-                        <li>
-                            <a href="#" onclick="eventIndexColumnsToggle('<?= h($possibleColumn) ?>'); return false;">
-                                <i class="fa fa-check" style="<?= in_array($possibleColumn, $columns, true) ? '' : 'visibility: hidden' ?>"></i>
-                                <?= h($columnsDescription[$possibleColumn]) ?>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        </div>
+
     </div>
     <?php if (count($passedArgsArray) > 0): ?>
         <div class="beta-active-filters">
