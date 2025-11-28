@@ -38,6 +38,7 @@ class Correlation extends AppModel
     public $validEngines = [
         'Default' => 'default_correlations',
         'NoAcl' => 'no_acl_correlations',
+        'OnDemand' => false,
         'Legacy' => 'correlations'
     ];
 
@@ -62,13 +63,15 @@ class Correlation extends AppModel
     /** @var CorrelationRule */
     public $CorrelationRule;
 
+    private $engine = null;
+
     public $virtualTable = false;
 
     public function __construct($id = false, $table = null, $ds = null)
     {
         parent::__construct($id, $table, $ds);
         $correlationEngine = $this->getCorrelationModelName();
-        if ($correlationEngine !== 'NoAcl') {
+        if ($correlationEngine !== 'NoAcl' && $correlationEngine !== 'OnDemand') {
             $this->bindModel(
                 [
                     'belongsTo' => [
@@ -124,6 +127,42 @@ class Correlation extends AppModel
         }
     }
 
+        /**
+     * @return int|bool
+     * @throws Exception
+     */
+    public function generateCorrelationRouter($eventId = null)
+    {
+        if (Configure::read('MISP.background_jobs')) {
+            /** @var Job $job */
+            $job = ClassRegistry::init('Job');
+            $jobId = $job->createJob(
+                'SYSTEM',
+                Job::WORKER_DEFAULT,
+                'generateCorrelation',
+                '',
+                $eventId ? __('Starting the recorrelation of event #%d.', $eventId) : 'Starting full recorrelation.'
+            );
+
+            $this->getBackgroundJobsTool()->enqueue(
+                BackgroundJobsTool::DEFAULT_QUEUE,
+                BackgroundJobsTool::CMD_ADMIN,
+                [
+                    'jobGenerateCorrelation',
+                    $jobId,
+                    $eventId
+                ],
+                true,
+                $jobId
+            );
+
+            return $jobId;
+        } else {
+            $this->generateCorrelation(false, $eventId);
+            return true;
+        }
+    }
+
     /**
      * Generate correlation for given attributes or events.
      *
@@ -135,6 +174,9 @@ class Correlation extends AppModel
      */
     public function generateCorrelation($jobId = false, $eventId = false, $attributeId = false)
     {
+        if ($this->onDemandEngine()) {
+            return true;
+        }
         $this->purgeCorrelations($eventId);
 
         $this->FuzzyCorrelateSsdeep = ClassRegistry::init('FuzzyCorrelateSsdeep');
@@ -324,6 +366,9 @@ class Correlation extends AppModel
 
     public function correlateValue($value, $jobId = false)
     {
+        if ($this->onDemandEngine()) {
+            return true;
+        }
         $correlatingAttributes = $this->__getMatchingAttributes($value);
         $count = count($correlatingAttributes);
         $correlations = [];
@@ -421,6 +466,9 @@ class Correlation extends AppModel
      */
     public function afterSaveCorrelation($a, $full = false, $event = false)
     {
+        if ($this->onDemandEngine()) {
+            return true;
+        }
         $a = ['Attribute' => $a];
         if (!empty($a['Attribute']['disable_correlation']) || Configure::read('MISP.completely_disable_correlation')) {
             return true;
@@ -442,7 +490,7 @@ class Correlation extends AppModel
             return true;
         }
         /* 
-         *Removed this check for now, it assumed that correlatioan rules COMPLETELY blocked correlation, which is not the case.
+         *Removed this check for now, it assumed that correlation rules COMPLETELY blocked correlation, which is not the case.
         if (!$this->CorrelationRule->canCorrelate($a)) {
             return true;
         }
@@ -808,6 +856,10 @@ class Correlation extends AppModel
 
     public function generateTopCorrelations($jobId = false)
     {
+        if ($this->onDemandEngine()) {
+            $this->generateTopOnDemand();
+            return true;
+        }
         try {
             $redis = RedisTool::init();
         } catch (Exception $e) {
@@ -861,6 +913,65 @@ class Correlation extends AppModel
         return true;
     }
 
+    public function generateTopOnDemand()
+    {
+        $this->query('TRUNCATE TABLE attr_value_counts');
+
+        $this->query(
+            "INSERT INTO attr_value_counts (value, cnt_v1)
+            SELECT LEFT(a.value1, 64) AS value, COUNT(*) AS c
+            FROM attributes a
+            WHERE a.deleted = 0
+            AND a.disable_correlation = 0
+            AND a.value1 <> ''
+            GROUP BY LEFT(a.value1, 64)
+            ON DUPLICATE KEY UPDATE cnt_v1 = VALUES(cnt_v1);"
+        );
+
+        $this->query(
+            "INSERT INTO attr_value_counts (value, cnt_v2)
+            SELECT LEFT(a.value2, 64) AS value, COUNT(*) AS c
+            FROM attributes a
+            WHERE a.deleted = 0
+            AND a.disable_correlation = 0
+            AND a.value2 <> ''
+            GROUP BY LEFT(a.value2, 64)
+            ON DUPLICATE KEY UPDATE cnt_v2 = VALUES(cnt_v2);"
+        );
+        
+    }
+
+    private function findTopOnDemand(array $query)
+    {
+        $limit  = (int)($query['limit'] ?? 100);
+        $page   = max(1, (int)($query['page'] ?? 1));
+        $offset = $limit * ($page - 1);
+
+        $sql = "
+            SELECT value, (cnt_v1 + cnt_v2) AS cnt
+            FROM attr_value_counts
+            WHERE (cnt_v1 + cnt_v2) > 0
+            ORDER BY cnt DESC
+            LIMIT " . intval($limit) . " OFFSET " . intval($offset);
+
+        $rows = $this->query($sql);
+
+        $results = [];
+        foreach ($rows as $row) {
+            $v   = $row[0]['value'] ?? $row['attr_value_counts']['value'];
+            $cnt = (int)($row[0]['cnt']   ?? $row['attr_value_counts']['cnt']);
+
+            $results[] = [
+                'Correlation' => [
+                    'value'    => (string)$v,
+                    'count'    => $cnt,
+                    'excluded' => $this->__preventExcludedCorrelations((string)$v),
+                ]
+            ];
+        }
+        return $results;
+    }
+    
     /**
      * @param array $query
      * @return array|false
@@ -868,6 +979,9 @@ class Correlation extends AppModel
      */
     public function findTop(array $query)
     {
+        if ($this->onDemandEngine()) {
+            return $this->findTopOnDemand($query);
+        }
         try {
             $redis = RedisTool::init();
         } catch (Exception $e) {
@@ -900,6 +1014,9 @@ class Correlation extends AppModel
 
     public function getTopTime()
     {
+        if ($this->onDemandEngine()) {
+            return true;
+        }
         try {
             $redis = RedisTool::init();
         } catch (Exception $e) {
@@ -1120,6 +1237,11 @@ class Correlation extends AppModel
                         ]
                     ]
                 ],
+                'OnDemand' => [
+                    'name' => __('On Demand correlation engine'),
+                    'tables' => [
+                    ]
+                ],
                 'Legacy' => [
                     'name' => __('Legacy correlation engine (< 2.4.160)'),
                     'tables' => [
@@ -1157,6 +1279,9 @@ class Correlation extends AppModel
 
     public function truncate(array $user, string $engine)
     {
+        if ($this->onDemandEngine()) {
+            return true;
+        }
         $table = $this->validEngines[$engine];
         $result = $this->query('truncate table ' . $table);
         if ($result !== true) {
@@ -1175,9 +1300,12 @@ class Correlation extends AppModel
     /**
      * @return string
      */
-    private function getCorrelationModelName()
+    public function getCorrelationModelName()
     {
-        return Configure::read('MISP.correlation_engine') ?: 'Default';
+        if (!isset($this->engine)) {
+            $this->engine = Configure::read('MISP.correlation_engine') ?: 'Default';
+        }
+        return $this->engine;
     }
 
     public function getRuleImpact($id)
@@ -1195,6 +1323,9 @@ class Correlation extends AppModel
 
     public function executeRule($id)
     {
+        if ($this->onDemandEngine()) {
+            throw new MethodNotAllowedException(__('You\'re using an on demand correlation engine, no need to execute rules on existing data, it will be adhered to live when fetching data.'));
+        }
         $rule = $this->CorrelationRule->find('first', [
             'conditions' => ['CorrelationRule.id' => $id],
             'recursive' => -1

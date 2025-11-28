@@ -109,12 +109,20 @@ class AttributesController extends AppController
         $exception = false;
         $filters = $this->_harvestParameters($filterData, $exception);
         if (!$this->_isRest()) {
+            $search_filters = $this->request->data;
+            if (isset($this->request->data['to_ids']) && $this->request->data['to_ids'] === '0') {
+                $search_filters['to_ids'] = [0,1];
+            }
+            $search_filters['published'] = [0,1];
+            $search_filters['flatten'] = true;
             if ($this->request->is('post') && empty($filters['search_token'])) {
-                $search_token = $this->MispAttribute->setSearchParamsByToken($this->request->data);
+                $search_token = $this->MispAttribute->setSearchParamsByToken($search_filters);
                 $this->set('search_token', $search_token);
-            } else if (!empty($filters['search_token'])) {
-                $filters = $this->MispAttribute->getSearchParamsByToken($filters);
-                $this->set('search_token', $filters['search_token']);
+            } else {
+                if (!empty($filters['search_token'])) {
+                    $filters = $this->MispAttribute->getSearchParamsByToken($filters);
+                    $this->set('search_token', $filters['search_token']);
+                }
             }
         }
         if (!$this->_isRest()) {
@@ -230,6 +238,13 @@ class AttributesController extends AppController
                 }
             }
         }
+        if (empty($request_filters['to_ids'])) {
+            $request_filters['to_ids'] = [0,1];
+        }
+        if (empty($request_filters['published'])) {
+            $request_filters['published'] = [0,1];
+        }
+        $this->set('request_filters', $request_filters);
         $this->set('paramArray', $paramArray);
         $this->set('passedArgsArray', $this->passedArgs);
         $this->set('export_filters', $export_filters);
@@ -1797,7 +1812,7 @@ class AttributesController extends AppController
             $user = $this->Auth->user();
         }
         // if the user is authorised to use the api key then user will be populated with the user's account
-        // in addition we also set a flag indicating whether the user is a site admin or not.
+        // in addition we also set a flag indicating whether or not the user is a site admin.
         if (!$user) {
             throw new UnauthorizedException(__('This authentication key is not authorized to be used for exports. Contact your administrator.'));
         }
@@ -2577,16 +2592,7 @@ class AttributesController extends AppController
 
     public function describeTypes()
     {
-        $result = array();
-        foreach ($this->MispAttribute->typeDefinitions as $key => $value) {
-            $result['sane_defaults'][$key] = array('default_category' => $value['default_category'], 'to_ids' => $value['to_ids']);
-        }
-        $result['types'] = array_keys($this->MispAttribute->typeDefinitions);
-        $result['categories'] = array_keys($this->MispAttribute->categoryDefinitions);
-        foreach ($this->MispAttribute->categoryDefinitions as $cat => $data) {
-            $result['category_type_mappings'][$cat] = $data['types'];
-        }
-        return $this->RestResponse->viewData(['result' => $result], 'json');
+        return $this->RestResponse->viewData(['result' => $this->MispAttribute->describeTypes()], 'json');
     }
 
     public function attributeStatistics($type = 'type', $percentage = false)

@@ -236,7 +236,7 @@
     "uuid": "3848ab01-e06f-4f91-a516-05e550dbc659",
     "org_uuid": "89ed13e7-d560-4d48-8ee7-a3aadad5e0ae",
     "org_name": "misp-lea.org",
-    "description": "MISP-LEA project consists in an law enforcement agency information sharing community. It’s powered by MISP and AIL project, two leading open source projects led by CIRCL. The community is only accessible to law enforcement agencies.",
+    "description": "MISP-LEA project consists in a law enforcement agency information sharing community. It’s powered by MISP and AIL project, two leading open source projects led by CIRCL. The community is only accessible to law enforcement agencies.",
     "url": "https://www.misp-lea.org/",
     "sector": "Law Enforcement",
     "nationality": "International",
@@ -279,5 +279,21 @@
     "misp_project_vetted": false,
     "scope_of_data_to_be_shared": "Cybersecurity Threat Intelligence including indicators, threat intelligence information, reports, contextual threat actor information or financial fraud information.",
     "self_registration": false
+  },
+  {
+    "name": "CSIRT.SK MISP Community",
+    "uuid": "c72b0e96-1c3d-4e70-867e-2f7c9a3cbb0e",
+    "org_uuid": "1a162d74-1a46-4492-82f4-46efbb44834d",
+    "org_name": "CSIRT.SK",
+    "description": "The Slovak CSIRT team operates a system of interconnected MISP instances, providing governmental, public, and security organisations in Slovakia with a threat intelligence sharing platform.",
+    "url": "https://csirt.sk/registracia-afrodita.html",
+    "sector": "Government",
+    "nationality": "Slovak",
+    "type": "Information Sharing Community",
+    "email": "cti@csirt.sk",
+    "pgp_key": null,
+    "misp_project_vetted": false,
+    "scope_of_data_to_be_shared": "Cybersecurity Threat Intelligence provided by CSIRT.SK and its partners, including indicators, threat intelligence information, reports, contextual threat actor information, releasable incident data, and financial fraud information.",
+    "self_registration": true
   }
 ]

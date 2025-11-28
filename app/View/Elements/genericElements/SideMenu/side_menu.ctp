@@ -45,7 +45,7 @@ $divider = '<li class="divider"></li>';
                     ));
                     break;
                 case 'event':
-                    $eventId = (int)$event['Event']['id'];
+                    $eventId = Configure::read('MISP.use_uuids_in_urls') ? h($event['Event']['uuid']) : (int)$event['Event']['id'];
                     echo '<div id="hiddenSideMenuData" class="hidden" data-event-id="' . $eventId . '"></div>';
                     $mayModify = $mayModify ?? $this->Acl->canModifyEvent($event);
                     $mayPublish = $mayPublish ?? ($mayModify && $this->Acl->canPublishEvent($event));
@@ -248,6 +248,15 @@ $divider = '<li class="divider"></li>';
                                 ]
                             ),
                             'text' => __('Run Ad-Hoc Workflow')
+                        ));
+                        echo $this->element('/genericElements/SideMenu/side_menu_link', array(
+                            'onClick' => array(
+                                'function' => 'openGenericModal',
+                                'params' => [
+                                    $baseurl . '/events/recorrelateEvent/' . $eventId,
+                                ]
+                            ),
+                            'text' => __('Recorrelate Event')
                         ));
                     }
                     if ($this->Acl->canAccess('events', 'pushEventToKafka') &&
