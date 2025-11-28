@@ -40,6 +40,7 @@
         <?php if (in_array('owner_org', $columns, true)): ?><th class="filter col-owner-org"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></th><?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?><th class="col-clusters"><?= __('Clusters') ?></th><?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?><th class="col-tags"><?= __('Tags') ?></th><?php endif; ?>
+        <?php if (in_array('highlights', $columns, true)): ?><th class="col-highlights"><?= __('Highlight tags') ?></th><?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?><th class="col-attr-count" title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?><th class="col-corr-count" title="<?= __('Correlation Count')  ?>"><?= __('#Corr.') ?></th><?php endif; ?>
         <?php if (in_array('report_count', $columns, true)): ?><th class="col-report-count" title="<?= __('Report Count') ?>"><?= $this->Paginator->sort('report_count', __('#Reports')) ?></th><?php endif; ?>
@@ -187,6 +188,31 @@
             ?>
         </td>
         <?php endif; ?>
+        <?php if (in_array('highlights', $columns, true)): ?>
+        <td class="shortish col-highlights">
+            <?php
+                // Display only highlighted tags using the standard rich_tag element
+                $highlightedTags = $event['Event']['highlightedTags'] ?? [];
+                if (!empty($highlightedTags)) {
+                    foreach ($highlightedTags as $hTaxonomy) {
+                        if (isset($hTaxonomy['tags'])) {
+                            foreach ($hTaxonomy['tags'] as $hTag) {
+                                echo $this->element('rich_tag', [
+                                    'tag' => $hTag,
+                                    'tagAccess' => false,
+                                    'localTagAccess' => false,
+                                    'searchUrl' => '/events/index/searchtag:',
+                                    'scope' => 'event',
+                                    'id' => $event['Event']['id'],
+                                    'tag_display_style' => 1 // Use full tag style as requested
+                                ]);
+                            }
+                        }
+                    }
+                }
+            ?>
+        </td>
+        <?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?>
         <td class="dblclickElement col-attr-count" style="width:30px">
             <?= $event['Event']['attribute_count']; ?>
@@ -244,13 +270,24 @@
             <time><?= $event['Event']['date'] ?></time>
         </td>
         <?php if (in_array('timestamp', $columns, true)): ?>
-        <td class="short dblclickElement col-timestamp">
+        <td class="short dblclickElement col-timestamp beta-relative-timestamp" 
+            data-timestamp="<?= h($event['Event']['timestamp']) ?>" 
+            data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>" 
+            title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)" 
+            style="cursor: pointer;">
             <?= preg_replace('/\s+/', '<br>', $this->Time->time($event['Event']['timestamp'])) ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?>
-        <td class="short dblclickElement col-publish-timestamp">
-            <?= preg_replace('/\s+/', '<br>', $this->Time->time($event['Event']['publish_timestamp'])) ?>
+        <td class="short dblclickElement col-publish-timestamp beta-relative-timestamp" 
+            <?php if (!empty($event['Event']['publish_timestamp'])): ?>
+            data-timestamp="<?= h($event['Event']['publish_timestamp']) ?>" 
+            data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['publish_timestamp'])) ?>" 
+            title="<?= h(date('Y-m-d H:i:s', $event['Event']['publish_timestamp'])) ?> (click to copy)" 
+            style="cursor: pointer;"
+            <?php endif; ?>
+        >
+            <?= !empty($event['Event']['publish_timestamp']) ? preg_replace('/\s+/', '<br>', $this->Time->time($event['Event']['publish_timestamp'])) : '' ?>
         </td>
         <?php endif; ?>
     </tr>

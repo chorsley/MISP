@@ -1019,6 +1019,7 @@ class EventsController extends AppController
         if (Configure::read('MISP.tagging')) {
             $possibleColumns[] = 'clusters';
             $possibleColumns[] = 'tags';
+            $possibleColumns[] = 'highlights';
         }
 
         $possibleColumns[] = 'attribute_count';
@@ -1068,7 +1069,7 @@ class EventsController extends AppController
 
         $user = $this->Auth->user();
 
-        if (in_array('tags', $columns, true) || in_array('clusters', $columns, true)) {
+        if (in_array('tags', $columns, true) || in_array('clusters', $columns, true) || in_array('highlights', $columns, true)) {
             $events = $this->Event->attachTagsToEvents($events);
             $events = $this->GalaxyCluster->attachClustersToEventIndex($user, $events, true);
             $events = $this->__attachHighlightedTagsToEvents($events);

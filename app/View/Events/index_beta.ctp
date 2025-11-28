@@ -40,6 +40,7 @@
             'attribute_count' => __('Attribute count'),
             'creator_user' => __('Creator user'),
             'tags' => __('Tags'),
+            'highlights' => __('Highlight tags'),
             'clusters' => __('Clusters'),
             'correlations' => __('Correlations'),
             'sightings' => __('Sightings'),
@@ -182,6 +183,6 @@
 <?php
 echo $this->element('genericElements/assetLoader', [
     'css' => ['vis', 'distribution-graph'],
-    'js' => ['vis', 'jquery-ui.min', 'network-distribution-graph'],
+    'js' => ['vis', 'jquery-ui.min', 'network-distribution-graph', 'beta-events-timestamps'],
 ]);
 ?>
