@@ -805,6 +805,8 @@ pre {
 .beta-events-table {
     width: 100%;
     max-width: 100%;
+    table-layout: auto;
+    overflow-wrap: break-word;
 }
 
 /* Truncation and sizing for Info column */
@@ -910,6 +912,7 @@ body.beta-ui-enabled .events.index.beta-events-index {
     padding-left: 20px !important;
     padding-right: 20px !important;
     margin-left: 0 !important;
+    box-sizing: border-box !important;
 }
 
 /* Hide the sidebar actions div for beta events index */
@@ -923,10 +926,11 @@ body.beta-ui-enabled #content {
     margin-left: 0 !important;
 }
 
-/* Ensure the main container uses full width */
+/* Ensure the main container uses full width with proper padding */
 body.beta-ui-enabled .container-fluid {
     padding-left: 20px !important;
     padding-right: 20px !important;
+    box-sizing: border-box !important;
 }
 
 
@@ -1194,16 +1198,13 @@ body.beta-ui-enabled #content {
     margin-left: 0 !important;
 }
 
-/* Remove container padding for beta events index */
+/* Ensure beta events index has proper padding and box-sizing */
 body.beta-ui-enabled .beta-events-index {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-/* Override container-fluid padding for beta UI */
-body.beta-ui-enabled .container-fluid {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
 }
 
 /* Responsive improvements */
