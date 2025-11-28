@@ -526,6 +526,18 @@ pre {
     line-height: 1.5;
 }
 
+.beta-info-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.beta-info-wrapper .dist-widget {
+    margin-top: 3px;
+    /* Align with text baseline */
+    flex-shrink: 0;
+}
+
 /* Enhanced ID column styling - consistent with other links */
 .beta-events-table .short a {
     font-weight: 600;
@@ -678,6 +690,8 @@ pre {
     border-radius: 4px;
     background-color: #ffffff;
     transition: all 0.15s ease-in-out;
+    margin-top: 2px;
+    /* Fix vertical alignment with text */
 }
 
 .beta-checkbox-actions-wrapper:hover {

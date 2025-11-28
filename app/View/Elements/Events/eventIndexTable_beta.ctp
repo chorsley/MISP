@@ -86,14 +86,16 @@
             $extendedEventsIdByUuid = array_column($extendedEvents, 'id', 'uuid');
         ?>
         <td class="dblclickElement beta-info-cell" style="min-width: 20vi; white-space: normal;">
-            <a href="<?= $baseurl."/events/view/".$eventId ?>" class="beta-info-link" title="<?= h($event['Event']['info']) ?>">
-                <?= nl2br(h($event['Event']['info']), false) ?>
-            </a>
-            <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
-                 title="<?= __('Toggle advanced sharing network viewer') ?>"
-                 data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
-                 data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
-                 data-scope-id="<?= $eventId ?>">
+            <div class="beta-info-wrapper">
+                <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
+                     title="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($distributionLevels[$event['Event']['distribution']]) ?>"
+                     data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
+                     data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
+                     data-scope-id="<?= $eventId ?>">
+                </div>
+                <a href="<?= $baseurl."/events/view/".$eventId ?>" class="beta-info-link" title="<?= h($event['Event']['info']) ?>">
+                    <?= nl2br(h($event['Event']['info']), false) ?>
+                </a>
             </div>
 
             <?php if ($extends_info): ?>
