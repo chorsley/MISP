@@ -65,6 +65,20 @@
         <div class="beta-header-left">
             <h2><?php echo __('Events');?></h2>
             <div class="beta-header-filters">
+                <?php if ($this->Acl->canAccess('events', 'add')): ?>
+                    <div class="btn-group beta-create-event-group">
+                        <a href="<?= $baseurl ?>/events/add" class="btn btn-primary">
+                            <i class="fa fa-plus"></i> <?= __('Create Event') ?>
+                        </a>
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="caret"></span>
+                            <span class="sr-only"><?= __('Toggle Dropdown') ?></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= $baseurl ?>/events/add_misp_export"><i class="fa fa-file-import"></i> <?= __('Create event from import') ?></a></li>
+                        </ul>
+                    </div>
+                <?php endif; ?>
                 <a href="<?= $baseurl ?>/collections/index" class="btn btn-default beta-filter-button">
                     <i class="fa fa-folder-open"></i> <?= __('Event Collections') ?>
                 </a>
@@ -170,8 +184,4 @@ echo $this->element('genericElements/assetLoader', [
     'css' => ['vis', 'distribution-graph'],
     'js' => ['vis', 'jquery-ui.min', 'network-distribution-graph'],
 ]);
-// Beta version: No sidebar navigation
-if (!$ajax) {
-    echo $this->element('/genericElements/SideMenu/side_menu', array('menuList' => 'event-collection-beta', 'menuItem' => 'index'));
-}
 ?>

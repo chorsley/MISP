@@ -901,11 +901,35 @@ pre {
     color: #1e7e34;
 }
 
-/* Beta Events Index - Header Layout */
-.beta-events-index {
+/* Beta Events Index - Remove Sidebar Spacing */
+/* Override the default sidebar layout from main.css */
+body.beta-ui-enabled .events.index.beta-events-index {
+    float: none !important;
+    width: 100% !important;
+    border-left: none !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
     margin-left: 0 !important;
-    padding-left: 0 !important;
 }
+
+/* Hide the sidebar actions div for beta events index */
+body.beta-ui-enabled .events.index.beta-events-index+div.actions,
+body.beta-ui-enabled .events.index.beta-events-index~div.actions {
+    display: none !important;
+}
+
+/* Remove left margin from content wrapper when beta events index is present */
+body.beta-ui-enabled #content {
+    margin-left: 0 !important;
+}
+
+/* Ensure the main container uses full width */
+body.beta-ui-enabled .container-fluid {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
+
 
 /* Header row with title, filter buttons, and Create Event button */
 .beta-events-header-row {
@@ -1161,9 +1185,7 @@ pre {
     font-size: 0.875rem;
 }
 
-/* Hide sidebar for beta events index */
-.beta-events-index+#SideMenu,
-.beta-events-index~#SideMenu {
+.sidemenu {
     display: none !important;
 }
 
@@ -1305,6 +1327,8 @@ body.beta-ui-enabled .container-fluid {
 /* Make distribution widget clickable */
 .dist-widget {
     cursor: pointer;
+    margin-top: 4px;
+    /* Space when stacked under title */
 }
 
 /* Reduce padding for Create Event button group */

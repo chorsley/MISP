@@ -48,9 +48,8 @@
         <?php if (in_array('discussion', $columns, true)): ?><th class="col-post-count" title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
         <?php if (in_array('creator_user', $columns, true)): ?><th class="col-creator-user"><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
         <th class="filter col-date"><?= $this->Paginator->sort('date', null, array('direction' => 'desc'));?></th>
-        <?php if (in_array('timestamp', $columns, true)): ?><th class="col-timestamp" title="<?= __('Last modified at') ?>"><?= $this->Paginator->sort('timestamp', __('Last modified at')) ?></th><?php endif; ?>
-        <?php if (in_array('publish_timestamp', $columns, true)): ?><th class="col-publish-timestamp" title="<?= __('Published at') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Published at')) ?></th><?php endif; ?>
-        <th class="col-distribution" title="<?= $eventDescriptions['distribution']['desc'];?>"><?= $this->Paginator->sort('distribution', 'Dist');?></th>
+        <?php if (in_array('timestamp', $columns, true)): ?><th class="col-timestamp" title="<?= __('Last mod') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
+        <?php if (in_array('publish_timestamp', $columns, true)): ?><th class="col-publish-timestamp" title="<?= __('Pub time') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Pub time')) ?></th><?php endif; ?>
     </tr>
     <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
     <tr id="event_<?= $eventId ?>">
@@ -84,13 +83,17 @@
             $extends_uuid = $event['Event']['extends_uuid'] ?? null;
             $extendedEventsInfoByUuid = array_column($extendedEvents, 'info', 'uuid');
             $extendedEventsIdByUuid = array_column($extendedEvents, 'id', 'uuid');
-            $extends_info = $extendedEventsInfoByUuid[$extends_uuid] ?? null;
-            $extends_id = $extendedEventsIdByUuid[$extends_uuid] ?? null;
         ?>
         <td class="dblclickElement beta-info-cell" style="min-width: 20vi; white-space: normal;">
             <a href="<?= $baseurl."/events/view/".$eventId ?>" class="beta-info-link" title="<?= h($event['Event']['info']) ?>">
                 <?= nl2br(h($event['Event']['info']), false) ?>
             </a>
+            <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
+                 title="<?= __('Toggle advanced sharing network viewer') ?>"
+                 data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
+                 data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
+                 data-scope-id="<?= $eventId ?>">
+            </div>
 
             <?php if ($extends_info): ?>
                 <?php if (in_array('is_extension', $columns, true)): ?>
@@ -242,27 +245,14 @@
         </td>
         <?php if (in_array('timestamp', $columns, true)): ?>
         <td class="short dblclickElement col-timestamp">
-            <?= $this->Time->time($event['Event']['timestamp']) ?>
+            <?= preg_replace('/\s+/', '<br>', $this->Time->time($event['Event']['timestamp'])) ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?>
         <td class="short dblclickElement col-publish-timestamp">
-            <?= $this->Time->time($event['Event']['publish_timestamp']) ?>
+            <?= preg_replace('/\s+/', '<br>', $this->Time->time($event['Event']['publish_timestamp'])) ?>
         </td>
         <?php endif; ?>
-        <td class="short dblclickElement col-distribution<?php if ($event['Event']['distribution'] == 0) echo ' privateRedText';?>" title="<?= $event['Event']['distribution'] != 3 ? $distributionLevels[$event['Event']['distribution']] : __('All');?>">
-            <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
-                 title="<?= __('Toggle advanced sharing network viewer') ?>"
-                 data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
-                 data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
-                 data-scope-id="<?= $eventId ?>">
-            </div>
-            <?php if ($event['Event']['distribution'] == 4):?>
-                <a href="<?php echo $baseurl;?>/sharingGroups/view/<?= intval($event['SharingGroup']['id']); ?>" class="dist-text"><?= h($event['SharingGroup']['name']) ?></a>
-            <?php else: ?>
-                <span class="dist-text"><?= h($shortDist[$event['Event']['distribution']]) ?></span>
-            <?php endif; ?>
-        </td>
     </tr>
     <?php endforeach; ?>
 </table>
