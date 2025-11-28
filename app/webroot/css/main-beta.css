@@ -1068,6 +1068,7 @@ body.beta-ui-enabled .container-fluid {
     display: flex;
     align-items: flex-end;
     padding-bottom: 2px;
+    position: relative;
     /* Align with input fields */
 }
 
@@ -1080,6 +1081,8 @@ body.beta-ui-enabled .container-fluid {
 
 .beta-columns-menu {
     min-width: 200px;
+    right: 0;
+    left: auto;
 }
 
 .beta-columns-menu li a {
@@ -1342,6 +1345,7 @@ body.beta-ui-enabled .beta-events-index {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
 }
+
 /* Highlights Column - Compact Tag Display */
 .col-highlights {
     max-width: 15vw;

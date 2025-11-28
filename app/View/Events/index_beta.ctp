@@ -96,7 +96,7 @@
                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="<?= __('Choose columns to show') ?>">
                     <i class="fa fa-columns"></i> <?= __('Columns') ?> <span class="caret"></span>
                 </button>
-                <ul class="dropdown-menu beta-columns-menu">
+                <ul class="dropdown-menu dropdown-menu-right beta-columns-menu">
                     <?php foreach ($possibleColumns as $possibleColumn): ?>
                         <li>
                             <a href="#" onclick="eventIndexColumnsToggle('<?= h($possibleColumn) ?>'); return false;">
