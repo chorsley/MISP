@@ -17,7 +17,7 @@
      if (!isset($data['requirement']) || $data['requirement']) {
          echo sprintf(
              '<li class="dropdown-submenu"><a tabindex="-1" href="#">%s%s</a><ul class="dropdown-menu">%s</ul></li>',
-             (empty($data['html']) ? '' : h($data['html'])),
+             (empty($data['html']) ? '' : $data['html']),
              (empty($data['text']) ? '' : h($data['text'])),
              $child_data
          );

@@ -51,7 +51,11 @@
     <div id="gray_out"></div>
     <div id="container">
         <?php
-            echo $this->element('global_menu');
+            if (!empty($uiBetaEnabled)) {
+                echo $this->element('global_menu_beta');
+            } else {
+                echo $this->element('global_menu');
+            }
             $topPadding = '50';
             if (!empty($debugMode) && $debugMode != 'debugOff') {
                 $topPadding = '0';
