@@ -45,10 +45,7 @@ if (!empty($me)) {
             'type' => 'root',
             'text' => __('Events'),
             'children' => array(
-                array(
-                    'html' => '<i class="fas fa-tachometer-alt fa-fw"></i> ' . __('Dashboards'),
-                    'url' => $baseurl . '/dashboards'
-                ),
+
                 array(
                     'type' => 'separator'
                 ),
@@ -77,11 +74,7 @@ if (!empty($me)) {
                             'html' => '<i class="fas fa-list fa-fw"></i> ' . __('List'),
                             'url' => $baseurl . '/attributes/index'
                         ),
-                        array(
-                            'html' => '<i class="fas fa-plus fa-fw"></i> ' . __('Add'),
-                            'url' => $baseurl . '/attributes/add',
-                            'requirement' => $this->Acl->canAccess('attributes', 'add'),
-                        ),
+
                         array(
                             'html' => '<i class="fas fa-search fa-fw"></i> ' . __('Search'),
                             'url' => $baseurl . '/attributes/search'
@@ -151,6 +144,17 @@ if (!empty($me)) {
                             'url' => $baseurl . '/eventBlocklists',
                         )
                     )
+                ),
+                array(
+                    'type' => 'separator'
+                ),
+                array(
+                    'html' => '<i class="fas fa-tachometer-alt fa-fw"></i> ' . __('Dashboards'),
+                    'url' => $baseurl . '/dashboards'
+                ),
+                array(
+                    'html' => '<i class="fas fa-chart-pie fa-fw"></i> ' . __('Statistics'),
+                    'url' => $baseurl . '/users/statistics'
                 )
             )
         ),
@@ -159,89 +163,121 @@ if (!empty($me)) {
             'type' => 'root',
             'text' => __('Data Models'),
             'children' => array(
+                // Tags & Taxonomies Group
                 array(
-                    'html' => '<i class="fas fa-tag fa-fw"></i> ' . __('List Tags'),
-                    'url' => $baseurl . '/tags/index'
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-tags fa-fw"></i> ' . __('Tags & Taxonomies'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-tag fa-fw"></i> ' . __('List Tags'),
+                            'url' => $baseurl . '/tags/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-plus fa-fw"></i> ' . __('Add Tag'),
+                            'url' => $baseurl . '/tags/add',
+                            'requirement' => $this->Acl->canAccess('tags', 'add'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-tags fa-fw"></i> ' . __('List Tag Collections'),
+                            'url' => $baseurl . '/tag_collections/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-sitemap fa-fw"></i> ' . __('Tag Taxonomies'),
+                            'url' => $baseurl . '/taxonomies/index'
+                        ),
+                    )
                 ),
+                // Templates Group
                 array(
-                    'html' => '<i class="fas fa-plus fa-fw"></i> ' . __('Add Tag'),
-                    'url' => $baseurl . '/tags/add',
-                    'requirement' => $this->Acl->canAccess('tags', 'add'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-tags fa-fw"></i> ' . __('List Tag Collections'),
-                    'url' => $baseurl . '/tag_collections/index'
-                ),
-                array(
-                    'html' => '<i class="fas fa-sitemap fa-fw"></i> ' . __('List Taxonomies'),
-                    'url' => $baseurl . '/taxonomies/index'
-                ),
-                array(
-                    'html' => '<i class="fas fa-file-code fa-fw"></i> ' . __('List Templates'),
-                    'url' => $baseurl . '/templates/index'
-                ),
-                array(
-                    'html' => '<i class="fas fa-cubes fa-fw"></i> ' . __('List Object Templates'),
-                    'url' => $baseurl . '/objectTemplates/index'
-                ),
-                array(
-                    'type' => 'separator'
-                ),
-                array(
-                    'html' => '<i class="fas fa-star fa-fw"></i> ' . __('List Galaxies'),
-                    'url' => $baseurl . '/galaxies/index'
-                ),
-                array(
-                    'html' => '<i class="fas fa-project-diagram fa-fw"></i> ' . __('List Galaxy Relationships'),
-                    'url' => $baseurl . '/galaxy_cluster_relations/index'
-                ),
-                array(
-                    'type' => 'separator'
-                ),
-                array(
-                    'html' => '<i class="fas fa-hourglass-half fa-fw"></i> ' . __('Decaying Models Tool'),
-                    'url' => $baseurl . '/decayingModel/decayingTool',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-list-ol fa-fw"></i> ' . __('List Decaying Models'),
-                    'url' => $baseurl . '/decayingModel/index',
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-file-code fa-fw"></i> ' . __('Templates'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-file-code fa-fw"></i> ' . __('List Templates'),
+                            'url' => $baseurl . '/templates/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-cubes fa-fw"></i> ' . __('List Object Templates'),
+                            'url' => $baseurl . '/objectTemplates/index'
+                        ),
+                    )
                 ),
                 array(
                     'type' => 'separator'
                 ),
+                // Galaxies Group
                 array(
-                    'html' => '<i class="fas fa-exclamation-triangle fa-fw"></i> ' . __('Warninglists'),
-                    'url' => $baseurl . '/warninglists/index'
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-star fa-fw"></i> ' . __('Galaxies'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-star fa-fw"></i> ' . __('List Galaxies'),
+                            'url' => $baseurl . '/galaxies/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-project-diagram fa-fw"></i> ' . __('List Galaxy Relationships'),
+                            'url' => $baseurl . '/galaxy_cluster_relations/index'
+                        ),
+                    )
+                ),
+                // Decaying Models Group
+                array(
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-hourglass-half fa-fw"></i> ' . __('Decaying Models'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-hourglass-half fa-fw"></i> ' . __('Decaying Models Tool'),
+                            'url' => $baseurl . '/decayingModel/decayingTool',
+                            'requirement' => $isAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-list-ol fa-fw"></i> ' . __('List Decaying Models'),
+                            'url' => $baseurl . '/decayingModel/index',
+                        ),
+                    )
                 ),
                 array(
-                    'html' => '<i class="fas fa-info-circle fa-fw"></i> ' . __('Noticelists'),
-                    'url' => $baseurl . '/noticelists/index'
+                    'type' => 'separator'
                 ),
+                // Lists & Regex Group
                 array(
-                    'html' => '<i class="fas fa-code fa-fw"></i> ' . __('Import Regexp'),
-                    'url' => $baseurl . '/admin/regexp/index',
-                    'requirement' => $isAclRegexp
-                ),
-                array(
-                    'html' => '<i class="fas fa-code fa-fw"></i> ' . __('Import Regexp'),
-                    'url' => $baseurl . '/regexp/index',
-                    'requirement' => !$isAclRegexp
-                ),
-                array(
-                    'html' => '<i class="fas fa-check-circle fa-fw"></i> ' . __('Signature Allowedlist'),
-                    'url' => $baseurl . '/admin/allowedlists/index',
-                    'requirement' => $isAclRegexp
-                ),
-                array(
-                    'html' => '<i class="fas fa-check-circle fa-fw"></i> ' . __('Signature Allowedlist'),
-                    'url' => $baseurl . '/allowedlists/index',
-                    'requirement' => !$isAclRegexp
-                ),
-                array(
-                    'html' => '<i class="fas fa-filter fa-fw"></i> ' . __('Correlation Exclusions'),
-                    'url' => $baseurl . '/correlation_exclusions/index',
-                    'requirement' => $this->Acl->canAccess('correlation_exclusions', 'index'),
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-list-ul fa-fw"></i> ' . __('Filters & Lists'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-exclamation-triangle fa-fw"></i> ' . __('Warninglists'),
+                            'url' => $baseurl . '/warninglists/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-info-circle fa-fw"></i> ' . __('Noticelists'),
+                            'url' => $baseurl . '/noticelists/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-code fa-fw"></i> ' . __('Import Regexp'),
+                            'url' => $baseurl . '/admin/regexp/index',
+                            'requirement' => $isAclRegexp
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-code fa-fw"></i> ' . __('Import Regexp'),
+                            'url' => $baseurl . '/regexp/index',
+                            'requirement' => !$isAclRegexp
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-check-circle fa-fw"></i> ' . __('Signature Allowedlist'),
+                            'url' => $baseurl . '/admin/allowedlists/index',
+                            'requirement' => $isAclRegexp
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-check-circle fa-fw"></i> ' . __('Signature Allowedlist'),
+                            'url' => $baseurl . '/allowedlists/index',
+                            'requirement' => !$isAclRegexp
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-filter fa-fw"></i> ' . __('Correlation Exclusions'),
+                            'url' => $baseurl . '/correlation_exclusions/index',
+                            'requirement' => $this->Acl->canAccess('correlation_exclusions', 'index'),
+                        )
+                    )
                 )
             )
         ),
@@ -251,65 +287,83 @@ if (!empty($me)) {
             'text' => __('Sync'),
             'requirement' =>  $isAclSync || $isAdmin || $hostOrgUser,
             'children' => array(
+                // Servers & Feeds Group
                 array(
-                    'html' => '<i class="fas fa-sync fa-fw"></i> ' . __('Create Sync Config'),
-                    'url' => $baseurl . '/servers/createSync',
-                    'requirement' => $isAclSync && !$isSiteAdmin
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-server fa-fw"></i> ' . __('Servers & Feeds'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-sync fa-fw"></i> ' . __('Create Sync Config'),
+                            'url' => $baseurl . '/servers/createSync',
+                            'requirement' => $isAclSync && !$isSiteAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-server fa-fw"></i> ' . __('Remote Servers'),
+                            'url' => $baseurl . '/servers/index',
+                            'requirement' => $this->Acl->canAccess('servers', 'index'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-rss fa-fw"></i> ' . __('Feeds'),
+                            'url' => $baseurl . '/feeds/index',
+                            'requirement' => $this->Acl->canAccess('feeds', 'index'),
+                        ),
+                    )
                 ),
+                // Sharing Groups Group
                 array(
-                    'html' => '<i class="fas fa-server fa-fw"></i> ' . __('Remote Servers'),
-                    'url' => $baseurl . '/servers/index',
-                    'requirement' => $this->Acl->canAccess('servers', 'index'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-rss fa-fw"></i> ' . __('Feeds'),
-                    'url' => $baseurl . '/feeds/index',
-                    'requirement' => $this->Acl->canAccess('feeds', 'index'),
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-share-alt fa-fw"></i> ' . __('Sharing Groups'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-share-alt fa-fw"></i> ' . __('List Sharing Groups'),
+                            'url' => $baseurl . '/sharing_groups/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-plus fa-fw"></i> ' . __('Add Sharing Group'),
+                            'url' => $baseurl . '/sharing_groups/add',
+                            'requirement' => $this->Acl->canAccess('sharing_groups', 'add'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-drafting-compass fa-fw"></i> ' . __('List Sharing Groups Blueprints'),
+                            'url' => $baseurl . '/sharing_group_blueprints/index',
+                            'requirement' => $this->Acl->canAccess('sharing_group_blueprints', 'index'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-plus-square fa-fw"></i> ' . __('Add Sharing Group Blueprint'),
+                            'url' => $baseurl . '/sharing_group_blueprints/add',
+                            'requirement' => $this->Acl->canAccess('sharing_group_blueprints', 'add'),
+                        ),
+                    )
                 ),
                 array(
                     'type' => 'separator'
                 ),
+                // Integrations Group
                 array(
-                    'html' => '<i class="fas fa-share-alt fa-fw"></i> ' . __('List Sharing Groups'),
-                    'url' => $baseurl . '/sharing_groups/index'
-                ),
-                array(
-                    'html' => '<i class="fas fa-plus fa-fw"></i> ' . __('Add Sharing Group'),
-                    'url' => $baseurl . '/sharing_groups/add',
-                    'requirement' => $this->Acl->canAccess('sharing_groups', 'add'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-drafting-compass fa-fw"></i> ' . __('List Sharing Groups Blueprints'),
-                    'url' => $baseurl . '/sharing_group_blueprints/index',
-                    'requirement' => $this->Acl->canAccess('sharing_group_blueprints', 'index'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-plus-square fa-fw"></i> ' . __('Add Sharing Group Blueprint'),
-                    'url' => $baseurl . '/sharing_group_blueprints/add',
-                    'requirement' => $this->Acl->canAccess('sharing_group_blueprints', 'add'),
-                ),
-                array(
-                    'type' => 'separator'
-                ),
-                array(
-                    'html' => '<i class="fas fa-users fa-fw"></i> ' . __('Communities'),
-                    'url' => $baseurl . '/communities/index',
-                    'requirement' => $this->Acl->canAccess('communities', 'index'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-network-wired fa-fw"></i> ' . __('Cerebrates'),
-                    'url' => $baseurl . '/cerebrates/index',
-                    'requirement' => $this->Acl->canAccess('cerebrates', 'index'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-cloud fa-fw"></i> ' . __('TAXII Servers'),
-                    'url' => $baseurl . '/TaxiiServers/index',
-                    'requirement' => $this->Acl->canAccess('taxiiServers', 'index'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-eye fa-fw"></i> ' . __('SightingDB'),
-                    'url' => $baseurl . '/sightingdb/index',
-                    'requirement' => $this->Acl->canAccess('sightingdb', 'index'),
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-plug fa-fw"></i> ' . __('Integrations'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-users fa-fw"></i> ' . __('Communities'),
+                            'url' => $baseurl . '/communities/index',
+                            'requirement' => $this->Acl->canAccess('communities', 'index'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-network-wired fa-fw"></i> ' . __('Cerebrates'),
+                            'url' => $baseurl . '/cerebrates/index',
+                            'requirement' => $this->Acl->canAccess('cerebrates', 'index'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-cloud fa-fw"></i> ' . __('TAXII Servers'),
+                            'url' => $baseurl . '/TaxiiServers/index',
+                            'requirement' => $this->Acl->canAccess('taxiiServers', 'index'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-eye fa-fw"></i> ' . __('SightingDB'),
+                            'url' => $baseurl . '/sightingdb/index',
+                            'requirement' => $this->Acl->canAccess('sightingdb', 'index'),
+                        ),
+                    )
                 ),
                 array(
                     'html' => '<i class="fas fa-exchange-alt fa-fw"></i> ' . __('Event ID translator'),
@@ -333,152 +387,178 @@ if (!empty($me)) {
                     'type' => 'separator',
                     'requirement' => $isSiteAdmin
                 ),
+                // Users & Orgs Group
                 array(
-                    'html' => '<i class="fas fa-user fa-fw"></i> ' . __('List Users'),
-                    'url' => $baseurl . '/admin/users/index',
-                    'requirement' => $isAdmin
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-users-cog fa-fw"></i> ' . __('Users & Orgs'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-user fa-fw"></i> ' . __('List Users'),
+                            'url' => $baseurl . '/admin/users/index',
+                            'requirement' => $isAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-user-plus fa-fw"></i> ' . __('Add User'),
+                            'url' => $baseurl . '/admin/users/add',
+                            'requirement' => $this->Acl->canAccess('users', 'admin_add'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-envelope fa-fw"></i> ' . __('Contact Users'),
+                            'url' => $baseurl . '/admin/users/email',
+                            'requirement' => $isAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-clipboard-list fa-fw"></i> ' . __('User Registrations'),
+                            'url' => $baseurl . '/users/registrations',
+                            'requirement' => $this->Acl->canAccess('users', 'registrations'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-building fa-fw"></i> ' . __('List Organisations'),
+                            'url' => $baseurl . '/organisations/index',
+                            'requirement' => $this->Acl->canAccess('organisations', 'index'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-plus-square fa-fw"></i> ' . __('Add Organisations'),
+                            'url' => $baseurl . '/admin/organisations/add',
+                            'requirement' => $this->Acl->canAccess('organisations', 'admin_add'),
+                        ),
+                    )
                 ),
+                // Roles & Permissions Group
                 array(
-                    'html' => '<i class="fas fa-user-plus fa-fw"></i> ' . __('Add User'),
-                    'url' => $baseurl . '/admin/users/add',
-                    'requirement' => $this->Acl->canAccess('users', 'admin_add'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-envelope fa-fw"></i> ' . __('Contact Users'),
-                    'url' => $baseurl . '/admin/users/email',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-clipboard-list fa-fw"></i> ' . __('User Registrations'),
-                    'url' => $baseurl . '/users/registrations',
-                    'requirement' => $this->Acl->canAccess('users', 'registrations'),
-                ),
-                array(
-                    'type' => 'separator',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-building fa-fw"></i> ' . __('List Organisations'),
-                    'url' => $baseurl . '/organisations/index',
-                    'requirement' => $this->Acl->canAccess('organisations', 'index'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-plus-square fa-fw"></i> ' . __('Add Organisations'),
-                    'url' => $baseurl . '/admin/organisations/add',
-                    'requirement' => $this->Acl->canAccess('organisations', 'admin_add'),
-                ),
-                array(
-                    'type' => 'separator',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-user-tag fa-fw"></i> ' . __('List Roles'),
-                    'url' => $baseurl . '/roles/index',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-plus-circle fa-fw"></i> ' . __('Add Roles'),
-                    'url' => $baseurl . '/admin/roles/add',
-                    'requirement' => $isSiteAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-lock fa-fw"></i> ' . __('Role Permissions'),
-                    'url' => $baseurl . '/roles/index',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'type' => 'separator',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-key fa-fw"></i> ' . __('List Auth Keys'),
-                    'url' => $baseurl . '/auth_keys/index',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-sliders-h fa-fw"></i> ' . __('List User Settings'),
-                    'url' => $baseurl . '/user_settings/index/user_id:all',
-                    'requirement' => $isAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-cog fa-fw"></i> ' . __('Set User Setting'),
-                    'url' => $baseurl . '/user_settings/setSetting',
-                    'requirement' => $isAdmin
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-user-shield fa-fw"></i> ' . __('Roles & Permissions'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-user-tag fa-fw"></i> ' . __('List Roles'),
+                            'url' => $baseurl . '/roles/index',
+                            'requirement' => $isAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-plus-circle fa-fw"></i> ' . __('Add Roles'),
+                            'url' => $baseurl . '/admin/roles/add',
+                            'requirement' => $isSiteAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-lock fa-fw"></i> ' . __('Role Permissions'),
+                            'url' => $baseurl . '/roles/index',
+                            'requirement' => $isAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-key fa-fw"></i> ' . __('List Auth Keys'),
+                            'url' => $baseurl . '/auth_keys/index',
+                            'requirement' => $isAdmin
+                        ),
+                    )
                 ),
                 array(
                     'type' => 'separator',
                     'requirement' => $isSiteAdmin
                 ),
+                // System Jobs Group
                 array(
-                    'html' => sprintf(
-                        '<span style="display: flex;"><i class="fas fa-project-diagram fa-fw"></i>&nbsp;<span>%s</span></span>',
-                        __('Workflows')
-                    ),
-                    'url' => $baseurl . '/workflows/triggers',
-                    'requirement' => $isSiteAdmin
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-cogs fa-fw"></i> ' . __('System Jobs'),
+                    'children' => array(
+                        array(
+                            'html' => sprintf(
+                                '<span style="display: flex;"><i class="fas fa-project-diagram fa-fw"></i>&nbsp;<span>%s</span></span>',
+                                __('Workflows')
+                            ),
+                            'url' => $baseurl . '/workflows/triggers',
+                            'requirement' => $isSiteAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-tasks fa-fw"></i> ' . __('Jobs'),
+                            'url' => $baseurl . '/jobs/index',
+                            'requirement' => Configure::read('MISP.background_jobs') && $isSiteAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-clock fa-fw"></i> ' . __('Scheduled Tasks'),
+                            'url' => $baseurl . '/tasks',
+                            'requirement' => Configure::read('MISP.background_jobs') && $isSiteAdmin
+                        ),
+                        [
+                            'html' => '<i class="fas fa-tachometer-alt fa-fw"></i> ' . __('Benchmarking'),
+                            'url' => $baseurl . '/benchmarks/index',
+                            'requirement' => $isSiteAdmin && Configure::read('Plugin.Benchmarking_enable')
+                        ],
+                    )
                 ),
-                array(
-                    'html' => '<i class="fas fa-tasks fa-fw"></i> ' . __('Jobs'),
-                    'url' => $baseurl . '/jobs/index',
-                    'requirement' => Configure::read('MISP.background_jobs') && $isSiteAdmin
-                ),
-                array(
-                    'html' => '<i class="fas fa-clock fa-fw"></i> ' . __('Scheduled Tasks'),
-                    'url' => $baseurl . '/tasks',
-                    'requirement' => Configure::read('MISP.background_jobs') && $isSiteAdmin
-                ),
-                [
-                    'html' => '<i class="fas fa-tachometer-alt fa-fw"></i> ' . __('Benchmarking'),
-                    'url' => $baseurl . '/benchmarks/index',
-                    'requirement' => $isSiteAdmin && Configure::read('Plugin.Benchmarking_enable')
-                ],
                 array(
                     'type' => 'separator',
                     'requirement' => $isSiteAdmin
                 ),
+                // Blocklists & Rules Group
                 array(
-                    'html' => '<i class="fas fa-shield-alt fa-fw"></i> ' . __('Event Block Rules'),
-                    'url' => $baseurl . '/servers/eventBlockRule',
-                    'requirement' => $isSiteAdmin
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-ban fa-fw"></i> ' . __('Blocklists & Rules'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-shield-alt fa-fw"></i> ' . __('Event Block Rules'),
+                            'url' => $baseurl . '/servers/eventBlockRule',
+                            'requirement' => $isSiteAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-ban fa-fw"></i> ' . __('Event Blocklists'),
+                            'url' => $baseurl . '/eventBlocklists',
+                            'requirement' => Configure::read('MISP.enableEventBlocklisting') !== false && $isSiteAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-building-slash fa-fw"></i> ' . __('Org Blocklists'),
+                            'url' => $baseurl . '/orgBlocklists',
+                            'requirement' => Configure::read('MISP.enableOrgBlocklisting') !== false && $isSiteAdmin
+                        ),
+                    )
                 ),
+                // Correlations Group
                 array(
-                    'html' => '<i class="fas fa-ban fa-fw"></i> ' . __('Event Blocklists'),
-                    'url' => $baseurl . '/eventBlocklists',
-                    'requirement' => Configure::read('MISP.enableEventBlocklisting') !== false && $isSiteAdmin
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-project-diagram fa-fw"></i> ' . __('Correlations'),
+                    'children' => array(
+                        [
+                            'html' => '<i class="fas fa-chart-bar fa-fw"></i> ' . __('Top Correlations'),
+                            'url' => $baseurl . '/correlations/top',
+                            'requirement' => $isSiteAdmin
+                        ],
+                        [
+                            'html' => '<i class="fas fa-ruler fa-fw"></i> ' . __('Correlation rules'),
+                            'url' => $baseurl . '/correlationRules/index',
+                            'requirement' => $isSiteAdmin
+                        ],
+                        [
+                            'html' => sprintf(
+                                '<span style="display: flex;"><i class="fas fa-exclamation-circle fa-fw"></i>&nbsp;<span>%s</span></span>',
+                                __('Over-correlating values')
+                            ),
+                            'url' => $baseurl . '/correlations/overCorrelations',
+                            'requirement' => $isSiteAdmin
+                        ]
+                    )
                 ),
+                // Settings Group
                 array(
-                    'html' => '<i class="fas fa-building-slash fa-fw"></i> ' . __('Org Blocklists'),
-                    'url' => $baseurl . '/orgBlocklists',
-                    'requirement' => Configure::read('MISP.enableOrgBlocklisting') !== false && $isSiteAdmin
-                ),
-                [
-                    'type' => 'separator',
-                    'requirement' => $isSiteAdmin
-                ],
-                [
-                    'html' => '<i class="fas fa-chart-bar fa-fw"></i> ' . __('Top Correlations'),
-                    'url' => $baseurl . '/correlations/top',
-                    'requirement' => $isSiteAdmin
-                ],
-                [
-                    'html' => '<i class="fas fa-ruler fa-fw"></i> ' . __('Correlation rules'),
-                    'url' => $baseurl . '/correlationRules/index',
-                    'requirement' => $isSiteAdmin
-                ],
-                [
-                    'html' => sprintf(
-                        '<span style="display: flex;"><i class="fas fa-exclamation-circle fa-fw"></i>&nbsp;<span>%s</span></span>',
-                        __('Over-correlating values')
-                    ),
-                    'url' => $baseurl . '/correlations/overCorrelations',
-                    'requirement' => $isSiteAdmin
-                ]
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-sliders-h fa-fw"></i> ' . __('Settings'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-sliders-h fa-fw"></i> ' . __('List User Settings'),
+                            'url' => $baseurl . '/user_settings/index/user_id:all',
+                            'requirement' => $isAdmin
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-cog fa-fw"></i> ' . __('Set User Setting'),
+                            'url' => $baseurl . '/user_settings/setSetting',
+                            'requirement' => $isAdmin
+                        ),
+                    )
+                )
             )
         ),
         // 6. Audit
         array(
             'type' => 'root',
-            'text' => __('Audit'),
+            'text' => __('Logs'),
             'requirement' => $isAclAudit,
             'children' => array(
                 array(
@@ -540,34 +620,46 @@ if (!empty($me)) {
                     'type' => 'separator',
                     'requirement' => $this->Acl->canAccess('threads', 'index'),
                 ),
+                // Discussions Group
                 array(
-                    'html' => '<i class="fas fa-comments fa-fw"></i> ' . __('List Discussions'),
-                    'url' => $baseurl . '/threads/index',
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-comments fa-fw"></i> ' . __('Discussions'),
                     'requirement' => $this->Acl->canAccess('threads', 'index'),
-                ),
-                array(
-                    'html' => '<i class="fas fa-comment-medical fa-fw"></i> ' . __('Start Discussion'),
-                    'url' => $baseurl . '/posts/add',
-                    'requirement' => $this->Acl->canAccess('posts', 'add'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-comments fa-fw"></i> ' . __('List Discussions'),
+                            'url' => $baseurl . '/threads/index',
+                            'requirement' => $this->Acl->canAccess('threads', 'index'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-comment-medical fa-fw"></i> ' . __('Start Discussion'),
+                            'url' => $baseurl . '/posts/add',
+                            'requirement' => $this->Acl->canAccess('posts', 'add'),
+                        ),
+                    )
                 ),
                 array(
                     'type' => 'separator'
                 ),
+                // Documentation Group
                 array(
-                    'html' => '<i class="fas fa-book-open fa-fw"></i> ' . __('User Guide'),
-                    'url' => 'https://www.circl.lu/doc/misp/'
-                ),
-                array(
-                    'html' => '<i class="fas fa-list-ul fa-fw"></i> ' . __('Categories & Types'),
-                    'url' => $baseurl . '/pages/display/doc/categories_and_types'
-                ),
-                array(
-                    'html' => '<i class="fas fa-gavel fa-fw"></i> ' . __('Terms & Conditions'),
-                    'url' => $baseurl . '/users/terms'
-                ),
-                array(
-                    'html' => '<i class="fas fa-chart-pie fa-fw"></i> ' . __('Statistics'),
-                    'url' => $baseurl . '/users/statistics'
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-book fa-fw"></i> ' . __('Documentation'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-book-open fa-fw"></i> ' . __('User Guide'),
+                            'url' => 'https://www.circl.lu/doc/misp/'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-list-ul fa-fw"></i> ' . __('Categories & Types'),
+                            'url' => $baseurl . '/pages/display/doc/categories_and_types'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-gavel fa-fw"></i> ' . __('Terms & Conditions'),
+                            'url' => $baseurl . '/users/terms'
+                        ),
+
+                    )
                 ),
                 array(
                     'type' => 'separator'
