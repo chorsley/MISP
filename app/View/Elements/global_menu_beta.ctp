@@ -43,6 +43,7 @@ if (!empty($me)) {
         // 2. Events
         array(
             'type' => 'root',
+            'html' => '<i class="fas fa-clipboard-list fa-fw"></i> ',
             'text' => __('Events'),
             'children' => array(
 
@@ -56,7 +57,7 @@ if (!empty($me)) {
                 // Events Group
                 array(
                     'type' => 'group',
-                    'html' => '<i class="fas fa-calendar fa-fw"></i> ' . __('Events'),
+                    'html' => '<i class="fas fa-clipboard-list fa-fw"></i> ' . __('Events'),
                     'children' => array(
                         array(
                             'html' => '<i class="fas fa-list fa-fw"></i> ' . __('List'),
@@ -165,6 +166,7 @@ if (!empty($me)) {
         // 3. Data Models
         array(
             'type' => 'root',
+            'html' => '<i class="fas fa-drafting-compass fa-fw"></i> ',
             'text' => __('Data Models'),
             'children' => array(
                 // Tags & Taxonomies Group
@@ -291,6 +293,7 @@ if (!empty($me)) {
         // 4. Sync
         array(
             'type' => 'root',
+            'html' => '<i class="fas fa-sync fa-fw"></i> ',
             'text' => __('Sync'),
             'requirement' =>  $isAclSync || $isAdmin || $hostOrgUser,
             'children' => array(
@@ -382,6 +385,7 @@ if (!empty($me)) {
         // 5. Administration
         array(
             'type' => 'root',
+            'html' => '<i class="fas fa-tools fa-fw"></i> ',
             'text' => __('Administration'),
             'requirement' => $isAdmin || $this->Acl->canAccess('organisations', 'index'),
             'children' => array(
@@ -565,6 +569,7 @@ if (!empty($me)) {
         // 6. Audit
         array(
             'type' => 'root',
+            'html' => '<i class="fas fa-history fa-fw"></i> ',
             'text' => __('Logs'),
             'requirement' => $isAclAudit,
             'children' => array(
@@ -592,6 +597,7 @@ if (!empty($me)) {
         // 7. Automation
         array(
             'type' => 'root',
+            'html' => '<i class="fas fa-robot fa-fw"></i> ',
             'text' => __('Automation'),
             'children' => array(
                 array(
@@ -617,6 +623,7 @@ if (!empty($me)) {
         // 8. Resources
         array(
             'type' => 'root',
+            'html' => '<i class="fas fa-info-circle fa-fw"></i> ',
             'text' => __('Resources'),
             'children' => array(
                 array(
