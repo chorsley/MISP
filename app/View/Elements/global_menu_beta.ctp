@@ -47,6 +47,10 @@ if (!empty($me)) {
             'children' => array(
 
                 array(
+                    'html' => '<i class="fas fa-list fa-fw"></i> ' . __('Event Index'),
+                    'url' => $baseurl . '/events/index'
+                ),
+                array(
                     'type' => 'separator'
                 ),
                 // Events Group
@@ -187,24 +191,6 @@ if (!empty($me)) {
                         ),
                     )
                 ),
-                // Templates Group
-                array(
-                    'type' => 'group',
-                    'html' => '<i class="fas fa-file-code fa-fw"></i> ' . __('Templates'),
-                    'children' => array(
-                        array(
-                            'html' => '<i class="fas fa-file-code fa-fw"></i> ' . __('List Templates'),
-                            'url' => $baseurl . '/templates/index'
-                        ),
-                        array(
-                            'html' => '<i class="fas fa-cubes fa-fw"></i> ' . __('List Object Templates'),
-                            'url' => $baseurl . '/objectTemplates/index'
-                        ),
-                    )
-                ),
-                array(
-                    'type' => 'separator'
-                ),
                 // Galaxies Group
                 array(
                     'type' => 'group',
@@ -220,6 +206,9 @@ if (!empty($me)) {
                         ),
                     )
                 ),
+                array(
+                    'type' => 'separator'
+                ),
                 // Decaying Models Group
                 array(
                     'type' => 'group',
@@ -233,6 +222,24 @@ if (!empty($me)) {
                         array(
                             'html' => '<i class="fas fa-list-ol fa-fw"></i> ' . __('List Decaying Models'),
                             'url' => $baseurl . '/decayingModel/index',
+                        ),
+                    )
+                ),
+                array(
+                    'type' => 'separator'
+                ),
+                // Templates Group
+                array(
+                    'type' => 'group',
+                    'html' => '<i class="fas fa-file-code fa-fw"></i> ' . __('Templates'),
+                    'children' => array(
+                        array(
+                            'html' => '<i class="fas fa-file-code fa-fw"></i> ' . __('List Templates'),
+                            'url' => $baseurl . '/templates/index'
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-cubes fa-fw"></i> ' . __('List Object Templates'),
+                            'url' => $baseurl . '/objectTemplates/index'
                         ),
                     )
                 ),
