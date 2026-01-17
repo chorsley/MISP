@@ -42,6 +42,7 @@ class AttributesController extends AppController
         $this->Security->unlockedActions[] = 'getMassEditForm';
         $this->Security->unlockedActions[] = 'search';
         $this->Security->unlockedActions[] = 'index';
+        $this->Security->unlockedActions[] = 'editField';
 
         if ($this->request->action === 'add_attachment') {
             $this->Security->unlockedFields = array('values');

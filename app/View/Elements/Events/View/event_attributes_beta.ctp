@@ -155,6 +155,7 @@
         <thead>
             <tr>
                 <th style="width: 50px;"><input type="checkbox" class="select-all"></th>
+                <th style="width: 40px;" title="<?php echo __('Recommend for blocking / alerting?'); ?>">IDS</th>
                 <th>Type / Object</th>
                 <th>Value / Attributes</th>
                 <th>Context</th>
@@ -210,6 +211,17 @@
                         </div>
                     </td>
                     
+                    <!-- IDS Toggle -->
+                    <td style="text-align: center;">
+                        <?php if (!$isObject): ?>
+                            <i class="fa fa-shield-alt beta-ids-toggle" 
+                               style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($item['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
+                               data-id="<?= h($item['id']) ?>"
+                               data-to-ids="<?= (int)$item['to_ids'] ?>"
+                               title="<?= ($item['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
+                        <?php endif; ?>
+                    </td>
+                    
                     <!-- Type / Object Name -->
                     <td>
                         <?php if ($isObject): ?>
@@ -227,9 +239,6 @@
                              <span class="text-muted"><?php echo h($item['description']); ?></span>
                          <?php else: ?>
                             <span class="attr-value"><?php echo h($item['value']); ?></span>
-                             <?php if ($item['to_ids']): ?>
-                                <i class="fa fa-shield-alt text-success" title="IDS Enabled" style="margin-left: 5px; font-size: 10px;"></i>
-                            <?php endif; ?>
                          <?php endif; ?>
                     </td>
 
@@ -273,7 +282,15 @@
                                              <?php endif; ?>
                                         </ul>
                                     </div>
-                                </div>
+                                 </div>
+                            </td>
+                            <!-- IDS Toggle for Sub-Attribute -->
+                            <td style="text-align: center; border-left: 3px solid #e1f0fa;">
+                                <i class="fa fa-shield-alt beta-ids-toggle" 
+                                   style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
+                                   data-id="<?= h($subAttr['id']) ?>"
+                                   data-to-ids="<?= (int)$subAttr['to_ids'] ?>"
+                                   title="<?= ($subAttr['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
                             </td>
                             <td><span class="text-muted"><i class="fa fa-level-up fa-rotate-90"></i> <?php echo h($subAttr['type']); ?></span></td>
                             <td><span class="attr-value"><?php echo h($subAttr['value']); ?></span></td>
@@ -320,6 +337,74 @@
         $('.select-all').change(function() {
             var checked = $(this).prop('checked');
             $('.select-row').prop('checked', checked);
+        });
+
+        // IDS Toggle handling
+        $('.beta-ids-toggle').on('click', function() {
+            <?php if (!$mayModify): ?>
+                return false;
+            <?php else: ?>
+                var $this = $(this);
+                var id = $this.data('id');
+                var currentStatus = $this.data('to-ids');
+                var newStatus = currentStatus === 1 ? 0 : 1;
+                
+                xhr({
+                    url: "/attributes/editField/" + id,
+                    type: "POST",
+                    data: {
+                        'Attribute': {
+                            'to_ids': newStatus
+                        }
+                    },
+                    success: function(data) {
+                        if (typeof data === 'string') {
+                            try {
+                                data = JSON.parse(data);
+                            } catch (e) {
+                                showMessage('fail', 'Invalid response from server.');
+                                return;
+                            }
+                        }
+                        if (data.saved) {
+                            $this.data('to-ids', newStatus);
+                            if (newStatus === 1) {
+                                $this.removeClass('text-muted');
+                                $this.css({
+                                    'color': '#ff8c00',
+                                    'opacity': '1'
+                                });
+                                $this.attr('title', '<?= __('Recommended for blocking / alerting') ?>');
+                            } else {
+                                $this.addClass('text-muted');
+                                $this.css({
+                                    'color': '',
+                                    'opacity': '0.2'
+                                });
+                                $this.attr('title', '<?= __('Not recommended for blocking / alerting') ?>');
+                            }
+                            showMessage('success', 'IDS flag updated.');
+                            if (typeof eventUnpublish === 'function') {
+                                eventUnpublish();
+                            }
+                        } else {
+                            var errorMsg = 'Failed to update IDS flag.';
+                            if (data.errors) {
+                                if (typeof data.errors === 'string') errorMsg += ' ' + data.errors;
+                                else if (typeof data.errors === 'object') {
+                                    for (var key in data.errors) {
+                                        errorMsg += ' ' + data.errors[key];
+                                    }
+                                }
+                            }
+                            showMessage('fail', errorMsg);
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        showMessage('fail', 'An error occurred while updating the IDS flag: ' + textStatus);
+                    }
+                });
+            <?php endif; ?>
         });
 
         <?php
