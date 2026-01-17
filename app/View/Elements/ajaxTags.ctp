@@ -134,7 +134,7 @@
                 echo sprintf('<span class="apply_css_arrow nowrap">%s</span><br>', h($tag));
             }
         }
-        echo '</div></div></span>';
+        echo '</div></div></div>';
     }
     if (!empty($tagConflicts['local'])) {
         echo '<div><div class="alert alert-error tag-conflict-notice">';
@@ -149,5 +149,5 @@
                 echo sprintf('<span class="apply_css_arrow nowrap">%s</span><br>', h($tag));
             }
         }
-        echo '</div></div></span>';
+        echo '</div></div></div>';
     }

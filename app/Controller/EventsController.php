@@ -1,6 +1,7 @@
 <?php
 App::uses('AppController', 'Controller');
 App::uses('Xml', 'Utility');
+App::uses('BetaUiHelper', 'Lib/Tools');
 
 /**
  * @property Event $Event
@@ -1888,6 +1889,18 @@ class EventsController extends AppController
             $this->Flash->info(__('You are currently logged in as a site administrator and about to edit an event not belonging to your organisation. This goes against the sharing model of MISP. Use a normal user account for day to day work.'));
         }
         $this->__viewUI($user, $event, $continue, $fromEvent);
+
+        if (!$this->request->is('ajax')) {
+            $this->loadModel('UserSetting');
+            $uiBetaEnabled = $this->UserSetting->isUiBetaEnabled($this->Auth->user('id'));
+            
+            if ($uiBetaEnabled) {
+                $viewPath = BetaUiHelper::getViewPath(true, 'Events/view');
+                if ($viewPath !== 'Events/view') {
+                    $this->render(basename($viewPath));
+                }
+            }
+        }
     }
 
     /**
