@@ -422,11 +422,16 @@
         });
 
         // Initialize history state on load
+        var initialTab = window.location.hash || '#summary';
+        if (window.location.hash) {
+            $('.nav-tabs a[href="' + window.location.hash + '"]').tab('show');
+        }
+
         var initialState = {
-            tab: $('.nav-tabs li.active a').attr('href') || '#summary',
+            tab: initialTab,
             filter: null
         };
-        history.replaceState(initialState, '', window.location.pathname);
+        history.replaceState(initialState, '', window.location.pathname + initialTab);
 
         window.ignoreTabPush = false;
 
@@ -439,7 +444,7 @@
             
             // Only push if it's different from the current tab in history
             if (!currentState || currentState.tab !== target) {
-                history.pushState({ tab: target, filter: null }, '', window.location.pathname);
+                history.pushState({ tab: target, filter: null }, '', window.location.pathname + target);
             }
         });
 
@@ -500,7 +505,7 @@
         }
 
         if (pushToHistory) {
-            history.pushState({ tab: '#attributes', filter: { type: type, name: name } }, '', window.location.pathname);
+            history.pushState({ tab: '#attributes', filter: { type: type, name: name } }, '', window.location.pathname + '#attributes');
         }
     }
 
