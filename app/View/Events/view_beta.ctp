@@ -360,7 +360,7 @@
                 .attr("class", "bar-group")
                 .style("cursor", "pointer")
                 .on("click", function(d) {
-                    betaFilterAttributesByComposition(d.type, d.name);
+                    betaFilterAttributesByComposition(d.type, d.name, true);
                 });
 
             bars.append("rect")
@@ -390,46 +390,86 @@
         $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1", function(data) {
             $("#event-reports-tab-content").html(data);
         });
+
+        // Initialize history state on load
+        var initialState = {
+            tab: $('.nav-tabs li.active a').attr('href') || '#summary',
+            filter: null
+        };
+        history.replaceState(initialState, '', window.location.pathname);
+
+        window.ignoreTabPush = false;
+
+        // Listen for tab changes
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            if (window.ignoreTabPush) return;
+
+            var target = $(e.target).attr('href');
+            var currentState = history.state;
+            
+            // Only push if it's different from the current tab in history
+            if (!currentState || currentState.tab !== target) {
+                history.pushState({ tab: target, filter: null }, '', window.location.pathname);
+            }
+        });
+
+        // Handle browser back/forward
+        window.onpopstate = function(event) {
+            if (event.state) {
+                window.ignoreTabPush = true;
+                if (event.state.tab) {
+                    $('.nav-tabs a[href="' + event.state.tab + '"]').tab('show');
+                }
+                if (event.state.filter) {
+                    betaFilterAttributesByComposition(event.state.filter.type, event.state.filter.name, false);
+                } else {
+                    // Clear filter if we go back to a state without one
+                    clearBetaAttributeFilter();
+                }
+                window.ignoreTabPush = false;
+            }
+        };
     });
 
-    function betaFilterAttributesByComposition(type, name) {
+    function betaFilterAttributesByComposition(type, name, pushToHistory) {
         // Switch to Attributes tab
+        window.ignoreTabPush = true;
         $('.nav-tabs a[href="#attributes"]').tab('show');
+        window.ignoreTabPush = false;
         
-        // Reset previous filters
-        $('.beta-attr-row').show();
-        $('.filter-active-msg').remove();
+        // Clear previous filters
+        clearBetaAttributeFilter();
 
         // Apply filter
         $('.beta-attr-row').hide();
         
         if (type === 'object') {
-            // Show the object header
             $('.beta-attr-row[data-object-name="' + name + '"]').show();
-            // Show the attributes belonging to the object
             $('.beta-attr-row[data-parent-object="' + name + '"]').show();
         } else {
-            // Show attributes of this type (both standalone and inside objects)
             $('.beta-attr-row[data-attribute-type="' + name + '"]').show();
-            
-            // Optional: If you want to show parent object header for filtered attributes, 
-            // we'd need to find visible attributes and show their parents.
-            // For now, let's keep it simple.
         }
 
         // Show message
         var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
-        msg += '<button type="button" class="close" data-dismiss="alert" onclick="$(\'.beta-attr-row\').show(); $(this).parent().remove();">×</button>';
+        msg += '<button type="button" class="close" data-dismiss="alert" onclick="clearBetaAttributeFilter()">×</button>';
         msg += 'Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>';
-        msg += ' <a href="#" onclick="$(\'.beta-attr-row\').show(); $(\'.filter-active-msg\').remove(); return false;">(Clear Filter)</a>';
+        msg += ' <a href="#" onclick="clearBetaAttributeFilter(); return false;">(Clear Filter)</a>';
         msg += '</div>';
         
-        // Insert message after toolbar in attributes tab
         if ($('.beta-toolbar').length) {
              $('.beta-toolbar').after(msg);
         } else {
-             // Fallback
              $('#attributes').prepend(msg);
         }
+
+        if (pushToHistory) {
+            history.pushState({ tab: '#attributes', filter: { type: type, name: name } }, '', window.location.pathname);
+        }
+    }
+
+    function clearBetaAttributeFilter() {
+        $('.beta-attr-row').show();
+        $('.filter-active-msg').remove();
     }
 </script>
