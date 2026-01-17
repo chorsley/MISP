@@ -1339,6 +1339,34 @@ class EventsController extends AppController
         }
         $event = $results[0];
 
+        // Attach related attributes to proper attribute
+        if (!empty($event['RelatedAttribute'])) {
+            foreach ($event['RelatedAttribute'] as $attribute_id => $relation) {
+                foreach ($event['Attribute'] as $k2 => $attribute) {
+                    if ((int)$attribute['id'] == $attribute_id) {
+                        if (!isset($event['Attribute'][$k2]['RelatedAttribute'])) {
+                            $event['Attribute'][$k2]['RelatedAttribute'] = [];
+                        }
+                        $event['Attribute'][$k2]['RelatedAttribute'][] = $relation;
+                        continue 2;
+                    }
+                }
+                foreach ($event['Object'] as $k2 => $object) {
+                    if (isset($object['Attribute'])) {
+                        foreach ($object['Attribute'] as $k3 => $attribute) {
+                            if ((int)$attribute['id'] == $attribute_id) {
+                                if (!isset($event['Object'][$k2]['Attribute'][$k3]['RelatedAttribute'])) {
+                                    $event['Object'][$k2]['Attribute'][$k3]['RelatedAttribute'] = [];
+                                }
+                                $event['Object'][$k2]['Attribute'][$k3]['RelatedAttribute'][] = $relation;
+                                continue 3;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         $emptyEvent = empty($event['Object']) && empty($event['Attribute']);
         $this->set('emptyEvent', $emptyEvent);
 
