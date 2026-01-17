@@ -131,10 +131,10 @@
             </span>
             <span class="meta-box mod-box">
                 <span class="meta-label"><?php echo __('Last Mod'); ?></span>
-                <span class="meta-value beta-relative-timestamp" 
-                    data-timestamp="<?= h($event['Event']['timestamp']) ?>" 
-                    data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>" 
-                    title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)" 
+                <span class="meta-value beta-relative-timestamp"
+                    data-timestamp="<?= h($event['Event']['timestamp']) ?>"
+                    data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>"
+                    title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)"
                     style="cursor: pointer;">
                     <?php echo $this->Time->time($event['Event']['timestamp']); ?>
                 </span>
@@ -174,7 +174,7 @@
             <div role="tabpanel" class="tab-pane active" id="summary">
                  <div class="row-fluid">
                      <div class="span8">
-                         <!-- Report Snippet (Placeholder) -->
+                         <!-- Report Snippet -->
                           <div class="beta-card summary-card">
                               <div class="beta-card-header"><?php echo __('Report'); ?></div>
                               <div class="beta-card-body">
@@ -184,6 +184,78 @@
                                   <?php else: ?>
                                       <p class="muted"><?php echo __('No report content available.'); ?></p>
                                   <?php endif; ?>
+
+                                  <!-- Analysis Links Sub-section -->
+                                  <?php
+                                      $analysisLinks = [];
+                                      $seenIds = [];
+                                      $extractFromAttributes = function($attributes) use (&$analysisLinks, &$seenIds) {
+                                          if (empty($attributes)) return;
+                                          foreach ($attributes as $attr) {
+                                              if (isset($seenIds[$attr['id']])) continue;
+                                              if (isset($attr['category']) && $attr['category'] === 'External analysis') {
+                                                  if ($attr['type'] === 'link' || $attr['type'] === 'url') {
+                                                      $analysisLinks[] = ['value' => $attr['value'], 'type' => 'link', 'id' => $attr['id']];
+                                                      $seenIds[$attr['id']] = true;
+                                                  } elseif ($attr['type'] === 'attachment' && stripos($attr['value'], '.pdf') !== false) {
+                                                      $analysisLinks[] = ['value' => $attr['value'], 'type' => 'attachment', 'id' => $attr['id']];
+                                                      $seenIds[$attr['id']] = true;
+                                                  }
+                                              }
+                                          }
+                                      };
+
+                                      if (!empty($event['Attribute'])) {
+                                          $extractFromAttributes($event['Attribute']);
+                                      }
+                                      if (!empty($event['Object'])) {
+                                          foreach ($event['Object'] as $obj) {
+                                              if (!empty($obj['Attribute'])) {
+                                                  $extractFromAttributes($obj['Attribute']);
+                                              }
+                                          }
+                                      }
+                                      if (!empty($event['objects'])) {
+                                          $betaAttrs = [];
+                                          foreach ($event['objects'] as $item) {
+                                              if (isset($item['objectType']) && $item['objectType'] === 'attribute') {
+                                                  $betaAttrs[] = $item;
+                                              } elseif (isset($item['objectType']) && $item['objectType'] === 'object' && !empty($item['Attribute'])) {
+                                                  $betaAttrs = array_merge($betaAttrs, $item['Attribute']);
+                                              }
+                                          }
+                                          if (!empty($betaAttrs)) {
+                                              $extractFromAttributes($betaAttrs);
+                                          }
+                                      }
+
+                                      usort($analysisLinks, function($a, $b) {
+                                          return strcasecmp($a['value'], $b['value']);
+                                      });
+                                  ?>
+                                  <div class="analysis-links-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                                      <h5 style="margin-top: 0; font-size: 13px; color: #666;"><?php echo __('Analysis Links'); ?></h5>
+                                      <div class="alert alert-info" style="font-size: 11px; padding: 8px; margin-bottom: 10px;">
+                                          <i class="fa fa-exclamation-triangle"></i> <?php echo __('Always use caution when clicking'); ?>
+                                      </div>
+                                      <?php if (!empty($analysisLinks)): ?>
+                                          <ul style="list-style: none; padding: 0; margin: 0;">
+                                              <?php foreach ($analysisLinks as $link): ?>
+                                                  <li style="margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; word-break: break-all;">
+                                                      <?php if ($link['type'] === 'link'): ?>
+                                                          <i class="fa fa-external-link-alt" style="color: #428bca; margin-right: 5px;"></i>
+                                                          <a href="<?php echo h($link['value']); ?>" target="_blank" rel="noreferrer noopener"><?php echo h($link['value']); ?></a>
+                                                      <?php else: ?>
+                                                          <i class="fa fa-file-pdf" style="color: #d9534f; margin-right: 5px;"></i>
+                                                          <a href="<?php echo $baseurl; ?>/attributes/download/<?php echo h($link['id']); ?>"><?php echo h($link['value']); ?></a> (<?php echo __('PDF Attachment'); ?>)
+                                                      <?php endif; ?>
+                                                  </li>
+                                              <?php endforeach; ?>
+                                          </ul>
+                                      <?php else: ?>
+                                          <p class="muted" style="font-size: 12px;"><?php echo __('No external analysis links or PDF attachments available.'); ?></p>
+                                      <?php endif; ?>
+                                  </div>
                               </div>
                           </div>
                          
@@ -390,7 +462,7 @@
                 .attr("class", "bar-group")
                 .style("cursor", "pointer")
                 .on("click", function(d) {
-                    betaFilterAttributesByComposition(d.type, d.name, true);
+                    betaFilterAttributesByComposition(d.type, d.name);
                 });
 
             bars.append("rect")
@@ -416,10 +488,6 @@
         } else {
              d3.select("#composition-treemap").html('<div class="alert alert-info" style="margin: 20px;">No composition data available.</div>');
         }
-        // Load Reports
-        $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1", function(data) {
-            $("#event-reports-tab-content").html(data);
-        });
 
         // Initialize history state on load
         var initialTab = window.location.hash || '#summary';
@@ -435,11 +503,9 @@
 
         window.ignoreTabPush = false;
 
-        // Listen for tab changes
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $('.nav-tabs a').on('shown.bs.tab', function (e) {
             if (window.ignoreTabPush) return;
-
-            var target = $(e.target).attr('href');
+            var target = $(e.target).attr("href");
             var currentState = history.state;
             
             // Only push if it's different from the current tab in history
@@ -448,69 +514,54 @@
             }
         });
 
-        // Handle browser back/forward
         window.onpopstate = function(event) {
-            if (event.state) {
+            if (event.state && event.state.tab) {
                 window.ignoreTabPush = true;
-                if (event.state.tab) {
-                    $('.nav-tabs a[href="' + event.state.tab + '"]').tab('show');
-                }
-                if (event.state.filter) {
-                    betaFilterAttributesByComposition(event.state.filter.type, event.state.filter.name, false);
-                } else {
-                    // Clear filter if we go back to a state without one
-                    clearBetaAttributeFilter();
-                }
+                $('.nav-tabs a[href="' + event.state.tab + '"]').tab('show');
                 window.ignoreTabPush = false;
             }
         };
 
-        $('.distributionNetworkToggle').each(function() {
-            $(this).distributionNetwork({
-                distributionData: <?= json_encode($distributionData, JSON_UNESCAPED_UNICODE); ?>,
-            });
+        // Load Reports
+        $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1", function(data) {
+            $("#event-reports-tab-content").html(data);
         });
     });
 
-    function betaFilterAttributesByComposition(type, name, pushToHistory) {
+    function betaFilterAttributesByComposition(type, name) {
         // Switch to Attributes tab
-        window.ignoreTabPush = true;
         $('.nav-tabs a[href="#attributes"]').tab('show');
-        window.ignoreTabPush = false;
         
-        // Clear previous filters
-        clearBetaAttributeFilter();
+        // Reset previous filters
+        $('.beta-attr-row').show();
+        $('.filter-active-msg').remove();
 
         // Apply filter
         $('.beta-attr-row').hide();
         
         if (type === 'object') {
+            // Show the object header
             $('.beta-attr-row[data-object-name="' + name + '"]').show();
+            // Show the attributes belonging to the object
             $('.beta-attr-row[data-parent-object="' + name + '"]').show();
         } else {
+            // Show attributes of this type (both standalone and inside objects)
             $('.beta-attr-row[data-attribute-type="' + name + '"]').show();
         }
 
         // Show message
         var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
-        msg += '<button type="button" class="close" data-dismiss="alert" onclick="clearBetaAttributeFilter()">×</button>';
+        msg += '<button type="button" class="close" data-dismiss="alert" onclick="$(\'.beta-attr-row\').show(); $(this).parent().remove();">×</button>';
         msg += 'Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>';
-        msg += ' <a href="#" onclick="clearBetaAttributeFilter(); return false;">(Clear Filter)</a>';
+        msg += ' <a href="#" onclick="$(\'.beta-attr-row\').show(); $(\'.filter-active-msg\').remove(); return false;">(Clear Filter)</a>';
         msg += '</div>';
         
+        // Insert message after toolbar in attributes tab
         if ($('.beta-toolbar').length) {
              $('.beta-toolbar').after(msg);
         } else {
+             // Fallback
              $('#attributes').prepend(msg);
         }
-
-        if (pushToHistory) {
-            history.pushState({ tab: '#attributes', filter: { type: type, name: name } }, '', window.location.pathname + '#attributes');
-        }
-    }
-
-    function clearBetaAttributeFilter() {
-        $('.beta-attr-row').show();
-        $('.filter-active-msg').remove();
     }
 </script>
