@@ -1,7 +1,7 @@
 <?php
     echo $this->element('genericElements/assetLoader', [
         'css' => ['main-beta', 'components-beta', 'query-builder.default', 'attack_matrix', 'analyst-data'],
-        'js' => ['doT', 'extendext', 'moment.min', 'query-builder', 'network-distribution-graph', 'd3', 'd3.custom', 'jquery-ui.min'],
+        'js' => ['doT', 'extendext', 'moment.min', 'query-builder', 'network-distribution-graph', 'd3', 'd3.custom', 'jquery-ui.min', 'beta-events-timestamps'],
     ]);
 ?>
 
@@ -99,15 +99,45 @@
             </span>
             <span class="meta-box org-box">
                 <span class="meta-label"><?php echo __('Creator Org'); ?></span>
-                <span class="meta-value"><?php echo h($event['Orgc']['name']); ?></span>
+                <span class="meta-value">
+                     <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Orgc']['id'] ?>" class="beta-org-link" title="<?= h($event['Orgc']['name']) ?>">
+                        <span class="beta-org-name"><?= h($event['Orgc']['name']) ?></span>
+                        <?php
+                            $orgLogo = $this->OrgImg->getOrgLogo($event['Orgc'], 24, false);
+                            if (strpos($orgLogo, '<img') !== false): // Check if the output contains an image tag
+                                echo $orgLogo;
+                            endif;
+                        ?>
+                    </a>
+                </span>
             </span>
              <span class="meta-box dist-box" title="<?php echo h($distributionLevels[$event['Event']['distribution']]); ?>">
                 <span class="meta-label"><?php echo __('Distribution'); ?></span>
-                <span class="meta-value"><?php echo h($shortDist[$event['Event']['distribution']]); ?></span>
+                <span class="meta-value" style="display: flex; align-items: center; gap: 5px;">
+                    <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
+                         title="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($distributionLevels[$event['Event']['distribution']]) ?>"
+                         data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
+                         data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
+                         data-scope-id="<?= h($event['Event']['id']) ?>">
+                    </div>
+                    <?php 
+                        if ($event['Event']['distribution'] == 4):
+                            echo $this->Html->link($event['SharingGroup']['name'], array('controller' => 'sharing_groups', 'action' => 'view', $event['SharingGroup']['id']));
+                        else:
+                            echo h($shortDist[$event['Event']['distribution']]);
+                        endif;
+                    ?>
+                </span>
             </span>
             <span class="meta-box mod-box">
                 <span class="meta-label"><?php echo __('Last Mod'); ?></span>
-                <span class="meta-value"><?php echo $this->Time->time($event['Event']['timestamp']); ?></span>
+                <span class="meta-value beta-relative-timestamp" 
+                    data-timestamp="<?= h($event['Event']['timestamp']) ?>" 
+                    data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>" 
+                    title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)" 
+                    style="cursor: pointer;">
+                    <?php echo $this->Time->time($event['Event']['timestamp']); ?>
+                </span>
             </span>
             
             <div class="beta-header-actions" style="margin-left: auto;">
@@ -429,6 +459,12 @@
                 window.ignoreTabPush = false;
             }
         };
+
+        $('.distributionNetworkToggle').each(function() {
+            $(this).distributionNetwork({
+                distributionData: <?= json_encode($distributionData, JSON_UNESCAPED_UNICODE); ?>,
+            });
+        });
     });
 
     function betaFilterAttributesByComposition(type, name, pushToHistory) {

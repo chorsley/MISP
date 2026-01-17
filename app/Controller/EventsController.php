@@ -1704,6 +1704,7 @@ class EventsController extends AppController
             $this->set('firstEventReportId', null);
         }
 
+        $this->set('distributionData', $this->__genDistributionGraph($event['Event']['id']));
         $this->__eventViewCommon($user);
     }
 
