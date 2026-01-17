@@ -136,7 +136,7 @@
             <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Attributes'); ?> (<?php echo h($attribute_count); ?>)</a></li>
             <li role="presentation"><a href="#correlations" aria-controls="correlations" role="tab" data-toggle="tab"><?php echo __('Correlations'); ?> (<?php echo isset($relatedEventCorrelationCount) ? count($relatedEventCorrelationCount) : 0; ?>)</a></li>
             <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
-            <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?></a></li>
+            <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<?php echo h($eventReportCount); ?>)</a></li>
         </ul>
 
         <div class="tab-content beta-tab-content">
@@ -145,14 +145,17 @@
                  <div class="row-fluid">
                      <div class="span8">
                          <!-- Report Snippet (Placeholder) -->
-                         <div class="beta-card summary-card">
-                             <div class="beta-card-header"><?php echo __('Report'); ?></div>
-                             <div class="beta-card-body">
-                                 <!-- TODO: Fetch actual report snippet -->
-                                 <p class="muted"><?php echo __('No report content available.'); ?></p>
-                                 <a href="#reports" onclick="$('.nav-tabs a[href=\'#reports\']').tab('show'); return false;"><?php echo __('Read more'); ?></a>
-                             </div>
-                         </div>
+                          <div class="beta-card summary-card">
+                              <div class="beta-card-header"><?php echo __('Report'); ?></div>
+                              <div class="beta-card-body">
+                                  <?php if (!empty($eventReportSummary)): ?>
+                                      <p><?php echo h($eventReportSummary); ?></p>
+                                      <a href="#" onclick="openGenericModal('<?php echo $baseurl; ?>/eventReports/viewSummary/<?php echo h($firstEventReportId); ?>'); return false;"><?php echo __('Read more'); ?></a>
+                                  <?php else: ?>
+                                      <p class="muted"><?php echo __('No report content available.'); ?></p>
+                                  <?php endif; ?>
+                              </div>
+                          </div>
                          
                          <!-- Composition -->
                          <div class="beta-card summary-card">

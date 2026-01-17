@@ -1680,6 +1680,30 @@ class EventsController extends AppController
             $instanceKey = null;
         }
         $this->set('instanceFingerprint', $instanceKey);
+        $this->loadModel('EventReport');
+        $reportCount = $this->EventReport->find('count', [
+            'conditions' => [
+                'EventReport.event_id' => $event['Event']['id'],
+                'EventReport.deleted' => 0
+            ]
+        ]);
+        $this->set('eventReportCount', $reportCount);
+
+        $reports = $this->EventReport->find('first', [
+            'conditions' => [
+                'EventReport.event_id' => $event['Event']['id'],
+                'EventReport.deleted' => 0
+            ],
+            'order' => ['EventReport.id' => 'ASC']
+        ]);
+        if ($reports) {
+            $this->set('eventReportSummary', $this->EventReport->getSummary($reports['EventReport']['content'], $event['Event']['id']));
+            $this->set('firstEventReportId', $reports['EventReport']['id']);
+        } else {
+            $this->set('eventReportSummary', '');
+            $this->set('firstEventReportId', null);
+        }
+
         $this->__eventViewCommon($user);
     }
 

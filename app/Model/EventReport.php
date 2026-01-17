@@ -1752,4 +1752,29 @@ class EventReport extends AppModel
         }
         return $this->redis->get(sprintf('%s:%s', self::REDIS_KEY_PICTURE_FILENAME_FROM_ALIAS, $alias));
     }
+
+    public function getSummary($content, $event_id = 0, $wordLimit = 200)
+    {
+        if (empty($content)) {
+            return '';
+        }
+        // Replace MISP elements first
+        try {
+            $content = $this->replaceMISPElementByTheirValue($content, $event_id, ['Role' => ['perm_site_admin' => true]], false);
+        } catch (Exception $e) {
+            // If it fails (e.g. invalid event), just use raw content and strip references later
+        }
+        // Strip markdown
+        $content = preg_replace('/\[([^]]+)]\([^)]+\)/', '$1', $content); // links
+        $content = preg_replace('/([*_]{1,3})(\S.*?\S)\1/', '$2', $content); // bold/italic
+        $content = preg_replace('/^#+\s+/m', '', $content); // headers
+        $content = preg_replace('/`([^`]+)`/', '$1', $content); // code blocks
+        $content = preg_replace('/>\s+/', '', $content); // blockquotes
+        
+        $words = preg_split('/\s+/', $content);
+        if (count($words) > $wordLimit) {
+            $content = implode(' ', array_slice($words, 0, $wordLimit)) . '...';
+        }
+        return $content;
+    }
 }
