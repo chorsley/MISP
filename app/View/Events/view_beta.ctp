@@ -83,6 +83,51 @@
     .beta-card-body {
         padding: 15px;
     }
+    .comment-bar-container {
+        margin-bottom: 6px;
+        position: relative;
+        background-color: #deebfa;
+        border-radius: 4px;
+        overflow: hidden;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    .comment-bar-container:hover {
+        background-color: #d0e2f5;
+    }
+    .comment-bar-container:hover .comment-bar {
+        opacity: 0.5;
+    }
+    .comment-bar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background-color: #428bca;
+        opacity: 0.4;
+        z-index: 1;
+    }
+    .comment-text {
+        position: relative;
+        z-index: 2;
+        padding: 0 12px;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        color: #222;
+    }
+    .comment-count {
+        margin-left: auto;
+        padding-right: 12px;
+        font-weight: bold;
+        font-size: 12px;
+        z-index: 2;
+        color: #444;
+    }
 </style>
 
 <div class="events view beta-view-events">
@@ -151,7 +196,14 @@
         <?php if (!empty($warnings)): ?>
             <div class="alert alert-warning beta-alert" style="margin-top: 15px;">
                  <?php if (is_array($warnings)): ?>
-                    <?php echo implode('<br>', $warnings); ?>
+                    <?php
+                        foreach ($warnings as $k => $warning) {
+                            if (is_array($warning)) {
+                                $warnings[$k] = implode('<br>', $warning);
+                            }
+                        }
+                        echo implode('<br>', $warnings);
+                    ?>
                 <?php else: ?>
                     <?php echo $warnings; ?>
                 <?php endif; ?>
@@ -182,7 +234,7 @@
                                       <p><?php echo h($eventReportSummary); ?></p>
                                       <a href="#" onclick="openGenericModal('<?php echo $baseurl; ?>/eventReports/viewSummary/<?php echo h($firstEventReportId); ?>'); return false;"><?php echo __('Read more'); ?></a>
                                   <?php else: ?>
-                                      <p class="muted"><?php echo __('No report content available.'); ?></p>
+                                      <p class="muted"><?php echo __('No report content available. Good MISP events explain the "so what" using an Event Report!'); ?></p>
                                   <?php endif; ?>
 
                                   <!-- Analysis Links Sub-section -->
@@ -266,6 +318,14 @@
                                   <div id="composition-treemap" style="width: 100%; height: 200px;"></div>
                              </div>
                          </div>
+
+                         <!-- Analysis comments -->
+                         <div class="beta-card summary-card">
+                             <div class="beta-card-header"><?php echo __('Analysis comments'); ?></div>
+                             <div class="beta-card-body">
+                                  <div id="comments-graph" style="width: 100%; max-height: 300px; overflow-y: auto;"></div>
+                             </div>
+                         </div>
                      </div>
                      <div class="span4">
                          <!-- Context -->
@@ -274,33 +334,25 @@
                              <div class="beta-card-body">
                                  <strong><?php echo __('Tags'); ?></strong><br>
                                  <?php
-                                     if (!empty($event['EventTag'])) {
-                                        echo $this->element('ajaxTags', [
-                                            'event' => $event,
-                                            'tags' => $event['EventTag'],
-                                            'tagAccess' => $this->Acl->canAccess('tags', 'edit'),
-                                            'localTagAccess' => $this->Acl->canModifyTag($event, true),
-                                            'missingTaxonomies' => $missingTaxonomies,
-                                            'tagConflicts' => $tagConflicts
-                                        ]);
-                                     } else {
-                                         echo '<span class="muted">' . __('No tags') . '</span>';
-                                     }
+                                      echo $this->element('ajaxTags', [
+                                          'event' => $event,
+                                          'tags' => $event['EventTag'],
+                                          'tagAccess' => $this->Acl->canAccess('tags', 'edit'),
+                                          'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                          'missingTaxonomies' => $missingTaxonomies,
+                                          'tagConflicts' => $tagConflicts
+                                      ]);
                                  ?>
                                  <hr>
                                  <strong><?php echo __('Galaxies'); ?></strong><br>
-                                  <?php if (!empty($event['Galaxy'])): ?>
-                                    <?php
-                                        echo $this->element('galaxyQuickViewNew', [
-                                            'data' => $event['Galaxy'],
-                                            'event' => $event,
-                                            'target_id' => $event['Event']['id'],
-                                            'target_type' => 'event'
-                                        ]);
-                                    ?>
-                                 <?php else: ?>
-                                     <span class="muted"><?php echo __('No galaxies'); ?></span>
-                                 <?php endif; ?>
+                                  <?php
+                                      echo $this->element('galaxyQuickViewNew', [
+                                          'data' => $event['Galaxy'],
+                                          'event' => $event,
+                                          'target_id' => $event['Event']['id'],
+                                          'target_type' => 'event'
+                                      ]);
+                                  ?>
                                  </div>
                              </div>
                          </div>
@@ -377,6 +429,7 @@
         $compositionData = [];
         $attrTypes = [];
         $objTypes = [];
+        $commentCounts = [];
 
         if (!empty($event['objects'])) {
             foreach ($event['objects'] as $obj) {
@@ -384,10 +437,29 @@
                     $t = $obj['type'];
                     if (!isset($attrTypes[$t])) $attrTypes[$t] = 0;
                     $attrTypes[$t]++;
+                    if (!empty($obj['comment'])) {
+                        $c = $obj['comment'];
+                        if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                        $commentCounts[$c]++;
+                    }
                 } elseif ($obj['objectType'] === 'object') {
                     $t = $obj['name'];
                     if (!isset($objTypes[$t])) $objTypes[$t] = 0;
                     $objTypes[$t]++;
+                    if (!empty($obj['comment'])) {
+                        $c = $obj['comment'];
+                        if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                        $commentCounts[$c]++;
+                    }
+                    if (!empty($obj['Attribute'])) {
+                        foreach ($obj['Attribute'] as $attr) {
+                            if (!empty($attr['comment'])) {
+                                $c = $attr['comment'];
+                                if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                                $commentCounts[$c]++;
+                            }
+                        }
+                    }
                 }
             }
         } elseif (!empty($event['Attribute'])) {
@@ -395,12 +467,31 @@
                 $t = $attr['type'];
                 if (!isset($attrTypes[$t])) $attrTypes[$t] = 0;
                 $attrTypes[$t]++;
+                if (!empty($attr['comment'])) {
+                    $c = $attr['comment'];
+                    if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                    $commentCounts[$c]++;
+                }
             }
             if (!empty($event['Object'])) {
                  foreach ($event['Object'] as $obj) {
                     $t = $obj['name'];
                     if (!isset($objTypes[$t])) $objTypes[$t] = 0;
                     $objTypes[$t]++;
+                    if (!empty($obj['comment'])) {
+                        $c = $obj['comment'];
+                        if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                        $commentCounts[$c]++;
+                    }
+                    if (!empty($obj['Attribute'])) {
+                        foreach ($obj['Attribute'] as $attr) {
+                            if (!empty($attr['comment'])) {
+                                $c = $attr['comment'];
+                                if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                                $commentCounts[$c]++;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -426,9 +517,22 @@
         usort($compositionData, function($a, $b) {
             return $b['value'] - $a['value'];
         });
+
+        $commentData = [];
+        foreach ($commentCounts as $comment => $count) {
+            $commentData[] = [
+                'label' => $comment,
+                'value' => $count
+            ];
+        }
+        usort($commentData, function($a, $b) {
+            return $b['value'] - $a['value'];
+        });
     ?>
     var compositionData = <?php echo json_encode($compositionData); ?>;
+    var commentData = <?php echo json_encode($commentData); ?>;
     console.log('Composition Data:', compositionData);
+    console.log('Comment Data:', commentData);
 
     $(function() {
         // Horizontal Bar Chart
@@ -487,6 +591,37 @@
                 .text(function(d) { return d.value; });
         } else {
              d3.select("#composition-treemap").html('<div class="alert alert-info" style="margin: 20px;">No composition data available.</div>');
+        }
+
+        // Comments Bar Chart
+        if (commentData && commentData.length > 0) {
+            var maxVal = d3.max(commentData, function(d) { return d.value; });
+            var container = d3.select("#comments-graph");
+            container.html(""); // Clear
+
+            commentData.forEach(function(d) {
+                var percentage = (d.value / maxVal) * 100;
+                var row = container.append("div")
+                    .attr("class", "comment-bar-container")
+                    .attr("title", d.label + " (" + d.value + ")")
+                    .on("click", function() {
+                        betaFilterAttributesByComment(d.label);
+                    });
+
+                row.append("div")
+                    .attr("class", "comment-bar")
+                    .style("width", percentage + "%");
+
+                row.append("div")
+                    .attr("class", "comment-text")
+                    .text(d.label);
+
+                row.append("div")
+                    .attr("class", "comment-count")
+                    .text(d.value);
+            });
+        } else {
+             d3.select("#comments-graph").html('<div class="alert alert-info" style="margin: 20px;">No comment data available.</div>');
         }
 
         // Initialize history state on load
@@ -553,6 +688,44 @@
         var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
         msg += '<button type="button" class="close" data-dismiss="alert" onclick="$(\'.beta-attr-row\').show(); $(this).parent().remove();">×</button>';
         msg += 'Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>';
+        msg += ' <a href="#" onclick="$(\'.beta-attr-row\').show(); $(\'.filter-active-msg\').remove(); return false;">(Clear Filter)</a>';
+        msg += '</div>';
+        
+        // Insert message after toolbar in attributes tab
+        if ($('.beta-toolbar').length) {
+             $('.beta-toolbar').after(msg);
+        } else {
+             // Fallback
+             $('#attributes').prepend(msg);
+        }
+    }
+
+    function betaFilterAttributesByComment(comment) {
+        // Switch to Attributes tab
+        $('.nav-tabs a[href="#attributes"]').tab('show');
+        
+        // Reset previous filters
+        $('.beta-attr-row').show();
+        $('.filter-active-msg').remove();
+
+        // Apply filter
+        $('.beta-attr-row').hide();
+        
+        // Show rows where the comment column matches
+        $('.beta-attr-row').each(function() {
+            var rowComment = $(this).find('.col-comment').text().trim();
+            if (rowComment === comment) {
+                $(this).show();
+                // If it's an attribute inside an object, we might need to show the object header too
+                // but usually comments are specific to the row. 
+                // If the object header itself has the comment, it will be shown.
+            }
+        });
+
+        // Show message
+        var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
+        msg += '<button type="button" class="close" data-dismiss="alert" onclick="$(\'.beta-attr-row\').show(); $(this).parent().remove();">×</button>';
+        msg += 'Filtering by Comment: <strong>' + comment + '</strong>';
         msg += ' <a href="#" onclick="$(\'.beta-attr-row\').show(); $(\'.filter-active-msg\').remove(); return false;">(Clear Filter)</a>';
         msg += '</div>';
         
