@@ -149,6 +149,13 @@
         font-weight: bold;
         color: #31708f;
     }
+    .object-header-meta {
+        text-align: right;
+    }
+    .object-desc {
+        font-size: 11px;
+        color: #999;
+    }
     .object-attr-row td:first-child {
         /* border-left handled inline for positioning */
     }
@@ -198,41 +205,6 @@
     }
     .beta-tagging-links {
         display: none;
-        margin-top: 4px;
-        font-size: 0.9em;
-        align-items: center;
-        gap: 6px;
-        color: #888;
-    }
-    .beta-attr-row:hover .beta-tagging-links,
-    .object-attribute-row:hover .beta-tagging-links {
-        display: flex;
-    }
-    .beta-tagging-label {
-        font-weight: 600;
-        margin-right: 2px;
-        color: #666;
-    }
-    .beta-tag-link {
-        color: #444;
-        text-decoration: none;
-        padding: 3px 6px;
-        border-radius: 3px;
-        background: #f0f0f0;
-        border: 1px solid #ddd;
-        line-height: 1;
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        font-size: 11px;
-    }
-    .beta-tag-link:hover {
-        background: #e0e0e0;
-        color: #000;
-        border-color: #ccc;
-    }
-    .beta-tag-link i {
-        font-size: 0.9em;
     }
     .col-comment {
         font-style: italic;
@@ -299,17 +271,17 @@
     <table class="beta-attr-table">
         <thead>
             <tr>
-                <th style="width: 50px;"><input type="checkbox" class="select-all"></th>
-                <th style="width: 40px;" title="<?php echo __('Recommend for blocking / alerting?'); ?>">IDS</th>
-                <th class="col-category"><?php echo __('Category'); ?></th>
-                <th><?php echo __('Type / Object'); ?></th>
+                <th style="width: 40px;"><input type="checkbox" class="select-all"></th>
+                <th class="col-category" style="width: 80px;"><?php echo __('Category'); ?></th>
+                <th style="width: 120px;"><?php echo __('Type / Object'); ?></th>
                 <th><?php echo __('Value / Attributes'); ?></th>
-                <th class="col-comment"><?php echo __('Comment'); ?></th>
-                <th class="col-correlation" style="width: 40px;" title="<?php echo __('Correlation'); ?>"><i class="fa fa-project-diagram"></i></th>
-                <th class="col-related"><?php echo __('Related'); ?></th>
+                <th class="col-related" style="width: 50px;"><?php echo __('Related'); ?></th>
+                <th class="col-comment" style="width: 20%;"><?php echo __('Comment'); ?></th>
+                <th style="width: 30px;" title="<?php echo __('Recommend for blocking / alerting?'); ?>">IDS</th>
+                <th class="col-correlation" style="width: 30px;" title="<?php echo __('Correlation'); ?>"><i class="fa fa-project-diagram"></i></th>
                 <th class="col-sightings" style="width: 30px;" title="<?php echo __('Sightings'); ?>"><i class="fa fa-eye"></i></th>
                 <th class="col-distribution" style="width: 30px;" title="<?php echo __('Distribution'); ?>"><i class="fa fa-share-alt"></i></th>
-                <th class="col-date"><?php echo __('Date'); ?></th>
+                <th class="col-date" style="width: 80px;"><?php echo __('Date'); ?></th>
             </tr>
         </thead>
         <tbody>
@@ -337,85 +309,88 @@
                     <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
-                    <td style="position: relative;">
-                        <div class="beta-row-actions">
+                    <td style="position: relative;" <?php if ($isObject) echo 'colspan="4"'; ?>>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center;">
+                                <div class="beta-row-actions">
                             <input type="checkbox" class="select-row" value="<?php echo h($item['id']); ?>">
                             <div class="beta-row-menu-trigger">
                                 <i class="fa fa-caret-down"></i>
                             </div>
                             <div class="beta-row-menu">
                                 <ul>
-                                    <?php if ($mayModify): ?>
-                                    <!-- Edit -->
-                                    <li><a href="<?php echo $baseurl; ?>/<?php echo $isObject ? 'objects' : 'attributes'; ?>/edit/<?php echo h($item['id']); ?>"><i class="fa fa-edit"></i> Edit</a></li>
-                                    
-                                    <!-- Proposals -->
-                                    <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/shadow_attributes/add/<?php echo h($item['id']); ?>');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
+                                <?php if ($mayModify): ?>
+                                <!-- Edit -->
+                                <li><a href="<?php echo $baseurl; ?>/<?php echo $isObject ? 'objects' : 'attributes'; ?>/edit/<?php echo h($item['id']); ?>"><i class="fa fa-edit"></i> Edit</a></li>
+                                
+                                <!-- Proposals -->
+                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/shadow_attributes/add/<?php echo h($item['id']); ?>');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
 
-                                    <!-- Context Specific Actions -->
-                                    <?php if (!$isObject && ($item['type'] == 'malware-sample' || $item['type'] == 'attachment')): ?>
-                                        <li><a href="<?php echo $baseurl; ?>/attributes/download/<?php echo h($item['id']); ?>"><i class="fa fa-download"></i> Download</a></li>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Sightings Actions -->
+                                <!-- Tagging / Galaxies -->
+                                <?php if (!$isObject): ?>
                                     <li class="divider"></li>
-                                    <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($item['id']); ?>');"><i class="fa fa-eye"></i> Add Sighting</a></li>
-                                    <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/setFalsePositive/<?php echo h($item['id']); ?>');"><i class="fa fa-eye-slash"></i> False Positive</a></li>
-                                    <li><a href="#" class="sightings_advanced_add" data-object-id="<?php echo h($item['id']); ?>" data-object-context="<?php echo $isObject ? 'object' : 'attribute'; ?>"><i class="fa fa-wrench"></i> Advanced Sightings</a></li>
+                                    <li><a href="#" onclick="getPopup('local:1/<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Add Tag - Local</a></li>
+                                    <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Add Tag - Galaxy</a></li>
+                                    <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Add Galaxy - Local</a></li>
+                                    <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Add Galaxy - Global</a></li>
+                                <?php endif; ?>
 
-                                    <!-- Enrichment -->
+                                <!-- Context Specific Actions -->
+                                <?php if (!$isObject && ($item['type'] == 'malware-sample' || $item['type'] == 'attachment')): ?>
                                     <li class="divider"></li>
-                                    <?php if (!$isObject): ?>
-                                        <li><a href="#" onclick="simplePopup('<?php echo $baseurl;?>/events/queryEnrichment/<?php echo h($item['id']); ?>/0/Enrichment/Attribute');"><i class="fa fa-magic"></i> Enrich</a></li>
-                                    <?php endif; ?>
+                                    <li><a href="<?php echo $baseurl; ?>/attributes/download/<?php echo h($item['id']); ?>"><i class="fa fa-download"></i> Download</a></li>
+                                <?php endif; ?>
+                                
+                                <!-- Sightings Actions -->
+                                <li class="divider"></li>
+                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($item['id']); ?>');"><i class="fa fa-eye"></i> Add Sighting</a></li>
+                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/setFalsePositive/<?php echo h($item['id']); ?>');"><i class="fa fa-eye-slash"></i> False Positive</a></li>
+                                <li><a href="#" class="sightings_advanced_add" data-object-id="<?php echo h($item['id']); ?>" data-object-context="<?php echo $isObject ? 'object' : 'attribute'; ?>"><i class="fa fa-wrench"></i> Advanced Sightings</a></li>
 
-                                    <!-- Utilities -->
+                                <!-- Enrichment -->
+                                <?php if (!$isObject): ?>
                                     <li class="divider"></li>
-                                    <li><a href="#" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"><i class="fa fa-copy"></i> Copy UUID</a></li>
+                                    <li><a href="#" onclick="simplePopup('<?php echo $baseurl;?>/events/queryEnrichment/<?php echo h($item['id']); ?>/0/Enrichment/Attribute');"><i class="fa fa-magic"></i> Enrich</a></li>
+                                <?php endif; ?>
 
-                                    <!-- Delete -->
-                                    <li class="divider"></li>
-                                    <li><a href="#" class="text-danger" onclick="deleteObject('<?php echo $isObject ? 'objects' : 'attributes'; ?>', 'delete', '<?php echo h($item['id']); ?>')"><i class="fa fa-trash"></i> Delete</a></li>
-                                    <?php endif; ?>
+                                <!-- Utilities -->
+                                <li class="divider"></li>
+                                <li><a href="#" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"><i class="fa fa-copy"></i> Copy UUID</a></li>
+
+                                <!-- Delete -->
+                                <li class="divider"></li>
+                                <li><a href="#" class="text-danger" onclick="deleteObject('<?php echo $isObject ? 'objects' : 'attributes'; ?>', 'delete', '<?php echo h($item['id']); ?>')"><i class="fa fa-trash"></i> Delete</a></li>
+                                <?php endif; ?>
                                 </ul>
                             </div>
+                                </div>
+                                <?php if ($isObject): ?>
+                                    <span class="object-title" style="margin-left: 10px;"><i class="fa fa-cubes"></i> <?php echo h($item['name']); ?></span>
+                                    <span class="object-desc" style="margin-left: 10px;"><?php echo h($item['description']); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($isObject): ?>
+                                <div class="object-header-meta">
+                                    <div style="font-size: 10px; color: #999;"><?php echo count($item['Attribute']); ?> attributes</div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </td>
                     
-                    <!-- IDS Toggle -->
-                    <td style="text-align: center;">
-                        <?php if (!$isObject): ?>
-                            <i class="fa fa-shield-alt beta-ids-toggle" 
-                               style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($item['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
-                                data-id="<?= h($item['id']) ?>"
-                                data-to-ids="<?= (int)$item['to_ids'] ?>"
-                                title="<?= ($item['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
-                        <?php endif; ?>
-                    </td>
-
-                    <!-- Category -->
-                    <td class="col-category">
-                        <?php if (!$isObject): ?>
+                    <?php if (!$isObject): ?>
+                        <!-- Category -->
+                        <td class="col-category">
                             <span style="font-size: 11px; color: #777;"><?php echo h($item['category']); ?></span>
-                        <?php endif; ?>
-                    </td>
-                    
-                    <!-- Type / Object Name -->
-                    <td>
-                        <?php if ($isObject): ?>
-                            <span class="object-title"><i class="fa fa-cubes"></i> <?php echo h($item['name']); ?></span>
-                            <div style="font-size: 10px; color: #999;"><?php echo count($item['Attribute']); ?> attributes</div>
-                        <?php else: ?>
+                        </td>
+                        
+                        <!-- Type / Object Name -->
+                        <td>
                             <span class="attr-icon"><i class="fa fa-cube"></i></span> <?php echo h($item['type']); ?>
                             <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
-                        <?php endif; ?>
-                    </td>
+                        </td>
 
-                    <!-- Value -->
-                    <td>
-                         <?php if ($isObject): ?>
-                              <span class="text-muted"><?php echo h($item['description']); ?></span>
-                         <?php else: ?>
+                        <!-- Value -->
+                        <td>
                             <div style="display: flex; align-items: center; gap: 5px;">
                                 <span class="attr-value"><?php echo h($item['value']); ?></span>
                                 <?php if (isset($item['warnings'])): ?>
@@ -432,54 +407,56 @@
                                     <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
                                 <?php endif; ?>
                                 <?php if ($mayModify): ?>
-                                     <div class="beta-tagging-links">
-                                        <span class="beta-tagging-label"><?= __('Tags:') ?></span>
-                                        <a href="#" class="beta-tag-link" onclick="getPopup('<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;" title="<?= __('Add Global Tag') ?>"><i class="fa fa-plus"></i><i class="fa fa-globe"></i></a>
-                                        <a href="#" class="beta-tag-link" onclick="getPopup('local:1/<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;" title="<?= __('Add Local Tag') ?>"><i class="fa fa-plus"></i><i class="fa fa-user"></i></a>
-                                        <span class="beta-tagging-label" style="margin-left: 5px;"><?= __('Galaxies:') ?></span>
-                                        <a href="#" class="beta-tag-link" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;" title="<?= __('Add Galaxy Cluster') ?>"><i class="fa fa-plus"></i><i class="fa fa-globe"></i></a>
-                                        <a href="#" class="beta-tag-link" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;" title="<?= __('Add Local Galaxy Cluster') ?>"><i class="fa fa-plus"></i><i class="fa fa-user"></i></a>
-                                    </div>
+                                     <div class="beta-tagging-links"></div>
                                 <?php endif; ?>
                             </div>
-                         <?php endif; ?>
-                    </td>
+                        </td>
+
+                        <!-- Related Events -->
+                        <td class="col-related">
+                            <?php 
+                                $relatedCount = 0;
+                                if (isset($item['RelatedAttribute'])) {
+                                    $relatedCount = count($item['RelatedAttribute']);
+                                }
+                            ?>
+                            <?php if ($relatedCount > 0): ?>
+                                <button class="btn btn-default btn-xs" onclick="showRelatedMenu(this, '<?php echo h($item['id']); ?>')"><?php echo $relatedCount; ?></button>
+                            <?php endif; ?>
+                        </td>
+                    <?php endif; ?>
 
                     <!-- Comment -->
-                    <td class="col-comment">
+                    <td class="col-comment" <?php if ($isObject) echo 'colspan="5"'; ?>>
                         <?php echo h($item['comment'] ?? ''); ?>
                     </td>
 
-                    <!-- Correlation Toggle -->
-                    <td class="col-correlation" style="text-align: center;">
-                        <?php if (!$isObject): ?>
+                    <?php if (!$isObject): ?>
+                        <!-- IDS Toggle -->
+                        <td style="text-align: center;">
+                            <i class="fa fa-shield-alt beta-ids-toggle" 
+                               style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($item['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
+                                data-id="<?= h($item['id']) ?>"
+                                data-to-ids="<?= (int)$item['to_ids'] ?>"
+                                title="<?= ($item['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
+                        </td>
+
+                        <!-- Correlation Toggle -->
+                        <td class="col-correlation" style="text-align: center;">
                             <i class="fa fa-project-diagram beta-correlation-toggle" 
                                style="cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($item['disable_correlation'] ? 'opacity: 0.2;' : 'color: #428bca;') ?>"
                                data-id="<?= h($item['id']) ?>"
                                data-disable-correlation="<?= (int)$item['disable_correlation'] ?>"
                                title="<?= ($item['disable_correlation'] ? __('Correlation disabled') : __('Correlation enabled')) ?>"></i>
-                        <?php endif; ?>
-                    </td>
+                        </td>
 
-                    <!-- Related Events -->
-                    <td class="col-related">
-                        <?php 
-                            $relatedCount = 0;
-                            if (isset($item['RelatedAttribute'])) {
-                                $relatedCount = count($item['RelatedAttribute']);
-                            }
-                        ?>
-                        <?php if ($relatedCount > 0): ?>
-                            <button class="btn btn-default btn-xs" onclick="showRelatedMenu(this, '<?php echo h($item['id']); ?>')"><?php echo $relatedCount; ?></button>
-                        <?php endif; ?>
-                    </td>
-
-                    <!-- Sightings -->
-                    <td class="col-sightings" style="text-align: center;">
-                        <?php if ($isSighted): ?>
-                            <span class="beta-sighting-alert" title="<?php echo __('Sighted'); ?>">!</span>
-                        <?php endif; ?>
-                    </td>
+                        <!-- Sightings -->
+                        <td class="col-sightings" style="text-align: center;">
+                            <?php if ($isSighted): ?>
+                                <span class="beta-sighting-alert" title="<?php echo __('Sighted'); ?>">!</span>
+                            <?php endif; ?>
+                        </td>
+                    <?php endif; ?>
 
                     <!-- Distribution -->
                     <td class="col-distribution" style="text-align: center;">
@@ -519,6 +496,7 @@
                                 'localTagAccess' => $this->Acl->canModifyTag($event, true),
                                 'scope' => 'attribute',
                                 'tagConflicts' => $item['tagConflicts'] ?? [],
+                                'static_tags_only' => true,
                             ]); ?>
                         </div>
                     </td>
@@ -575,6 +553,14 @@
                                              <?php if ($mayModify): ?>
                                                 <li><a href="<?php echo $baseurl; ?>/attributes/edit/<?php echo h($subAttr['id']); ?>"><i class="fa fa-edit"></i> Edit</a></li>
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/shadow_attributes/add/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
+
+                                                <li class="divider"></li>
+                                                <li><a href="#" onclick="getPopup('local:1/<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Add Tag - Local</a></li>
+                                                <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Add Tag - Galaxy</a></li>
+                                                <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Add Galaxy - Local</a></li>
+                                                <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Add Galaxy - Global</a></li>
+
+                                                <li class="divider"></li>
                                                 <li><a href="<?php echo $baseurl; ?>/attributes/download/<?php echo h($subAttr['id']); ?>"><i class="fa fa-download"></i> Download</a></li>
                                                 <li class="divider"></li>
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-eye"></i> Add Sighting</a></li>
@@ -589,20 +575,15 @@
                                     </div>
                                  </div>
                             </td>
-                            <!-- IDS Toggle for Sub-Attribute -->
-                            <td style="text-align: center; border-left: 3px solid #e1f0fa;">
-                                <i class="fa fa-shield-alt beta-ids-toggle" 
-                                   style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
-                                   data-id="<?= h($subAttr['id']) ?>"
-                                   data-to-ids="<?= (int)$subAttr['to_ids'] ?>"
-                                   title="<?= ($subAttr['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
-                            </td>
+                            
                             <!-- Category -->
                             <td class="col-category"><span style="font-size: 11px; color: #777;"><?php echo h($subAttr['category']); ?></span></td>
+                            
                             <!-- Type -->
                             <td><span class="text-muted"><i class="fa fa-level-up fa-rotate-90"></i> <?php echo h($subAttr['type']); ?></span>
                                 <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
                             </td>
+                            
                             <!-- Value -->
                             <td>
                                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -621,29 +602,11 @@
                                         <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
                                     <?php endif; ?>
                                     <?php if ($mayModify): ?>
-                                         <div class="beta-tagging-links">
-                                            <span class="beta-tagging-label"><?= __('Tags:') ?></span>
-                                            <a href="#" class="beta-tag-link" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;" title="<?= __('Add Global Tag') ?>"><i class="fa fa-plus"></i><i class="fa fa-globe"></i></a>
-                                            <a href="#" class="beta-tag-link" onclick="getPopup('local:1/<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;" title="<?= __('Add Local Tag') ?>"><i class="fa fa-plus"></i><i class="fa fa-user"></i></a>
-                                            <span class="beta-tagging-label" style="margin-left: 5px;"><?= __('Galaxies:') ?></span>
-                                            <a href="#" class="beta-tag-link" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;" title="<?= __('Add Galaxy Cluster') ?>"><i class="fa fa-plus"></i><i class="fa fa-globe"></i></a>
-                                            <a href="#" class="beta-tag-link" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;" title="<?= __('Add Local Galaxy Cluster') ?>"><i class="fa fa-plus"></i><i class="fa fa-user"></i></a>
-                                          </div>
+                                         <div class="beta-tagging-links"></div>
                                     <?php endif; ?>
                                 </div>
                             </td>
-                            <!-- Comment -->
-                            <td class="col-comment">
-                                <?php echo h($subAttr['comment'] ?? ''); ?>
-                            </td>
-                            <!-- Correlation -->
-                            <td class="col-correlation" style="text-align: center;">
-                                <i class="fa fa-project-diagram beta-correlation-toggle" 
-                                   style="cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['disable_correlation'] ? 'opacity: 0.2;' : 'color: #428bca;') ?>"
-                                   data-id="<?= h($subAttr['id']) ?>"
-                                   data-disable-correlation="<?= (int)$subAttr['disable_correlation'] ?>"
-                                   title="<?= ($subAttr['disable_correlation'] ? __('Correlation disabled') : __('Correlation enabled')) ?>"></i>
-                            </td>
+
                             <!-- Related -->
                             <td class="col-related">
                                 <?php 
@@ -656,6 +619,30 @@
                                     <button class="btn btn-default btn-xs" onclick="showRelatedMenu(this, '<?php echo h($subAttr['id']); ?>')"><?php echo $subRelatedCount; ?></button>
                                 <?php endif; ?>
                             </td>
+
+                            <!-- Comment -->
+                            <td class="col-comment">
+                                <?php echo h($subAttr['comment'] ?? ''); ?>
+                            </td>
+
+                            <!-- IDS Toggle for Sub-Attribute -->
+                            <td style="text-align: center;">
+                                <i class="fa fa-shield-alt beta-ids-toggle" 
+                                   style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
+                                   data-id="<?= h($subAttr['id']) ?>"
+                                   data-to-ids="<?= (int)$subAttr['to_ids'] ?>"
+                                   title="<?= ($subAttr['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
+                            </td>
+
+                            <!-- Correlation -->
+                            <td class="col-correlation" style="text-align: center;">
+                                <i class="fa fa-project-diagram beta-correlation-toggle" 
+                                   style="cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['disable_correlation'] ? 'opacity: 0.2;' : 'color: #428bca;') ?>"
+                                   data-id="<?= h($subAttr['id']) ?>"
+                                   data-disable-correlation="<?= (int)$subAttr['disable_correlation'] ?>"
+                                   title="<?= ($subAttr['disable_correlation'] ? __('Correlation disabled') : __('Correlation enabled')) ?>"></i>
+                            </td>
+
                             <!-- Sightings -->
                             <td class="col-sightings" style="text-align: center;">
                                 <?php if ($isSightedSub): ?>
