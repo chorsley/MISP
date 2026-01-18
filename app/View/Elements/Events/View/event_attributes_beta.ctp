@@ -24,11 +24,28 @@
 ?>
 
 <style>
+    .beta-attributes-list {
+        padding: 0;
+        box-sizing: border-box;
+    }
+    .beta-toolbar {
+        margin-left: -10px;
+        margin-right: -10px;
+        justify-content: flex-start;
+    }
+    .beta-toolbar .pull-right {
+        margin-left: auto;
+    }
     .beta-attr-table {
         width: 100%;
         border-collapse: separate; 
         border-spacing: 0;
         margin-top: 10px;
+        table-layout: fixed;
+    }
+    .beta-attr-table th,
+    .beta-attr-table td {
+        overflow-wrap: anywhere;
     }
     .beta-attr-table th {
         text-align: left;
@@ -237,7 +254,7 @@
 
 <div class="beta-attributes-list">
     <!-- Toolbar -->
-    <div class="beta-toolbar clearfix" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+    <div class="beta-toolbar clearfix" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
         <div class="pull-left" style="display: flex; gap: 10px; align-items: center;">
              <?php if ($mayModify): ?>
                 <a href="<?php echo $baseurl; ?>/attributes/add/<?php echo h($event['Event']['id']); ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo __('Add Attribute'); ?></a>
