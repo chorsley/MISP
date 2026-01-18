@@ -128,6 +128,62 @@
         z-index: 2;
         color: #444;
     }
+    /* Toggle Switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+        vertical-align: middle;
+    }
+    .switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 20px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #428bca;
+    }
+    input:focus + .slider {
+        box-shadow: 0 0 1px #428bca;
+    }
+    input:checked + .slider:before {
+        -webkit-transform: translateX(20px);
+        -ms-transform: translateX(20px);
+        transform: translateX(20px);
+    }
+    .published-label {
+        margin-right: 8px;
+        font-weight: 600;
+        color: #666;
+        vertical-align: middle;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
 </style>
 
 <div class="events view beta-view-events">
@@ -186,7 +242,14 @@
             </span>
             
             <div class="beta-header-actions" style="margin-left: auto;">
-                 <?php if ($this->Acl->canAccess('events', 'edit')): ?>
+                 <?php if ($this->Acl->canAccess('events', 'edit') && $this->Acl->canAccess('events', 'publish')): ?>
+                    <div style="display: inline-block; margin-right: 15px; vertical-align: middle;" title="<?php echo __('Toggle publication status'); ?>">
+                        <span class="published-label"><?php echo __('Published'); ?></span>
+                        <label class="switch">
+                            <input type="checkbox" id="publishedToggle" data-id="<?php echo h($event['Event']['id']); ?>" <?php echo $event['Event']['published'] ? 'checked' : ''; ?>>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
                     <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit'); ?></a>
                  <?php endif; ?>
                  <a href="<?php echo $baseurl; ?>/users/routeUserSetting/ui_beta/0" class="btn btn-default btn-sm" title="<?php echo __('Switch back to Classic View'); ?>"><i class="fa fa-exchange-alt"></i> Classic</a>
@@ -617,6 +680,8 @@
     console.log('Comment Data:', commentData);
 
     $(function() {
+        popoverStartup();
+
         // Horizontal Bar Chart
         if (compositionData && compositionData.length > 0) {
             var margin = {top: 20, right: 20, bottom: 20, left: 150};
@@ -819,4 +884,41 @@
              $('#attributes').prepend(msg);
         }
     }
+
+    $(document).ready(function() {
+        $('#publishedToggle').change(function() {
+            var $toggle = $(this);
+            var id = $toggle.data('id');
+            var isChecked = $toggle.is(':checked');
+            var action = isChecked ? 'publish' : 'unpublish';
+            var url = '<?php echo $baseurl; ?>/events/' + action + '/' + id + '.json';
+            
+            // Disable to prevent double clicks
+            $toggle.prop('disabled', true);
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'json',
+                success: function(response) {
+                    $toggle.prop('disabled', false);
+                    if (response.saved || (response.response && response.response.saved)) {
+                         showMessage('success', response.message || (response.response ? response.response.message : 'Event updated'));
+                    } else {
+                        // Revert
+                        $toggle.prop('checked', !isChecked);
+                        showMessage('fail', response.message || (response.response ? response.response.message : 'Action failed'));
+                        if (response.errors) {
+                             console.error(response.errors);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    $toggle.prop('disabled', false);
+                    $toggle.prop('checked', !isChecked);
+                    xhrFailCallback(xhr);
+                }
+            });
+        });
+    });
 </script>

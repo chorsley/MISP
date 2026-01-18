@@ -215,10 +215,6 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .beta-attr-row:hover .col-comment {
-        white-space: normal;
-        overflow: visible;
-    }
     .beta-columns-menu {
         min-width: 180px;
     }
@@ -428,7 +424,15 @@
 
                     <!-- Comment -->
                     <td class="col-comment" <?php if ($isObject) echo 'colspan="5"'; ?>>
-                        <?php echo h($item['comment'] ?? ''); ?>
+                        <?php 
+                            $comment = $item['comment'] ?? '';
+                            if (mb_strlen($comment) > 50) {
+                                echo h(mb_substr($comment, 0, 50)) . '... ';
+                                echo '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';
+                            } else {
+                                echo h($comment);
+                            }
+                        ?>
                     </td>
 
                     <?php if (!$isObject): ?>
@@ -622,7 +626,15 @@
 
                             <!-- Comment -->
                             <td class="col-comment">
-                                <?php echo h($subAttr['comment'] ?? ''); ?>
+                                <?php 
+                                    $comment = $subAttr['comment'] ?? '';
+                                    if (mb_strlen($comment) > 50) {
+                                        echo h(mb_substr($comment, 0, 50)) . '... ';
+                                        echo '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';
+                                    } else {
+                                        echo h($comment);
+                                    }
+                                ?>
                             </td>
 
                             <!-- IDS Toggle for Sub-Attribute -->
@@ -837,11 +849,70 @@
         });
 
         // Dropdown handling
-        $(document).on('click', '.beta-row-menu-trigger', function(e) {
+        // Cleanup orphans from previous executions
+        $('.beta-row-menu.active-moved').remove();
+
+        $(document).off('click', '.beta-row-menu-trigger').on('click', '.beta-row-menu-trigger', function(e) {
             e.stopPropagation();
-            var menu = $(this).next('.beta-row-menu');
-            $('.beta-row-menu').not(menu).hide(); // Close others
-            menu.toggle();
+            var trigger = $(this);
+            
+            // Check for existing active menu
+            var activeMenu = $('.beta-row-menu.active-moved');
+            if (activeMenu.length) {
+                var oldTrigger = activeMenu.data('trigger');
+                
+                // Put it back
+                activeMenu.hide().removeClass('active-moved').css({top: '', left: '', position: '', zIndex: ''});
+                if (oldTrigger && oldTrigger[0].parentNode) {
+                    oldTrigger.after(activeMenu);
+                } else {
+                    activeMenu.remove();
+                }
+                
+                if (oldTrigger && oldTrigger[0] === trigger[0]) return; // Toggle off
+            }
+
+            var menu = trigger.next('.beta-row-menu');
+            $('.beta-row-menu').not(menu).hide();
+
+            // Move to body
+            menu.addClass('active-moved').appendTo('body');
+            menu.data('trigger', trigger);
+            
+            var offset = trigger.offset();
+            var triggerHeight = trigger.outerHeight();
+            
+            menu.css({
+                display: 'block',
+                position: 'absolute',
+                top: (offset.top + triggerHeight) + 'px',
+                left: offset.left + 'px',
+                zIndex: 10000
+            });
+            
+            var rect = menu[0].getBoundingClientRect();
+            var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            
+            if (rect.bottom > viewportHeight) {
+                 menu.css({
+                    top: (offset.top - menu.outerHeight()) + 'px'
+                 });
+            }
+        });
+
+        $(document).off('click.betaMenuClose').on('click.betaMenuClose', function(e) {
+            var activeMenu = $('.beta-row-menu.active-moved');
+            if (activeMenu.length) {
+                if ($(e.target).closest('.beta-row-menu.active-moved').length) return;
+                
+                var oldTrigger = activeMenu.data('trigger');
+                activeMenu.hide().removeClass('active-moved').css({top: '', left: '', position: '', zIndex: ''});
+                if (oldTrigger && oldTrigger[0].parentNode) {
+                    oldTrigger.after(activeMenu);
+                } else {
+                    activeMenu.remove();
+                }
+            }
         });
 
         $(document).on('click', function() {
