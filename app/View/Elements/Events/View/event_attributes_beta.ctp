@@ -400,6 +400,19 @@
                          <?php else: ?>
                             <div style="display: flex; align-items: center; gap: 5px;">
                                 <span class="attr-value"><?php echo h($item['value']); ?></span>
+                                <?php if (isset($item['warnings'])): ?>
+                                    <?php
+                                        $temp = '';
+                                        foreach ($item['warnings'] as $warning) {
+                                            $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
+                                            if (isset($warning['comment'])) {
+                                                $temp .= ' (' . h($warning['comment']) . ')';
+                                            }
+                                            $temp .= '<br>';
+                                        }
+                                    ?>
+                                    <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
+                                <?php endif; ?>
                                 <?php if ($mayModify): ?>
                                      <div class="beta-tagging-links">
                                         <span class="beta-tagging-label"><?= __('Tags:') ?></span>
@@ -575,6 +588,19 @@
                             <td>
                                 <div style="display: flex; align-items: center; gap: 5px;">
                                     <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
+                                    <?php if (isset($subAttr['warnings'])): ?>
+                                        <?php
+                                            $temp = '';
+                                            foreach ($subAttr['warnings'] as $warning) {
+                                                $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
+                                                if (isset($warning['comment'])) {
+                                                    $temp .= ' (' . h($warning['comment']) . ')';
+                                                }
+                                                $temp .= '<br>';
+                                            }
+                                        ?>
+                                        <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
+                                    <?php endif; ?>
                                     <?php if ($mayModify): ?>
                                          <div class="beta-tagging-links">
                                             <span class="beta-tagging-label"><?= __('Tags:') ?></span>

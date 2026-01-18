@@ -326,10 +326,11 @@
                                   <div id="comments-graph" style="width: 100%; max-height: 300px; overflow-y: auto;"></div>
                              </div>
                          </div>
-                     </div>
-                     <div class="span4">
-                         <!-- Context -->
-                          <div class="beta-card summary-card">
+
+                      </div>
+                      <div class="span4">
+                          <!-- Context -->
+                           <div class="beta-card summary-card">
                              <div class="beta-card-header"><?php echo __('Context'); ?></div>
                              <div class="beta-card-body">
                                  <strong><?php echo __('Tags'); ?></strong><br>
@@ -353,10 +354,88 @@
                                           'target_type' => 'event'
                                       ]);
                                   ?>
-                                 </div>
-                             </div>
-                         </div>
-                     </div>
+                                  </div>
+                              </div>
+                          <!-- Warninglist Matches -->
+                          <?php
+                              $warninglistMatches = [];
+                              $extractWarnings = function($attributes) use (&$warninglistMatches) {
+                                  if (empty($attributes)) return;
+                                  foreach ($attributes as $attr) {
+                                      if (!empty($attr['warnings'])) {
+                                          foreach ($attr['warnings'] as $w) {
+                                              $key = $w['warninglist_name'] . '||' . $attr['value'];
+                                              if (!isset($warninglistMatches[$key])) {
+                                                  $warninglistMatches[$key] = [
+                                                      'warninglist_name' => $w['warninglist_name'],
+                                                      'value' => $attr['value'],
+                                                      'count' => 0
+                                                  ];
+                                              }
+                                              $warninglistMatches[$key]['count']++;
+                                          }
+                                      }
+                                  }
+                              };
+
+                              if (!empty($event['Attribute'])) {
+                                  $extractWarnings($event['Attribute']);
+                              }
+                              if (!empty($event['Object'])) {
+                                  foreach ($event['Object'] as $obj) {
+                                      if (!empty($obj['Attribute'])) {
+                                          $extractWarnings($obj['Attribute']);
+                                      }
+                                  }
+                              }
+                              if (!empty($event['objects'])) {
+                                  $betaAttrs = [];
+                                  foreach ($event['objects'] as $item) {
+                                      if (isset($item['objectType']) && $item['objectType'] === 'attribute') {
+                                          $betaAttrs[] = $item;
+                                      } elseif (isset($item['objectType']) && $item['objectType'] === 'object' && !empty($item['Attribute'])) {
+                                          $betaAttrs = array_merge($betaAttrs, $item['Attribute']);
+                                      }
+                                  }
+                                  if (!empty($betaAttrs)) {
+                                      $extractWarnings($betaAttrs);
+                                  }
+                              }
+                              usort($warninglistMatches, function($a, $b) {
+                                  return strcasecmp($a['warninglist_name'], $b['warninglist_name']) ?: strcasecmp($a['value'], $b['value']);
+                              });
+                          ?>
+                          <div class="beta-card summary-card">
+                              <div class="beta-card-header"><?php echo __('Warninglist Matches'); ?></div>
+                              <div class="beta-card-body">
+                                  <?php if (!empty($warninglistMatches)): ?>
+                                      <table class="table table-condensed table-hover" style="font-size: 12px; margin-bottom: 0;">
+                                          <thead>
+                                              <tr>
+                                                  <th><?php echo __('Warninglist'); ?></th>
+                                                  <th><?php echo __('Value'); ?></th>
+                                              </tr>
+                                          </thead>
+                                          <tbody>
+                                              <?php foreach ($warninglistMatches as $match): ?>
+                                                  <tr>
+                                                      <td><span class="label label-warning"><?php echo h($match['warninglist_name']); ?></span></td>
+                                                      <td>
+                                                          <a href="#attributes" data-toggle="tab" onclick="$('#beta-attr-search').val('<?php echo h($match['value']); ?>').trigger('keyup');" class="attr-value">
+                                                              <?php echo h($match['value']); ?>
+                                                          </a>
+                                                      </td>
+                                                  </tr>
+                                              <?php endforeach; ?>
+                                          </tbody>
+                                      </table>
+                                  <?php else: ?>
+                                      <p class="muted" style="font-size: 12px;"><?php echo __('No warninglist matches found.'); ?></p>
+                                  <?php endif; ?>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                  </div>
 
             <!-- Attributes Tab -->
