@@ -291,7 +291,7 @@
                      <div class="span8">
                          <!-- Report Snippet -->
                           <div class="beta-card summary-card">
-                              <div class="beta-card-header"><?php echo __('Report'); ?></div>
+                              <div class="beta-card-header"><?php echo __('Report preview'); ?></div>
                               <div class="beta-card-body">
                                   <?php if (!empty($eventReportSummary)): ?>
                                       <p><?php echo h($eventReportSummary); ?></p>
@@ -349,10 +349,7 @@
                                       });
                                   ?>
                                   <div class="analysis-links-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-                                      <h5 style="margin-top: 0; font-size: 13px; color: #666;"><?php echo __('Analysis Links'); ?></h5>
-                                      <div class="alert alert-info" style="font-size: 11px; padding: 8px; margin-bottom: 10px;">
-                                          <i class="fa fa-exclamation-triangle"></i> <?php echo __('Always use caution when clicking'); ?>
-                                      </div>
+                                      <h5 style="margin-top: 0; font-size: 13px; color: #666;"><?php echo __('Analysis Links <i class="fa fa-exclamation-triangle"></i> (open links cautiously!)'); ?></h5>
                                       <?php if (!empty($analysisLinks)): ?>
                                           <ul style="list-style: none; padding: 0; margin: 0;">
                                               <?php foreach ($analysisLinks as $link): ?>

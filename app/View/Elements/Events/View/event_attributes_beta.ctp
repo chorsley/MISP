@@ -57,13 +57,13 @@
         letter-spacing: 0.5px;
     }
     .beta-attr-table td {
-        padding: 10px;
+        padding: 2px 10px;
         border-bottom: 1px solid #f9f9f9;
         vertical-align: middle;
         font-size: 13px;
     }
     .beta-attr-row:hover {
-        background-color: #f5faff;
+        background-color: #f5f5f5;
     }
     .beta-attr-row:hover .beta-row-menu-trigger {
         visibility: visible;
@@ -145,6 +145,13 @@
         background-color: #f0f7fd;
         border-top: 2px solid #e1f0fa;
     }
+    .object-header-row td {
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    .object-header-row td:first-child {
+        border-left: 4px solid #31708f;
+    }
     .object-title {
         font-weight: bold;
         color: #31708f;
@@ -218,6 +225,36 @@
     .beta-columns-menu {
         min-width: 180px;
     }
+    
+    /* Tree Structure */
+    .tree-cell {
+        position: relative;
+        padding-left: 30px !important;
+    }
+    .tree-cell::before {
+        /* Vertical line */
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 10px;
+        width: 2px;
+        background-color: #999;
+    }
+    .tree-cell::after {
+        /* Horizontal line */
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        width: 15px;
+        height: 2px;
+        background-color: #999;
+    }
+    .tree-cell.last-item::before {
+        bottom: 50%;
+    }
+
 </style>
 
 <div class="beta-attributes-list">
@@ -226,7 +263,7 @@
         <div class="pull-left" style="display: flex; gap: 10px; align-items: center;">
              <?php if ($mayModify): ?>
                 <a href="<?php echo $baseurl; ?>/attributes/add/<?php echo h($event['Event']['id']); ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo __('Add Attribute'); ?></a>
-                <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'objects', 'add'); return false;" class="btn btn-primary btn-sm"><i class="fa fa-cube"></i> <?php echo __('Add Object'); ?></a>
+                <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'objectTemplates', 'objectMetaChoice'); return false;" class="btn btn-primary btn-sm"><i class="fa fa-cube"></i> <?php echo __('Add Object'); ?></a>
             <?php endif; ?>
             
             <button id="btn-toggle-all" class="btn btn-default btn-sm" onclick="toggleAllObjectsAttributes()"><i class="fa fa-expand"></i> <span id="label-toggle-all"><?php echo __('Expand All'); ?></span></button>
@@ -490,6 +527,7 @@
                 </tr>
 
                 <!-- Tags Sub-row -->
+                <?php if (!empty($item['AttributeTag'])): ?>
                 <tr class="beta-sub-row col-tags-row" data-primary-id="<?php echo h($item['id']); ?>">
                     <td colspan="11">
                         <div class="attributeTagContainer">
@@ -505,6 +543,7 @@
                         </div>
                     </td>
                 </tr>
+                <?php endif; ?>
 
                 <!-- Galaxies Sub-row -->
                 <?php if (!empty($item['Galaxy'])): ?>
@@ -532,8 +571,15 @@
                 
                 <!-- Expanded Object Attributes -->
                 <?php if ($isObject && !empty($item['Attribute'])): ?>
+                    <?php 
+                        $totalAttrs = count($item['Attribute']);
+                        $attrIndex = 0;
+                    ?>
                     <?php foreach ($item['Attribute'] as $subAttr): ?>
                         <?php 
+                            $attrIndex++;
+                            $isLast = ($attrIndex === $totalAttrs);
+
                             $isSightedSub = isset($sightingsData['data'][$subAttr['id']]);
                             if (!$isSightedSub && isset($subAttr['Sighting']) && !empty($subAttr['Sighting'])) {
                                 $isSightedSub = true;
@@ -545,7 +591,7 @@
                             }
                         ?>
                         <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
-                            <td style="border-left: 3px solid #e1f0fa; padding-left: 20px; position: relative;">
+                            <td class="tree-cell <?php echo $isLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">
                                     <input type="checkbox" class="select-row" value="<?php echo h($subAttr['id']); ?>">
@@ -584,7 +630,9 @@
                             <td class="col-category"><span style="font-size: 11px; color: #777;"><?php echo h($subAttr['category']); ?></span></td>
                             
                             <!-- Type -->
-                            <td><span class="text-muted"><i class="fa fa-level-up fa-rotate-90"></i> <?php echo h($subAttr['type']); ?></span>
+                            <td>
+                                <i class="fa fa-level-up fa-rotate-90 text-muted" style="margin-right: 5px;"></i>
+                                <span class="text-muted"><?php echo h($subAttr['type']); ?></span>
                                 <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
                             </td>
                             
