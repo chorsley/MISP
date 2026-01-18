@@ -1858,6 +1858,7 @@ class EventsController extends AppController
             $conditions['excludeLocalTags'] = $namedParams['excludeLocalTags'];
         }
         $conditions['includeFeedCorrelations'] = 1;
+        $conditions['includeGranularCorrelations'] = 1;
         if (!$this->_isRest()) {
             $conditions['includeGranularCorrelations'] = 1;
         } else if (!empty($namedParams['includeGranularCorrelations'])) {

@@ -509,29 +509,113 @@
             <!-- Other Tabs Placeholders -->
              <div role="tabpanel" class="tab-pane" id="correlations">
                 <h3><?php echo __('Correlations'); ?></h3>
-                <?php if (!empty($event['RelatedEvent'])): ?>
-                    <table class="table table-hover table-condensed">
+                
+                <?php
+                    // Build Correlation Data
+                    $allCorrelations = [];
+                    $relatedEventsMap = [];
+                    if (!empty($event['RelatedEvent'])) {
+                        foreach ($event['RelatedEvent'] as $re) {
+                            $relatedEventsMap[$re['Event']['id']] = $re['Event'];
+                        }
+                    }
+
+                    $processAttr = function($attr) use (&$allCorrelations, $relatedEventsMap, $event) {
+                        $relatedAttrs = $attr['RelatedAttribute'] ?? [];
+                        if (empty($relatedAttrs) && !empty($event['RelatedAttribute'][$attr['id']])) {
+                            $relatedAttrs = $event['RelatedAttribute'][$attr['id']];
+                        }
+
+                        if (!empty($relatedAttrs)) {
+                            foreach ($relatedAttrs as $related) {
+                                // Handle potential double nesting or direct relation
+                                $relationsToProcess = [];
+                                if (isset($related['event_id']) || isset($related['id'])) {
+                                    $relationsToProcess[] = $related;
+                                } elseif (is_array($related)) {
+                                    foreach ($related as $sub) {
+                                        if (is_array($sub) && (isset($sub['event_id']) || isset($sub['id']))) {
+                                            $relationsToProcess[] = $sub;
+                                        }
+                                    }
+                                }
+
+                                foreach ($relationsToProcess as $rel) {
+                                    $eventId = $rel['event_id'] ?? $rel['id'] ?? null;
+                                    if (!$eventId) continue;
+                                    // Permissive check to debug missing event info
+                                    $eventDate = isset($relatedEventsMap[$eventId]) ? $relatedEventsMap[$eventId]['date'] : ($rel['date'] ?? 'N/A');
+                                    $eventInfo = isset($relatedEventsMap[$eventId]) ? $relatedEventsMap[$eventId]['info'] : ($rel['info'] ?? 'Event info not available');
+                                    $orgcId = isset($relatedEventsMap[$eventId]) ? ($relatedEventsMap[$eventId]['orgc_id'] ?? 0) : ($rel['org_id'] ?? 0);
+
+                                    $allCorrelations[] = [
+                                        'local_attr_id' => $attr['id'],
+                                        'value' => $rel['value'] ?? $attr['value'],
+                                        'type' => $attr['type'],
+                                        'event_id' => $eventId,
+                                        'event_date' => $eventDate,
+                                        'event_info' => $eventInfo,
+                                        'orgc_id' => $orgcId
+                                    ];
+                                }
+                            }
+                        }
+                    };
+
+                    if (!empty($event['Attribute'])) {
+                        foreach ($event['Attribute'] as $attr) $processAttr($attr);
+                    }
+                    if (!empty($event['Object'])) {
+                        foreach ($event['Object'] as $obj) {
+                            if (!empty($obj['Attribute'])) {
+                                foreach ($obj['Attribute'] as $attr) $processAttr($attr);
+                            }
+                        }
+                    }
+                    if (!empty($event['objects'])) {
+                        foreach ($event['objects'] as $item) {
+                            if ($item['objectType'] === 'attribute') {
+                                $processAttr($item);
+                            } elseif ($item['objectType'] === 'object' && !empty($item['Attribute'])) {
+                                foreach ($item['Attribute'] as $attr) $processAttr($attr);
+                            }
+                        }
+                    }
+                    
+                    // Sort by Date DESC
+                    usort($allCorrelations, function($a, $b) {
+                        return strcmp($b['event_date'], $a['event_date']);
+                    });
+                ?>
+
+                <div id="correlation-filter-controls" style="display: none; margin-bottom: 15px;">
+                    <span id="correlation-filter-msg" class="label label-info" style="font-size: 12px;"></span>
+                    <button id="correlation-reset-btn" class="btn btn-default btn-xs" onclick="resetCorrelationFilter()"><i class="fa fa-times"></i> <?php echo __('Clear Filter'); ?></button>
+                </div>
+
+                <?php if (!empty($allCorrelations)): ?>
+                    <table class="table table-hover table-condensed" id="correlations-table">
                         <thead>
                             <tr>
                                 <th><?php echo __('Date'); ?></th>
                                 <th><?php echo __('Event ID'); ?></th>
                                 <th><?php echo __('Info'); ?></th>
-                                <th><?php echo __('Correlations'); ?></th>
+                                <th><?php echo __('Type'); ?></th>
+                                <th><?php echo __('Value'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($event['RelatedEvent'] as $related): ?>
-                                <tr>
-                                    <td><?php echo h($related['Event']['date']); ?></td>
+                            <?php foreach ($allCorrelations as $corr): ?>
+                                <tr data-attribute-id="<?php echo h($corr['local_attr_id']); ?>">
+                                    <td><?php echo h($corr['event_date']); ?></td>
                                     <td>
-                                        <a href="<?php echo $baseurl; ?>/events/view/<?php echo h($related['Event']['id']); ?>">
-                                            <?php echo h($related['Event']['id']); ?>
+                                        <a href="<?php echo $baseurl; ?>/events/view/<?php echo h($corr['event_id']); ?>">
+                                            <?php echo h($corr['event_id']); ?>
                                         </a>
                                     </td>
-                                    <td><?php echo h($related['Event']['info']); ?></td>
-                                    <td>
-                                        <span class="badge"><?php echo isset($relatedEventCorrelationCount[$related['Event']['id']]) ? $relatedEventCorrelationCount[$related['Event']['id']] : 0; ?></span>
-                                    </td>
+                                    <td><?php echo h($corr['event_info']); ?></td>
+                                    <td><?php echo h($corr['type']); ?></td>
+                                    <td style="word-break: break-all;"><?php echo h($corr['value']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -918,4 +1002,25 @@
             });
         });
     });
+    function filterCorrelations(attributeId) {
+        $('.nav-tabs a[href="#correlations"]').tab('show');
+        var rows = $('#correlations-table tbody tr');
+        if (attributeId) {
+            rows.hide();
+            rows.filter('[data-attribute-id="' + attributeId + '"]').show();
+            $('#correlation-filter-msg').text('<?php echo __('Filtering by Attribute ID'); ?>: ' + attributeId);
+            $('#correlation-filter-controls').show();
+        } else {
+            rows.show();
+            $('#correlation-filter-controls').hide();
+        }
+        // Scroll to top of tab content
+        $('html, body').animate({
+            scrollTop: $(".beta-tabs-container").offset().top
+        }, 500);
+    }
+
+    function resetCorrelationFilter() {
+        filterCorrelations(null);
+    }
 </script>

@@ -1,6 +1,15 @@
 <?php
     // Prepare items
     $items = [];
+    
+    // Workaround for missing RelatedAttribute in attributes
+    $relatedMap = [];
+    if (!empty($event['RelatedAttribute'])) {
+        foreach ($event['RelatedAttribute'] as $attrId => $relations) {
+            $relatedMap[$attrId] = $relations;
+        }
+    }
+
     if (!empty($event['objects'])) {
         $items = $event['objects'];
     } else {
@@ -17,6 +26,24 @@
             }
         }
     }
+
+    // Attach RelatedAttribute if missing
+    if (!empty($relatedMap)) {
+        foreach ($items as &$item) {
+            if (isset($item['objectType']) && $item['objectType'] === 'attribute') {
+                if (isset($relatedMap[$item['id']])) {
+                    $item['RelatedAttribute'] = $relatedMap[$item['id']];
+                }
+            } elseif (isset($item['objectType']) && $item['objectType'] === 'object' && !empty($item['Attribute'])) {
+                foreach ($item['Attribute'] as &$subAttr) {
+                    if (isset($relatedMap[$subAttr['id']])) {
+                        $subAttr['RelatedAttribute'] = $relatedMap[$subAttr['id']];
+                    }
+                }
+            }
+        }
+    }
+
     // Sort desc by timestamp
     usort($items, function($a, $b) {
         return $b['timestamp'] - $a['timestamp'];
@@ -454,7 +481,7 @@
                                 }
                             ?>
                             <?php if ($relatedCount > 0): ?>
-                                <button class="btn btn-default btn-xs" onclick="showRelatedMenu(this, '<?php echo h($item['id']); ?>')"><?php echo $relatedCount; ?></button>
+                                <span class="badge" title="<?php echo __('Show correlations'); ?>" style="cursor: pointer; background-color: #428bca;" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo $relatedCount; ?></span>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
@@ -668,7 +695,7 @@
                                     }
                                 ?>
                                 <?php if ($subRelatedCount > 0): ?>
-                                    <button class="btn btn-default btn-xs" onclick="showRelatedMenu(this, '<?php echo h($subAttr['id']); ?>')"><?php echo $subRelatedCount; ?></button>
+                                    <span class="badge" style="cursor: pointer; background-color: #428bca;" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><?php echo $subRelatedCount; ?></span>
                                 <?php endif; ?>
                             </td>
 
