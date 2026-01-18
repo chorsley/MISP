@@ -334,16 +334,19 @@
                              <div class="beta-card-header"><?php echo __('Context'); ?></div>
                              <div class="beta-card-body">
                                  <strong><?php echo __('Tags'); ?></strong><br>
-                                 <?php
-                                      echo $this->element('ajaxTags', [
-                                          'event' => $event,
-                                          'tags' => $event['EventTag'],
-                                          'tagAccess' => $this->Acl->canAccess('tags', 'edit'),
-                                          'localTagAccess' => $this->Acl->canModifyTag($event, true),
-                                          'missingTaxonomies' => $missingTaxonomies,
-                                          'tagConflicts' => $tagConflicts
-                                      ]);
-                                 ?>
+                                 <span class="eventTagContainer">
+                                     <?php
+                                           echo $this->element('ajaxTags', [
+                                               'event' => $event,
+                                               'tags' => $event['EventTag'],
+                                               'tagAccess' => $this->Acl->canAccess('tags', 'edit'),
+                                               'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                               'missingTaxonomies' => $missingTaxonomies,
+                                               'tagConflicts' => $tagConflicts,
+                                               'popoverPlacement' => 'left'
+                                           ]);
+                                     ?>
+                                 </span>
                                  <hr>
                                  <strong><?php echo __('Galaxies'); ?></strong><br>
                                   <?php

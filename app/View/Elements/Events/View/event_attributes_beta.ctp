@@ -316,6 +316,7 @@
                 ?>
                 <tr class="beta-attr-row <?php echo $rowClass; ?>" 
                     data-object-type="<?php echo $dataType; ?>" 
+                    data-primary-id="<?php echo h($item['id']); ?>"
                     <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
@@ -491,19 +492,20 @@
                 </tr>
 
                 <!-- Tags Sub-row -->
-                <?php if (!empty($item['AttributeTag'])): ?>
-                <tr class="beta-sub-row col-tags-row">
+                <tr class="beta-sub-row col-tags-row" data-primary-id="<?php echo h($item['id']); ?>">
                     <td colspan="11">
-                        <div class="beta-tags-container">
-                            <?php foreach ($item['AttributeTag'] as $tag): ?>
-                                <span class="attr-tag" style="background-color:<?php echo h($tag['Tag']['colour']); ?>; color:<?php echo $this->TextColour->getTextColour($tag['Tag']['colour']); ?>">
-                                    <?php echo h($tag['Tag']['name']); ?>
-                                </span>
-                            <?php endforeach; ?>
+                        <div class="attributeTagContainer">
+                            <?php echo $this->element('ajaxTags', [
+                                'attributeId' => $item['id'],
+                                'tags' => $item['AttributeTag'] ?? [],
+                                'tagAccess' => $mayModify,
+                                'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                'scope' => 'attribute',
+                                'tagConflicts' => $item['tagConflicts'] ?? [],
+                            ]); ?>
                         </div>
                     </td>
                 </tr>
-                <?php endif; ?>
 
                 <!-- Galaxies Sub-row -->
                 <?php if (!empty($item['Galaxy'])): ?>

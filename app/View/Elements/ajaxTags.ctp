@@ -30,24 +30,27 @@
     $tagData = "";
     $tag_display_style = $tag_display_style ?? 1;
     $buttonData = [];
+    $popoverPlacement = $popoverPlacement ?? 'right';
 
     if ($full) {
         $buttonData[] = sprintf(
-            '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s">%s</button>',
+            '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s" data-popover-placement="%s">%s</button>',
             __('Add a tag'),
             __('Add a tag'),
             'addTagButton addButton btn btn-inverse noPrint',
             $baseurl . '/tags/selectTaxonomy/' . h($id) . ($scope === 'event' ? '' : ('/' . $scope)),
+            h($popoverPlacement),
             '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
         );
     }
     if ($full || $fullLocal) {
         $buttonData[] = sprintf(
-            '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s">%s</button>',
+            '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s" data-popover-placement="%s">%s</button>',
             __('Add a local tag'),
             __('Add a local tag'),
             'addLocalTagButton addButton btn btn-inverse noPrint',
             $baseurl . '/tags/selectTaxonomy/local:1/' . h($id) . ($scope === 'event' ? '' : ('/' . $scope)),
+            h($popoverPlacement),
             '<i class="fas fa-user"></i> <i class="fas fa-plus"></i>'
         );
     }
@@ -58,11 +61,12 @@
             $hButtonData = [];
             if ($full) {
                 $hButtonData[] = sprintf(
-                    '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s">%s</button>',
+                    '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s" data-popover-placement="%s">%s</button>',
                     __('Add a tag'),
                     __('Add a tag'),
                     'addTagButton addButton btn btn-inverse noPrint',
                     sprintf($baseurl . '/tags/selectTag/%u/%u/event', h($id), $hTaxonomy['taxonomy']['Taxonomy']['id']),
+                    h($popoverPlacement),
                     '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
                 );
             }
