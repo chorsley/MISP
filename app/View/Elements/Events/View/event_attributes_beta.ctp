@@ -11,10 +11,40 @@
     }
 
     if (!empty($event['objects'])) {
-        $items = $event['objects'];
+        $items = [];
+        $objectAttributeIds = [];
+        foreach ($event['objects'] as $item) {
+            if ($item['objectType'] === 'object') {
+                if (!empty($item['Attribute'])) {
+                    foreach ($item['Attribute'] as $objAttr) {
+                        $objectAttributeIds[$objAttr['id']] = true;
+                    }
+                }
+            }
+        }
+        foreach ($event['objects'] as $item) {
+            if ($item['objectType'] === 'attribute' && isset($objectAttributeIds[$item['id']])) {
+                continue;
+            }
+            $items[] = $item;
+        }
     } else {
+        $objectAttributeIds = [];
+        if (!empty($event['Object'])) {
+            foreach ($event['Object'] as $obj) {
+                if (!empty($obj['Attribute'])) {
+                    foreach ($obj['Attribute'] as $objAttr) {
+                        $objectAttributeIds[$objAttr['id']] = true;
+                    }
+                }
+            }
+        }
+
         if (!empty($event['Attribute'])) {
             foreach ($event['Attribute'] as $attr) {
+                if (isset($objectAttributeIds[$attr['id']])) {
+                    continue;
+                }
                 $attr['objectType'] = 'attribute';
                 $items[] = $attr;
             }
@@ -307,7 +337,7 @@
                             'sightings' => __('Sightings'),
                             'distribution' => __('Distribution'),
                             'correlation' => __('Correlation'),
-                            'related' => __('Related Events'),
+                            'related' => __('Corr.'),
                             'comment' => __('Comment'),
                             'tags' => __('Tags'),
                             'galaxies' => __('Galaxies'),
@@ -335,12 +365,12 @@
                 <th class="col-category" style="width: 80px;"><?php echo __('Category'); ?></th>
                 <th style="width: 120px;"><?php echo __('Type / Object'); ?></th>
                 <th><?php echo __('Value / Attributes'); ?></th>
-                <th class="col-related" style="width: 50px;"><?php echo __('Related'); ?></th>
+                <th class="col-related" style="width: 50px;"><?php echo __('Corr.'); ?></th>
                 <th class="col-comment" style="width: 20%;"><?php echo __('Comment'); ?></th>
                 <th style="width: 30px;" title="<?php echo __('Recommend for blocking / alerting?'); ?>">IDS</th>
                 <th class="col-correlation" style="width: 30px;" title="<?php echo __('Correlation'); ?>"><i class="fa fa-project-diagram"></i></th>
                 <th class="col-sightings" style="width: 30px;" title="<?php echo __('Sightings'); ?>"><i class="fa fa-eye"></i></th>
-                <th class="col-distribution" style="width: 30px;" title="<?php echo __('Distribution'); ?>"><i class="fa fa-share-alt"></i></th>
+                <th class="col-distribution" style="width: 40px;" title="<?php echo __('Distribution'); ?>"><i class="fa fa-share-alt"></i></th>
                 <th class="col-date" style="width: 80px;"><?php echo __('Date'); ?></th>
             </tr>
         </thead>
@@ -389,10 +419,20 @@
                                 <!-- Tagging / Galaxies -->
                                 <?php if (!$isObject): ?>
                                     <li class="divider"></li>
-                                    <li><a href="#" onclick="getPopup('local:1/<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Add Tag - Local</a></li>
-                                    <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Add Tag - Galaxy</a></li>
-                                    <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Add Galaxy - Local</a></li>
-                                    <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Add Galaxy - Global</a></li>
+                                    <li class="dropdown-submenu">
+                                        <a href="#"><i class="fa fa-tag"></i> Add tag</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="#" onclick="getPopup('local:1/<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                            <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="dropdown-submenu">
+                                        <a href="#"><i class="fa fa-bahai"></i> Galaxies</a>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                            <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                        </ul>
+                                    </li>
                                 <?php endif; ?>
 
                                 <!-- Context Specific Actions -->
@@ -528,7 +568,12 @@
 
                     <!-- Distribution -->
                     <td class="col-distribution" style="text-align: center;">
-                        <i class="fa fa-circle" style="color: <?php echo $distColor; ?>;" title="<?php echo h($distributionLevels[$item['distribution']] ?? ''); ?>"></i>
+                        <div class="dist-widget dist-<?= intval($item['distribution']) ?> distributionNetworkToggle"
+                             title="<?= $item['distribution'] == 4 ? h($item['SharingGroup']['name'] ?? '') : (isset($distributionLevels[$item['distribution']]) ? h($distributionLevels[$item['distribution']]) : '') ?>"
+                             data-event-distribution="<?= intval($item['distribution']) ?>"
+                             data-event-distribution-name="<?= $item['distribution'] == 4 ? h($item['SharingGroup']['name'] ?? '') : (isset($shortDist[$item['distribution']]) ? h($shortDist[$item['distribution']]) : '') ?>"
+                             data-scope-id="<?= h($item['id']) ?>">
+                        </div>
                     </td>
 
                     <!-- Date -->
@@ -632,10 +677,20 @@
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/shadow_attributes/add/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
 
                                                 <li class="divider"></li>
-                                                <li><a href="#" onclick="getPopup('local:1/<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Add Tag - Local</a></li>
-                                                <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Add Tag - Galaxy</a></li>
-                                                <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Add Galaxy - Local</a></li>
-                                                <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Add Galaxy - Global</a></li>
+                                                <li class="dropdown-submenu">
+                                                    <a href="#"><i class="fa fa-tag"></i> Add tag</a>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a href="#" onclick="getPopup('local:1/<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                                        <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                                    </ul>
+                                                </li>
+                                                <li class="dropdown-submenu">
+                                                    <a href="#"><i class="fa fa-bahai"></i> Galaxies</a>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                                        <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                                    </ul>
+                                                </li>
 
                                                 <li class="divider"></li>
                                                 <li><a href="<?php echo $baseurl; ?>/attributes/download/<?php echo h($subAttr['id']); ?>"><i class="fa fa-download"></i> Download</a></li>
@@ -738,7 +793,12 @@
                             </td>
                             <!-- Distribution -->
                             <td class="col-distribution" style="text-align: center;">
-                                <i class="fa fa-circle" style="color: <?php echo $subDistColor; ?>;" title="<?php echo h($distributionLevels[$subAttr['distribution']] ?? ''); ?>"></i>
+                                <div class="dist-widget dist-<?= intval($subAttr['distribution']) ?> distributionNetworkToggle"
+                                     title="<?= $subAttr['distribution'] == 4 ? h($subAttr['SharingGroup']['name'] ?? '') : (isset($distributionLevels[$subAttr['distribution']]) ? h($distributionLevels[$subAttr['distribution']]) : '') ?>"
+                                     data-event-distribution="<?= intval($subAttr['distribution']) ?>"
+                                     data-event-distribution-name="<?= $subAttr['distribution'] == 4 ? h($subAttr['SharingGroup']['name'] ?? '') : (isset($shortDist[$subAttr['distribution']]) ? h($shortDist[$subAttr['distribution']]) : '') ?>"
+                                     data-scope-id="<?= h($subAttr['id']) ?>">
+                                </div>
                             </td>
                             <!-- Date -->
                             <td class="col-date">
@@ -1080,6 +1140,11 @@
         <?php
             endif;
         ?>
+        $('.distributionNetworkToggle').each(function() {
+            $(this).distributionNetwork({
+                distributionData: <?= json_encode($distributionData, JSON_UNESCAPED_UNICODE); ?>,
+            });
+        });
         popoverStartup();
     });
     </script>

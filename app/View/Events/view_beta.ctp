@@ -18,7 +18,13 @@
     .beta-event-title {
         font-weight: 600;
         margin-top: 0;
+        margin-bottom: 2px;
         color: #333;
+    }
+    .beta-event-subtitle {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 10px;
     }
     .beta-id-badge {
         font-size: 0.6em;
@@ -89,7 +95,7 @@
         background-color: #deebfa;
         border-radius: 4px;
         overflow: hidden;
-        height: 30px;
+        min-height: 30px;
         display: flex;
         align-items: center;
         cursor: pointer;
@@ -191,11 +197,13 @@
     <div class="beta-header-container">
         <h2 class="beta-event-title">
             <?php echo h($event['Event']['info']); ?>
-             <span class="beta-id-badge">#<?php echo h($event['Event']['id']); ?></span>
         </h2>
+        <div class="beta-event-subtitle">
+            ID: <?php echo h($event['Event']['id']); ?> / UUID: <?php echo h($event['Event']['uuid']); ?>
+        </div>
         <div class="beta-event-meta-row">
             <span class="meta-box date-box">
-                <span class="meta-label"><?php echo __('Date'); ?></span>
+                <span class="meta-label"><?php echo __('Event Date'); ?></span>
                 <span class="meta-value"><?php echo h($event['Event']['date']); ?></span>
             </span>
             <span class="meta-box org-box">
@@ -252,7 +260,6 @@
                     </div>
                     <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit'); ?></a>
                  <?php endif; ?>
-                 <a href="<?php echo $baseurl; ?>/users/routeUserSetting/ui_beta/0" class="btn btn-default btn-sm" title="<?php echo __('Switch back to Classic View'); ?>"><i class="fa fa-exchange-alt"></i> Classic</a>
             </div>
         </div>
         
@@ -280,8 +287,8 @@
             <li role="presentation" class="active"><a href="#summary" aria-controls="summary" role="tab" data-toggle="tab"><?php echo __('Summary'); ?></a></li>
             <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Attributes'); ?> (<?php echo h($attribute_count); ?>)</a></li>
             <li role="presentation"><a href="#correlations" aria-controls="correlations" role="tab" data-toggle="tab"><?php echo __('Correlations'); ?> (<?php echo isset($relatedEventCorrelationCount) ? count($relatedEventCorrelationCount) : 0; ?>)</a></li>
-            <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
             <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<?php echo h($eventReportCount); ?>)</a></li>
+            <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
         </ul>
 
         <div class="tab-content beta-tab-content">
@@ -375,7 +382,7 @@
                          <div class="beta-card summary-card">
                              <div class="beta-card-header"><?php echo __('Composition'); ?></div>
                              <div class="beta-card-body">
-                                  <div id="composition-treemap" style="width: 100%; height: 200px;"></div>
+                                  <div id="composition-treemap" style="width: 100%; min-height: 200px;"></div>
                              </div>
                          </div>
 
@@ -383,7 +390,7 @@
                          <div class="beta-card summary-card">
                              <div class="beta-card-header"><?php echo __('Analysis comments'); ?></div>
                              <div class="beta-card-body">
-                                  <div id="comments-graph" style="width: 100%; max-height: 300px; overflow-y: auto;"></div>
+                                  <div id="comments-graph" style="width: 100%;"></div>
                              </div>
                          </div>
 
@@ -624,6 +631,15 @@
                     <p class="muted"><?php echo __('No correlations found.'); ?></p>
                 <?php endif; ?>
             </div>
+             <div role="tabpanel" class="tab-pane" id="reports">
+                <h3><?php echo __('Reports'); ?></h3>
+                <div id="event-reports-tab-content">
+                    <div class="text-center" style="padding: 20px;">
+                        <i class="fa fa-spinner fa-spin fa-2x"></i><br>
+                        <?php echo __('Loading reports...'); ?>
+                    </div>
+                </div>
+            </div>
              <div role="tabpanel" class="tab-pane" id="history">
                 <h3><?php echo __('History'); ?></h3>
                 <?php if (!empty($contributors)): ?>
@@ -634,15 +650,6 @@
                     <i class="fa fa-info-circle"></i> <?php echo __('Full audit log is available in the dedicated view.'); ?>
                     <br><br>
                     <a href="<?php echo $baseurl; ?>/audit_logs/eventIndex/<?php echo h($event['Event']['id']); ?>" class="btn btn-primary"><?php echo __('View Full Audit Log'); ?></a>
-                </div>
-            </div>
-             <div role="tabpanel" class="tab-pane" id="reports">
-                <h3><?php echo __('Reports'); ?></h3>
-                <div id="event-reports-tab-content">
-                    <div class="text-center" style="padding: 20px;">
-                        <i class="fa fa-spinner fa-spin fa-2x"></i><br>
-                        <?php echo __('Loading reports...'); ?>
-                    </div>
                 </div>
             </div>
         </div>

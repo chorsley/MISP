@@ -1336,6 +1336,15 @@ body.beta-ui-enabled .beta-view-events {
     background-color: #6a5acd;
 }
 
+/* 5: Inherit Event - Grey */
+.dist-5 {
+    background-color: #adb5bd;
+}
+
+.dist-inherited {
+    border: 1px dashed #6c757d;
+}
+
 /* Ensure the cell content aligns nicely */
 .col-distribution {
     white-space: nowrap;
