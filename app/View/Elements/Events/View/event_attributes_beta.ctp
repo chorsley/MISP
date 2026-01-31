@@ -114,10 +114,11 @@
         letter-spacing: 0.5px;
     }
     .beta-attr-table td {
-        padding: 2px 10px;
+        padding: 5px 10px;
         border-bottom: 1px solid #f9f9f9;
-        vertical-align: middle;
+        vertical-align: top;
         font-size: 13px;
+        border-left: 4px solid transparent; /* Align with object header blue bar */
     }
     .beta-attr-row:hover {
         background-color: #f5f5f5;
@@ -199,12 +200,15 @@
         border: 1px solid transparent;
     }
     .object-header-row {
-        background-color: #f0f7fd;
-        border-top: 2px solid #e1f0fa;
+        background-color: #ebf5fb;
+    }
+    .object-attr-row, .object-attr-row + .beta-sub-row {
+        background-color: #f8fbfe; /* Even more subtle pale blue for object members */
     }
     .object-header-row td {
         padding-top: 4px;
         padding-bottom: 4px;
+        border-left: 0; /* Inherit from td, specialized below */
     }
     .object-header-row td:first-child {
         border-left: 4px solid #31708f;
@@ -224,11 +228,14 @@
         /* border-left handled inline for positioning */
     }
     .beta-sub-row {
+        /* background-color inherited from preceding row logic where possible, otherwise white */
         background-color: #fff;
     }
     .beta-sub-row td {
-        padding: 4px 10px 8px 60px;
+        padding: 4px 10px 8px 10px;
         border-bottom: 1px solid #f0f0f0;
+        vertical-align: top;
+        border-left: 4px solid transparent; /* Keep aligned */
     }
     .beta-tags-container, .beta-galaxies-container {
         display: flex;
@@ -286,7 +293,8 @@
     /* Tree Structure */
     .tree-cell {
         position: relative;
-        padding-left: 30px !important;
+        padding-left: 10px !important;
+        border-left: 4px solid transparent !important;
     }
     .tree-cell::before {
         /* Vertical line */
@@ -294,24 +302,31 @@
         position: absolute;
         top: 0;
         bottom: 0;
-        left: 10px;
+        left: -3px;
         width: 2px;
         background-color: #999;
     }
     .tree-cell::after {
-        /* Horizontal line */
+        /* Horizontal line - only for rows with a checkbox */
         content: '';
         position: absolute;
-        top: 50%;
-        left: 10px;
-        width: 15px;
+        top: 15px; /* Aligned with checkbox center in top-aligned layout */
+        left: -3px;
+        width: 13px;
         height: 2px;
         background-color: #999;
     }
+    .tree-cell.no-tick::after {
+        display: none;
+    }
     .tree-cell.last-item::before {
-        bottom: 50%;
+        bottom: auto;
+        height: 16px; /* Ends at the horizontal line */
     }
 
+    .standalone-attr-row {
+        background-color: #fff;
+    }
 </style>
 
 <div class="beta-attributes-list">
@@ -380,7 +395,7 @@
                     $isObject = $item['objectType'] === 'object';
                     $dataType = $isObject ? 'object' : 'attribute';
                     $dataName = $isObject ? $item['name'] : $item['type'];
-                    $rowClass = $isObject ? 'object-header-row' : '';
+                    $rowClass = $isObject ? 'object-header-row' : 'standalone-attr-row';
                     
                     $isSighted = isset($sightingsData['data'][$item['id']]);
                     if (!$isObject && !$isSighted && isset($item['Sighting']) && !empty($item['Sighting'])) {
@@ -662,8 +677,13 @@
                                 $subDistColor = $subDistColors[$subAttr['distribution']] ?? '#999';
                             }
                         ?>
+                        <?php 
+                            $hasTags = !empty($subAttr['AttributeTag']);
+                            $hasGalaxies = !empty($subAttr['Galaxy']);
+                            $attributeIsLast = $isLast && !$hasTags && !$hasGalaxies;
+                        ?>
                         <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
-                            <td class="tree-cell <?php echo $isLast ? 'last-item' : ''; ?>">
+                            <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">
                                     <input type="checkbox" class="select-row" value="<?php echo h($subAttr['id']); ?>">
@@ -824,9 +844,14 @@
 
                         <!-- Sub-Attr Tags -->
                         <?php if (!empty($subAttr['AttributeTag'])): ?>
+                        <?php 
+                            $tagsAreLast = $isLast && !$hasGalaxies;
+                        ?>
                         <tr class="beta-sub-row col-tags-row">
-                            <td style="border-left: 3px solid #e1f0fa;"></td>
-                            <td colspan="10">
+                            <td class="tree-cell no-tick <?php echo $tagsAreLast ? 'last-item' : ''; ?>"></td>
+                            <td class="col-category"></td>
+                            <td></td>
+                            <td colspan="8">
                                 <div class="beta-tags-container">
                                     <?php foreach ($subAttr['AttributeTag'] as $tag): ?>
                                         <span class="attr-tag" style="background-color:<?php echo h($tag['Tag']['colour']); ?>; color:<?php echo $this->TextColour->getTextColour($tag['Tag']['colour']); ?>">
@@ -841,8 +866,10 @@
                         <!-- Sub-Attr Galaxies -->
                         <?php if (!empty($subAttr['Galaxy'])): ?>
                         <tr class="beta-sub-row col-galaxies-row">
-                            <td style="border-left: 3px solid #e1f0fa;"></td>
-                            <td colspan="10">
+                            <td class="tree-cell no-tick <?php echo $isLast ? 'last-item' : ''; ?>"></td>
+                            <td class="col-category"></td>
+                            <td></td>
+                            <td colspan="8">
                                 <div class="beta-galaxies-container">
                                     <?php 
                                         $subClusters = [];

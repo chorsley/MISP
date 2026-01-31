@@ -285,9 +285,9 @@
     <div class="beta-tabs-container">
         <ul class="nav nav-tabs beta-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#summary" aria-controls="summary" role="tab" data-toggle="tab"><?php echo __('Summary'); ?></a></li>
+            <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<?php echo h($eventReportCount); ?>)</a></li>
             <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Attributes'); ?> (<?php echo h($attribute_count); ?>)</a></li>
             <li role="presentation"><a href="#correlations" aria-controls="correlations" role="tab" data-toggle="tab"><?php echo __('Correlations'); ?> (<?php echo isset($relatedEventCorrelationCount) ? count($relatedEventCorrelationCount) : 0; ?>)</a></li>
-            <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<?php echo h($eventReportCount); ?>)</a></li>
             <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
         </ul>
 
@@ -508,6 +508,17 @@
                   </div>
                  </div>
 
+            <!-- Reports Tab -->
+            <div role="tabpanel" class="tab-pane" id="reports">
+                <h3><?php echo __('Reports'); ?></h3>
+                <div id="event-reports-tab-content">
+                    <div class="text-center" style="padding: 20px;">
+                        <i class="fa fa-spinner fa-spin fa-2x"></i><br>
+                        <?php echo __('Loading reports...'); ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Attributes Tab -->
             <div role="tabpanel" class="tab-pane" id="attributes">
                  <?php echo $this->element('Events/View/event_attributes_beta'); ?>
@@ -630,15 +641,6 @@
                 <?php else: ?>
                     <p class="muted"><?php echo __('No correlations found.'); ?></p>
                 <?php endif; ?>
-            </div>
-             <div role="tabpanel" class="tab-pane" id="reports">
-                <h3><?php echo __('Reports'); ?></h3>
-                <div id="event-reports-tab-content">
-                    <div class="text-center" style="padding: 20px;">
-                        <i class="fa fa-spinner fa-spin fa-2x"></i><br>
-                        <?php echo __('Loading reports...'); ?>
-                    </div>
-                </div>
             </div>
              <div role="tabpanel" class="tab-pane" id="history">
                 <h3><?php echo __('History'); ?></h3>
