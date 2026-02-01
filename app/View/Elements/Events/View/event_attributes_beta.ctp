@@ -112,13 +112,16 @@
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        border-left: 4px solid transparent; /* Align with row gutter */
     }
     .beta-attr-table td {
         padding: 5px 10px;
         border-bottom: 1px solid #f9f9f9;
         vertical-align: top;
         font-size: 13px;
-        border-left: 4px solid transparent; /* Align with object header blue bar */
+    }
+    .beta-attr-table td:first-child {
+        border-left: 4px solid transparent; /* Gutter only on the first column */
     }
     .beta-attr-row:hover {
         background-color: #f5f5f5;
@@ -206,16 +209,36 @@
         background-color: #f8fbfe; /* Even more subtle pale blue for object members */
     }
     .object-header-row td {
-        padding-top: 4px;
-        padding-bottom: 4px;
-        border-left: 0; /* Inherit from td, specialized below */
+        padding-top: 8px;
+        padding-bottom: 8px;
+        border-top: 1px solid #d1e9f5;
+        border-bottom: 1px solid #d1e9f5;
     }
     .object-header-row td:first-child {
         border-left: 4px solid #31708f;
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+    }
+    .object-header-row td:last-child {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+        border-right: 1px solid #d1e9f5;
     }
     .object-title {
         font-weight: bold;
         color: #31708f;
+        font-size: 14px;
+    }
+    .object-label {
+        background: #31708f;
+        color: white;
+        font-size: 9px;
+        padding: 1px 4px;
+        border-radius: 3px;
+        text-transform: uppercase;
+        vertical-align: middle;
+        margin-right: 5px;
+        letter-spacing: 0.5px;
     }
     .object-header-meta {
         text-align: right;
@@ -245,11 +268,11 @@
     .beta-galaxy-cluster {
         display: flex;
         align-items: center;
-        background: #fcfcfc;
-        border: 1px solid #eee;
-        border-radius: 4px;
-        padding: 4px 10px;
-        font-size: 12px;
+        background: #f1f1f1;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 11px;
     }
     .beta-galaxy-cluster-label {
         font-weight: bold;
@@ -327,6 +350,60 @@
     .standalone-attr-row {
         background-color: #fff;
     }
+
+    /* New Card-like styles */
+    .beta-attr-meta-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .beta-attr-type-path {
+        font-size: 11px;
+        color: #888;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
+    }
+    .beta-category-label {
+        font-size: 10px;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .beta-type-insight {
+        background: #f0f0f0;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+        color: #444;
+        border: 1px solid #e0e0e0;
+    }
+    .beta-object-relation-insight {
+        background: #e8f4fd;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+        color: #2f5a93;
+        border: 1px solid #d1e9f5;
+    }
+    .beta-attr-tags-inline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 2px;
+    }
+    .beta-attr-value-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding-top: 2px;
+    }
+    .beta-attr-comment-inline {
+        font-size: 11px;
+        color: #777;
+        font-style: italic;
+    }
 </style>
 
 <div class="beta-attributes-list">
@@ -347,15 +424,12 @@
                 <ul class="dropdown-menu beta-columns-menu">
                     <?php 
                         $cols = [
-                            'category' => __('Category'),
                             'date' => __('Date'),
                             'sightings' => __('Sightings'),
                             'distribution' => __('Distribution'),
                             'correlation' => __('Correlation'),
                             'related' => __('Corr.'),
                             'comment' => __('Comment'),
-                            'tags' => __('Tags'),
-                            'galaxies' => __('Galaxies'),
                         ];
                         foreach ($cols as $id => $label):
                     ?>
@@ -377,9 +451,7 @@
         <thead>
             <tr>
                 <th style="width: 40px;"><input type="checkbox" class="select-all"></th>
-                <th class="col-category" style="width: 80px;"><?php echo __('Category'); ?></th>
-                <th style="width: 120px;"><?php echo __('Type / Object'); ?></th>
-                <th><?php echo __('Value / Attributes'); ?></th>
+                <th colspan="2"><?php echo __('Attribute Details'); ?></th>
                 <th class="col-related" style="width: 50px;"><?php echo __('Corr.'); ?></th>
                 <th class="col-comment" style="width: 20%;"><?php echo __('Comment'); ?></th>
                 <th style="width: 30px;" title="<?php echo __('Recommend for blocking / alerting?'); ?>">IDS</th>
@@ -414,7 +486,7 @@
                     <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
-                    <td style="position: relative;" <?php if ($isObject) echo 'colspan="4"'; ?>>
+                    <td style="position: relative;" <?php if ($isObject) echo 'colspan="3"'; ?>>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
                                 <div class="beta-row-actions">
@@ -480,7 +552,8 @@
                             </div>
                                 </div>
                                 <?php if ($isObject): ?>
-                                    <span class="object-title" style="margin-left: 10px;"><i class="fa fa-cubes"></i> <?php echo h($item['name']); ?></span>
+                                    <span class="object-label">Object</span>
+                                    <span class="object-title"><?php echo h($item['name']); ?></span>
                                     <span class="object-desc" style="margin-left: 10px;"><?php echo h($item['description']); ?></span>
                                 <?php endif; ?>
                             </div>
@@ -493,37 +566,69 @@
                     </td>
                     
                     <?php if (!$isObject): ?>
-                        <!-- Category -->
-                        <td class="col-category">
-                            <span style="font-size: 11px; color: #777;"><?php echo h($item['category']); ?></span>
-                        </td>
-                        
-                        <!-- Type / Object Name -->
-                        <td>
-                            <span class="attr-icon"><i class="fa fa-cube"></i></span> <?php echo h($item['type']); ?>
-                            <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
-                        </td>
+                        <!-- Metadata (Category > Type + Tags) -->
+                        <td colspan="2">
+                            <div class="beta-attr-meta-block">
+                                <div class="beta-attr-type-path">
+                                    <span class="beta-category-label"><?php echo h($item['category']); ?></span>
+                                    <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>
+                                    <span class="beta-type-insight"><?php echo h($item['type']); ?></span>
+                                    <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
+                                </div>
+                                
+                                <?php if (!empty($item['AttributeTag'])): ?>
+                                    <div class="beta-attr-tags-inline">
+                                        <?php echo $this->element('ajaxTags', [
+                                            'attributeId' => $item['id'],
+                                            'tags' => $item['AttributeTag'] ?? [],
+                                            'tagAccess' => $mayModify,
+                                            'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                            'scope' => 'attribute',
+                                            'tagConflicts' => $item['tagConflicts'] ?? [],
+                                            'static_tags_only' => true,
+                                        ]); ?>
+                                    </div>
+                                <?php endif; ?>
 
-                        <!-- Value -->
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <span class="attr-value"><?php echo h($item['value']); ?></span>
-                                <?php if (isset($item['warnings'])): ?>
-                                    <?php
-                                        $temp = '';
-                                        foreach ($item['warnings'] as $warning) {
-                                            $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
-                                            if (isset($warning['comment'])) {
-                                                $temp .= ' (' . h($warning['comment']) . ')';
+                                <!-- Galaxies Inline -->
+                                <?php if (!empty($item['Galaxy'])): ?>
+                                    <div class="beta-attr-tags-inline" style="margin-top: 4px;">
+                                        <?php 
+                                            $clusters = [];
+                                            foreach ($item['Galaxy'] as $galaxy) {
+                                                foreach ($galaxy['GalaxyCluster'] as $cluster) {
+                                                    $clusters[$galaxy['name']][] = $cluster['tag_name'];
+                                                }
                                             }
-                                            $temp .= '<br>';
-                                        }
-                                    ?>
-                                    <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
+                                            foreach ($clusters as $galaxyName => $clusterTags):
+                                        ?>
+                                            <div class="beta-galaxy-cluster">
+                                                <span class="beta-galaxy-cluster-label"><?php echo h($galaxyName); ?>:</span>
+                                                <?php echo implode(', ', array_map('h', $clusterTags)); ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
                                 <?php endif; ?>
-                                <?php if ($mayModify): ?>
-                                     <div class="beta-tagging-links"></div>
-                                <?php endif; ?>
+
+                                <div class="beta-attr-value-container">
+                                    <span class="attr-value"><?php echo h($item['value']); ?></span>
+                                    <?php if (isset($item['warnings'])): ?>
+                                        <?php
+                                            $temp = '';
+                                            foreach ($item['warnings'] as $warning) {
+                                                $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
+                                                if (isset($warning['comment'])) {
+                                                    $temp .= ' (' . h($warning['comment']) . ')';
+                                                }
+                                                $temp .= '<br>';
+                                            }
+                                        ?>
+                                        <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
+                                    <?php endif; ?>
+                                    <?php if ($mayModify): ?>
+                                         <div class="beta-tagging-links"></div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </td>
 
@@ -613,48 +718,7 @@
                     </td>
                 </tr>
 
-                <!-- Tags Sub-row -->
-                <?php if (!empty($item['AttributeTag'])): ?>
-                <tr class="beta-sub-row col-tags-row" data-primary-id="<?php echo h($item['id']); ?>">
-                    <td colspan="11">
-                        <div class="attributeTagContainer">
-                            <?php echo $this->element('ajaxTags', [
-                                'attributeId' => $item['id'],
-                                'tags' => $item['AttributeTag'] ?? [],
-                                'tagAccess' => $mayModify,
-                                'localTagAccess' => $this->Acl->canModifyTag($event, true),
-                                'scope' => 'attribute',
-                                'tagConflicts' => $item['tagConflicts'] ?? [],
-                                'static_tags_only' => true,
-                            ]); ?>
-                        </div>
-                    </td>
-                </tr>
-                <?php endif; ?>
-
-                <!-- Galaxies Sub-row -->
-                <?php if (!empty($item['Galaxy'])): ?>
-                <tr class="beta-sub-row col-galaxies-row">
-                    <td colspan="11">
-                        <div class="beta-galaxies-container">
-                            <?php 
-                                $clusters = [];
-                                foreach ($item['Galaxy'] as $galaxy) {
-                                    foreach ($galaxy['GalaxyCluster'] as $cluster) {
-                                        $clusters[$galaxy['name']][] = $cluster['tag_name'];
-                                    }
-                                }
-                                foreach ($clusters as $galaxyName => $clusterTags):
-                            ?>
-                                <div class="beta-galaxy-cluster">
-                                    <span class="beta-galaxy-cluster-label"><?php echo h($galaxyName); ?>:</span>
-                                    <?php echo implode(', ', array_map('h', $clusterTags)); ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    </td>
-                </tr>
-                <?php endif; ?>
+                <!-- No more sub-rows for Standalone Tags/Galaxies -->
                 
                 <!-- Expanded Object Attributes -->
                 <?php if ($isObject && !empty($item['Attribute'])): ?>
@@ -728,36 +792,74 @@
                                  </div>
                             </td>
                             
-                            <!-- Category -->
-                            <td class="col-category"><span style="font-size: 11px; color: #777;"><?php echo h($subAttr['category']); ?></span></td>
                             
-                            <!-- Type -->
-                            <td>
-                                <i class="fa fa-level-up fa-rotate-90 text-muted" style="margin-right: 5px;"></i>
-                                <span class="text-muted"><?php echo h($subAttr['type']); ?></span>
-                                <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
-                            </td>
-                            
-                            <!-- Value -->
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 5px;">
-                                    <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
-                                    <?php if (isset($subAttr['warnings'])): ?>
-                                        <?php
-                                            $temp = '';
-                                            foreach ($subAttr['warnings'] as $warning) {
-                                                $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
-                                                if (isset($warning['comment'])) {
-                                                    $temp .= ' (' . h($warning['comment']) . ')';
+                            <!-- Metadata (Category > Name (type) :: Description + Tags + Value) -->
+                            <td colspan="2">
+                                <div class="beta-attr-meta-block">
+                                    <div class="beta-attr-type-path">
+                                        <span class="beta-category-label"><?php echo h($subAttr['category']); ?></span>
+                                        <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>
+                                        <span class="beta-object-relation-insight"><?php echo h($subAttr['object_relation']); ?></span>
+                                        <span class="beta-type-insight"><?php echo h($subAttr['type']); ?></span>
+                                        <?php if (!empty($subAttr['comment'])): ?>
+                                            <span class="beta-attr-comment-inline">:: <?php echo h($subAttr['comment']); ?></span>
+                                        <?php endif; ?>
+                                        <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
+                                    </div>
+
+                                    <?php if (!empty($subAttr['AttributeTag'])): ?>
+                                        <div class="beta-attr-tags-inline">
+                                            <?php echo $this->element('ajaxTags', [
+                                                'attributeId' => $subAttr['id'],
+                                                'tags' => $subAttr['AttributeTag'] ?? [],
+                                                'tagAccess' => $mayModify,
+                                                'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                                'scope' => 'attribute',
+                                                'tagConflicts' => $subAttr['tagConflicts'] ?? [],
+                                                'static_tags_only' => true,
+                                            ]); ?>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <!-- Galaxies Inline -->
+                                    <?php if (!empty($subAttr['Galaxy'])): ?>
+                                        <div class="beta-attr-tags-inline" style="margin-top: 4px;">
+                                            <?php 
+                                                $subClusters = [];
+                                                foreach ($subAttr['Galaxy'] as $galaxy) {
+                                                    foreach ($galaxy['GalaxyCluster'] as $cluster) {
+                                                        $subClusters[$galaxy['name']][] = $cluster['tag_name'];
+                                                    }
                                                 }
-                                                $temp .= '<br>';
-                                            }
-                                        ?>
-                                        <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
+                                                foreach ($subClusters as $galaxyName => $clusterTags):
+                                            ?>
+                                                <div class="beta-galaxy-cluster">
+                                                    <span class="beta-galaxy-cluster-label"><?php echo h($galaxyName); ?>:</span>
+                                                    <?php echo implode(', ', array_map('h', $clusterTags)); ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
                                     <?php endif; ?>
-                                    <?php if ($mayModify): ?>
-                                         <div class="beta-tagging-links"></div>
-                                    <?php endif; ?>
+
+                                    <div class="beta-attr-value-container">
+                                        <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
+                                        <?php if (isset($subAttr['warnings'])): ?>
+                                            <?php
+                                                $temp = '';
+                                                foreach ($subAttr['warnings'] as $warning) {
+                                                    $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
+                                                    if (isset($warning['comment'])) {
+                                                        $temp .= ' (' . h($warning['comment']) . ')';
+                                                    }
+                                                    $temp .= '<br>';
+                                                }
+                                            ?>
+                                            <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
+                                        <?php endif; ?>
+                                        <?php if ($mayModify): ?>
+                                             <div class="beta-tagging-links"></div>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </td>
 
@@ -842,54 +944,6 @@
                             </td>
                         </tr>
 
-                        <!-- Sub-Attr Tags -->
-                        <?php if (!empty($subAttr['AttributeTag'])): ?>
-                        <?php 
-                            $tagsAreLast = $isLast && !$hasGalaxies;
-                        ?>
-                        <tr class="beta-sub-row col-tags-row">
-                            <td class="tree-cell no-tick <?php echo $tagsAreLast ? 'last-item' : ''; ?>"></td>
-                            <td class="col-category"></td>
-                            <td></td>
-                            <td colspan="8">
-                                <div class="beta-tags-container">
-                                    <?php foreach ($subAttr['AttributeTag'] as $tag): ?>
-                                        <span class="attr-tag" style="background-color:<?php echo h($tag['Tag']['colour']); ?>; color:<?php echo $this->TextColour->getTextColour($tag['Tag']['colour']); ?>">
-                                            <?php echo h($tag['Tag']['name']); ?>
-                                        </span>
-                                    <?php endforeach; ?>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-
-                        <!-- Sub-Attr Galaxies -->
-                        <?php if (!empty($subAttr['Galaxy'])): ?>
-                        <tr class="beta-sub-row col-galaxies-row">
-                            <td class="tree-cell no-tick <?php echo $isLast ? 'last-item' : ''; ?>"></td>
-                            <td class="col-category"></td>
-                            <td></td>
-                            <td colspan="8">
-                                <div class="beta-galaxies-container">
-                                    <?php 
-                                        $subClusters = [];
-                                        foreach ($subAttr['Galaxy'] as $galaxy) {
-                                            foreach ($galaxy['GalaxyCluster'] as $cluster) {
-                                                $subClusters[$galaxy['name']][] = $cluster['tag_name'];
-                                            }
-                                        }
-                                        foreach ($subClusters as $galaxyName => $clusterTags):
-                                    ?>
-                                        <div class="beta-galaxy-cluster">
-                                            <span class="beta-galaxy-cluster-label"><?php echo h($galaxyName); ?>:</span>
-                                            <?php echo implode(', ', array_map('h', $clusterTags)); ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-
                     <?php endforeach; ?>
                 <?php endif; ?>
 
@@ -902,15 +956,12 @@
     
     // Column state
     var betaColumns = {
-        category: true,
         date: true,
         sightings: true,
         distribution: true,
         correlation: true,
         related: true,
         comment: true,
-        tags: true,
-        galaxies: true
     };
 
     function toggleBetaColumn(col) {
