@@ -194,6 +194,160 @@
         color: #428bca;
         text-decoration: underline;
     }
+
+    /* Common Beta UI Styles */
+    .beta-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .beta-attr-table {
+        width: 100%;
+        border-collapse: separate; 
+        border-spacing: 0;
+        margin-top: 10px;
+        table-layout: fixed;
+    }
+    .beta-attr-table th {
+        text-align: left;
+        padding: 12px 10px;
+        border-bottom: 2px solid #eee;
+        color: #777;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .beta-attr-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #f9f9f9;
+        vertical-align: top;
+        font-size: 13px;
+    }
+    .beta-attr-row:hover {
+        background-color: #f5f5f5;
+    }
+    .beta-row-actions {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        position: relative;
+    }
+    .beta-row-menu-trigger {
+        cursor: pointer;
+        padding: 2px 6px;
+        color: #777;
+        border-radius: 3px;
+        transition: background 0.2s;
+    }
+    .beta-row-menu-trigger:hover {
+        background: #eee;
+        color: #333;
+    }
+    .beta-row-menu {
+        display: none;
+        position: absolute;
+        z-index: 10000;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 160px;
+        padding: 5px 0;
+        right: 0;
+        top: 100%;
+    }
+    .beta-row-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .beta-row-menu li a {
+        display: block;
+        padding: 8px 15px;
+        color: #444;
+        text-decoration: none;
+        font-size: 13px;
+    }
+    .beta-row-menu li a:hover {
+        background-color: #f5f5f5;
+        color: #000;
+    }
+    .beta-row-menu .divider {
+        height: 1px;
+        background: #eee;
+        margin: 5px 0;
+    }
+    .beta-uuid-compact {
+        font-size: 10px;
+        color: #bbb;
+        cursor: pointer;
+        font-family: monospace;
+    }
+    .beta-uuid-compact:hover {
+        color: #428bca;
+        text-decoration: underline;
+    }
+    .beta-tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .beta-relative-timestamp {
+        font-size: 12px;
+        color: #666;
+        cursor: pointer;
+    }
+    .beta-relative-timestamp:hover {
+        text-decoration: underline;
+    }
+    .beta-attr-meta-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .beta-attr-type-path {
+        font-size: 11px;
+        color: #888;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
+    }
+    .beta-category-label {
+        font-size: 10px;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .beta-type-insight {
+        background: #f0f0f0;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+        color: #444;
+        border: 1px solid #e0e0e0;
+    }
+    .beta-object-relation-insight {
+        background: #e8f4fd;
+        padding: 1px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+        color: #2f5a93;
+        border: 1px solid #d1e9f5;
+    }
+    .beta-id-badge {
+        font-size: 0.8em;
+        color: #999;
+        font-weight: 400;
+    }
+    .report-snippet {
+        font-family: inherit;
+        line-height: 1.4;
+    }
+    .report-name-cell:hover {
+        text-decoration: underline;
+    }
 </style>
 
 <div class="events view beta-view-events">
@@ -545,7 +699,6 @@
 
             <!-- Reports Tab -->
             <div role="tabpanel" class="tab-pane" id="reports">
-                <h3><?php echo __('Reports'); ?></h3>
                 <div id="event-reports-tab-content">
                     <div class="text-center" style="padding: 20px;">
                         <i class="fa fa-spinner fa-spin fa-2x"></i><br>
@@ -565,7 +718,7 @@
                 
                 <?php
                     // Build Correlation Data
-                    $allCorrelations = [];
+                    $groupedCorrelations = [];
                     $relatedEventsMap = [];
                     if (!empty($event['RelatedEvent'])) {
                         foreach ($event['RelatedEvent'] as $re) {
@@ -573,13 +726,25 @@
                         }
                     }
 
-                    $processAttr = function($attr) use (&$allCorrelations, $relatedEventsMap, $event) {
+                    $processAttr = function($attr) use (&$groupedCorrelations, $relatedEventsMap, $event) {
                         $relatedAttrs = $attr['RelatedAttribute'] ?? [];
                         if (empty($relatedAttrs) && !empty($event['RelatedAttribute'][$attr['id']])) {
                             $relatedAttrs = $event['RelatedAttribute'][$attr['id']];
                         }
 
                         if (!empty($relatedAttrs)) {
+                            // Create a key for grouping
+                            $groupKey = md5($attr['value'] . $attr['type']);
+                            
+                            if (!isset($groupedCorrelations[$groupKey])) {
+                                $groupedCorrelations[$groupKey] = [
+                                    'local_attr_id' => $attr['id'],
+                                    'value' => $attr['value'],
+                                    'type' => $attr['type'],
+                                    'related' => []
+                                ];
+                            }
+
                             foreach ($relatedAttrs as $related) {
                                 // Handle potential double nesting or direct relation
                                 $relationsToProcess = [];
@@ -596,15 +761,16 @@
                                 foreach ($relationsToProcess as $rel) {
                                     $eventId = $rel['event_id'] ?? $rel['id'] ?? null;
                                     if (!$eventId) continue;
+                                    
+                                    // Avoid duplicates in the same group
+                                    if (isset($groupedCorrelations[$groupKey]['related'][$eventId])) continue;
+
                                     // Permissive check to debug missing event info
                                     $eventDate = isset($relatedEventsMap[$eventId]) ? $relatedEventsMap[$eventId]['date'] : ($rel['date'] ?? 'N/A');
                                     $eventInfo = isset($relatedEventsMap[$eventId]) ? $relatedEventsMap[$eventId]['info'] : ($rel['info'] ?? 'Event info not available');
                                     $orgcId = isset($relatedEventsMap[$eventId]) ? ($relatedEventsMap[$eventId]['orgc_id'] ?? 0) : ($rel['org_id'] ?? 0);
 
-                                    $allCorrelations[] = [
-                                        'local_attr_id' => $attr['id'],
-                                        'value' => $rel['value'] ?? $attr['value'],
-                                        'type' => $attr['type'],
+                                    $groupedCorrelations[$groupKey]['related'][$eventId] = [
                                         'event_id' => $eventId,
                                         'event_date' => $eventDate,
                                         'event_info' => $eventInfo,
@@ -635,10 +801,31 @@
                         }
                     }
                     
-                    // Sort by Date DESC
-                    usort($allCorrelations, function($a, $b) {
-                        return strcmp($b['event_date'], $a['event_date']);
+                    // Sort Groups by Value
+                    usort($groupedCorrelations, function($a, $b) {
+                        return strcasecmp($a['value'], $b['value']);
                     });
+
+                    // Flatten for Top Events Calc but keep structure for Table
+                    $eventCounts = [];
+                    $eventDetails = [];
+                    foreach ($groupedCorrelations as $group) {
+                        foreach ($group['related'] as $rel) {
+                             $eid = $rel['event_id'];
+                             if (!isset($eventCounts[$eid])) {
+                                $eventCounts[$eid] = 0;
+                                $eventDetails[$eid] = [
+                                    'info' => $rel['event_info'],
+                                    'date' => $rel['event_date'],
+                                    'orgc_id' => $rel['orgc_id']
+                                ];
+                            }
+                            $eventCounts[$eid]++;
+                        }
+                    }
+                    arsort($eventCounts);
+                    $topEvents = array_slice($eventCounts, 0, 5, true);
+                    $maxCount = !empty($topEvents) ? reset($topEvents) : 0;
                 ?>
 
                 <div id="correlation-filter-controls" style="display: none; margin-bottom: 15px;">
@@ -646,30 +833,84 @@
                     <button id="correlation-reset-btn" class="btn btn-default btn-xs" onclick="resetCorrelationFilter()"><i class="fa fa-times"></i> <?php echo __('Clear Filter'); ?></button>
                 </div>
 
-                <?php if (!empty($allCorrelations)): ?>
-                    <table class="table table-hover table-condensed" id="correlations-table">
+                <?php if (!empty($topEvents)): ?>
+                    <div class="row-fluid" style="margin-bottom: 25px;">
+                        <div class="span12">
+                            <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #555;"><?php echo __('Top Related Events'); ?></h4>
+                            <div class="beta-card" style="padding: 15px; background: #fff;">
+                                <?php foreach ($topEvents as $eid => $count): ?>
+                                    <?php 
+                                        $percent = ($maxCount > 0) ? ($count / $maxCount) * 100 : 0;
+                                        $details = $eventDetails[$eid];
+                                    ?>
+                                    <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 15px;">
+                                        <!-- Event Info Link -->
+                                        <div style="width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: baseline; gap: 8px;">
+                                            <a href="<?php echo $baseurl; ?>/events/view/<?php echo h($eid); ?>" style="font-weight: 600; font-size: 13px;">
+                                                #<?php echo h($eid); ?>
+                                            </a>
+                                            <span class="muted" style="font-size: 11px; min-width: 70px;"><?php echo h($details['date']); ?></span>
+                                            <span style="font-size: 12px; color: #555; overflow: hidden; text-overflow: ellipsis;" title="<?php echo h($details['info']); ?>"><?php echo h($details['info']); ?></span>
+                                        </div>
+                                        
+                                        <!-- Bar -->
+                                        <div style="flex-grow: 1; height: 18px; background: #f0f0f0; border-radius: 3px; position: relative;">
+                                            <div style="width: <?php echo $percent; ?>%; height: 100%; background: #428bca; border-radius: 3px; opacity: 0.8;"></div>
+                                             <div style="position: absolute; right: 8px; top: 0; line-height: 18px; font-size: 10px; color: #666; font-weight: bold;">
+                                                <?php echo $count; ?> matches
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($groupedCorrelations)): ?>
+                    <table class="table table-hover table-condensed table-bordered" id="correlations-table">
                         <thead>
                             <tr>
-                                <th><?php echo __('Date'); ?></th>
-                                <th><?php echo __('Event ID'); ?></th>
-                                <th><?php echo __('Info'); ?></th>
-                                <th><?php echo __('Type'); ?></th>
                                 <th><?php echo __('Value'); ?></th>
+                                <th><?php echo __('Related Event'); ?></th>
+                                <th style="width: 100px;"><?php echo __('Date'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($allCorrelations as $corr): ?>
-                                <tr data-attribute-id="<?php echo h($corr['local_attr_id']); ?>">
-                                    <td><?php echo h($corr['event_date']); ?></td>
-                                    <td>
-                                        <a href="<?php echo $baseurl; ?>/events/view/<?php echo h($corr['event_id']); ?>">
-                                            <?php echo h($corr['event_id']); ?>
-                                        </a>
-                                    </td>
-                                    <td><?php echo h($corr['event_info']); ?></td>
-                                    <td><?php echo h($corr['type']); ?></td>
-                                    <td style="word-break: break-all;"><?php echo h($corr['value']); ?></td>
-                                </tr>
+                            <?php foreach ($groupedCorrelations as $group): ?>
+                                <?php 
+                                    $first = true; 
+                                    $rowSpan = count($group['related']);
+                                    // Sort related by Date DESC
+                                    usort($group['related'], function($a, $b) {
+                                        return strcmp($b['event_date'], $a['event_date']);
+                                    });
+                                ?>
+                                <?php foreach ($group['related'] as $rel): ?>
+                                    <tr data-attribute-id="<?php echo h($group['local_attr_id']); ?>">
+                                        <?php if ($first): ?>
+                                            <td rowspan="<?php echo $rowSpan; ?>" style="vertical-align: middle; background-color: #fbfbfb; word-break: break-all;">
+                                                <div style="font-weight: 600; font-size: 13px; color: #333; margin-bottom: 4px;">
+                                                    <a href="#attributes" data-toggle="tab" onclick="$('#beta-attr-search').val('<?php echo h($group['value']); ?>').trigger('keyup');" class="attr-value" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #ccc;" title="<?php echo __('Filter attributes'); ?>">
+                                                        <?php echo h($group['value']); ?>
+                                                    </a>
+                                                </div>
+                                                <div style="font-size: 11px; color: #888;">
+                                                    <?php echo h($group['type']); ?>
+                                                </div>
+                                            </td>
+                                        <?php endif; ?>
+                                        <td>
+                                            <a href="<?php echo $baseurl; ?>/events/view/<?php echo h($rel['event_id']); ?>" style="font-weight: 600;">
+                                                #<?php echo h($rel['event_id']); ?> <?php echo h($rel['event_info']); ?>
+                                            </a>
+                                        </td>
+                                        <td style="white-space: nowrap; color: #666;">
+                                            <?php echo h($rel['event_date']); ?>
+                                        </td>
+                                    </tr>
+                                    <?php $first = false; ?>
+                                <?php endforeach; ?>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -930,8 +1171,11 @@
         };
 
         // Load Reports
-        $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1", function(data) {
+        $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1/beta:1", function(data) {
             $("#event-reports-tab-content").html(data);
+            if (window.betaTimestamps && typeof window.betaTimestamps.update === 'function') {
+                window.betaTimestamps.update();
+            }
         });
     });
 

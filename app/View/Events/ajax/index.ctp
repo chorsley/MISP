@@ -14,7 +14,10 @@
             ?>
             </ul>
         </div>
-        <?= $this->element('Events/eventIndexTable'); ?>
+        <?php
+            App::uses('BetaUiHelper', 'Lib/Tools');
+            echo $this->element(BetaUiHelper::getElementPath(!empty($uiBetaEnabled) ? $uiBetaEnabled : false, 'Events/eventIndexTable'));
+        ?>
         <p>
         <?php
         echo $this->Paginator->counter(array(

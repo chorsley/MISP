@@ -337,7 +337,7 @@ class EventReportsController extends AppController
 
     public function index()
     {
-        $filters = $this->IndexFilter->harvestParameters(['event_id', 'value', 'context', 'index_for_event', 'extended_event', 'extending_event']);
+        $filters = $this->IndexFilter->harvestParameters(['event_id', 'value', 'context', 'index_for_event', 'extended_event', 'extending_event', 'beta']);
         $filters['embedded_view']  = $this->request->is('ajax');
         $compiledConditions = $this->__generateIndexConditions($filters);
         $this->EventReport->includeAnalystData = true;
@@ -370,7 +370,11 @@ class EventReportsController extends AppController
                 $this->set('extendingEvent', !empty($filters['extending_event']));
                 $fetcherModule = $this->EventReport->isFetchURLModuleEnabled();
                 $this->set('importModuleEnabled', is_array($fetcherModule));
-                $this->render('ajax/indexForEvent');
+                if (!empty($filters['beta'])) {
+                    $this->render('ajax/indexForEvent_beta');
+                } else {
+                    $this->render('ajax/indexForEvent');
+                }
             } else {
                 $this->set('title_for_layout', __('Event Reports'));
                 $this->set('canModify', false);

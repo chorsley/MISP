@@ -796,20 +796,18 @@ class EventsController extends AppController
             $this->set('extendedEvents', []);
         }
 
+        $this->loadModel('UserSetting');
+        $uiBetaEnabled = $this->UserSetting->isUiBetaEnabled($this->Auth->user('id'));
+        $this->set('uiBetaEnabled', $uiBetaEnabled);
+
         if ($this->request->is('ajax')) {
             $this->autoRender = false;
             $this->layout = false;
             $this->render('ajax/index');
-        } else {
-            // Check if user has beta UI enabled and use beta view if available
-            $this->loadModel('UserSetting');
-            $uiBetaEnabled = $this->UserSetting->isUiBetaEnabled($this->Auth->user('id'));
-            
-            if ($uiBetaEnabled) {
-                App::uses('BetaUiHelper', 'Lib/Tools');
-                $viewPath = BetaUiHelper::getViewPath($uiBetaEnabled, 'Events/index');
-                $this->render(str_replace('Events/', '', $viewPath));
-            }
+        } else if ($uiBetaEnabled) {
+            App::uses('BetaUiHelper', 'Lib/Tools');
+            $viewPath = BetaUiHelper::getViewPath($uiBetaEnabled, 'Events/index');
+            $this->render(str_replace('Events/', '', $viewPath));
         }
     }
 
@@ -1094,6 +1092,11 @@ class EventsController extends AppController
 
         if (in_array('report_count', $columns, true)) {
             $events = $this->Event->EventReport->attachReportCountsToEvents($user, $events);
+        } else {
+            $this->loadModel('UserSetting');
+            if ($this->UserSetting->isUiBetaEnabled($user['id'])) {
+                $events = $this->Event->EventReport->attachReportCountsToEvents($user, $events);
+            }
         }
 
         return $events;
