@@ -265,22 +265,6 @@
         flex-wrap: wrap;
         gap: 5px;
     }
-    .beta-galaxy-cluster {
-        display: flex;
-        align-items: center;
-        background: #f1f1f1;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        padding: 2px 6px;
-        font-size: 11px;
-    }
-    .beta-galaxy-cluster-label {
-        font-weight: bold;
-        color: #777;
-        margin-right: 5px;
-        text-transform: uppercase;
-        font-size: 11px;
-    }
     .beta-sighting-alert {
         color: #d9534f;
         font-weight: bold;
@@ -392,6 +376,11 @@
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 2px;
+        opacity: 0.4;
+        transition: opacity 0.2s;
+    }
+    .beta-attr-row:hover .beta-attr-tags-inline {
+        opacity: 1;
     }
     .beta-attr-value-container {
         display: flex;
@@ -576,40 +565,6 @@
                                     <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
                                 </div>
                                 
-                                <?php if (!empty($item['AttributeTag'])): ?>
-                                    <div class="beta-attr-tags-inline">
-                                        <?php echo $this->element('ajaxTags', [
-                                            'attributeId' => $item['id'],
-                                            'tags' => $item['AttributeTag'] ?? [],
-                                            'tagAccess' => $mayModify,
-                                            'localTagAccess' => $this->Acl->canModifyTag($event, true),
-                                            'scope' => 'attribute',
-                                            'tagConflicts' => $item['tagConflicts'] ?? [],
-                                            'static_tags_only' => true,
-                                        ]); ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <!-- Galaxies Inline -->
-                                <?php if (!empty($item['Galaxy'])): ?>
-                                    <div class="beta-attr-tags-inline" style="margin-top: 4px;">
-                                        <?php 
-                                            $clusters = [];
-                                            foreach ($item['Galaxy'] as $galaxy) {
-                                                foreach ($galaxy['GalaxyCluster'] as $cluster) {
-                                                    $clusters[$galaxy['name']][] = $cluster['tag_name'];
-                                                }
-                                            }
-                                            foreach ($clusters as $galaxyName => $clusterTags):
-                                        ?>
-                                            <div class="beta-galaxy-cluster">
-                                                <span class="beta-galaxy-cluster-label"><?php echo h($galaxyName); ?>:</span>
-                                                <?php echo implode(', ', array_map('h', $clusterTags)); ?>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                <?php endif; ?>
-
                                 <div class="beta-attr-value-container">
                                     <span class="attr-value"><?php echo h($item['value']); ?></span>
                                     <?php if (isset($item['warnings'])): ?>
@@ -629,6 +584,41 @@
                                          <div class="beta-tagging-links"></div>
                                     <?php endif; ?>
                                 </div>
+
+                                <?php if (!empty($item['AttributeTag'])): ?>
+                                    <div class="beta-attr-tags-inline">
+                                        <?php echo $this->element('ajaxTags', [
+                                            'attributeId' => $item['id'],
+                                            'tags' => $item['AttributeTag'] ?? [],
+                                            'tagAccess' => $mayModify,
+                                            'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                            'scope' => 'attribute',
+                                            'tagConflicts' => $item['tagConflicts'] ?? [],
+                                            'static_tags_only' => true,
+                                        ]); ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- Galaxies Inline -->
+                                <?php if (!empty($item['Galaxy'])): ?>
+                                    <div class="beta-attr-tags-inline" style="margin-top: 4px;">
+                                        <?php 
+                                            $clustersByGalaxy = [];
+                                            foreach ($item['Galaxy'] as $galaxy) {
+                                                foreach ($galaxy['GalaxyCluster'] as $cluster) {
+                                                    $clustersByGalaxy[$galaxy['name']][] = $cluster;
+                                                }
+                                            }
+                                            foreach ($clustersByGalaxy as $galaxyName => $clusters):
+                                                echo $this->element('Events/View/galaxy_compact_beta', [
+                                                    'galaxyName' => $galaxyName,
+                                                    'clusters' => $clusters,
+                                                    'baseurl' => $baseurl
+                                                ]);
+                                            endforeach;
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </td>
 
@@ -807,40 +797,6 @@
                                         <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
                                     </div>
 
-                                    <?php if (!empty($subAttr['AttributeTag'])): ?>
-                                        <div class="beta-attr-tags-inline">
-                                            <?php echo $this->element('ajaxTags', [
-                                                'attributeId' => $subAttr['id'],
-                                                'tags' => $subAttr['AttributeTag'] ?? [],
-                                                'tagAccess' => $mayModify,
-                                                'localTagAccess' => $this->Acl->canModifyTag($event, true),
-                                                'scope' => 'attribute',
-                                                'tagConflicts' => $subAttr['tagConflicts'] ?? [],
-                                                'static_tags_only' => true,
-                                            ]); ?>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <!-- Galaxies Inline -->
-                                    <?php if (!empty($subAttr['Galaxy'])): ?>
-                                        <div class="beta-attr-tags-inline" style="margin-top: 4px;">
-                                            <?php 
-                                                $subClusters = [];
-                                                foreach ($subAttr['Galaxy'] as $galaxy) {
-                                                    foreach ($galaxy['GalaxyCluster'] as $cluster) {
-                                                        $subClusters[$galaxy['name']][] = $cluster['tag_name'];
-                                                    }
-                                                }
-                                                foreach ($subClusters as $galaxyName => $clusterTags):
-                                            ?>
-                                                <div class="beta-galaxy-cluster">
-                                                    <span class="beta-galaxy-cluster-label"><?php echo h($galaxyName); ?>:</span>
-                                                    <?php echo implode(', ', array_map('h', $clusterTags)); ?>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-
                                     <div class="beta-attr-value-container">
                                         <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
                                         <?php if (isset($subAttr['warnings'])): ?>
@@ -860,6 +816,41 @@
                                              <div class="beta-tagging-links"></div>
                                         <?php endif; ?>
                                     </div>
+
+                                    <?php if (!empty($subAttr['AttributeTag'])): ?>
+                                        <div class="beta-attr-tags-inline">
+                                            <?php echo $this->element('ajaxTags', [
+                                                'attributeId' => $subAttr['id'],
+                                                'tags' => $subAttr['AttributeTag'] ?? [],
+                                                'tagAccess' => $mayModify,
+                                                'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                                'scope' => 'attribute',
+                                                'tagConflicts' => $subAttr['tagConflicts'] ?? [],
+                                                'static_tags_only' => true,
+                                            ]); ?>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <!-- Galaxies Inline -->
+                                    <?php if (!empty($subAttr['Galaxy'])): ?>
+                                        <div class="beta-attr-tags-inline" style="margin-top: 4px;">
+                                            <?php 
+                                                $subClustersByGalaxy = [];
+                                                foreach ($subAttr['Galaxy'] as $galaxy) {
+                                                    foreach ($galaxy['GalaxyCluster'] as $cluster) {
+                                                        $subClustersByGalaxy[$galaxy['name']][] = $cluster;
+                                                    }
+                                                }
+                                                foreach ($subClustersByGalaxy as $galaxyName => $clusters):
+                                                    echo $this->element('Events/View/galaxy_compact_beta', [
+                                                        'galaxyName' => $galaxyName,
+                                                        'clusters' => $clusters,
+                                                        'baseurl' => $baseurl
+                                                    ]);
+                                                endforeach;
+                                            ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                             </td>
 

@@ -190,6 +190,10 @@
         font-size: 12px;
         text-transform: uppercase;
     }
+    .beta-galaxy-link:hover {
+        color: #428bca;
+        text-decoration: underline;
+    }
 </style>
 
 <div class="events view beta-view-events">
@@ -416,14 +420,45 @@
                                  </span>
                                  <hr>
                                  <strong><?php echo __('Galaxies'); ?></strong><br>
-                                  <?php
-                                      echo $this->element('galaxyQuickViewNew', [
-                                          'data' => $event['Galaxy'],
-                                          'event' => $event,
-                                          'target_id' => $event['Event']['id'],
-                                          'target_type' => 'event'
-                                      ]);
-                                  ?>
+                                 <div class="beta-galaxies-container" style="margin-top: 5px;">
+                                   <?php
+                                       if (!empty($event['Galaxy'])) {
+                                           foreach ($event['Galaxy'] as $galaxy) {
+                                               echo $this->element('Events/View/galaxy_compact_beta', [
+                                                   'galaxyName' => $galaxy['name'],
+                                                   'clusters' => $galaxy['GalaxyCluster'],
+                                                   'baseurl' => $baseurl
+                                               ]);
+                                           }
+                                       } else {
+                                           echo '<span class="muted" style="font-size: 11px;">' . __('No galaxies attached.') . ' </span>';
+                                       }
+                                       
+                                       // Add Buttons
+                                       $tagAccess = $this->Acl->canModifyTag($event);
+                                       $localTagAccess = $this->Acl->canModifyTag($event, true);
+                                       $targetId = $event['Event']['id'];
+                                       
+                                       if ($tagAccess) {
+                                           $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";
+                                           echo sprintf(
+                                               '<button class="%s" data-popover-popup="%s" role="button" tabindex="0" aria-label="' . __('Add new cluster') . '" title="' . __('Add new cluster') . '">%s</button>',
+                                               'useCursorPointer addButton btn btn-inverse noPrint',
+                                               $link,
+                                               '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
+                                           );
+                                       }
+                                       if ($localTagAccess) {
+                                           $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:1";
+                                           echo sprintf(
+                                               '<button class="%s" data-popover-popup="%s" role="button" tabindex="0" aria-label="' . __('Add new local cluster') . '" title="' . __('Add new local cluster') . '">%s</button>',
+                                               'useCursorPointer addButton btn btn-inverse noPrint',
+                                               $link,
+                                               '<i class="fas fa-user"></i> <i class="fas fa-plus"></i>'
+                                           );
+                                       }
+                                   ?>
+                                 </div>
                                   </div>
                               </div>
                           <!-- Warninglist Matches -->

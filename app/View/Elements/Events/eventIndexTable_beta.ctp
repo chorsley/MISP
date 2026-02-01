@@ -151,25 +151,26 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
-        <td class="short col-clusters">
+        <td class="col-clusters">
             <?php
-                $galaxies = array();
                 if (!empty($event['GalaxyCluster'])) {
+                    $galaxies = array();
                     foreach ($event['GalaxyCluster'] as $galaxy_cluster) {
-                        $galaxy_id = $galaxy_cluster['Galaxy']['id'];
-                        if (!isset($galaxies[$galaxy_id])) {
-                            $galaxies[$galaxy_id] = $galaxy_cluster['Galaxy'];
+                        $galaxy_name = $galaxy_cluster['Galaxy']['name'];
+                        if (!isset($galaxies[$galaxy_name])) {
+                            $galaxies[$galaxy_name] = array();
                         }
-                        unset($galaxy_cluster['Galaxy']);
-                        $galaxies[$galaxy_id]['GalaxyCluster'][] = $galaxy_cluster;
+                        $galaxies[$galaxy_name][] = $galaxy_cluster;
                     }
-                    echo $this->element('galaxyQuickViewNew', array(
-                      'data' => $galaxies,
-                      'event' => $event,
-                      'target_id' => $eventId,
-                      'target_type' => 'event',
-                      'static_tags_only' => true,
-                    ));
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    foreach ($galaxies as $galaxyName => $clusters) {
+                        echo $this->element('Events/View/galaxy_compact_beta', array(
+                            'galaxyName' => $galaxyName,
+                            'clusters' => $clusters,
+                            'baseurl' => $baseurl
+                        ));
+                    }
+                    echo '</div>';
                 }
             ?>
         </td>
