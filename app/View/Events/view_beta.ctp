@@ -304,7 +304,7 @@
                                       <p><?php echo h($eventReportSummary); ?></p>
                                       <a href="#" onclick="openGenericModal('<?php echo $baseurl; ?>/eventReports/viewSummary/<?php echo h($firstEventReportId); ?>'); return false;"><?php echo __('Read more'); ?></a>
                                   <?php else: ?>
-                                      <p class="muted"><?php echo __('No report content available. Good MISP events explain the "so what" using an Event Report!'); ?></p>
+                                      <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
                                   <?php endif; ?>
 
                                   <!-- Analysis Links Sub-section -->
