@@ -1179,10 +1179,27 @@
         });
     });
 
+    function betaClearAttributeFilter() {
+        $('.filter-active-msg').remove();
+        if (typeof betaPagination !== 'undefined') {
+            betaPagination.searchActive = false;
+            $('.beta-pagination-container').show();
+            betaPaginationApply();
+        } else {
+            $('.beta-attr-row').show();
+        }
+    }
+
     function betaFilterAttributesByComposition(type, name) {
         // Switch to Attributes tab
         $('.nav-tabs a[href="#attributes"]').tab('show');
         
+        // Disable pagination during filtering
+        if (typeof betaPagination !== 'undefined') {
+            betaPagination.searchActive = true;
+            $('.beta-pagination-container').hide();
+        }
+
         // Reset previous filters
         $('.beta-attr-row').show();
         $('.filter-active-msg').remove();
@@ -1202,9 +1219,9 @@
 
         // Show message
         var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
-        msg += '<button type="button" class="close" data-dismiss="alert" onclick="$(\'.beta-attr-row\').show(); $(this).parent().remove();">×</button>';
+        msg += '<button type="button" class="close" onclick="betaClearAttributeFilter(); $(this).parent().remove();">×</button>';
         msg += 'Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>';
-        msg += ' <a href="#" onclick="$(\'.beta-attr-row\').show(); $(\'.filter-active-msg\').remove(); return false;">(Clear Filter)</a>';
+        msg += ' <a href="#" onclick="betaClearAttributeFilter(); return false;">(Clear Filter)</a>';
         msg += '</div>';
         
         // Insert message after toolbar in attributes tab
@@ -1220,6 +1237,12 @@
         // Switch to Attributes tab
         $('.nav-tabs a[href="#attributes"]').tab('show');
         
+        // Disable pagination during filtering
+        if (typeof betaPagination !== 'undefined') {
+            betaPagination.searchActive = true;
+            $('.beta-pagination-container').hide();
+        }
+
         // Reset previous filters
         $('.beta-attr-row').show();
         $('.filter-active-msg').remove();
@@ -1232,17 +1255,14 @@
             var rowComment = $(this).find('.col-comment').text().trim();
             if (rowComment === comment) {
                 $(this).show();
-                // If it's an attribute inside an object, we might need to show the object header too
-                // but usually comments are specific to the row. 
-                // If the object header itself has the comment, it will be shown.
             }
         });
 
         // Show message
         var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
-        msg += '<button type="button" class="close" data-dismiss="alert" onclick="$(\'.beta-attr-row\').show(); $(this).parent().remove();">×</button>';
+        msg += '<button type="button" class="close" onclick="betaClearAttributeFilter(); $(this).parent().remove();">×</button>';
         msg += 'Filtering by Comment: <strong>' + comment + '</strong>';
-        msg += ' <a href="#" onclick="$(\'.beta-attr-row\').show(); $(\'.filter-active-msg\').remove(); return false;">(Clear Filter)</a>';
+        msg += ' <a href="#" onclick="betaClearAttributeFilter(); return false;">(Clear Filter)</a>';
         msg += '</div>';
         
         // Insert message after toolbar in attributes tab

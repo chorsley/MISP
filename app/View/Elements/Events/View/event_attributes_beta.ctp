@@ -70,14 +70,21 @@
                         $subAttr['RelatedAttribute'] = $relatedMap[$subAttr['id']];
                     }
                 }
+                unset($subAttr);
             }
         }
+        unset($item);
     }
 
     // Sort desc by timestamp
     usort($items, function($a, $b) {
         return $b['timestamp'] - $a['timestamp'];
     });
+
+    // Beta pagination config
+    $betaPageSize = 50;
+    $betaTotalItems = count($items);
+    $betaTotalPages = max(1, ceil($betaTotalItems / $betaPageSize));
 ?>
 
 <style>
@@ -210,6 +217,49 @@
     }
     .beta-columns-menu {
         min-width: 180px;
+    }
+
+    /* Beta Pagination Styles */
+    .beta-pagination-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .beta-pagination-info {
+        font-size: 13px;
+        color: #666;
+    }
+    .beta-pagination-info .beta-page-badge {
+        display: inline-block;
+        background: #428bca;
+        color: #fff;
+        padding: 2px 10px;
+        border-radius: 3px;
+        font-weight: 600;
+        font-size: 12px;
+    }
+    .beta-pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .beta-pagination-controls .btn {
+        min-width: 36px;
+    }
+    .beta-pagination-controls .beta-page-size-select {
+        width: auto;
+        display: inline-block;
+        padding: 4px 8px;
+        font-size: 12px;
+        height: auto;
+    }
+    .beta-pagination-bottom {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
     }
     
     /* Tree Structure */
@@ -351,6 +401,28 @@
         </div>
     </div>
 
+    <!-- Beta Pagination Controls (Top) -->
+    <div class="beta-pagination-container" id="beta-pagination-top">
+        <div class="beta-pagination-info">
+            <span class="beta-page-badge" id="beta-page-badge-top"><?php echo __('Page 1 of %s', $betaTotalPages); ?></span>
+            <span id="beta-page-item-info-top">(<?php echo __('Total %s items', $betaTotalItems); ?>)</span>
+        </div>
+        <div class="beta-pagination-controls">
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" id="beta-page-first" title="<?php echo __('First page'); ?>"><i class="fa fa-angle-double-left"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" id="beta-page-prev" title="<?php echo __('Previous page'); ?>"><i class="fa fa-angle-left"></i></button>
+            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-top"><?php echo __('1 / %s', $betaTotalPages); ?></span>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" id="beta-page-next" title="<?php echo __('Next page'); ?>"><i class="fa fa-angle-right"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" id="beta-page-last" title="<?php echo __('Last page'); ?>"><i class="fa fa-angle-double-right"></i></button>
+            <select class="form-control beta-page-size-select" id="beta-page-size" title="<?php echo __('Items per page'); ?>">
+                <option value="20" <?php echo $betaPageSize == 20 ? 'selected' : ''; ?>>20</option>
+                <option value="50" <?php echo $betaPageSize == 50 ? 'selected' : ''; ?>>50</option>
+                <option value="100" <?php echo $betaPageSize == 100 ? 'selected' : ''; ?>>100</option>
+                <option value="200" <?php echo $betaPageSize == 200 ? 'selected' : ''; ?>>200</option>
+                <option value="0"><?php echo __('All'); ?></option>
+            </select>
+        </div>
+    </div>
+
     <table class="beta-attr-table">
         <thead>
             <tr>
@@ -366,8 +438,9 @@
             </tr>
         </thead>
         <tbody>
+            <?php $betaItemIndex = 0; ?>
             <?php foreach ($items as $item): ?>
-                <?php 
+                <?php
                     $isObject = $item['objectType'] === 'object';
                     $dataType = $isObject ? 'object' : 'attribute';
                     $dataName = $isObject ? $item['name'] : $item['type'];
@@ -384,9 +457,10 @@
                         $distColor = $distColors[$item['distribution']] ?? '#999';
                     }
                 ?>
-                <tr class="beta-attr-row <?php echo $rowClass; ?>" 
-                    data-object-type="<?php echo $dataType; ?>" 
+                <tr class="beta-attr-row <?php echo $rowClass; ?>"
+                    data-object-type="<?php echo $dataType; ?>"
                     data-primary-id="<?php echo h($item['id']); ?>"
+                    data-page-item-index="<?php echo $betaItemIndex; ?>"
                     <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
@@ -651,7 +725,7 @@
                             $hasGalaxies = !empty($subAttr['Galaxy']);
                             $attributeIsLast = $isLast && !$hasTags && !$hasGalaxies;
                         ?>
-                        <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
+                        <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>" data-page-item-index="<?php echo $betaItemIndex; ?>">
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">
@@ -853,13 +927,130 @@
                     <?php endforeach; ?>
                 <?php endif; ?>
 
+            <?php $betaItemIndex++; ?>
             <?php endforeach; ?>
         </tbody>
     </table>
+
+    <!-- Beta Pagination Controls (Bottom) -->
+    <div class="beta-pagination-container beta-pagination-bottom" id="beta-pagination-bottom">
+        <div class="beta-pagination-info">
+            <span class="beta-page-badge" id="beta-page-badge-bottom"><?php echo __('Page 1 of %s', $betaTotalPages); ?></span>
+            <span id="beta-page-item-info-bottom">(<?php echo __('Total %s items', $betaTotalItems); ?>)</span>
+        </div>
+        <div class="beta-pagination-controls">
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" title="<?php echo __('First page'); ?>"><i class="fa fa-angle-double-left"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" title="<?php echo __('Previous page'); ?>"><i class="fa fa-angle-left"></i></button>
+            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-bottom"><?php echo __('1 / %s', $betaTotalPages); ?></span>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" title="<?php echo __('Next page'); ?>"><i class="fa fa-angle-right"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" title="<?php echo __('Last page'); ?>"><i class="fa fa-angle-double-right"></i></button>
+        </div>
+    </div>
 </div>
     <script>
     var currentUri = "<?php echo isset($currentUri) ? h($currentUri) : $baseurl . '/events/viewEventAttributes/' . h($event['Event']['id']); ?>";
-    
+
+    // ===== Beta Pagination Logic =====
+    var betaPagination = {
+        currentPage: 1,
+        pageSize: <?php echo $betaPageSize; ?>,
+        totalItems: <?php echo $betaTotalItems; ?>,
+        totalPages: <?php echo $betaTotalPages; ?>,
+        searchActive: false
+    };
+
+    function betaPaginationRecalc() {
+        if (betaPagination.pageSize === 0) {
+            betaPagination.totalPages = 1;
+        } else {
+            betaPagination.totalPages = Math.max(1, Math.ceil(betaPagination.totalItems / betaPagination.pageSize));
+        }
+        if (betaPagination.currentPage > betaPagination.totalPages) {
+            betaPagination.currentPage = betaPagination.totalPages;
+        }
+        if (betaPagination.currentPage < 1) {
+            betaPagination.currentPage = 1;
+        }
+    }
+
+    function betaPaginationApply() {
+        // If search is active, don't interfere with search filtering
+        if (betaPagination.searchActive) {
+            return;
+        }
+
+        var page = betaPagination.currentPage;
+        var size = betaPagination.pageSize;
+
+        // Show all rows first (reset)
+        $('.beta-attr-table tbody tr[data-page-item-index]').each(function() {
+            var idx = parseInt($(this).attr('data-page-item-index'), 10);
+            if (size === 0) {
+                // Show all
+                $(this).show();
+            } else {
+                var startIdx = (page - 1) * size;
+                var endIdx = startIdx + size - 1;
+                if (idx >= startIdx && idx <= endIdx) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            }
+        });
+
+        betaPaginationUpdateUI();
+    }
+
+    function betaPaginationUpdateUI() {
+        var page = betaPagination.currentPage;
+        var total = betaPagination.totalPages;
+        var size = betaPagination.pageSize;
+        var totalItems = betaPagination.totalItems;
+
+        var pageText = '<?php echo __('Page'); ?> ' + page + ' <?php echo __('of'); ?> ' + total;
+        var itemStart = size === 0 ? 1 : ((page - 1) * size + 1);
+        var itemEnd = size === 0 ? totalItems : Math.min(page * size, totalItems);
+        var itemInfo = '(<?php echo __('Showing'); ?> ' + itemStart + '-' + itemEnd + ' <?php echo __('of'); ?> ' + totalItems + ' <?php echo __('items'); ?>)';
+
+        // Update top controls
+        $('#beta-page-badge-top').text(pageText);
+        $('#beta-page-item-info-top').text(itemInfo);
+        $('#beta-page-num-display-top').text(page + ' / ' + total);
+
+        // Update bottom controls
+        $('#beta-page-badge-bottom').text(pageText);
+        $('#beta-page-item-info-bottom').text(itemInfo);
+        $('#beta-page-num-display-bottom').text(page + ' / ' + total);
+
+        // Enable/disable buttons
+        var isFirst = (page <= 1);
+        var isLast = (page >= total);
+        $('#beta-page-first, #beta-page-prev').prop('disabled', isFirst);
+        $('#beta-page-next, #beta-page-last').prop('disabled', isLast);
+    }
+
+    function betaPaginationGo(target) {
+        if (target === 'prev') {
+            betaPagination.currentPage = Math.max(1, betaPagination.currentPage - 1);
+        } else if (target === 'next') {
+            betaPagination.currentPage = Math.min(betaPagination.totalPages, betaPagination.currentPage + 1);
+        } else if (target === 'last') {
+            betaPagination.currentPage = betaPagination.totalPages;
+        } else {
+            betaPagination.currentPage = parseInt(target, 10) || 1;
+        }
+        betaPaginationApply();
+    }
+
+    function betaPaginationChangeSize(newSize) {
+        betaPagination.pageSize = parseInt(newSize, 10);
+        betaPagination.currentPage = 1;
+        betaPaginationRecalc();
+        betaPaginationApply();
+    }
+    // ===== End Beta Pagination Logic =====
+
     // Column state
     var betaColumns = {
         date: true,
@@ -910,16 +1101,44 @@
             }
         });
 
-        // Search filtering
+        // Apply initial pagination
+        betaPaginationApply();
+
+        // Pagination button click handlers (using delegated events for robustness)
+        $(document).on('click', '.beta-page-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var action = $(this).data('page-action');
+            if (action === 'first') {
+                betaPaginationGo(1);
+            } else {
+                betaPaginationGo(action);
+            }
+        });
+
+        // Page size change handler
+        $(document).on('change', '#beta-page-size', function() {
+            betaPaginationChangeSize($(this).val());
+        });
+
+        // Search filtering (disables pagination while searching)
         $('#beta-attr-search').on('keyup', function() {
             var val = $(this).val().toLowerCase();
-            $('.beta-attr-row').each(function() {
-                var text = $(this).find('.attr-value').text().toLowerCase();
-                if (text === "") text = $(this).find('.object-title').text().toLowerCase();
-                $(this).toggle(text.indexOf(val) > -1);
-                // Also toggle sub-rows if parent is hidden?
-                // For simplicity, let's just filter by value
-            });
+            if (val.length > 0) {
+                // Disable pagination during search
+                betaPagination.searchActive = true;
+                $('.beta-pagination-container').hide();
+                $('.beta-attr-row').each(function() {
+                    var text = $(this).find('.attr-value').text().toLowerCase();
+                    if (text === "") text = $(this).find('.object-title').text().toLowerCase();
+                    $(this).toggle(text.indexOf(val) > -1);
+                });
+            } else {
+                // Re-enable pagination when search is cleared
+                betaPagination.searchActive = false;
+                $('.beta-pagination-container').show();
+                betaPaginationApply();
+            }
         });
 
         // Individual Object Toggle
