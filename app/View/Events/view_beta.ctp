@@ -694,24 +694,24 @@
                                        $localTagAccess = $this->Acl->canModifyTag($event, true);
                                        $targetId = $event['Event']['id'];
                                        
-                                       if ($tagAccess) {
-                                           $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";
-                                           echo sprintf(
-                                               '<button class="%s" data-popover-popup="%s" role="button" tabindex="0" aria-label="' . __('Add new cluster') . '" title="' . __('Add new cluster') . '">%s</button>',
-                                               'useCursorPointer addButton btn btn-inverse noPrint',
-                                               $link,
-                                               '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
-                                           );
-                                       }
-                                       if ($localTagAccess) {
-                                           $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:1";
-                                           echo sprintf(
-                                               '<button class="%s" data-popover-popup="%s" role="button" tabindex="0" aria-label="' . __('Add new local cluster') . '" title="' . __('Add new local cluster') . '">%s</button>',
-                                               'useCursorPointer addButton btn btn-inverse noPrint',
-                                               $link,
-                                               '<i class="fas fa-user"></i> <i class="fas fa-plus"></i>'
-                                           );
-                                       }
+                                        if ($tagAccess) {
+                                            $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";
+                                            echo sprintf(
+                                                '<button class="%s" data-popover-popup="%s" data-popover-placement="left" role="button" tabindex="0" aria-label="' . __('Add new cluster') . '" title="' . __('Add new cluster') . '">%s</button>',
+                                                'useCursorPointer addButton btn btn-inverse noPrint',
+                                                $link,
+                                                '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
+                                            );
+                                        }
+                                        if ($localTagAccess) {
+                                            $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:1";
+                                            echo sprintf(
+                                                '<button class="%s" data-popover-popup="%s" data-popover-placement="left" role="button" tabindex="0" aria-label="' . __('Add new local cluster') . '" title="' . __('Add new local cluster') . '">%s</button>',
+                                                'useCursorPointer addButton btn btn-inverse noPrint',
+                                                $link,
+                                                '<i class="fas fa-user"></i> <i class="fas fa-plus"></i>'
+                                            );
+                                        }
                                    ?>
                                  </div>
                                   </div>

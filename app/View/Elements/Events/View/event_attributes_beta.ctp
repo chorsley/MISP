@@ -572,7 +572,9 @@
                         <!-- Sightings -->
                         <td class="col-sightings" style="text-align: center;">
                             <?php if ($isSighted): ?>
-                                <span class="beta-sighting-alert" title="<?php echo __('Sighted'); ?>">!</span>
+                                <i class="fa fa-eye sightings_advanced_add" style="color: #d9534f; cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($item['id']); ?>" data-object-context="attribute"></i>
+                            <?php else: ?>
+                                <i class="fa fa-eye" style="color: #ccc; cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($item['id']); ?>');"></i>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
@@ -802,7 +804,9 @@
                             <!-- Sightings -->
                             <td class="col-sightings" style="text-align: center;">
                                 <?php if ($isSightedSub): ?>
-                                    <span class="beta-sighting-alert" title="<?php echo __('Sighted'); ?>">!</span>
+                                    <i class="fa fa-eye sightings_advanced_add" style="color: #d9534f; cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($subAttr['id']); ?>" data-object-context="attribute"></i>
+                                <?php else: ?>
+                                    <i class="fa fa-eye" style="color: #ccc; cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($subAttr['id']); ?>');"></i>
                                 <?php endif; ?>
                             </td>
                             <!-- Distribution -->
