@@ -1,90 +1,5 @@
 <?php
-    // Prepare items
-    $items = [];
-    
-    // Workaround for missing RelatedAttribute in attributes
-    $relatedMap = [];
-    if (!empty($event['RelatedAttribute'])) {
-        foreach ($event['RelatedAttribute'] as $attrId => $relations) {
-            $relatedMap[$attrId] = $relations;
-        }
-    }
-
-    if (!empty($event['objects'])) {
-        $items = [];
-        $objectAttributeIds = [];
-        foreach ($event['objects'] as $item) {
-            if ($item['objectType'] === 'object') {
-                if (!empty($item['Attribute'])) {
-                    foreach ($item['Attribute'] as $objAttr) {
-                        $objectAttributeIds[$objAttr['id']] = true;
-                    }
-                }
-            }
-        }
-        foreach ($event['objects'] as $item) {
-            if ($item['objectType'] === 'attribute' && isset($objectAttributeIds[$item['id']])) {
-                continue;
-            }
-            $items[] = $item;
-        }
-    } else {
-        $objectAttributeIds = [];
-        if (!empty($event['Object'])) {
-            foreach ($event['Object'] as $obj) {
-                if (!empty($obj['Attribute'])) {
-                    foreach ($obj['Attribute'] as $objAttr) {
-                        $objectAttributeIds[$objAttr['id']] = true;
-                    }
-                }
-            }
-        }
-
-        if (!empty($event['Attribute'])) {
-            foreach ($event['Attribute'] as $attr) {
-                if (isset($objectAttributeIds[$attr['id']])) {
-                    continue;
-                }
-                $attr['objectType'] = 'attribute';
-                $items[] = $attr;
-            }
-        }
-        if (!empty($event['Object'])) {
-            foreach ($event['Object'] as $obj) {
-                $obj['objectType'] = 'object';
-                $items[] = $obj;
-            }
-        }
-    }
-
-    // Attach RelatedAttribute if missing
-    if (!empty($relatedMap)) {
-        foreach ($items as &$item) {
-            if (isset($item['objectType']) && $item['objectType'] === 'attribute') {
-                if (isset($relatedMap[$item['id']])) {
-                    $item['RelatedAttribute'] = $relatedMap[$item['id']];
-                }
-            } elseif (isset($item['objectType']) && $item['objectType'] === 'object' && !empty($item['Attribute'])) {
-                foreach ($item['Attribute'] as &$subAttr) {
-                    if (isset($relatedMap[$subAttr['id']])) {
-                        $subAttr['RelatedAttribute'] = $relatedMap[$subAttr['id']];
-                    }
-                }
-                unset($subAttr);
-            }
-        }
-        unset($item);
-    }
-
-    // Sort desc by timestamp
-    usort($items, function($a, $b) {
-        return $b['timestamp'] - $a['timestamp'];
-    });
-
-    // Beta pagination config
-    $betaPageSize = 50;
-    $betaTotalItems = count($items);
-    $betaTotalPages = max(1, ceil($betaTotalItems / $betaPageSize));
+    // Logic moved to view_beta.ctp to support tab counts
 ?>
 
 <style>
@@ -404,21 +319,20 @@
     <!-- Beta Pagination Controls (Top) -->
     <div class="beta-pagination-container" id="beta-pagination-top">
         <div class="beta-pagination-info">
-            <span class="beta-page-badge" id="beta-page-badge-top"><?php echo __('Page 1 of %s', $betaTotalPages); ?></span>
-            <span id="beta-page-item-info-top">(<?php echo __('Total %s items', $betaTotalItems); ?>)</span>
+            <span class="beta-page-badge" id="beta-page-badge-top"><?php echo __('Page %s of %s', $betaCurrentPage, $betaTotalPages); ?></span>
+            <span id="beta-page-item-info-top">(<?php echo __('Showing %s-%s of %s items', $betaShowStart, $betaShowEnd, $betaTotalAttributes); ?>)</span>
         </div>
         <div class="beta-pagination-controls">
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" id="beta-page-first" title="<?php echo __('First page'); ?>"><i class="fa fa-angle-double-left"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" id="beta-page-prev" title="<?php echo __('Previous page'); ?>"><i class="fa fa-angle-left"></i></button>
-            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-top"><?php echo __('1 / %s', $betaTotalPages); ?></span>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" id="beta-page-next" title="<?php echo __('Next page'); ?>"><i class="fa fa-angle-right"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" id="beta-page-last" title="<?php echo __('Last page'); ?>"><i class="fa fa-angle-double-right"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" id="beta-page-first" title="<?php echo __('First page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-double-left"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" id="beta-page-prev" title="<?php echo __('Previous page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-left"></i></button>
+            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-top"><?php echo __('%s / %s', $betaCurrentPage, $betaTotalPages); ?></span>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" id="beta-page-next" title="<?php echo __('Next page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-right"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" id="beta-page-last" title="<?php echo __('Last page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-double-right"></i></button>
             <select class="form-control beta-page-size-select" id="beta-page-size" title="<?php echo __('Items per page'); ?>">
                 <option value="20" <?php echo $betaPageSize == 20 ? 'selected' : ''; ?>>20</option>
                 <option value="50" <?php echo $betaPageSize == 50 ? 'selected' : ''; ?>>50</option>
                 <option value="100" <?php echo $betaPageSize == 100 ? 'selected' : ''; ?>>100</option>
                 <option value="200" <?php echo $betaPageSize == 200 ? 'selected' : ''; ?>>200</option>
-                <option value="0"><?php echo __('All'); ?></option>
             </select>
         </div>
     </div>
@@ -438,7 +352,6 @@
             </tr>
         </thead>
         <tbody>
-            <?php $betaItemIndex = 0; ?>
             <?php foreach ($items as $item): ?>
                 <?php
                     $isObject = $item['objectType'] === 'object';
@@ -460,7 +373,6 @@
                 <tr class="beta-attr-row <?php echo $rowClass; ?>"
                     data-object-type="<?php echo $dataType; ?>"
                     data-primary-id="<?php echo h($item['id']); ?>"
-                    data-page-item-index="<?php echo $betaItemIndex; ?>"
                     <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
@@ -720,12 +632,12 @@
                                 $subDistColor = $subDistColors[$subAttr['distribution']] ?? '#999';
                             }
                         ?>
-                        <?php 
+                        <?php
                             $hasTags = !empty($subAttr['AttributeTag']);
                             $hasGalaxies = !empty($subAttr['Galaxy']);
                             $attributeIsLast = $isLast && !$hasTags && !$hasGalaxies;
                         ?>
-                        <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>" data-page-item-index="<?php echo $betaItemIndex; ?>">
+                        <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">
@@ -927,7 +839,6 @@
                     <?php endforeach; ?>
                 <?php endif; ?>
 
-            <?php $betaItemIndex++; ?>
             <?php endforeach; ?>
         </tbody>
     </table>
@@ -935,145 +846,142 @@
     <!-- Beta Pagination Controls (Bottom) -->
     <div class="beta-pagination-container beta-pagination-bottom" id="beta-pagination-bottom">
         <div class="beta-pagination-info">
-            <span class="beta-page-badge" id="beta-page-badge-bottom"><?php echo __('Page 1 of %s', $betaTotalPages); ?></span>
-            <span id="beta-page-item-info-bottom">(<?php echo __('Total %s items', $betaTotalItems); ?>)</span>
+            <span class="beta-page-badge" id="beta-page-badge-bottom"><?php echo __('Page %s of %s', $betaCurrentPage, $betaTotalPages); ?></span>
+            <span id="beta-page-item-info-bottom">(<?php echo __('Showing %s-%s of %s items', $betaShowStart, $betaShowEnd, $betaTotalAttributes); ?>)</span>
         </div>
         <div class="beta-pagination-controls">
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" title="<?php echo __('First page'); ?>"><i class="fa fa-angle-double-left"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" title="<?php echo __('Previous page'); ?>"><i class="fa fa-angle-left"></i></button>
-            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-bottom"><?php echo __('1 / %s', $betaTotalPages); ?></span>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" title="<?php echo __('Next page'); ?>"><i class="fa fa-angle-right"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" title="<?php echo __('Last page'); ?>"><i class="fa fa-angle-double-right"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" title="<?php echo __('First page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-double-left"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" title="<?php echo __('Previous page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-left"></i></button>
+            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-bottom"><?php echo __('%s / %s', $betaCurrentPage, $betaTotalPages); ?></span>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" title="<?php echo __('Next page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-right"></i></button>
+            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" title="<?php echo __('Last page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-double-right"></i></button>
         </div>
     </div>
 </div>
     <script>
     var currentUri = "<?php echo isset($currentUri) ? h($currentUri) : $baseurl . '/events/viewEventAttributes/' . h($event['Event']['id']); ?>";
 
-    // ===== Beta Pagination Logic =====
-    var betaPagination = {
-        currentPage: 1,
+    // ===== Beta Pagination Logic (Server-Side via AJAX) =====
+    // Use window-level object so it persists across AJAX reloads and isn't duplicated
+    window.betaPagination = {
+        currentPage: <?php echo $betaCurrentPage; ?>,
         pageSize: <?php echo $betaPageSize; ?>,
-        totalItems: <?php echo $betaTotalItems; ?>,
         totalPages: <?php echo $betaTotalPages; ?>,
-        searchActive: false
+        totalAttributes: <?php echo $betaTotalAttributes; ?>,
+        eventId: <?php echo (int)$event['Event']['id']; ?>,
+        baseUrl: "<?php echo $baseurl; ?>",
+        activeXhr: null,
+        loading: false
     };
 
-    function betaPaginationRecalc() {
-        if (betaPagination.pageSize === 0) {
-            betaPagination.totalPages = 1;
-        } else {
-            betaPagination.totalPages = Math.max(1, Math.ceil(betaPagination.totalItems / betaPagination.pageSize));
-        }
-        if (betaPagination.currentPage > betaPagination.totalPages) {
-            betaPagination.currentPage = betaPagination.totalPages;
-        }
-        if (betaPagination.currentPage < 1) {
-            betaPagination.currentPage = 1;
-        }
-    }
+    window.betaPaginationLoadPage = function(page, limit) {
+        if (typeof page === 'undefined') page = window.betaPagination.currentPage;
+        if (typeof limit === 'undefined') limit = window.betaPagination.pageSize;
 
-    function betaPaginationApply() {
-        // If search is active, don't interfere with search filtering
-        if (betaPagination.searchActive) {
-            return;
+        // Abort any in-flight request
+        if (window.betaPagination.activeXhr) {
+            window.betaPagination.activeXhr.abort();
+            window.betaPagination.activeXhr = null;
         }
 
-        var page = betaPagination.currentPage;
-        var size = betaPagination.pageSize;
+        // Prevent duplicate requests while loading
+        if (window.betaPagination.loading) return;
+        window.betaPagination.loading = true;
 
-        // Show all rows first (reset)
-        $('.beta-attr-table tbody tr[data-page-item-index]').each(function() {
-            var idx = parseInt($(this).attr('data-page-item-index'), 10);
-            if (size === 0) {
-                // Show all
-                $(this).show();
-            } else {
-                var startIdx = (page - 1) * size;
-                var endIdx = startIdx + size - 1;
-                if (idx >= startIdx && idx <= endIdx) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
+        // When limit is 0 ("All"), pass page:0 to disable server-side pagination
+        var effectivePage = (limit === 0) ? 0 : page;
+
+        var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId
+            + '/page:' + effectivePage
+            + '/limit:' + (limit === 0 ? 0 : limit)
+            + '/sort:timestamp/direction:desc';
+
+        // Find the container to replace
+        var $container = $('.beta-attributes-list').closest('#attributes');
+        if (!$container.length) {
+            $container = $('.beta-attributes-list').parent();
+        }
+
+        // Disable all pagination buttons and show loading state
+        $('.beta-page-btn').prop('disabled', true);
+        $container.css('opacity', '0.5');
+
+        window.betaPagination.activeXhr = $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(data) {
+                $container.html(data);
+                $container.css('opacity', '1');
+                // Scroll to top of attributes section
+                var offset = $container.offset();
+                if (offset) {
+                    $('html, body').animate({ scrollTop: offset.top - 60 }, 200);
                 }
+                // Re-initialize popovers and distribution widgets
+                if (typeof popoverStartup === 'function') popoverStartup();
+            },
+            error: function(jqXHR, textStatus) {
+                if (textStatus === 'abort') return; // Intentional abort, ignore
+                $container.css('opacity', '1');
+                $('.beta-page-btn').prop('disabled', false);
+                if (typeof showMessage === 'function') {
+                    showMessage('fail', 'Failed to load page.');
+                }
+            },
+            complete: function() {
+                window.betaPagination.activeXhr = null;
+                window.betaPagination.loading = false;
             }
         });
-
-        betaPaginationUpdateUI();
-    }
-
-    function betaPaginationUpdateUI() {
-        var page = betaPagination.currentPage;
-        var total = betaPagination.totalPages;
-        var size = betaPagination.pageSize;
-        var totalItems = betaPagination.totalItems;
-
-        var pageText = '<?php echo __('Page'); ?> ' + page + ' <?php echo __('of'); ?> ' + total;
-        var itemStart = size === 0 ? 1 : ((page - 1) * size + 1);
-        var itemEnd = size === 0 ? totalItems : Math.min(page * size, totalItems);
-        var itemInfo = '(<?php echo __('Showing'); ?> ' + itemStart + '-' + itemEnd + ' <?php echo __('of'); ?> ' + totalItems + ' <?php echo __('items'); ?>)';
-
-        // Update top controls
-        $('#beta-page-badge-top').text(pageText);
-        $('#beta-page-item-info-top').text(itemInfo);
-        $('#beta-page-num-display-top').text(page + ' / ' + total);
-
-        // Update bottom controls
-        $('#beta-page-badge-bottom').text(pageText);
-        $('#beta-page-item-info-bottom').text(itemInfo);
-        $('#beta-page-num-display-bottom').text(page + ' / ' + total);
-
-        // Enable/disable buttons
-        var isFirst = (page <= 1);
-        var isLast = (page >= total);
-        $('#beta-page-first, #beta-page-prev').prop('disabled', isFirst);
-        $('#beta-page-next, #beta-page-last').prop('disabled', isLast);
-    }
-
-    function betaPaginationGo(target) {
-        if (target === 'prev') {
-            betaPagination.currentPage = Math.max(1, betaPagination.currentPage - 1);
-        } else if (target === 'next') {
-            betaPagination.currentPage = Math.min(betaPagination.totalPages, betaPagination.currentPage + 1);
-        } else if (target === 'last') {
-            betaPagination.currentPage = betaPagination.totalPages;
-        } else {
-            betaPagination.currentPage = parseInt(target, 10) || 1;
-        }
-        betaPaginationApply();
-    }
-
-    function betaPaginationChangeSize(newSize) {
-        betaPagination.pageSize = parseInt(newSize, 10);
-        betaPagination.currentPage = 1;
-        betaPaginationRecalc();
-        betaPaginationApply();
-    }
-    // ===== End Beta Pagination Logic =====
-
-    // Column state
-    var betaColumns = {
-        date: true,
-        sightings: true,
-        distribution: true,
-        correlation: true,
-        related: true,
-        comment: true,
     };
 
-    function toggleBetaColumn(col) {
-        betaColumns[col] = !betaColumns[col];
-        $('.col-' + col).toggle(betaColumns[col]);
-        $('.col-' + col + '-row').toggle(betaColumns[col]);
-        $('.col-check-' + col).toggleClass('fa-check fa-times');
-        
-        // Adjust sub-row colspan if needed (though 11 is static for now)
+    window.betaPaginationGo = function(target) {
+        var page = window.betaPagination.currentPage;
+        if (target === 'prev') {
+            page = Math.max(1, page - 1);
+        } else if (target === 'next') {
+            page = Math.min(window.betaPagination.totalPages, page + 1);
+        } else if (target === 'last') {
+            page = window.betaPagination.totalPages;
+        } else if (target === 'first') {
+            page = 1;
+        } else {
+            page = parseInt(target, 10) || 1;
+        }
+        window.betaPaginationLoadPage(page, window.betaPagination.pageSize);
+    };
+
+    window.betaPaginationChangeSize = function(newSize) {
+        var limit = parseInt(newSize, 10);
+        window.betaPaginationLoadPage(1, limit);
+    };
+    // ===== End Beta Pagination Logic =====
+
+    // Column state (preserve across AJAX reloads)
+    if (typeof window.betaColumns === 'undefined') {
+        window.betaColumns = {
+            date: true,
+            sightings: true,
+            distribution: true,
+            correlation: true,
+            related: true,
+            comment: true,
+        };
     }
 
-    var allExpanded = false;
+    function toggleBetaColumn(col) {
+        window.betaColumns[col] = !window.betaColumns[col];
+        $('.col-' + col).toggle(window.betaColumns[col]);
+        $('.col-' + col + '-row').toggle(window.betaColumns[col]);
+        $('.col-check-' + col).toggleClass('fa-check fa-times');
+    }
+
+    if (typeof window.allExpanded === 'undefined') {
+        window.allExpanded = false;
+    }
     function toggleAllObjectsAttributes() {
-        allExpanded = !allExpanded;
-        if (allExpanded) {
+        window.allExpanded = !window.allExpanded;
+        if (window.allExpanded) {
             $('.object-attr-row, .col-tags-row, .col-galaxies-row').show();
             $('#btn-toggle-all i').removeClass('fa-expand').addClass('fa-compress');
             $('#label-toggle-all').text('Collapse All');
@@ -1085,72 +993,89 @@
     }
 
     function showRelatedMenu(el, attributeId) {
-        // Fetch related events via AJAX if not already present or show existing menu
-        // For now, let's assume we can fetch them
         getPopup(attributeId, 'attributes', 'relatedAttributes', '', '#confirmation_box');
     }
 
+    // Remove all previous beta event handlers before re-binding (prevents accumulation on AJAX reload)
+    $(document).off('.betaAttr');
+
     $(function() {
-        // Initial column sync
-        Object.keys(betaColumns).forEach(function(col) {
-            $('.col-' + col).toggle(betaColumns[col]);
-            if (betaColumns[col]) {
+        // Apply column state (may have been toggled on a previous page)
+        Object.keys(window.betaColumns).forEach(function(col) {
+            $('.col-' + col).toggle(window.betaColumns[col]);
+            if (window.betaColumns[col]) {
                 $('.col-check-' + col).addClass('fa-check').removeClass('fa-times');
             } else {
                 $('.col-check-' + col).addClass('fa-times').removeClass('fa-check');
             }
         });
 
-        // Apply initial pagination
-        betaPaginationApply();
-
-        // Pagination button click handlers (using delegated events for robustness)
-        $(document).on('click', '.beta-page-btn', function(e) {
+        // Pagination button click handlers (namespaced to allow clean removal)
+        $(document).on('click.betaAttr', '.beta-page-btn', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            if ($(this).prop('disabled')) return;
             var action = $(this).data('page-action');
-            if (action === 'first') {
-                betaPaginationGo(1);
-            } else {
-                betaPaginationGo(action);
-            }
+            window.betaPaginationGo(action);
         });
 
         // Page size change handler
-        $(document).on('change', '#beta-page-size', function() {
-            betaPaginationChangeSize($(this).val());
+        $(document).on('change.betaAttr', '#beta-page-size', function() {
+            window.betaPaginationChangeSize($(this).val());
         });
 
-        // Search filtering (disables pagination while searching)
-        $('#beta-attr-search').on('keyup', function() {
-            var val = $(this).val().toLowerCase();
+        // Search filtering uses server-side search via viewEventAttributes
+        $(document).on('keyup.betaAttr', '#beta-attr-search', function() {
+            var val = $(this).val();
+            // Clear any pending search timer
+            if (window._betaSearchTimer) clearTimeout(window._betaSearchTimer);
+
             if (val.length > 0) {
-                // Disable pagination during search
-                betaPagination.searchActive = true;
-                $('.beta-pagination-container').hide();
-                $('.beta-attr-row').each(function() {
-                    var text = $(this).find('.attr-value').text().toLowerCase();
-                    if (text === "") text = $(this).find('.object-title').text().toLowerCase();
-                    $(this).toggle(text.indexOf(val) > -1);
-                });
+                window._betaSearchTimer = setTimeout(function() {
+                    // Abort any in-flight request
+                    if (window.betaPagination.activeXhr) {
+                        window.betaPagination.activeXhr.abort();
+                        window.betaPagination.activeXhr = null;
+                    }
+                    var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId
+                        + '/searchFor:' + encodeURIComponent(val)
+                        + '/page:1/limit:' + window.betaPagination.pageSize
+                        + '/sort:timestamp/direction:desc';
+                    var $container = $('.beta-attributes-list').closest('#attributes');
+                    if (!$container.length) $container = $('.beta-attributes-list').parent();
+                    $container.css('opacity', '0.5');
+                    window.betaPagination.activeXhr = $.ajax({
+                        url: url,
+                        type: 'GET',
+                        success: function(data) {
+                            $container.html(data);
+                            $container.css('opacity', '1');
+                            if (typeof popoverStartup === 'function') popoverStartup();
+                        },
+                        error: function(jqXHR, textStatus) {
+                            if (textStatus === 'abort') return;
+                            $container.css('opacity', '1');
+                        },
+                        complete: function() {
+                            window.betaPagination.activeXhr = null;
+                        }
+                    });
+                }, 400);
             } else {
-                // Re-enable pagination when search is cleared
-                betaPagination.searchActive = false;
-                $('.beta-pagination-container').show();
-                betaPaginationApply();
+                window._betaSearchTimer = setTimeout(function() {
+                    window.betaPaginationLoadPage(1, window.betaPagination.pageSize);
+                }, 400);
             }
         });
 
         // Individual Object Toggle
-        $(document).on('click', '.object-header-row', function() {
+        $(document).on('click.betaAttr', '.object-header-row', function() {
             var name = $(this).data('object-name');
             $('.object-attr-row[data-parent-object="' + name + '"]').toggle();
-            // Also toggle tags/galaxies for the object if any
-            // (Objects don't usually have tags/galaxies directly in the sub-row but just in case)
         });
 
         // Correlation Toggle handling
-        $(document).on('click', '.beta-correlation-toggle', function() {
+        $(document).on('click.betaAttr', '.beta-correlation-toggle', function() {
             <?php if (!$mayModify): ?>
                 return false;
             <?php else: ?>
@@ -1190,7 +1115,7 @@
         // Cleanup orphans from previous executions
         $('.beta-row-menu.active-moved').remove();
 
-        $(document).off('click', '.beta-row-menu-trigger').on('click', '.beta-row-menu-trigger', function(e) {
+        $(document).on('click.betaAttr', '.beta-row-menu-trigger', function(e) {
             e.stopPropagation();
             var trigger = $(this);
             
@@ -1238,7 +1163,7 @@
             }
         });
 
-        $(document).off('click.betaMenuClose').on('click.betaMenuClose', function(e) {
+        $(document).on('click.betaAttr', function(e) {
             var activeMenu = $('.beta-row-menu.active-moved');
             if (activeMenu.length) {
                 if ($(e.target).closest('.beta-row-menu.active-moved').length) return;
@@ -1253,23 +1178,19 @@
             }
         });
 
-        $(document).on('click', function() {
-            $('.beta-row-menu').hide();
-        });
-
         // Prevent closing when clicking inside the menu
-        $(document).on('click', '.beta-row-menu', function(e) {
+        $(document).on('click.betaAttr', '.beta-row-menu', function(e) {
             e.stopPropagation();
         });
         
         // Select All checkboxes
-        $('.select-all').change(function() {
+        $(document).on('change.betaAttr', '.select-all', function() {
             var checked = $(this).prop('checked');
             $('.select-row').prop('checked', checked);
         });
 
         // IDS Toggle handling
-        $('.beta-ids-toggle').on('click', function() {
+        $(document).on('click.betaAttr', '.beta-ids-toggle', function() {
             <?php if (!$mayModify): ?>
                 return false;
             <?php else: ?>

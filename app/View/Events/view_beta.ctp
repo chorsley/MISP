@@ -440,11 +440,112 @@
     </div>
 
     <!-- Tabs -->
+    <?php
+    // Prepare items
+    $items = [];
+    
+    // Workaround for missing RelatedAttribute in attributes
+    $relatedMap = [];
+    if (!empty($event['RelatedAttribute'])) {
+        foreach ($event['RelatedAttribute'] as $attrId => $relations) {
+            $relatedMap[$attrId] = $relations;
+        }
+    }
+
+    if (!empty($event['objects'])) {
+        $items = [];
+        $objectAttributeIds = [];
+        foreach ($event['objects'] as $item) {
+            if ($item['objectType'] === 'object') {
+                if (!empty($item['Attribute'])) {
+                    foreach ($item['Attribute'] as $objAttr) {
+                        $objectAttributeIds[$objAttr['id']] = true;
+                    }
+                }
+            }
+        }
+        foreach ($event['objects'] as $item) {
+            if ($item['objectType'] === 'attribute' && isset($objectAttributeIds[$item['id']])) {
+                continue;
+            }
+            $items[] = $item;
+        }
+    } else {
+        $objectAttributeIds = [];
+        if (!empty($event['Object'])) {
+            foreach ($event['Object'] as $obj) {
+                if (!empty($obj['Attribute'])) {
+                    foreach ($obj['Attribute'] as $objAttr) {
+                        $objectAttributeIds[$objAttr['id']] = true;
+                    }
+                }
+            }
+        }
+
+        if (!empty($event['Attribute'])) {
+            foreach ($event['Attribute'] as $attr) {
+                if (isset($objectAttributeIds[$attr['id']])) {
+                    continue;
+                }
+                $attr['objectType'] = 'attribute';
+                $items[] = $attr;
+            }
+        }
+        if (!empty($event['Object'])) {
+            foreach ($event['Object'] as $obj) {
+                $obj['objectType'] = 'object';
+                $items[] = $obj;
+            }
+        }
+    }
+
+    // Attach RelatedAttribute if missing
+    if (!empty($relatedMap)) {
+        foreach ($items as &$item) {
+            if (isset($item['objectType']) && $item['objectType'] === 'attribute') {
+                if (isset($relatedMap[$item['id']])) {
+                    $item['RelatedAttribute'] = $relatedMap[$item['id']];
+                }
+            } elseif (isset($item['objectType']) && $item['objectType'] === 'object' && !empty($item['Attribute'])) {
+                foreach ($item['Attribute'] as &$subAttr) {
+                    if (isset($relatedMap[$subAttr['id']])) {
+                        $subAttr['RelatedAttribute'] = $relatedMap[$subAttr['id']];
+                    }
+                }
+                unset($subAttr);
+            }
+        }
+        unset($item);
+    }
+
+    // Sort desc by timestamp
+    usort($items, function($a, $b) {
+        return $b['timestamp'] - $a['timestamp'];
+    });
+
+    // Server-side pagination params from CustomPaginationTool
+    $paging = isset($this->params->params['paging']['Event']) ? $this->params->params['paging']['Event'] : [];
+    $betaCurrentPage = isset($paging['page']) ? (int)$paging['page'] : 1;
+    $betaPageSize = isset($paging['limit']) ? (int)$paging['limit'] : 50;
+    $betaTotalItems = isset($paging['count']) ? (int)$paging['count'] : 0;
+    $betaTotalPages = isset($paging['pageCount']) ? (int)$paging['pageCount'] : 1;
+
+    // Count total items for display purposes
+    $betaTotalAttributes = $betaTotalItems > 0 ? $betaTotalItems : count($items);
+
+    // Calculate display range for "Showing X-Y of Z"
+    $betaShowStart = ($betaCurrentPage - 1) * $betaPageSize + 1;
+    $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalItems);
+    if ($betaTotalItems == 0) {
+        $betaShowStart = 0;
+        $betaShowEnd = 0;
+    }
+    ?>
     <div class="beta-tabs-container">
         <ul class="nav nav-tabs beta-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#summary" aria-controls="summary" role="tab" data-toggle="tab"><?php echo __('Summary'); ?></a></li>
             <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<?php echo h($eventReportCount); ?>)</a></li>
-            <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Attributes'); ?> (<?php echo h($attribute_count); ?>)</a></li>
+            <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Data'); ?> (<?php echo h($betaTotalAttributes); ?>)</a></li>
             <li role="presentation"><a href="#correlations" aria-controls="correlations" role="tab" data-toggle="tab"><?php echo __('Correlations'); ?> (<?php echo isset($relatedEventCorrelationCount) ? count($relatedEventCorrelationCount) : 0; ?>)</a></li>
             <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
         </ul>
@@ -709,7 +810,17 @@
 
             <!-- Attributes Tab -->
             <div role="tabpanel" class="tab-pane" id="attributes">
-                 <?php echo $this->element('Events/View/event_attributes_beta'); ?>
+                 <?php echo $this->element('Events/View/event_attributes_beta', [
+                     'items' => $items,
+                     'betaTotalAttributes' => $betaTotalAttributes,
+                     'paging' => $paging,
+                     'betaCurrentPage' => $betaCurrentPage,
+                     'betaPageSize' => $betaPageSize,
+                     'betaTotalItems' => $betaTotalItems,
+                     'betaTotalPages' => $betaTotalPages,
+                     'betaShowStart' => $betaShowStart,
+                     'betaShowEnd' => $betaShowEnd
+                 ]); ?>
             </div>
             
             <!-- Other Tabs Placeholders -->
