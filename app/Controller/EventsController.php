@@ -32,7 +32,7 @@ class EventsController extends AppController
         'sort', 'direction', 'focus', 'is_extended', 'overrideLimit', 'filterColumnsOverwrite', 'attributeFilter', 'page',
         'searchFor', 'proposal', 'correlation', 'warning', 'deleted', 'includeRelatedTags', 'includeDecayScore', 'distribution',
         'taggedAttributes', 'galaxyAttachedAttributes', 'objectType', 'attributeType', 'feed', 'server', 'toIDS',
-        'sighting', 'includeSightingdb', 'warninglistId', 'correlationId', 'email', 'eventid', 'datefrom', 'dateuntil'
+        'sighting', 'includeSightingdb', 'warninglistId', 'correlationId', 'email', 'eventid', 'datefrom', 'dateuntil', 'beta'
     );
 
     // private
@@ -1469,7 +1469,13 @@ class EventsController extends AppController
         $this->set('currentUri', $this->request->here);
         $this->layout = false;
         $this->__eventViewCommon($user);
-        $this->render('/Elements/eventattribute');
+
+        if (!empty($filters['beta'])) {
+            $this->set('distributionData', $this->__genDistributionGraph($event['Event']['id']));
+            $this->render('/Elements/Events/View/event_attributes_beta');
+        } else {
+            $this->render('/Elements/eventattribute');
+        }
     }
 
     /**
