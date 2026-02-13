@@ -1,5 +1,13 @@
 <?php
-    // Logic moved to view_beta.ctp to support tab counts
+    // Pagination logic calculated here to keep EventsController minimal
+    $paging = $this->params->params['paging']['Event'] ?? [];
+    $betaTotalAttributes = $paging['count'] ?? count($event['objects']);
+    $betaPageSize = ($paging['limit'] ?? 0) != 0 ? $paging['limit'] : ($betaTotalAttributes ?: 50);
+    $betaCurrentPage = $paging['page'] ?? 1;
+    $betaTotalPages = $paging['pageCount'] ?? 1;
+    $betaShowStart = ($betaTotalAttributes > 0) ? ($betaCurrentPage - 1) * $betaPageSize + 1 : 0;
+    $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalAttributes);
+    $items = $event['objects'];
 ?>
 
 <style>
@@ -404,7 +412,7 @@
                                         </ul>
                                     </li>
                                     <li class="dropdown-submenu">
-                                        <a href="#"><i class="fa fa-bahai"></i> Galaxies</a>
+                                        <a href="#"><i class="fa fa-bahai"></i> Add Galaxy</a>
                                         <ul class="dropdown-menu">
                                             <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Local</a></li>
                                             <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Global</a></li>
@@ -486,8 +494,8 @@
                                     <?php endif; ?>
                                 </div>
 
-                                <?php if (!empty($item['AttributeTag'])): ?>
-                                    <div class="beta-attr-tags-inline">
+                                <div class="beta-attr-tags-inline beta-attr-tags attributeTagContainer" data-attribute-id="<?php echo h($item['id']); ?>">
+                                    <?php if (!empty($item['AttributeTag'])): ?>
                                         <?php echo $this->element('ajaxTags', [
                                             'attributeId' => $item['id'],
                                             'tags' => $item['AttributeTag'] ?? [],
@@ -497,12 +505,12 @@
                                             'tagConflicts' => $item['tagConflicts'] ?? [],
                                             'static_tags_only' => true,
                                         ]); ?>
-                                    </div>
-                                <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
 
                                 <!-- Galaxies Inline -->
-                                <?php if (!empty($item['Galaxy'])): ?>
-                                    <div class="beta-attr-tags-inline" style="margin-top: 4px;">
+                                <div class="beta-attr-tags-inline beta-attr-galaxies" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
+                                    <?php if (!empty($item['Galaxy'])): ?>
                                         <?php 
                                             $clustersByGalaxy = [];
                                             foreach ($item['Galaxy'] as $galaxy) {
@@ -518,8 +526,8 @@
                                                 ]);
                                             endforeach;
                                         ?>
-                                    </div>
-                                <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </td>
 
@@ -639,7 +647,7 @@
                             $hasGalaxies = !empty($subAttr['Galaxy']);
                             $attributeIsLast = $isLast && !$hasTags && !$hasGalaxies;
                         ?>
-                        <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
+                        <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-primary-id="<?php echo h($subAttr['id']); ?>" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">
@@ -720,8 +728,8 @@
                                         <?php endif; ?>
                                     </div>
 
-                                    <?php if (!empty($subAttr['AttributeTag'])): ?>
-                                        <div class="beta-attr-tags-inline">
+                                    <div class="beta-attr-tags-inline beta-attr-tags attributeTagContainer" data-attribute-id="<?php echo h($subAttr['id']); ?>">
+                                        <?php if (!empty($subAttr['AttributeTag'])): ?>
                                             <?php echo $this->element('ajaxTags', [
                                                 'attributeId' => $subAttr['id'],
                                                 'tags' => $subAttr['AttributeTag'] ?? [],
@@ -731,12 +739,12 @@
                                                 'tagConflicts' => $subAttr['tagConflicts'] ?? [],
                                                 'static_tags_only' => true,
                                             ]); ?>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
 
                                     <!-- Galaxies Inline -->
-                                    <?php if (!empty($subAttr['Galaxy'])): ?>
-                                        <div class="beta-attr-tags-inline" style="margin-top: 4px;">
+                                    <div class="beta-attr-tags-inline beta-attr-galaxies" data-attribute-id="<?php echo h($subAttr['id']); ?>" style="margin-top: 4px;">
+                                        <?php if (!empty($subAttr['Galaxy'])): ?>
                                             <?php 
                                                 $subClustersByGalaxy = [];
                                                 foreach ($subAttr['Galaxy'] as $galaxy) {
@@ -752,8 +760,8 @@
                                                     ]);
                                                 endforeach;
                                             ?>
-                                        </div>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </td>
 
@@ -898,7 +906,7 @@
         var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId
             + '/page:' + effectivePage
             + '/limit:' + (limit === 0 ? 0 : limit)
-            + '/sort:timestamp/direction:desc';
+            + '/sort:timestamp/direction:desc/beta:1';
 
         // Find the container to replace
         var $container = $('.beta-attributes-list').closest('#attributes');
@@ -1044,7 +1052,7 @@
                     var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId
                         + '/searchFor:' + encodeURIComponent(val)
                         + '/page:1/limit:' + window.betaPagination.pageSize
-                        + '/sort:timestamp/direction:desc';
+                        + '/sort:timestamp/direction:desc/beta:1';
                     var $container = $('.beta-attributes-list').closest('#attributes');
                     if (!$container.length) $container = $('.beta-attributes-list').parent();
                     $container.css('opacity', '0.5');
@@ -1185,6 +1193,22 @@
         // Prevent closing when clicking inside the menu
         $(document).on('click.betaAttr', '.beta-row-menu', function(e) {
             e.stopPropagation();
+        });
+
+        // Close dropdown after selecting an action so dialogs are visible
+        $(document).on('click.betaAttr', '.beta-row-menu a', function() {
+            var activeMenu = $('.beta-row-menu.active-moved');
+            if (!activeMenu.length) {
+                return;
+            }
+
+            var oldTrigger = activeMenu.data('trigger');
+            activeMenu.hide().removeClass('active-moved').css({top: '', left: '', position: '', zIndex: ''});
+            if (oldTrigger && oldTrigger[0].parentNode) {
+                oldTrigger.after(activeMenu);
+            } else {
+                activeMenu.remove();
+            }
         });
         
         // Select All checkboxes
