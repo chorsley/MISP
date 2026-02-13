@@ -234,10 +234,19 @@ if (!empty($me)) {
                 ),
                 array(
                     'html' => sprintf(
-                        '<span id="betaUiToggle" style="cursor: pointer;"><i class="fas fa-flask"></i> %s <span class="label %s">%s</span></span>',
+                        '<span id="betaUiToggle" class="setTheme" style="cursor: pointer;" data-theme="UiBeta"><i class="fas fa-flask"></i> %s <span class="label %s">%s</span></span>',
                         __('Beta UI'),
-                        !empty($uiBetaEnabled) ? 'label-success' : 'label-default',
-                        !empty($uiBetaEnabled) ? __('ON') : __('OFF')
+                        'label-default',
+                        __('OFF')
+                    ),
+                    'url' => '#'
+                ),
+                array(
+                    'html' => sprintf(
+                        '<span id="OvermindToggle" class="setTheme" style="cursor: pointer;" data-theme="Overmind"><i class="fas fa-flask"></i> %s <span class="label %s">%s</span></span>',
+                        __('Overmind UI'),
+                        'label-default',
+                        __('OFF')
                     ),
                     'url' => '#'
                 ),
@@ -562,8 +571,13 @@ if (!empty($me)) {
     $today = date('md');
     if ($today >= 1222 && $today <= 1226) {
         $logo = '<span class="logoBlueStatic bold" id="smallLogo" title="' . __('Happy holidays!') .'">M🎄SP</span>';
-    } else if ($today == 1231 || $today == 0101) {
-        $logo = '<span class="logoBlueStatic bold" id="smallLogo" title="' . __('Happy New Year!') .'">🎉 MISP 🎉</span>';
+
+    } else if ($today == 1231 || $today == 0101 || $today == 0102) {
+        echo $this->element('genericElements/assetLoader', [
+            'js' => ['nye'],
+            'css' => ['nye',],
+        ]);
+        $logo = '<span class="misp-fireworks"></span><span class="logoBlueStatic bold" id="smallLogo" title="' . __('Happy New Year!') .'">🎉 MISP 🎉</span>';
     }
     $menu_right = array(
         array(
@@ -659,12 +673,16 @@ if ($isHal) {
 </div>
 <script>
 $(document).ready(function() {
-    $('#betaUiToggle').on('click', function(e) {
+    $('.setTheme').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
+
+        var theme = String($(this).data('theme') || '');
+        var safeTheme = encodeURIComponent(theme);
+
         $.ajax({
             type: 'POST',
-            url: '<?php echo $baseurl; ?>/user_settings/toggleBetaUi',
+            url: '<?php echo $baseurl; ?>/user_settings/setTheme/' + safeTheme,
             success: function(data) {
                 location.reload();
             },

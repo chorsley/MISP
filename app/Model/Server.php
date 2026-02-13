@@ -1440,7 +1440,7 @@ class Server extends AppModel
             $events = $eventModel->find('all', array(
                     'conditions' => $conditions,
                     'recursive' => 1,
-                    'contain' => 'ShadowAttribute',
+                    'contain' => ['ShadowAttribute' => 'Org'],
                     'fields' => array('Event.uuid')
             ));
 
@@ -2189,6 +2189,22 @@ class Server extends AppModel
     {
         if (strpos($value, '$password') === false || strpos($value, '$username') === false || strpos($value, '$misp') === false) {
             return 'The text served to the users must include the following replacement strings: "$username", "$password", "$misp"';
+        }
+        return true;
+    }
+
+    public function testForgotPasswordText($value)
+    {
+        if (strpos($value, '$misp') === false || strpos($value, '$reset_link') === false || strpos($value, '$ip') === false) {
+            return 'The text served to the users must include the following replacement strings: "$misp", "$reset_link", "$ip"';
+        }
+        return true;
+    }
+
+    public function testForgotPasswordTextNoEnc($value)
+    {
+        if (strpos($value, '$misp') === false || strpos($value, '$ip') === false) {
+            return 'The text served to the users must include the following replacement strings: "$misp", "$ip". It can also optionally include "$reset_link".';
         }
         return true;
     }
@@ -4895,6 +4911,82 @@ class Server extends AppModel
         return $servers;
     }
 
+
+
+    /**
+     * @param array $servers
+     * @return array
+     */
+    public function attachRuleDescriptions(array $servers, array $collection): array
+    {
+        $syncOptions = ['pull', 'push'];
+        $fieldOptions = ['tags', 'orgs'];
+
+        if (!empty(Configure::read('MISP.enable_synchronisation_filtering_on_type'))) {
+            $fieldOptions = array_merge($fieldOptions, ['type_attributes', 'type_objects']);
+        }
+
+        $typeOptions = [
+            'OR'  => ['colour' => 'green', 'text' => 'allowed'],
+            'NOT' => ['colour' => 'red',   'text' => 'blocked'],
+        ];
+
+        foreach ($servers as &$server) {
+            $rules = [
+                'push' => json_decode($server['Server']['push_rules'], true),
+                'pull' => json_decode($server['Server']['pull_rules'], true),
+            ];
+
+            $ruleDescription = ['pull' => '', 'push' => ''];
+
+            foreach ($syncOptions as $syncOption) {
+                foreach ($fieldOptions as $fieldOption) {
+                    foreach ($typeOptions as $typeOption => $typeData) {
+                        if (!empty($rules[$syncOption][$fieldOption][$typeOption])) {
+                            $ruleDescription[$syncOption] .=
+                                '<span class="bold">' .
+                                ucfirst($fieldOption) . ' ' . $typeData['text'] .
+                                '</span>: <span class="' . $typeData['colour'] . '">';
+
+                            foreach ($rules[$syncOption][$fieldOption][$typeOption] as $k => $temp) {
+                                if ($k !== 0) {
+                                    $ruleDescription[$syncOption] .= ', ';
+                                }
+
+                                if ($fieldOption === 'orgs') {
+                                    if (!empty($collection[$fieldOption][$temp])) {
+                                        $temp = $collection[$fieldOption][$temp] . ' (' . $temp . ')';
+                                    }
+                                } elseif ($syncOption === 'push') {
+                                    if (!empty($collection[$fieldOption][$temp])) {
+                                        $temp = $collection[$fieldOption][$temp];
+                                    }
+                                }
+
+                                $ruleDescription[$syncOption] .= h($temp);
+                            }
+
+                            $ruleDescription[$syncOption] .= '</span><br>';
+                        }
+                    }
+                }
+
+                if ($syncOption === 'pull' && !empty($rules['pull']['url_params'])) {
+                    $ruleDescription[$syncOption] .= sprintf(
+                        "<span class='bold'>%s</span>: <pre class='jsonify'>%s</pre>",
+                        __('URL params'),
+                        h(json_encode(json_decode($rules['pull']['url_params']), JSON_PRETTY_PRINT))
+                    );
+                }
+            }
+
+            $server['RuleDescription'] = $ruleDescription;
+        }
+
+        unset($server);
+        return $servers;
+    }
+
     /**
      * @return Generator[string, array]
      */
@@ -5278,6 +5370,15 @@ class Server extends AppModel
                     },
                     'afterHook' => 'cleanCacheFiles'
                 ),
+                'enable_themes' => array(
+                    'level' => 0,
+                    'description' => __('Enable themes for users of the instance. Currently this is used to allow users to opt-in to a the various preview/beta modes.'),
+                    'value' => false,
+                    'test' => 'testBool',
+                    'type' => 'boolean',
+                    'null' => true,
+                    'cli_only' => 1
+                ),
                 'default_attribute_memory_coefficient' => array(
                     'level' => 1,
                     'description' => __('This values controls the internal fetcher\'s memory envelope when it comes to attributes. The number provided is the amount of attributes that can be loaded for each MB of PHP memory available in one shot. Consider lowering this number if your instance has a lot of attribute tags / attribute galaxies attached.'),
@@ -5649,6 +5750,13 @@ class Server extends AppModel
                     'type' => 'string',
                     'cli_only' => 1
                 ),
+                'attachments_bucketed' => [
+                    'level' => 2,
+                    'description' => __('By default, MISP stores attachments in a flat structure. Enabling this setting will store attachments in a bucketed structure based on event IDs. This can help improve performance on filesystems that struggle with large numbers of subdirectories in a single directory.'),
+                    'value' => false,
+                    'test' => 'testBool',
+                    'type' => 'boolean',
+                ],
                 'download_attachments_on_load' => array(
                     'level' => 2,
                     'description' => __('Always download attachments when loaded by a user in a browser. It is highly recommended to leave this setting on true, as otherwise opening an attachment can lead to the execution of malicious code via XSS.'),
@@ -5968,6 +6076,22 @@ class Server extends AppModel
                     'test' => 'testPasswordResetText',
                     'type' => 'string'
                 ),
+                'forgotPasswordText' => [
+                    'level' => 1,
+                    'bigField' => true,
+                    'description' => __('The message sent to the users when when they trigger a password reset. The following variables can be used in the message: $misp (misp baseurl), $ip (requestor IP), $reset_link (the link including the reset token for the user to carry out the reset).'),
+                    'value' => 'Dear MISP user,\n\nyou have requested a password reset on the MISP instance at $misp. Click the link below to change your password.\n\n\$reset_link\n\nThe link above is only valid for 10 minutes, feel free to request a new one if it has expired.\n\nIf you haven\'t requested a password reset, reach out to your admin team and let them know that someone has attempted it in your stead.\n\nMake sure you keep the contents of this e-mail confidential, do NOT ever forward it as it contains a reset token that is equivalent of a password if acted upon. The IP used to trigger the request was: $ip\n\nBest regards,\nYour MISP admin team',
+                    'test' => 'testForgotPasswordText',
+                    'type' => 'string'
+                ],
+                'forgotPasswordTextNoEnc' => [
+                    'level' => 1,
+                    'bigField' => true,
+                    'description' => __('The message sent to the users when when they trigger a password reset and no suitable encryption key is found for the user. The following variables can be used in the message: $misp (misp baseurl), $ip (requestor IP). By default no reset_link is sent when the message cannot be encrypted, but you can override this behaviour by also adding the following variable to the message: $reset_link (the link including the reset token for the user to carry out the reset).'),
+                    'value' => 'Dear MISP user,\n\nyou have requested a password reset on the MISP instance at $misp, however, no valid encryption key was found for your user and thus we cannot deliver your reset token. Please get in touch with your org admin / with an instance site admin to ask for a reset.\n\nThe IP used to trigger the request was: $ip\n\nBest regards,\nYour MISP admin team',
+                    'test' => 'testForgotPasswordTextNoEnc',
+                    'type' => 'string'
+                ],
                 'enableEventBlocklisting' => array(
                     'level' => 1,
                     'description' => __('Since version 2.3.107 you can start blocklisting event UUIDs to prevent them from being pushed to your instance. This functionality will also happen silently whenever an event is deleted, preventing a deleted event from being pushed back from another instance.'),
@@ -7820,7 +7944,7 @@ class Server extends AppModel
                 'Sightings_policy' => array(
                     'level' => 1,
                     'description' => __('This setting defines who will have access to seeing the reported sightings. The default setting is the event owner organisation alone (in addition to everyone seeing their own contribution) with the other options being Sighting reporters (meaning the event owner and any organisation that provided sighting data about the event) and Everyone (meaning anyone that has access to seeing the event / attribute).'),
-                    'value' => 0,
+                    'value' => 2,
                     'type' => 'numeric',
                     'options' => array(
                         0 => __('Event Owner Organisation'),

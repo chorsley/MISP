@@ -29,7 +29,7 @@ class EventsController extends AppController
 
     // private
     const ACCEPTED_FILTERING_NAMED_PARAMS = array(
-        'sort', 'direction', 'focus', 'is_extended', 'overrideLimit', 'filterColumnsOverwrite', 'attributeFilter', 'page',
+        'sort', 'direction', 'focus', 'extended', 'is_extended', 'overrideLimit', 'filterColumnsOverwrite', 'attributeFilter', 'page',
         'searchFor', 'proposal', 'correlation', 'warning', 'deleted', 'includeRelatedTags', 'includeDecayScore', 'distribution',
         'taggedAttributes', 'galaxyAttachedAttributes', 'objectType', 'attributeType', 'feed', 'server', 'toIDS',
         'sighting', 'includeSightingdb', 'warninglistId', 'correlationId', 'email', 'eventid', 'datefrom', 'dateuntil', 'beta'
@@ -172,9 +172,12 @@ class EventsController extends AppController
             $subconditions[] = array('Attribute.value2 LIKE' => $v);
             $subconditions[] = array('Attribute.comment LIKE' => $v);
         }
-        $conditions = array(
-            'OR' => $subconditions,
-        );
+        $conditions = [
+            'AND' => [
+                'OR' => $subconditions,
+                'Attribute.deleted' => 0,
+            ]
+        ];
         $result = $this->Event->Attribute->fetchAttributes($this->Auth->user(), array(
             'conditions' => $conditions,
             'flatten' => 1,
@@ -804,10 +807,6 @@ class EventsController extends AppController
             $this->autoRender = false;
             $this->layout = false;
             $this->render('ajax/index');
-        } else if ($uiBetaEnabled) {
-            App::uses('BetaUiHelper', 'Lib/Tools');
-            $viewPath = BetaUiHelper::getViewPath($uiBetaEnabled, 'Events/index');
-            $this->render(str_replace('Events/', '', $viewPath));
         }
     }
 
@@ -4520,6 +4519,8 @@ class EventsController extends AppController
                     if (isset($sa['id'])) {
                         unset($sa['id']);
                     }
+                    $sa['org_id'] = $this->Event->Orgc->captureOrg($sa['Org'], $this->Auth->user());
+                    unset($sa['Org']);
                     $this->Event->ShadowAttribute->create();
                     if (!$this->Event->ShadowAttribute->save(array('ShadowAttribute' => $sa))) {
                         $message = "Some of the proposals could not be saved.";

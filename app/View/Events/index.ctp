@@ -46,7 +46,8 @@
             'discussion' => __('Posts'),
             'report_count' => __('Report count'),
             'timestamp' => __('Last modified at'),
-            'publish_timestamp' => __('Published at')
+            'publish_timestamp' => __('Published at'),
+            'highlights' => __('Highlights'),
         ];
 
         $columnsMenu = [];
@@ -156,9 +157,7 @@
         if (!$ajax) {
             echo $this->element('/genericElements/ListTopBar/scaffold', array('data' => $data));
         }
-        App::uses('BetaUiHelper', 'Lib/Tools');
-        $elementPath = BetaUiHelper::getElementPath(!empty($uiBetaEnabled) ? $uiBetaEnabled : false, 'Events/eventIndexTable');
-        echo $this->element($elementPath);
+        echo $this->element('Events/eventIndexTable');
     ?>
     <p>
     <?php
