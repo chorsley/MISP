@@ -1,7 +1,7 @@
 <?php
 App::uses('AppController', 'Controller');
 App::uses('Xml', 'Utility');
-App::uses('BetaUiHelper', 'Lib/Tools');
+
 
 /**
  * @property Event $Event
@@ -13,6 +13,8 @@ class EventsController extends AppController
         'RequestHandler',
         'IOCImport',
     );
+
+    public $helpers = array('DistributionGraph');
 
     public $paginate = array(
         'limit' => 60,
@@ -782,7 +784,6 @@ class EventsController extends AppController
         $this->set('analysisLevels', $this->Event->analysisLevels);
         $this->set('distributionLevels', $this->Event->distributionLevels);
         $this->set('shortDist', $this->Event->shortDist);
-        $this->set('distributionData', $this->__genDistributionGraph(-1));
         $this->set('urlparams', $urlparams);
         $this->set('passedArgsArray', $passedArgsArray);
         $this->set('passedArgs', json_encode($passedArgs));
@@ -799,9 +800,7 @@ class EventsController extends AppController
             $this->set('extendedEvents', []);
         }
 
-        $this->loadModel('UserSetting');
-        $uiBetaEnabled = $this->UserSetting->isUiBetaEnabled($this->Auth->user('id'));
-        $this->set('uiBetaEnabled', $uiBetaEnabled);
+
 
         if ($this->request->is('ajax')) {
             $this->autoRender = false;
@@ -1468,13 +1467,7 @@ class EventsController extends AppController
         $this->set('currentUri', $this->request->here);
         $this->layout = false;
         $this->__eventViewCommon($user);
-
-        if (!empty($filters['beta'])) {
-            $this->set('distributionData', $this->__genDistributionGraph($event['Event']['id']));
-            $this->render('/Elements/Events/View/event_attributes_beta');
-        } else {
-            $this->render('/Elements/eventattribute');
-        }
+        $this->render('/Elements/eventattribute');
     }
 
     /**
@@ -1740,7 +1733,6 @@ class EventsController extends AppController
             $this->set('firstEventReportId', null);
         }
 
-        $this->set('distributionData', $this->__genDistributionGraph($event['Event']['id']));
         $this->__eventViewCommon($user);
     }
 
@@ -1952,17 +1944,7 @@ class EventsController extends AppController
         }
         $this->__viewUI($user, $event, $continue, $fromEvent);
 
-        if (!$this->request->is('ajax')) {
-            $this->loadModel('UserSetting');
-            $uiBetaEnabled = $this->UserSetting->isUiBetaEnabled($this->Auth->user('id'));
-            
-            if ($uiBetaEnabled) {
-                $viewPath = BetaUiHelper::getViewPath(true, 'Events/view');
-                if ($viewPath !== 'Events/view') {
-                    $this->render(basename($viewPath));
-                }
-            }
-        }
+
     }
 
     /**
@@ -5034,29 +5016,29 @@ class EventsController extends AppController
         return $this->RestResponse->viewData($json, 'json');
     }
 
-    private function __genDistributionGraph($id, $type = 'event', $extended = 0, $user = null)
+    public function getDistributionGraph($id, $type = 'event')
     {
         $validTools = array('event');
         if (!in_array($type, $validTools)) {
             throw new MethodNotAllowedException(__('Invalid type.'));
         }
 
+        App::uses('DistributionGraphTool', 'Tools');
+        $user = $this->Auth->user();
         $this->loadModel('Server');
         $servers = $this->Server->find('column', array(
             'fields' => array('Server.name'),
         ));
-
-        App::uses('DistributionGraphTool', 'Tools');
-        $user = $user ?: $this->Auth->user();
+        $extended = isset($this->params['named']['extended']) ? 1 : 0;
         $grapher = new DistributionGraphTool($this->Event, $servers, $user, $extended);
         $json = $grapher->get_distributions_graph($id);
 
         array_walk_recursive($json, function (&$item, $key) {
-            if (!mb_detect_encoding($item, 'utf-8', true)) {
+            if (is_string($item) && !mb_detect_encoding($item, 'utf-8', true)) {
                 $item = utf8_encode($item);
             }
         });
-        return $json;
+        return $this->RestResponse->viewData($json, 'json');
     }
 
     public function getEventTimeline($id, $type = 'event')
@@ -5088,13 +5070,7 @@ class EventsController extends AppController
         return $this->RestResponse->viewData($json, 'json');
     }
 
-    public function getDistributionGraph($id, $type = 'event')
-    {
-        $user = $this->_closeSession();
-        $extended = isset($this->params['named']['extended']) ? 1 : 0;
-        $json = $this->__genDistributionGraph($id, $type, $extended, $user);
-        return $this->RestResponse->viewData($json, 'json');
-    }
+
 
     public function getEventGraphReferences($id, $type = 'event')
     {

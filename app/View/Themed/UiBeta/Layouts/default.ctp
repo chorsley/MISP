@@ -16,8 +16,6 @@
             ['main', ['preload' => true]],
             ['main-beta', ['preload' => true]],
             ['components-beta', ['preload' => true]],
-            ['layout-beta', ['preload' => true]],
-            ['theme-beta', ['preload' => true]],
             ['print', ['media' => 'print']],
         ];
         if (Configure::read('MISP.custom_css')) {

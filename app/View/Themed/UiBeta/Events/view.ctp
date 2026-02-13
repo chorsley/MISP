@@ -815,7 +815,7 @@
 
             <!-- Attributes Tab -->
             <div role="tabpanel" class="tab-pane" id="attributes">
-                 <?php echo $this->element('Events/View/event_attributes_beta', [
+                 <?php echo $this->element('eventattribute', [
                      'items' => $items,
                      'betaTotalAttributes' => $betaTotalAttributes,
                      'paging' => $paging,

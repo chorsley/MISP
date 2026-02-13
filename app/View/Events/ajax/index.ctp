@@ -15,8 +15,7 @@
             </ul>
         </div>
         <?php
-            App::uses('BetaUiHelper', 'Lib/Tools');
-            echo $this->element(BetaUiHelper::getElementPath(!empty($uiBetaEnabled) ? $uiBetaEnabled : false, 'Events/eventIndexTable'));
+            echo $this->element('Events/eventIndexTable');
         ?>
         <p>
         <?php

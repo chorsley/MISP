@@ -425,10 +425,6 @@ class UserSettingsController extends AppController
      */
     public function setTheme($theme)
     {
-        if (!$this->request->is('post')) {
-            throw new MethodNotAllowedException(__('Expecting POST request.'));
-        }
-
         $userId = $this->Auth->user('id');
         $validThemes = array_flip($this->UserSetting::VALID_SETTINGS['ui_theme']['options']);
         if (!isset($validThemes[$theme])) {
@@ -441,10 +437,21 @@ class UserSettingsController extends AppController
 
         if ($result) {
             $message = __('%s theme set. The page will now reload.', $theme);
-            return $this->RestResponse->saveSuccessResponse('UserSettings', 'setTheme', false, 'json', $message);
+            if ($this->_isRest()) {
+                return $this->RestResponse->saveSuccessResponse('UserSettings', 'setTheme', false, 'json', $message);
+            } else {
+                $this->Flash->success($message);
+                $this->redirect($this->referer());
+            }
         } else {
             $message = __('Failed to set %s theme.', $theme);
-            return $this->RestResponse->saveFailResponse('UserSettings', 'setTheme', false, $message, 'json');
+            if ($this->_isRest()) {
+                return $this->RestResponse->saveFailResponse('UserSettings', 'setTheme', false, $message, 'json');
+            } else {
+                $this->Flash->error($message);
+                $this->redirect($this->referer());
+            }
         }
     }
+
 }
