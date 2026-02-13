@@ -257,6 +257,11 @@
         right: 0;
         top: 100%;
     }
+    .beta-row-menu.active-moved {
+        right: auto;
+        width: max-content;
+        max-width: 320px;
+    }
     .beta-row-menu ul {
         list-style: none;
         padding: 0;
