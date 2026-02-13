@@ -1840,6 +1840,9 @@ class EventsController extends AppController
                 $conditions['includeCustomGalaxyCluster'] = 1;
             }
         }
+        if (!empty($namedParams['noSightings'])) {
+            $conditions['noSightings'] = 1;
+        }
         if (!empty($namedParams['extended']) || !empty($this->request->data['extended'])) {
             $conditions['extended'] = 1;
             $this->set('extended', 1);

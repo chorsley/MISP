@@ -544,6 +544,7 @@ class Server extends AppModel
             'includeEventCorrelations' => 0, // we don't need remote correlations
             'includeFeedCorrelations' => 0,
             'includeWarninglistHits' => 0, // we don't need remote warninglist hits
+            'noSightings' => 1
         ];
         if (empty($serverSync->server()['Server']['internal'])) {
             $params['excludeLocalTags'] = 1;
@@ -1715,6 +1716,12 @@ class Server extends AppModel
         return $languages;
     }
 
+    public function loadAvailableThemes()
+    {
+        $this->UserSetting = ClassRegistry::init('UserSetting');
+        return array_flip($this->UserSetting::VALID_SETTINGS['ui_theme']['options']);
+    }
+
     public function testLanguage($value)
     {
         $languages = $this->loadAvailableLanguages();
@@ -1768,6 +1775,15 @@ class Server extends AppModel
     {
         if (!is_numeric($value)) {
             return __('This setting has to be a number.');
+        }
+        return true;
+    }
+
+    public function testTheme($value)
+    {
+        $themes = $this->loadAvailableThemes();
+        if (!isset($themes[$value])) {
+            return __('Invalid theme.');
         }
         return true;
     }
@@ -5379,6 +5395,18 @@ class Server extends AppModel
                     'null' => true,
                     'cli_only' => 1
                 ),
+                'default_theme' => array(
+                    'level' => 2,
+                    'description' => __('Set a default theme for the instance. This is mostly used for developer purposes for now, but will be more interesting in the future.'),
+                    'value' => false,
+                    'test' => 'testTheme',
+                    'type' => 'string',
+                    'optionsSource' => function () {
+                        return $this->loadAvailableThemes();
+                    },
+                    'null' => true,
+                    'cli_only' => 1
+                ),
                 'default_attribute_memory_coefficient' => array(
                     'level' => 1,
                     'description' => __('This values controls the internal fetcher\'s memory envelope when it comes to attributes. The number provided is the amount of attributes that can be loaded for each MB of PHP memory available in one shot. Consider lowering this number if your instance has a lot of attribute tags / attribute galaxies attached.'),
@@ -6686,7 +6714,7 @@ class Server extends AppModel
                 ],
                 'download_gpg_from_homedir' => [
                     'level' => self::SETTING_OPTIONAL,
-                    'description' => __('Fetch GPG instance key from GPG homedir.'),
+                    'description' => __('Fetch GPG instance key from GPG keyring. Be careful a user with the email address used for the instance key can override the instance key when using the keyring.'),
                     'value' => false,
                     'test' => 'testBool',
                     'type' => 'boolean',
@@ -7010,6 +7038,15 @@ class Server extends AppModel
                     'value' => false,
                     'test' => null,
                     'type' => 'string',
+                    'cli_only' => 1
+                ),
+                'workflow_enable_arbitrary_urls' => array(
+                    'level' => 0,
+                    'description' => __('Enable this setting if you wish for users to be able to query any arbitrary URL via workflows. Keep in mind that queries are executed by the MISP server, so internal IPs in your MISP\'s network may be reachable. Only a compromised site-admin account could cause damage.'),
+                    'value' => false,
+                    'test' => 'testBool',
+                    'type' => 'boolean',
+                    'null' => true,
                     'cli_only' => 1
                 ),
                 'syslog' => array(
