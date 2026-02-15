@@ -224,4 +224,15 @@ class CorrelationsController extends AppController
         $this->Flash->info($message);
         $this->redirect(['controller' => 'correlations', 'action' => 'overCorrelations']);
     }
+
+    public function eventCorrelations($eventId)
+    {
+        if (!$this->Auth->user()) {
+            throw new ForbiddenException();
+        }
+        $this->loadModel('Event');
+        $sgids = $this->Event->SharingGroup->authorizedIds($this->Auth->user());
+        $correlations = $this->Correlation->getAttributesRelatedToEvent($this->Auth->user(), $eventId, $sgids);
+        return $this->RestResponse->viewData($correlations, 'json');
+    }
 }
