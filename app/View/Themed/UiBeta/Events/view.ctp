@@ -1,7 +1,7 @@
 <?php
     echo $this->element('genericElements/assetLoader', [
         'css' => ['main-beta', 'components-beta', 'query-builder.default', 'attack_matrix', 'analyst-data'],
-        'js' => ['doT', 'extendext', 'moment.min', 'query-builder', 'network-distribution-graph', 'd3', 'd3.custom', 'jquery-ui.min', 'beta-events-timestamps'],
+        'js' => ['doT', 'extendext', 'moment.min', 'query-builder', 'network-distribution-graph', 'd3', 'd3.custom', 'jquery-ui.min', 'beta-events-timestamps', 'd3-sankey.min'],
     ]);
 ?>
 
@@ -830,15 +830,21 @@
             
             <!-- Other Tabs Placeholders -->
              <div role="tabpanel" class="tab-pane" id="correlations">
-                <h3><?php echo __('Correlations'); ?></h3>
-                <div id="correlations-loader" style="text-align: center; padding: 20px;">
-                    <i class="fa fa-spinner fa-spin fa-2x"></i>
-                    <p><?php echo __('Loading correlations...'); ?></p>
-                </div>
-                <div id="correlations-content" style="display: none;">
-                    <div id="correlation-filter-controls" style="display: none; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;"><?php echo __('Correlations'); ?></h3>
+                    <div id="correlation-filter-controls" style="display: none;">
                         <span id="correlation-filter-msg" class="label label-info" style="font-size: 12px;"></span>
                         <button id="correlation-reset-btn" class="btn btn-default btn-xs" onclick="resetCorrelationFilter()"><i class="fa fa-times"></i> <?php echo __('Clear Filter'); ?></button>
+                    </div>
+                </div>
+                <div id="correlations-loader" style="text-align: center; padding: 40px;">
+                    <i class="fa fa-spinner fa-spin fa-3x" style="color: #428bca; margin-bottom: 15px;"></i>
+                    <p style="color: #666; font-size: 1.1em;"><?php echo __('Analyzing correlations...'); ?></p>
+                </div>
+                <div id="correlations-content" style="display: none;">
+                    <div id="correlations-sankey-container" style="margin-bottom: 30px; background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; display: none;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #555;"><?php echo __('Correlation Flow'); ?></h4>
+                        <div id="correlations-sankey" style="width: 100%; height: 400px;"></div>
                     </div>
                     <div id="correlations-table-container"></div>
                 </div>
@@ -1227,71 +1233,339 @@
         }
 
         function renderCorrelations(data) {
-            var grouped = [];
             var eventCounts = {};
             var eventDetails = {};
+            var attributeMap = {};
 
-            // Process data into grouped structure
+            // Process data
             for (var parentId in data) {
                 var relations = data[parentId];
                 relations.forEach(function(rel) {
                     var eid = rel.id;
                     if (!eventCounts[eid]) {
                         eventCounts[eid] = 0;
-                        eventDetails[eid] = {info: rel.info, date: rel.date};
+                        eventDetails[eid] = {info: rel.info, date: rel.date, org: rel.org_id};
                     }
                     eventCounts[eid]++;
+                    
+                    if (!attributeMap[eid]) attributeMap[eid] = [];
+                    attributeMap[eid].push({
+                        id: parentId,
+                        value: rel.value || parentId, // Fallback to ID if value not present
+                        type: rel.type || ''
+                    });
                 });
             }
 
-            var html = '';
-            // Top Events
             var sortedEvents = Object.keys(eventCounts).sort(function(a,b){return eventCounts[b]-eventCounts[a]});
-            if (sortedEvents.length > 0) {
-                var top = sortedEvents; // Show all unique events
-                var max = eventCounts[sortedEvents[0]];
-                html += '<div class="row-fluid" style="margin-bottom: 25px;"><div class="span12">';
-                html += '<h4 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #555;"><?php echo __('Top Related Events'); ?></h4>';
-                html += '<div class="beta-card" style="padding: 15px; background: #fff; max-height: 400px; overflow-y: auto;">';
-                top.forEach(function(eid) {
-                    var count = eventCounts[eid];
-                    var details = eventDetails[eid];
-                    var percent = (count / max) * 100;
-                    html += '<div style="margin-bottom: 12px; display: flex; align-items: center; gap: 15px;">';
-                    html += '<div style="width: 40%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: baseline; gap: 8px;">';
-                    html += '<a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 600; font-size: 13px;">#' + eid + '</a>';
-                    html += '<span class="muted" style="font-size: 11px; min-width: 70px;">' + details.date + '</span>';
-                    html += '<span style="font-size: 12px; color: #555; overflow: hidden; text-overflow: ellipsis;" title="' + details.info + '">' + details.info + '</span></div>';
-                    html += '<div style="flex-grow: 1; height: 18px; background: #f0f0f0; border-radius: 3px; position: relative;">';
-                    html += '<div style="width: ' + percent + '%; height: 100%; background: #428bca; border-radius: 3px; opacity: 0.8;"></div>';
-                    html += '<div style="position: absolute; right: 8px; top: 0; line-height: 18px; font-size: 10px; color: #666; font-weight: bold;">' + count + ' matches</div></div></div>';
-                });
-                html += '</div></div></div>';
+            if (sortedEvents.length === 0) {
+                $('#correlations-table-container').html('<p class="muted"><?php echo __('No correlations found.'); ?></p>');
+                return;
             }
 
-            // Table
-            html += '<table class="table table-hover table-condensed table-bordered" id="correlations-table"><thead><tr>';
-            html += '<th><?php echo __('Attribute ID'); ?></th><th><?php echo __('Related Event'); ?></th><th style="width: 100px;"><?php echo __('Date'); ?></th>';
-            html += '</tr></thead><tbody>';
+            var max = eventCounts[sortedEvents[0]];
+            var html = '<div class="beta-correlations-container">';
             
-            for (var parentId in data) {
-                var relations = data[parentId];
-                relations.sort(function(a,b){ return b.date.localeCompare(a.date); });
-                relations.forEach(function(rel, index) {
-                    html += '<tr data-attribute-id="' + parentId + '">';
-                    if (index === 0) {
-                        html += '<td rowspan="' + relations.length + '" style="vertical-align: middle; background-color: #fbfbfb;">' + parentId + '</td>';
+            sortedEvents.forEach(function(eid) {
+                var count = eventCounts[eid];
+                var details = eventDetails[eid];
+                var percent = (count / max) * 100;
+                var attrs = attributeMap[eid];
+                
+                html += '<div class="beta-card correlation-event-card" style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
+                html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8fbfe;">';
+                html += '    <div style="display: flex; align-items: center; gap: 10px;">';
+                html += '      <a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 700; font-size: 1.1em;">#' + eid + ' ' + details.info + '</a>';
+                html += '      <span class="label label-default" style="font-weight: normal;">' + details.date + '</span>';
+                html += '    </div>';
+                html += '    <div style="text-align: right;">';
+                html += '      <span style="font-size: 12px; font-weight: 600; color: #666;">' + count + ' ' + (count === 1 ? 'match' : 'matches') + '</span>';
+                html += '      <div style="width: 100px; height: 4px; background: #eee; border-radius: 2px; margin-top: 4px;">';
+                html += '        <div style="width: ' + percent + '%; height: 100%; background: #428bca; border-radius: 2px;"></div>';
+                html += '      </div>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '  <div class="beta-card-body" style="padding: 10px 15px;">';
+                html += '    <div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+                
+                // Show unique correlating values as tags
+                var uniqueValues = {};
+                attrs.forEach(function(a) {
+                    if (!uniqueValues[a.value]) {
+                        uniqueValues[a.value] = true;
+                        html += '<span class="label label-info" style="background-color: #ebf5fb; color: #31708f; border: 1px solid #d1e9f5; font-weight: normal; padding: 4px 8px; cursor: pointer;" onclick="$(\'#beta-attr-search\').val(\'' + a.value + '\').trigger(\'keyup\'); $(\'a[href=\\\'#attributes\\\']\').tab(\'show\');" title="<?php echo __('Click to filter attributes'); ?>">' + a.value + '</span>';
                     }
-                    html += '<td><a href="<?php echo $baseurl; ?>/events/view/' + rel.id + '" style="font-weight: 600;">#' + rel.id + ' ' + rel.info + '</a></td>';
-                    html += '<td style="white-space: nowrap; color: #666;">' + rel.date + '</td></tr>';
                 });
-            }
-            html += '</tbody></table>';
+                
+                html += '    </div>';
+                html += '  </div>';
+                html += '</div>';
+            });
             
-            if (Object.keys(data).length === 0) {
-                html = '<p class="muted"><?php echo __('No correlations found.'); ?></p>';
-            }
+            html += '</div>';
             $('#correlations-table-container').html(html);
+            
+            renderSankey(data, eventDetails);
+        }
+
+        function renderSankey(data, eventDetails) {
+            var nodes = [];
+            var links = [];
+            var nodeMap = {};
+            var currentEventId = '<?php echo h($event['Event']['id']); ?>';
+            var currentEventName = 'Event #' + currentEventId;
+            if ('<?php echo addslashes(h($event['Event']['info'])); ?>') {
+                currentEventName += ': ' + '<?php echo addslashes(h($event['Event']['info'])); ?>';
+            }
+            
+            function addNode(name, type, id) {
+                var key = name + '_' + type;
+                if (nodeMap[key] === undefined) {
+                    nodeMap[key] = nodes.length;
+                    nodes.push({name: name, type: type, id: id});
+                }
+                return nodeMap[key];
+            }
+
+            var sourceIdx = addNode(currentEventName, 'source');
+            
+            // Limit to top correlations to keep diagram readable
+            var parentIds = Object.keys(data);
+            if (parentIds.length > 20) parentIds = parentIds.slice(0, 20);
+
+            parentIds.forEach(function(parentId) {
+                var relations = data[parentId];
+                var attrValue = relations[0].value || ('Attr #' + parentId);
+                var attrIdx = addNode(attrValue, 'attribute', parentId);
+                
+                links.push({
+                    source: sourceIdx,
+                    target: attrIdx,
+                    value: relations.length
+                });
+
+                relations.forEach(function(rel) {
+                    var targetEventName = 'Event #' + rel.id;
+                    var fullTitle = targetEventName;
+                    if (rel.info) {
+                        fullTitle += ': ' + rel.info;
+                        targetEventName += ': ' + rel.info;
+                    }
+                    var targetIdx = addNode(targetEventName, 'target', rel.id);
+                    nodes[targetIdx].fullTitle = fullTitle;
+                    
+                    links.push({
+                        source: attrIdx,
+                        target: targetIdx,
+                        value: 1
+                    });
+                });
+            });
+
+            if (links.length === 0) return;
+            $('#correlations-sankey-container').show();
+
+            var margin = {top: 10, right: 350, bottom: 10, left: 10},
+                width = $('#correlations-sankey').width() - margin.left - margin.right,
+                height = 400 - margin.top - margin.bottom;
+
+            $('#correlations-sankey').empty();
+            var svg = d3.select("#correlations-sankey").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var sankey = d3.sankey()
+                .nodeWidth(15)
+                .nodePadding(10)
+                .extent([[1, 1], [width - 1, height - 6]]);
+
+            var graph = sankey({
+                nodes: nodes.map(function(d) { return Object.assign({}, d); }),
+                links: links.map(function(d) { return Object.assign({}, d); })
+            });
+
+            // D3 v3 compatibility for scale and color
+            var color = d3.scale ? d3.scale.category10() : (d3.scaleOrdinal ? d3.scaleOrdinal(d3.schemeCategory10) : function() { return '#428bca'; });
+
+            // D3 v3 compatibility: use enter().append() instead of join()
+            svg.append("g")
+                .selectAll("rect")
+                .data(graph.nodes)
+                .enter()
+                .append("rect")
+                .attr("x", function(d) { return d.x0; })
+                .attr("y", function(d) { return d.y0; })
+                .attr("height", function(d) { return d.y1 - d.y0; })
+                .attr("width", function(d) { return d.x1 - d.x0; })
+                .attr("fill", function(d) { return typeof color === 'function' ? color(d.type) : color; })
+                .attr("cursor", function(d) { return (d.type === 'target' || d.type === 'attribute') ? 'pointer' : 'default'; })
+                .on("click", function(d) {
+                    if (d.type === 'target' && d.id) {
+                        window.location.href = '<?php echo $baseurl; ?>/events/view/' + d.id;
+                    } else if (d.type === 'attribute' && d.id) {
+                        filterCorrelations(d.id);
+                    }
+                })
+                .on("mouseover", function(d) {
+                    if (d.type === 'attribute' || d.type === 'target') {
+                        svg.selectAll(".sankey-link")
+                            .transition()
+                            .duration(200)
+                            .style("stroke-opacity", function(l) {
+                                return (l.source === d || l.target === d || (d.type === 'target' && l.target === d) || (d.type === 'attribute' && (l.source === d || l.target === d))) ? 0.5 : 0.1;
+                            });
+                        svg.selectAll(".sankey-label")
+                            .transition()
+                            .duration(200)
+                            .style("opacity", function(n) {
+                                if (n === d) return 1;
+                                if (d.type === 'attribute') {
+                                    // Highlight source and targets connected to this attribute
+                                    var connected = false;
+                                    graph.links.forEach(function(l) {
+                                        if ((l.source === d && l.target === n) || (l.target === d && l.source === n)) connected = true;
+                                    });
+                                    return connected ? 1 : 0.1;
+                                } else if (d.type === 'target') {
+                                    // Highlight source and attributes connected to this target
+                                    var connected = false;
+                                    graph.links.forEach(function(l) {
+                                        if (l.target === d && l.source === n) {
+                                            connected = true;
+                                        } else if (l.target === d) {
+                                            // Also check if n is source connected via an attribute
+                                            graph.links.forEach(function(l2) {
+                                                if (l2.target === l.source && l2.source === n) connected = true;
+                                            });
+                                        }
+                                    });
+                                    return connected ? 1 : 0.1;
+                                }
+                                return 0.1;
+                            });
+                    }
+                })
+                .on("mouseout", function(d) {
+                    if (d.type === 'attribute' || d.type === 'target') {
+                        svg.selectAll(".sankey-link")
+                            .transition()
+                            .duration(200)
+                            .style("stroke-opacity", 0.5);
+                        svg.selectAll(".sankey-label")
+                            .transition()
+                            .duration(200)
+                            .style("opacity", 1);
+                    }
+                })
+                .append("title")
+                .text(function(d) { return d.fullTitle || d.name; });
+
+            var link = svg.append("g")
+                .attr("fill", "none")
+                .attr("stroke-opacity", 0.5)
+                .selectAll("path")
+                .data(graph.links)
+                .enter()
+                .append("path")
+                .attr("class", "sankey-link")
+                .attr("d", function(d) {
+                    var x0 = d.source.x1,
+                        x1 = d.target.x0,
+                        xi = d3.interpolateNumber(x0, x1),
+                        x2 = xi(0.5),
+                        x3 = xi(0.5),
+                        y0 = d.y0,
+                        y1 = d.y1;
+                    return "M" + x0 + "," + y0
+                         + "C" + x2 + "," + y0
+                         + " " + x3 + "," + y1
+                         + " " + x1 + "," + y1;
+                })
+                .attr("stroke", function(d) { return typeof color === 'function' ? color(d.source.type) : color; })
+                .attr("stroke-width", function(d) { return Math.max(1, d.width); });
+
+            svg.append("g")
+                .style("font", "10px sans-serif")
+                .selectAll("text")
+                .data(graph.nodes)
+                .enter()
+                .append("text")
+                .attr("class", "sankey-label")
+                .attr("x", function(d) { return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6; })
+                .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
+                .attr("dy", "0.35em")
+                .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; })
+                .attr("cursor", function(d) { return (d.type === 'target' || d.type === 'attribute') ? 'pointer' : 'default'; })
+                .style("font-weight", function(d) { return (d.type === 'target' || d.type === 'attribute') ? 'bold' : 'normal'; })
+                .on("click", function(d) {
+                    if (d.type === 'target' && d.id) {
+                        window.location.href = '<?php echo $baseurl; ?>/events/view/' + d.id;
+                    } else if (d.type === 'attribute' && d.id) {
+                        filterCorrelations(d.id);
+                    }
+                })
+                .on("mouseover", function(d) {
+                    if (d.type === 'attribute' || d.type === 'target') {
+                        svg.selectAll(".sankey-link")
+                            .transition()
+                            .duration(200)
+                            .style("stroke-opacity", function(l) {
+                                var isConnected = (l.source === d || l.target === d);
+                                if (!isConnected && d.type === 'target') {
+                                    // Check if this link is part of the path to the target
+                                    graph.links.forEach(function(l2) {
+                                        if (l2.target === d && l2.source === l.target && l.source.type === 'source') isConnected = true;
+                                    });
+                                }
+                                return isConnected ? 0.5 : 0.1;
+                            });
+                        svg.selectAll(".sankey-label")
+                            .transition()
+                            .duration(200)
+                            .style("opacity", function(n) {
+                                if (n === d) return 1;
+                                if (d.type === 'attribute') {
+                                    var connected = false;
+                                    graph.links.forEach(function(l) {
+                                        if ((l.source === d && l.target === n) || (l.target === d && l.source === n)) connected = true;
+                                    });
+                                    return connected ? 1 : 0.1;
+                                } else if (d.type === 'target') {
+                                    var connected = false;
+                                    graph.links.forEach(function(l) {
+                                        if (l.target === d && l.source === n) {
+                                            connected = true;
+                                        } else if (l.target === d) {
+                                            graph.links.forEach(function(l2) {
+                                                if (l2.target === l.source && l2.source === n) connected = true;
+                                            });
+                                        }
+                                    });
+                                    return connected ? 1 : 0.1;
+                                }
+                                return 0.1;
+                            });
+                    }
+                })
+                .on("mouseout", function(d) {
+                    if (d.type === 'attribute' || d.type === 'target') {
+                        svg.selectAll(".sankey-link")
+                            .transition()
+                            .duration(200)
+                            .style("stroke-opacity", 0.5);
+                        svg.selectAll(".sankey-label")
+                            .transition()
+                            .duration(200)
+                            .style("opacity", 1);
+                    }
+                })
+                .text(function(d) {
+                    if (d.type === 'source') return d.name;
+                    var maxLength = d.x0 < width / 2 ? 50 : 70;
+                    return d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
+                });
         }
 
         $('#publishedToggle').change(function() {
@@ -1330,7 +1604,10 @@
         });
     });
     function filterCorrelations(attributeId) {
-        $('.nav-tabs a[href="#correlations"]').tab('show');
+        $('.nav-tabs a[href="#attributes"]').tab('show');
+        if (attributeId && typeof filterAttributes === 'function') {
+            filterAttributes(attributeId);
+        }
         var rows = $('#correlations-table tbody tr');
         if (attributeId) {
             rows.hide();
