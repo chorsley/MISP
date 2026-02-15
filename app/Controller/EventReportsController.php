@@ -370,11 +370,7 @@ class EventReportsController extends AppController
                 $this->set('extendingEvent', !empty($filters['extending_event']));
                 $fetcherModule = $this->EventReport->isFetchURLModuleEnabled();
                 $this->set('importModuleEnabled', is_array($fetcherModule));
-                if (!empty($filters['beta'])) {
-                    $this->render('ajax/indexForEvent_beta');
-                } else {
-                    $this->render('ajax/indexForEvent');
-                }
+                $this->render('ajax/indexForEvent');
             } else {
                 $this->set('title_for_layout', __('Event Reports'));
                 $this->set('canModify', false);

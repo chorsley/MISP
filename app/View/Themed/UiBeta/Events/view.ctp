@@ -680,7 +680,7 @@
                                  </span>
                                  <hr>
                                  <strong><?php echo __('Galaxies'); ?></strong><br>
-                                 <div class="beta-galaxies-container" style="margin-top: 5px;">
+                                 <div class="beta-galaxies-container" id="galaxies_div" style="margin-top: 5px;">
                                    <?php
                                        if (!empty($event['Galaxy'])) {
                                            foreach ($event['Galaxy'] as $galaxy) {

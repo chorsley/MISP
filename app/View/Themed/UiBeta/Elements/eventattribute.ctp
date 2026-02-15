@@ -264,12 +264,12 @@
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 2px;
-        opacity: 0.4;
-        transition: opacity 0.2s;
+        /* opacity: 0.4; Removed as per user request */
+        /* transition: opacity 0.2s; */
     }
-    .beta-attr-row:hover .beta-attr-tags-inline {
+    /*.beta-attr-row:hover .beta-attr-tags-inline {
         opacity: 1;
-    }
+    }*/
     .beta-attr-value-container {
         display: flex;
         align-items: flex-start;
@@ -509,7 +509,7 @@
                                 </div>
 
                                 <!-- Galaxies Inline -->
-                                <div class="beta-attr-tags-inline beta-attr-galaxies" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
+                                <div class="beta-attr-tags-inline beta-attr-galaxies" id="attribute_<?php echo $item['id']; ?>_galaxy" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
                                     <?php if (!empty($item['Galaxy'])): ?>
                                         <?php 
                                             $clustersByGalaxy = [];
