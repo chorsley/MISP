@@ -233,6 +233,41 @@ class CorrelationsController extends AppController
         $this->loadModel('Event');
         $sgids = $this->Event->SharingGroup->authorizedIds($this->Auth->user());
         $correlations = $this->Correlation->getAttributesRelatedToEvent($this->Auth->user(), $eventId, $sgids);
+        if ($this->request->query('extended')) {
+            $attributeIds = [];
+            foreach ($correlations as $parentId => $relations) {
+                foreach ($relations as $rel) {
+                    $attributeIds[] = $rel['attribute_id'];
+                }
+            }
+            if (!empty($attributeIds)) {
+                $this->loadModel('MispAttribute');
+                $attributes = $this->MispAttribute->find('all', [
+                    'conditions' => ['Attribute.id' => $attributeIds],
+                    'contain' => [
+                        'AttributeTag' => ['Tag'],
+                        'SharingGroup' => ['fields' => ['SharingGroup.name']],
+                        'Object' => ['fields' => ['Object.id', 'Object.name']]
+                    ]
+                ]);
+                $attributeDetails = [];
+                foreach ($attributes as $attr) {
+                    $attributeDetails[$attr['Attribute']['id']] = $attr;
+                }
+                foreach ($correlations as $parentId => &$relations) {
+                    foreach ($relations as &$rel) {
+                        if (isset($attributeDetails[$rel['attribute_id']])) {
+                            $rel['Attribute'] = $attributeDetails[$rel['attribute_id']]['Attribute'];
+                            $rel['Attribute']['AttributeTag'] = $attributeDetails[$rel['attribute_id']]['AttributeTag'];
+                            $rel['Attribute']['SharingGroup'] = $attributeDetails[$rel['attribute_id']]['SharingGroup'];
+                            if (!empty($attributeDetails[$rel['attribute_id']]['Object'])) {
+                                $rel['Attribute']['Object'] = $attributeDetails[$rel['attribute_id']]['Object'];
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return $this->RestResponse->viewData($correlations, 'json');
     }
 }

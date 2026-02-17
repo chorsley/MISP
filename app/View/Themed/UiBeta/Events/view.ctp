@@ -1219,7 +1219,7 @@
             if ($('#correlations-table').length > 0) return;
             var eventId = '<?php echo h($event['Event']['id']); ?>';
             $.ajax({
-                url: '<?php echo $baseurl; ?>/correlations/eventCorrelations/' + eventId + '.json',
+                url: '<?php echo $baseurl; ?>/correlations/eventCorrelations/' + eventId + '.json?extended=1',
                 type: 'GET',
                 success: function(response) {
                     $('#correlations-loader').hide();
@@ -1252,7 +1252,8 @@
                     attributeMap[eid].push({
                         id: parentId,
                         value: rel.value || parentId, // Fallback to ID if value not present
-                        type: rel.type || ''
+                        type: rel.type || '',
+                        attribute: rel.Attribute || null
                     });
                 });
             }
@@ -1285,19 +1286,93 @@
                 html += '      </div>';
                 html += '    </div>';
                 html += '  </div>';
-                html += '  <div class="beta-card-body" style="padding: 10px 15px;">';
-                html += '    <div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+                html += '  <div class="beta-card-body" style="padding: 0;">';
+                html += '    <table class="beta-attr-table" style="margin-top: 0;">';
+                html += '      <tbody>';
                 
-                // Show unique correlating values as tags
-                var uniqueValues = {};
                 attrs.forEach(function(a) {
-                    if (!uniqueValues[a.value]) {
-                        uniqueValues[a.value] = true;
-                        html += '<span class="label label-info" style="background-color: #ebf5fb; color: #31708f; border: 1px solid #d1e9f5; font-weight: normal; padding: 4px 8px; cursor: pointer;" onclick="$(\'#beta-attr-search\').val(\'' + a.value + '\').trigger(\'keyup\'); $(\'a[href=\\\'#attributes\\\']\').tab(\'show\');" title="<?php echo __('Click to filter attributes'); ?>">' + a.value + '</span>';
+                    var attr = a.attribute;
+                    if (attr) {
+                        html += '        <tr class="beta-attr-row standalone-attr-row">';
+                        html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-link" style="color: #ccc;"></i></td>';
+                        html += '          <td colspan="2">';
+                        html += '            <div class="beta-attr-meta-block">';
+                        html += '              <div class="beta-attr-type-path">';
+                        html += '                <span class="beta-category-label">' + attr.category + '</span>';
+                        html += '                <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>';
+                        html += '                <span class="beta-type-insight">' + attr.type + '</span>';
+                        if (attr.Object) {
+                            html += '                <i class="fa fa-cube" style="font-size: 10px; color: #31708f; margin-left: 5px;"></i>';
+                            html += '                <span class="beta-object-relation-insight">' + attr.Object.name + '</span>';
+                        }
+                        html += '              </div>';
+                        html += '              <div class="beta-attr-value-container">';
+                        html += '                <span class="attr-value">' + attr.value + '</span>';
+                        html += '              </div>';
+                        
+                        if (attr.AttributeTag && attr.AttributeTag.length > 0) {
+                            html += '              <div class="beta-attr-tags-inline">';
+                            attr.AttributeTag.forEach(function(at) {
+                                var tag = at.Tag;
+                                var tagColor = tag.colour || '#0088cc';
+                                var hex = tagColor.replace('#', '');
+                                var r, g, b;
+                                if (hex.length === 3) {
+                                    r = parseInt(hex[0] + hex[0], 16);
+                                    g = parseInt(hex[1] + hex[1], 16);
+                                    b = parseInt(hex[2] + hex[2], 16);
+                                } else {
+                                    r = parseInt(hex.substring(0, 2), 16);
+                                    g = parseInt(hex.substring(2, 4), 16);
+                                    b = parseInt(hex.substring(4, 6), 16);
+                                }
+                                var rgba = 'rgba(' + r + ', ' + g + ', ' + b + ', 0.7)';
+                                var luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+                                var iconColor = luminance > 0.5 ? '#000' : '#fff';
+                                
+                                html += '<div class="tag-container" style="display: inline-flex; align-items: center; margin-right: 4px; margin-bottom: 2px;">';
+                                html += '  <span class="tag-scope-icon" style="background-color: ' + rgba + '; color: ' + iconColor + '; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px 0 0 4px; border: 1px solid #d0d0d0; border-right: none;"><i class="fas fa-' + (tag.local ? 'user' : 'globe-americas') + '" style="font-size: 11px;"></i></span>';
+                                html += '  <span class="tag nowrap" style="background-color: transparent; border: 1px solid #d0d0d0; color: #000; padding: 3px 8px; font-size: 12px; border-radius: 0 4px 4px 0;">' + tag.name + '</span>';
+                                html += '</div>';
+                            });
+                            html += '              </div>';
+                        }
+                        html += '            </div>';
+                        html += '          </td>';
+                        html += '          <td class="col-related"></td>';
+                        html += '          <td class="col-comment" style="width: 20%;">';
+                        if (attr.comment) {
+                            if (attr.comment.length > 50) {
+                                html += attr.comment.substring(0, 50) + '... ';
+                                html += '<i class="fa fa-comment-dots" style="cursor: pointer;" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' + attr.comment + '"></i>';
+                            } else {
+                                html += attr.comment;
+                            }
+                        }
+                        html += '          </td>';
+                        html += '          <td style="text-align: center;">';
+                        html += '            <i class="fa fa-shield-alt" style="font-size: 1.5em; ' + (attr.to_ids ? 'color: #ff8c00;' : 'opacity: 0.2;') + '" title="' + (attr.to_ids ? 'Recommended for blocking / alerting' : 'Not recommended for blocking / alerting') + '"></i>';
+                        html += '          </td>';
+                        html += '          <td class="col-correlation" style="text-align: center;">';
+                        html += '            <i class="fa fa-project-diagram" style="' + (attr.disable_correlation ? 'opacity: 0.2;' : 'color: #428bca;') + '" title="' + (attr.disable_correlation ? 'Correlation disabled' : 'Correlation enabled') + '"></i>';
+                        html += '          </td>';
+                        html += '          <td class="col-sightings" style="text-align: center;"><i class="fa fa-eye" style="color: #ccc;"></i></td>';
+                        html += '          <td class="col-distribution" style="text-align: center;">';
+                        html += '            <div class="dist-widget dist-' + parseInt(attr.distribution) + '" title="' + (attr.SharingGroup ? attr.SharingGroup.name : "") + '"></div>';
+                        html += '          </td>';
+                        html += '          <td class="col-date" style="width: 80px;">' + moment.unix(attr.timestamp).format('YYYY-MM-DD') + '</td>';
+                        html += '        </tr>';
+                    } else {
+                        // Fallback for when attribute data is missing
+                        html += '        <tr class="beta-attr-row">';
+                        html += '          <td style="width: 40px;"></td>';
+                        html += '          <td colspan="5"><span class="label label-info">' + a.value + '</span></td>';
+                        html += '        </tr>';
                     }
                 });
                 
-                html += '    </div>';
+                html += '      </tbody>';
+                html += '    </table>';
                 html += '  </div>';
                 html += '</div>';
             });
@@ -1313,21 +1388,28 @@
             var links = [];
             var nodeMap = {};
             var currentEventId = '<?php echo h($event['Event']['id']); ?>';
+            var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
             var currentEventName = 'Event #' + currentEventId;
-            if ('<?php echo addslashes(h($event['Event']['info'])); ?>') {
-                currentEventName += ': ' + '<?php echo addslashes(h($event['Event']['info'])); ?>';
+            var currentEventFullTitle = currentEventName;
+            if (currentEventInfo) {
+                currentEventFullTitle += ': ' + currentEventInfo;
+                if (currentEventInfo.length > 40) {
+                    currentEventName += ': ' + currentEventInfo.substring(0, 40) + '...';
+                } else {
+                    currentEventName += ': ' + currentEventInfo;
+                }
             }
             
-            function addNode(name, type, id) {
+            function addNode(name, type, id, fullTitle) {
                 var key = name + '_' + type;
                 if (nodeMap[key] === undefined) {
                     nodeMap[key] = nodes.length;
-                    nodes.push({name: name, type: type, id: id});
+                    nodes.push({name: name, type: type, id: id, fullTitle: fullTitle});
                 }
                 return nodeMap[key];
             }
 
-            var sourceIdx = addNode(currentEventName, 'source');
+            var sourceIdx = addNode(currentEventName, 'source', currentEventId, currentEventFullTitle);
             
             // Limit to top correlations to keep diagram readable
             var parentIds = Object.keys(data);
@@ -1349,10 +1431,13 @@
                     var fullTitle = targetEventName;
                     if (rel.info) {
                         fullTitle += ': ' + rel.info;
-                        targetEventName += ': ' + rel.info;
+                        if (rel.info.length > 40) {
+                            targetEventName += ': ' + rel.info.substring(0, 40) + '...';
+                        } else {
+                            targetEventName += ': ' + rel.info;
+                        }
                     }
-                    var targetIdx = addNode(targetEventName, 'target', rel.id);
-                    nodes[targetIdx].fullTitle = fullTitle;
+                    var targetIdx = addNode(targetEventName, 'target', rel.id, fullTitle);
                     
                     links.push({
                         source: attrIdx,
@@ -1414,7 +1499,24 @@
                             .transition()
                             .duration(200)
                             .style("stroke-opacity", function(l) {
-                                return (l.source === d || l.target === d || (d.type === 'target' && l.target === d) || (d.type === 'attribute' && (l.source === d || l.target === d))) ? 0.5 : 0.1;
+                                if (d.type === 'attribute') {
+                                    // Highlight links connected to this attribute (both from source and to targets)
+                                    return (l.source === d || l.target === d) ? 0.7 : 0.1;
+                                } else if (d.type === 'target') {
+                                    // Highlight links leading to this target, AND the links from source to the attributes that lead to this target
+                                    var isDirectLink = (l.target === d);
+                                    var isPathFromSource = false;
+                                    if (!isDirectLink) {
+                                        // Check if l is a link from source to an attribute that connects to d
+                                        graph.links.forEach(function(l2) {
+                                            if (l2.target === d && l2.source === l.target && l.source.type === 'source') {
+                                                isPathFromSource = true;
+                                            }
+                                        });
+                                    }
+                                    return (isDirectLink || isPathFromSource) ? 0.7 : 0.1;
+                                }
+                                return 0.1;
                             });
                         svg.selectAll(".sankey-label")
                             .transition()
@@ -1431,16 +1533,16 @@
                                 } else if (d.type === 'target') {
                                     // Highlight source and attributes connected to this target
                                     var connected = false;
-                                    graph.links.forEach(function(l) {
-                                        if (l.target === d && l.source === n) {
-                                            connected = true;
-                                        } else if (l.target === d) {
-                                            // Also check if n is source connected via an attribute
-                                            graph.links.forEach(function(l2) {
-                                                if (l2.target === l.source && l2.source === n) connected = true;
-                                            });
-                                        }
-                                    });
+                                    if (n.type === 'source') {
+                                        // Source is always connected to any target via some attribute
+                                        connected = true;
+                                    } else {
+                                        graph.links.forEach(function(l) {
+                                            if (l.target === d && l.source === n) {
+                                                connected = true;
+                                            }
+                                        });
+                                    }
                                     return connected ? 1 : 0.1;
                                 }
                                 return 0.1;
