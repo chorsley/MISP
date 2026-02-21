@@ -549,7 +549,7 @@
     <div class="beta-tabs-container">
         <ul class="nav nav-tabs beta-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#summary" aria-controls="summary" role="tab" data-toggle="tab"><?php echo __('Summary'); ?></a></li>
-            <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<?php echo h($eventReportCount); ?>)</a></li>
+            <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<span class="beta-reports-count"><?php echo h($eventReportCount); ?></span>)</a></li>
             <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Data'); ?> (<?php echo h($betaTotalAttributes); ?>)</a></li>
             <li role="presentation"><a href="#correlations" aria-controls="correlations" role="tab" data-toggle="tab"><?php echo __('Correlations'); ?> (<?php echo isset($relatedEventCorrelationCount) ? count($relatedEventCorrelationCount) : 0; ?>)</a></li>
             <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
@@ -860,15 +860,19 @@
                 </div>
             </div>
              <div role="tabpanel" class="tab-pane" id="history">
-                <h3><?php echo __('History'); ?></h3>
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin: 0;"><?php echo __('History'); ?></h3>
+                </div>
+                
                 <?php if (!empty($contributors)): ?>
-                    <p><strong><?php echo __('Contributors'); ?>:</strong> <?php echo implode(', ', $contributors); ?></p>
+                    <p style="margin-bottom: 20px;"><strong><?php echo __('Contributors'); ?>:</strong> <?php echo implode(', ', $contributors); ?></p>
                 <?php endif; ?>
                 
-                <div class="alert alert-info" style="margin-top: 20px;">
-                    <i class="fa fa-info-circle"></i> <?php echo __('Full audit log is available in the dedicated view.'); ?>
-                    <br><br>
-                    <a href="<?php echo $baseurl; ?>/audit_logs/eventIndex/<?php echo h($event['Event']['id']); ?>" class="btn btn-primary"><?php echo __('View Full Audit Log'); ?></a>
+                <div id="history-content-container">
+                    <div class="text-center" style="padding: 40px;">
+                        <i class="fa fa-spinner fa-spin fa-2x"></i><br>
+                        <?php echo __('Loading history...'); ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1117,6 +1121,25 @@
             }
         });
 
+        // Load History when tab activated
+        $('a[data-toggle="tab"][href="#history"]').on('shown.bs.tab', function (e) {
+            loadHistory();
+        });
+
+        // Check if we are already on the history tab on page load
+        if (window.location.hash === '#history') {
+            loadHistory();
+        }
+
+        function loadHistory() {
+            if ($('#history-content-container .beta-history-container').length > 0) return;
+            var eventId = '<?php echo h($event['Event']['id']); ?>';
+            $.get("<?php echo $baseurl; ?>/audit_logs/eventIndex/" + eventId, function(data) {
+                $("#history-content-container").html(data);
+            }).fail(function() {
+                $("#history-content-container").html('<div class="alert alert-danger"><?php echo __('Failed to load history.'); ?></div>');
+            });
+        }
     });
 
     function betaClearAttributeFilter() {

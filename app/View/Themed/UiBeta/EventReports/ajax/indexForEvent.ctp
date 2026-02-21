@@ -36,40 +36,28 @@
         </div>
     <?php endif; ?>
 
-    <table class="beta-attr-table" style="table-layout: auto;">
-        <thead>
-            <tr>
-                <th style="width: 50px;"><input type="checkbox" class="select-all"></th>
-                <th style="width: 50px;"><?php echo __('ID'); ?></th>
-                <th><?php echo __('Report Details'); ?></th>
-                <th style="width: 150px; text-align: center;"><?php echo __('Tags'); ?></th>
-                <th style="width: 120px; text-align: right;"><?php echo __('Last Update'); ?></th>
-                <th style="width: 50px; text-align: center;" title="<?php echo __('Distribution'); ?>"><i class="fa fa-share-alt"></i></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($reports)): ?>
-                <tr>
-                    <td colspan="6" class="text-center muted" style="padding: 20px;">
-                        <?php echo __('No reports found.'); ?>
-                    </td>
-                </tr>
-            <?php else: ?>
-                <?php foreach ($reports as $report): ?>
-                    <tr class="beta-attr-row" data-primary-id="<?php echo h($report['EventReport']['id']); ?>">
-                        <td style="position: relative; vertical-align: middle !important;">
-                            <div class="beta-row-actions" style="display: flex; align-items: center; min-height: 24px;">
-                                <input type="checkbox" class="select-row" value="<?php echo h($report['EventReport']['id']); ?>">
+    <div class="beta-reports-grid">
+        <?php if (empty($reports)): ?>
+            <div class="beta-no-reports text-center muted" style="padding: 40px; border: 1px dashed #ddd; border-radius: 8px; grid-column: 1 / -1;">
+                <?php echo __('No reports found.'); ?>
+            </div>
+        <?php else: ?>
+            <?php foreach ($reports as $report): ?>
+                <div class="beta-report-tile" data-primary-id="<?php echo h($report['EventReport']['id']); ?>">
+                    <div class="beta-report-tile-header">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <span class="beta-id-badge">#<?php echo h($report['EventReport']['id']); ?></span>
+                            <div class="beta-row-actions">
                                 <div class="beta-row-menu-trigger">
-                                    <i class="fa fa-caret-down"></i>
+                                    <i class="fa fa-ellipsis-h"></i>
                                 </div>
-                                <div class="beta-row-menu" style="left: 0; right: auto;">
+                                <div class="beta-row-menu">
                                     <ul>
-                                        <li><a href="#" onclick="viewFullReport(<?php echo h($report['EventReport']['id']); ?>); return false;"><i class="fa fa-eye"></i> <?php echo __('View Full'); ?></a></li>
-                                        <li><a href="#" class="report-name-cell-inner"><i class="fa fa-file-text"></i> <?php echo __('View Summary'); ?></a></li>
+                                        <li><a href="#" onclick="viewFullReport(<?php echo h($report['EventReport']['id']); ?>); return false;"><i class="fa fa-eye"></i> <?php echo __('View Summary'); ?></a></li>
+                                        <li><a href="<?php echo $baseurl; ?>/eventReports/view/<?php echo h($report['EventReport']['id']); ?>"><i class="fa fa-columns"></i> <?php echo __('Splitscreen Editor'); ?></a></li>
                                         <?php if ($canModify): ?>
                                             <li class="divider"></li>
-                                            <li><a href="<?php echo $baseurl; ?>/eventReports/edit/<?php echo h($report['EventReport']['id']); ?>"><i class="fa fa-edit"></i> <?php echo __('Edit'); ?></a></li>
+                                            <li><a href="<?php echo $baseurl; ?>/eventReports/edit/<?php echo h($report['EventReport']['id']); ?>" class="modal-open"><i class="fa fa-edit"></i> <?php echo __('Edit Metadata'); ?></a></li>
                                             <?php if (!$report['EventReport']['deleted']): ?>
                                                 <li><a href="#" class="text-danger" onclick="simplePopup('<?php echo $baseurl; ?>/event_reports/delete/<?php echo h($report['EventReport']['id']); ?>');"><i class="fa fa-trash"></i> <?php echo __('Delete'); ?></a></li>
                                             <?php else: ?>
@@ -79,32 +67,29 @@
                                     </ul>
                                 </div>
                             </div>
-                        </td>
-                        <td style="vertical-align: middle !important;">
-                            <span class="beta-id-badge" style="display: inline-block; vertical-align: middle;">#<?php echo h($report['EventReport']['id']); ?></span>
-                        </td>
-                        <td style="vertical-align: middle !important;">
-                            <div class="beta-attr-meta-block">
-                                <div class="beta-attr-type-path" style="margin-bottom: 0;">
-                                    <span class="beta-uuid-compact" title="<?php echo h($report['EventReport']['uuid']); ?>" onclick="copyToClipboard('<?php echo h($report['EventReport']['uuid']); ?>'); showMessage('success', 'UUID copied');">
-                                        <?php echo h(substr($report['EventReport']['uuid'], 0, 8)); ?>...
-                                    </span>
-                                </div>
-                                <div class="report-name-cell" style="font-weight: 600; font-size: 14px; color: #333; cursor: pointer; line-height: 1.2;">
-                                    <?php echo h($report['EventReport']['name']); ?>
-                                </div>
-                                <?php if (!empty($report['EventReport']['content'])): ?>
-                                    <div class="report-snippet" style="font-size: 12px; color: #777; margin-top: 4px; max-width: 800px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">
-                                        <?php 
-                                            $snippet = strip_tags($report['EventReport']['content']);
-                                            echo h(mb_strimwidth($snippet, 0, 200, '...')); 
-                                        ?>
-                                    </div>
-                                <?php endif; ?>
+                        </div>
+                        <div class="report-name-cell" title="<?php echo __('Click to view summary'); ?>" style="font-weight: 700; font-size: 15px; color: #333; cursor: pointer; line-height: 1.3; margin-bottom: 4px;">
+                            <?php echo h($report['EventReport']['name']); ?>
+                        </div>
+                        <div class="beta-uuid-compact" style="margin-bottom: 10px;" title="<?php echo h($report['EventReport']['uuid']); ?>" onclick="copyToClipboard('<?php echo h($report['EventReport']['uuid']); ?>'); showMessage('success', 'UUID copied');">
+                            <?php echo h($report['EventReport']['uuid']); ?>
+                        </div>
+                    </div>
+                    
+                    <div class="beta-report-tile-body">
+                        <?php if (!empty($report['EventReport']['content'])): ?>
+                            <div class="report-snippet" style="font-size: 13px; color: #555; line-height: 1.5; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                <?php 
+                                    $snippet = strip_tags($report['EventReport']['content']);
+                                    echo h(mb_strimwidth($snippet, 0, 300, '...')); 
+                                ?>
                             </div>
-                        </td>
-                        <td style="text-align: center; vertical-align: middle !important;">
-                            <div class="beta-tags-container" style="justify-content: center; align-items: center; display: flex; flex-wrap: wrap;">
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="beta-report-tile-footer" style="margin-top: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 10px;">
+                            <div class="beta-tags-container" style="flex: 1;">
                                 <?php
                                     echo $this->element('ajaxTags', [
                                         'event' => $report,
@@ -112,42 +97,40 @@
                                         'tagAccess' => $canModify,
                                         'localTagAccess' => $canModify,
                                         'scope' => 'event_report',
-                                        'id_data_path' => 'EventReport.id',
-                                        'addButtonOnly' => true
+                                        'attributeId' => $report['EventReport']['id'],
+                                        'id_data_path' => 'EventReport.id'
                                     ]);
                                 ?>
                             </div>
-                        </td>
-                        <td style="text-align: right; vertical-align: middle !important;">
-                            <span class="beta-relative-timestamp" 
-                                  data-timestamp="<?php echo h($report['EventReport']['timestamp']); ?>"
-                                  data-absolute="<?php echo h(date('Y-m-d H:i:s', $report['EventReport']['timestamp'])); ?>"
-                                  title="<?php echo h(date('Y-m-d H:i:s', $report['EventReport']['timestamp'])); ?> (<?php echo __('click to copy'); ?>)"
-                                  style="cursor: pointer; display: inline-block; vertical-align: middle;">
-                                <?php echo preg_replace('/\s+/', '<br>', $this->Time->time($report['EventReport']['timestamp'])); ?>
-                            </span>
-                        </td>
-                        <td style="text-align: center; vertical-align: middle !important;">
-                            <div class="dist-widget dist-<?php echo intval($report['EventReport']['distribution']); ?>"
-                                 title="<?php echo $report['EventReport']['distribution'] == 4 ? h($report['SharingGroup']['name'] ?? '') : (isset($distributionLevels[$report['EventReport']['distribution']]) ? h($distributionLevels[$report['EventReport']['distribution']]) : ''); ?>"
-                                 style="margin: 0 auto;">
+                            <div style="text-align: right; flex-shrink: 0;">
+                                <div class="beta-relative-timestamp" 
+                                      data-timestamp="<?php echo h($report['EventReport']['timestamp']); ?>"
+                                      data-absolute="<?php echo h(date('Y-m-d H:i:s', $report['EventReport']['timestamp'])); ?>"
+                                      title="<?php echo h(date('Y-m-d H:i:s', $report['EventReport']['timestamp'])); ?>"
+                                      style="font-size: 11px; margin-bottom: 4px;">
+                                    <?php echo $this->Time->time($report['EventReport']['timestamp']); ?>
+                                </div>
+                                <div class="dist-widget dist-<?php echo intval($report['EventReport']['distribution']); ?>"
+                                     title="<?php echo $report['EventReport']['distribution'] == 4 ? h($report['SharingGroup']['name'] ?? '') : (isset($distributionLevels[$report['EventReport']['distribution']]) ? h($distributionLevels[$report['EventReport']['distribution']]) : ''); ?>"
+                                     style="transform: scale(0.8); transform-origin: right bottom;">
+                                </div>
                             </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
 </div>
 
 <script>
     var loadingSpanAnimation = '<span id="loadingSpan" class="fa fa-spin fa-spinner" style="margin-left: 5px;"></span>';
     $(function() {
-        // Report name click -> View Summary Modal
-        $('.report-name-cell, .report-name-cell-inner').off('click').on('click', function(e) {
+        // Report title click -> View Summary Modal
+        $('.report-name-cell').off('click').on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            var reportId = $(this).closest('tr').data('primary-id');
+            var reportId = $(this).closest('.beta-report-tile').data('primary-id');
             viewFullReport(reportId);
         });
 
@@ -168,6 +151,15 @@
                 }
             });
         });
+
+        // Update tab count
+        <?php
+            $paging = isset($this->params->params['paging']['EventReport']) ? $this->params->params['paging']['EventReport'] : [];
+            $totalReportsCount = isset($paging['count']) ? (int)$paging['count'] : count($reports);
+            if ($context === 'all' || $context === 'default'):
+        ?>
+            $('.beta-reports-count').text("<?php echo h($totalReportsCount); ?>");
+        <?php endif; ?>
     });
 
     function reloadEventReportTable() {
@@ -198,15 +190,50 @@
 </script>
 
 <style>
-    .beta-reports-list .beta-attr-table th {
-        background-color: #fbfbfb;
+    .beta-reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
     }
-    .beta-reports-list .beta-row-menu {
+    .beta-report-tile {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+        min-height: 200px;
+        position: relative;
+    }
+    .beta-report-tile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-color: #428bca;
+    }
+    .beta-report-tile-header {
+        margin-bottom: 10px;
+    }
+    .beta-report-tile .beta-row-menu {
         right: 0;
         left: auto;
     }
     .report-name-cell:hover {
         text-decoration: underline;
-        cursor: pointer;
+        color: #428bca !important;
+    }
+    .beta-report-tile-footer {
+        border-top: 1px solid #f0f0f0;
+        padding-top: 12px;
+        margin-top: auto;
+    }
+    .beta-reports-list .beta-row-menu-trigger {
+        font-size: 18px;
+        padding: 0 5px;
+    }
+    .beta-no-reports {
+        color: #999;
+        font-style: italic;
     }
 </style>

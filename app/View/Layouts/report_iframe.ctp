@@ -13,7 +13,7 @@
         echo $this->Html->css('bootstrap');
         echo $this->Html->css('font-awesome');
         echo $this->Html->css('main');
-        echo $this->Html->css('chosen');
+        echo $this->Html->css('chosen.min');
         echo $this->Html->script('jquery');
         echo $this->Html->script('bootstrap');
         echo $this->Html->script('chosen.jquery.min');

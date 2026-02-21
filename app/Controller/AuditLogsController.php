@@ -189,6 +189,7 @@ class AuditLogsController extends AppController
         }
         $this->paginate['conditions'][] = $this->__searchConditions($params);
 
+        $this->AuditLog->Behaviors->unload('LightPaginator');
         $list = $this->paginate();
 
         if (!$this->_isSiteAdmin()) {
@@ -218,7 +219,12 @@ class AuditLogsController extends AppController
 
         $this->set('data', $list);
         $this->set('event', $event);
+        $this->set('eventId', $eventId);
         $this->set('mayModify', $this->__canModifyEvent($event));
+        if ($this->request->is('ajax')) {
+            $this->layout = 'ajax';
+            $this->set('ajax', true);
+        }
         $this->set('menuData', [
             'menuList' => 'event',
             'menuItem' => 'eventLog'
