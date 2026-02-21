@@ -193,9 +193,57 @@
         <?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?>
         <td class="shortish col-tags">
+            <?php
+                $tags = $event['EventTag'];
+                $galaxyTags = [];
+                foreach ($tags as $k => $tag) {
+                    if ($tag['Tag']['is_galaxy']) {
+                        $galaxyTags[] = $tag;
+                        unset($tags[$k]);
+                    }
+                }
+                if (!empty($galaxyTags)) {
+                    $galaxies = array();
+                    foreach ($galaxyTags as $galaxyTag) {
+                        $tagName = $galaxyTag['Tag']['name'];
+                        if (strpos($tagName, 'misp-galaxy:') === 0) {
+                            $parts = explode(':', $tagName);
+                            if (count($parts) >= 2) {
+                                $galaxyName = $parts[1];
+                                $clusterValue = '';
+                                if (count($parts) >= 3) {
+                                    $clusterValue = $parts[2];
+                                    $clusterValue = trim($clusterValue, '"');
+                                    $clusterValue = explode('=', $clusterValue);
+                                    $clusterValue = end($clusterValue);
+                                    $clusterValue = trim($clusterValue, '"');
+                                }
+                                if (!isset($galaxies[$galaxyName])) {
+                                    $galaxies[$galaxyName] = array();
+                                }
+                                $galaxies[$galaxyName][] = [
+                                    'value' => $clusterValue,
+                                    'local' => $galaxyTag['local'],
+                                    'relationship_type' => $galaxyTag['relationship_type'],
+                                    'tag_id' => $galaxyTag['Tag']['id']
+                                ];
+                            }
+                        }
+                    }
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    foreach ($galaxies as $galaxyName => $clusters) {
+                        echo $this->element('Events/View/galaxy_compact_beta', array(
+                            'galaxyName' => $galaxyName,
+                            'clusters' => $clusters,
+                            'baseurl' => $baseurl
+                        ));
+                    }
+                    echo '</div>';
+                }
+            ?>
             <?= $this->element('ajaxTags', [
                 'event' => $event,
-                'tags' => $event['EventTag'],
+                'tags' => $tags,
                 'tagAccess' => false,
                 'localTagAccess' => false,
                 'missingTaxonomies' => false,

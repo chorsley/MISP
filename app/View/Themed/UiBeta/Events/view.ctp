@@ -7,7 +7,6 @@
 
 <style>
     .beta-view-events {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         padding: 20px;
         background-color: #f9f9f9;
         min-height: 100vh;
@@ -190,10 +189,7 @@
         font-size: 12px;
         text-transform: uppercase;
     }
-    .beta-galaxy-link:hover {
-        color: #428bca;
-        text-decoration: underline;
-    }
+
 
     /* Common Beta UI Styles */
     .beta-toolbar {
