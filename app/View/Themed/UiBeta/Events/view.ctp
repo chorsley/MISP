@@ -853,7 +853,10 @@
                 </div>
                 <div id="correlations-content" style="display: none;">
                     <div id="correlations-sankey-container" style="margin-bottom: 30px; background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; display: none;">
-                        <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #555;"><?php echo __('Correlation Flow'); ?></h4>
+                        <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #555; display: flex; justify-content: space-between; align-items: center;">
+                            <span><?php echo __('Correlation Flow'); ?></span>
+                            <span id="sankey-limit-msg" style="font-weight: normal; font-size: 12px; color: #888;"></span>
+                        </h4>
                         <div id="correlations-sankey" style="width: 100%; height: 400px;"></div>
                     </div>
                     <div id="correlations-table-container"></div>
@@ -1460,8 +1463,34 @@
             var sourceIdx = addNode(currentEventName, 'source', currentEventId, currentEventFullTitle);
             
             // Limit to top correlations to keep diagram readable
-            var parentIds = Object.keys(data);
-            if (parentIds.length > 20) parentIds = parentIds.slice(0, 20);
+            var maxSankeyAttributes = 100;
+            var parentIds = Object.keys(data).sort(function(a, b) {
+                return data[b].length - data[a].length;
+            });
+            
+            var totalAttributes = parentIds.length;
+            if (parentIds.length > maxSankeyAttributes) {
+                parentIds = parentIds.slice(0, maxSankeyAttributes);
+            }
+
+            var eventLinkCounts = {};
+            if (eventDetails) {
+                for (var eid in eventDetails) {
+                    eventLinkCounts[eid] = 0;
+                }
+            }
+            
+            // Calculate how many attributes lead to each event
+            parentIds.forEach(function(parentId) {
+                var relations = data[parentId];
+                relations.forEach(function(rel) {
+                    if (eventLinkCounts[rel.id] !== undefined) {
+                        eventLinkCounts[rel.id]++;
+                    } else {
+                        eventLinkCounts[rel.id] = 1;
+                    }
+                });
+            });
 
             parentIds.forEach(function(parentId) {
                 var relations = data[parentId];
@@ -1475,7 +1504,11 @@
                 });
 
                 relations.forEach(function(rel) {
+                    var count = eventLinkCounts[rel.id] || 1;
                     var targetEventName = 'Event #' + rel.id;
+                    if (count > 1) {
+                        targetEventName = '(' + count + ') ' + targetEventName;
+                    }
                     var fullTitle = targetEventName;
                     if (rel.info) {
                         fullTitle += ': ' + rel.info;
@@ -1495,12 +1528,32 @@
                 });
             });
 
+            var displayedEventsNodeIds = {};
+            links.forEach(function(l) {
+                if (nodes[l.target] && nodes[l.target].type === 'target') {
+                    displayedEventsNodeIds[nodes[l.target].id] = true;
+                }
+            });
+            var totalDisplayedEvents = Object.keys(displayedEventsNodeIds).length;
+            var totalPossibleEvents = Object.keys(eventDetails || {}).length;
+
+            if (totalPossibleEvents > totalDisplayedEvents) {
+                $('#sankey-limit-msg').text('<?php echo __("Showing top %s of %s correlating events", "' + totalDisplayedEvents + '", "' + totalPossibleEvents + '"); ?>');
+            } else {
+                $('#sankey-limit-msg').text('<?php echo __("Showing %s correlating events", "' + totalDisplayedEvents + '"); ?>');
+            }
+
             if (links.length === 0) return;
             $('#correlations-sankey-container').show();
 
             var margin = {top: 10, right: 350, bottom: 10, left: 10},
-                width = $('#correlations-sankey').width() - margin.left - margin.right,
-                height = 400 - margin.top - margin.bottom;
+                width = $('#correlations-sankey').width() - margin.left - margin.right;
+            
+            // Dynamic height: base height + extra per attribute node
+            var height = Math.max(400, (parentIds.length * 20) + 100);
+            $('#correlations-sankey').css('height', height + 'px');
+            
+            height = height - margin.top - margin.bottom;
 
             $('#correlations-sankey').empty();
             var svg = d3.select("#correlations-sankey").append("svg")
