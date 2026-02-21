@@ -564,12 +564,22 @@
                           <div class="beta-card summary-card">
                               <div class="beta-card-header"><?php echo __('Report preview'); ?></div>
                               <div class="beta-card-body">
-                                  <?php if (!empty($eventReportSummary)): ?>
-                                      <p><?php echo h($eventReportSummary); ?></p>
-                                      <a href="#" onclick="openGenericModal('<?php echo $baseurl; ?>/eventReports/viewSummary/<?php echo h($firstEventReportId); ?>'); return false;"><?php echo __('Read more'); ?></a>
-                                  <?php else: ?>
-                                      <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
-                                  <?php endif; ?>
+                                  <?php if (!empty($firstEventReportMarkdown)): ?>
+                                       <iframe id="summary-report-iframe"
+                                           src="<?php echo $baseurl; ?>/eventReports/viewRendered/<?php echo h($firstEventReportId); ?>"
+                                           style="width: 100%; max-height: 400px; min-height: 120px; border: 1px solid #e0e0e0; border-radius: 4px; background: #fff; overflow: hidden;"
+                                           frameborder="0"
+                                           scrolling="auto"
+                                           sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                                           loading="lazy"></iframe>
+                                       <div style="margin-top: 10px;">
+                                           <a href="#" onclick="viewFullReport(<?php echo h($firstEventReportId); ?>); return false;"><?php echo __('View full report'); ?></a>
+                                           |
+                                           <a href="#reports" onclick="$('.nav-tabs a[href=\'#reports\']').tab('show'); return false;"><?php echo __('See all reports'); ?></a>
+                                       </div>
+                                   <?php else: ?>
+                                       <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
+                                   <?php endif; ?>
 
                                   <!-- Analysis Links Sub-section -->
                                   <?php
@@ -786,7 +796,7 @@
                                                   <tr>
                                                       <td><span class="label label-warning"><?php echo h($match['warninglist_name']); ?></span></td>
                                                       <td>
-                                                          <a href="#attributes" data-toggle="tab" onclick="$('#beta-attr-search').val('<?php echo h($match['value']); ?>').trigger('keyup');" class="attr-value">
+                                                           <a href="#attributes" onclick="$('.nav-tabs a[href=\'#attributes\']').tab('show'); $('#beta-attr-search').val('<?php echo h($match['value']); ?>').trigger('keyup'); return false;" class="attr-value">
                                                               <?php echo h($match['value']); ?>
                                                           </a>
                                                       </td>
@@ -973,8 +983,6 @@
     ?>
     var compositionData = <?php echo json_encode($compositionData); ?>;
     var commentData = <?php echo json_encode($commentData); ?>;
-    console.log('Composition Data:', compositionData);
-    console.log('Comment Data:', commentData);
 
     $(function() {
         popoverStartup();
@@ -1108,6 +1116,7 @@
                 window.betaTimestamps.update();
             }
         });
+
     });
 
     function betaClearAttributeFilter() {
@@ -1163,6 +1172,22 @@
              $('#attributes').prepend(msg);
         }
     }
+
+    // Auto-resize report preview iframe based on content height
+    <?php if (!empty($firstEventReportId)): ?>
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'reportPreviewResize') {
+            var iframe = document.getElementById('summary-report-iframe');
+            if (iframe) {
+                var maxHeight = 300;
+                var newHeight = Math.min(event.data.height + 10, maxHeight);
+                iframe.style.height = newHeight + 'px';
+                // Show scrollbar if content exceeds max height
+                iframe.scrolling = event.data.height > maxHeight ? 'auto' : 'no';
+            }
+        }
+    });
+    <?php endif; ?>
 
     function betaFilterAttributesByComment(comment) {
         // Switch to Attributes tab
@@ -1705,6 +1730,27 @@
             });
         });
     });
+
+    window.viewFullReport = function(reportId) {
+        var url = baseurl + '/eventReports/viewRendered/' + reportId;
+        var modalHtml = 
+            '<div id="reportViewModal" class="modal hide fade" tabindex="-1" role="dialog" style="width: 94%; left: 3%; margin-left: 0; top: 3%; height: 94%;">' +
+            '    <div class="modal-header" style="padding: 10px 15px;">' +
+            '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
+            '        <h3 style="margin: 0; line-height: 1.5;"><?php echo __('Report Preview'); ?></h3>' +
+            '    </div>' +
+            '    <div class="modal-body" style="max-height: none; height: calc(100% - 100px); padding: 0; overflow: hidden;">' +
+            '        <iframe src="' + url + '" style="width: 100%; height: 100%; border: none;"></iframe>' +
+            '    </div>' +
+            '    <div class="modal-footer" style="padding: 10px 15px;">' +
+            '        <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true"><?php echo __('Close'); ?></button>' +
+            '    </div>' +
+            '</div>';
+        
+        $('#reportViewModal').remove();
+        $('body').append(modalHtml);
+        $('#reportViewModal').modal();
+    };
     function filterCorrelations(attributeId) {
         $('.nav-tabs a[href="#attributes"]').tab('show');
         if (attributeId && typeof filterAttributes === 'function') {

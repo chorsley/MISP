@@ -251,6 +251,7 @@ class ACLComponent extends Component
             'add' => array('perm_add'),
             'view' => array('*'),
             'viewSummary' => array('*'),
+            'viewRendered' => array('*'),
             'edit' => array('perm_add'),
             'delete' => array('perm_add'),
             'reportFromEvent' => array('perm_add'),

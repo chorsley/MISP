@@ -1726,11 +1726,11 @@ class EventsController extends AppController
             'order' => ['EventReport.id' => 'ASC']
         ]);
         if ($reports) {
-            $this->set('eventReportSummary', $this->EventReport->getSummary($reports['EventReport']['content'], $event['Event']['id']));
             $this->set('firstEventReportId', $reports['EventReport']['id']);
+            $this->set('firstEventReportMarkdown', $reports['EventReport']['content']);
         } else {
-            $this->set('eventReportSummary', '');
             $this->set('firstEventReportId', null);
+            $this->set('firstEventReportMarkdown', '');
         }
 
         $this->__eventViewCommon($user);

@@ -65,7 +65,7 @@
                                 </div>
                                 <div class="beta-row-menu" style="left: 0; right: auto;">
                                     <ul>
-                                        <li><a href="<?php echo $baseurl; ?>/eventReports/view/<?php echo h($report['EventReport']['id']); ?>"><i class="fa fa-eye"></i> <?php echo __('View Full'); ?></a></li>
+                                        <li><a href="#" onclick="viewFullReport(<?php echo h($report['EventReport']['id']); ?>); return false;"><i class="fa fa-eye"></i> <?php echo __('View Full'); ?></a></li>
                                         <li><a href="#" class="report-name-cell-inner"><i class="fa fa-file-text"></i> <?php echo __('View Summary'); ?></a></li>
                                         <?php if ($canModify): ?>
                                             <li class="divider"></li>
@@ -148,7 +148,7 @@
             e.preventDefault();
             e.stopPropagation();
             var reportId = $(this).closest('tr').data('primary-id');
-            openGenericModal(baseurl + '/eventReports/viewSummary/' + reportId);
+            viewFullReport(reportId);
         });
 
         // Context filter clicks
