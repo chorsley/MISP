@@ -777,35 +777,168 @@
                               });
                           ?>
                           <div class="beta-card summary-card">
-                              <div class="beta-card-header"><?php echo __('Warninglist Matches'); ?></div>
-                              <div class="beta-card-body">
-                                  <?php if (!empty($warninglistMatches)): ?>
-                                      <table class="table table-condensed table-hover" style="font-size: 12px; margin-bottom: 0;">
-                                          <thead>
-                                              <tr>
-                                                  <th><?php echo __('Warninglist'); ?></th>
-                                                  <th><?php echo __('Value'); ?></th>
-                                              </tr>
-                                          </thead>
-                                          <tbody>
-                                              <?php foreach ($warninglistMatches as $match): ?>
-                                                  <tr>
-                                                      <td><span class="label label-warning"><?php echo h($match['warninglist_name']); ?></span></td>
-                                                      <td>
-                                                           <a href="#attributes" onclick="$('.nav-tabs a[href=\'#attributes\']').tab('show'); $('#beta-attr-search').val('<?php echo h($match['value']); ?>').trigger('keyup'); return false;" class="attr-value">
-                                                              <?php echo h($match['value']); ?>
-                                                          </a>
-                                                      </td>
-                                                  </tr>
-                                              <?php endforeach; ?>
-                                          </tbody>
-                                      </table>
-                                  <?php else: ?>
-                                      <p class="muted" style="font-size: 12px;"><?php echo __('No warninglist matches found.'); ?></p>
-                                  <?php endif; ?>
-                              </div>
-                          </div>
-                      </div>
+                               <div class="beta-card-header"><?php echo __('Warninglist Matches'); ?></div>
+                               <div class="beta-card-body">
+                                   <?php if (!empty($warninglistMatches)): ?>
+                                       <table class="table table-condensed table-hover" style="font-size: 12px; margin-bottom: 0;">
+                                           <thead>
+                                               <tr>
+                                                   <th><?php echo __('Warninglist'); ?></th>
+                                                   <th><?php echo __('Value'); ?></th>
+                                               </tr>
+                                           </thead>
+                                           <tbody>
+                                               <?php foreach ($warninglistMatches as $match): ?>
+                                                   <tr>
+                                                       <td><span class="label label-warning"><?php echo h($match['warninglist_name']); ?></span></td>
+                                                       <td>
+                                                            <a href="#attributes" onclick="$('.nav-tabs a[href=\'#attributes\']').tab('show'); $('#beta-attr-search').val('<?php echo h($match['value']); ?>').trigger('keyup'); return false;" class="attr-value">
+                                                               <?php echo h($match['value']); ?>
+                                                           </a>
+                                                       </td>
+                                                   </tr>
+                                               <?php endforeach; ?>
+                                           </tbody>
+                                       </table>
+                                   <?php else: ?>
+                                       <p class="muted" style="font-size: 12px;"><?php echo __('No warninglist matches found.'); ?></p>
+                                   <?php endif; ?>
+                               </div>
+                           </div>
+
+                           <!-- Export Card -->
+                           <?php
+                               $eventId = $event['Event']['id'];
+                               $isPublished = !empty($event['Event']['published']);
+                               $betaExportFormats = [
+                                   'json' => [
+                                       'label' => __('MISP JSON'),
+                                       'url' => $baseurl . '/events/restSearch/json/includeAnalystData:1/eventid:' . $eventId . '.json',
+                                       'checkbox' => true,
+                                       'checkbox_label' => __('Encode Attachments'),
+                                       'checkbox_url' => $baseurl . '/events/restSearch/json/withAttachments:1/includeAnalystData:1/eventid:' . $eventId . '.json',
+                                       'icon' => 'fa-file-code',
+                                   ],
+                                   'xml' => [
+                                       'label' => __('MISP XML'),
+                                       'url' => $baseurl . '/events/restSearch/xml/eventid:' . $eventId . '.xml',
+                                       'checkbox' => true,
+                                       'checkbox_label' => __('Encode Attachments'),
+                                       'checkbox_url' => $baseurl . '/events/restSearch/xml/eventid:' . $eventId . '/withAttachments:1.xml',
+                                       'icon' => 'fa-file-code',
+                                   ],
+                                   'csv' => [
+                                       'label' => $isPublished ? __('CSV') : __('CSV (IDS flag ignored)'),
+                                       'url' => $isPublished
+                                           ? $baseurl . '/events/restSearch/returnFormat:csv/to_ids:1/published:1/includeContext:0/eventid:' . $eventId
+                                           : $baseurl . '/events/restSearch/returnFormat:csv/includeContext:0/eventid:' . $eventId,
+                                       'checkbox' => $isPublished,
+                                       'checkbox_label' => __('Include non-IDS marked attributes'),
+                                       'checkbox_url' => $baseurl . '/events/restSearch/returnFormat:csv/to_ids:1||0/published:1||0/includeContext:0/eventid:' . $eventId,
+                                       'icon' => 'fa-file-csv',
+                                   ],
+                                   'csv_context' => [
+                                       'label' => __('CSV with context'),
+                                       'url' => $isPublished
+                                           ? $baseurl . '/events/restSearch/returnFormat:csv/to_ids:1/published:1/includeContext:1/eventid:' . $eventId
+                                           : $baseurl . '/events/restSearch/returnFormat:csv/includeContext:1/eventid:' . $eventId,
+                                       'checkbox' => $isPublished,
+                                       'checkbox_label' => __('Include non-IDS marked attributes'),
+                                       'checkbox_url' => $baseurl . '/events/restSearch/returnFormat:csv/to_ids:1||0/published:1||0/includeContext:1/eventid:' . $eventId,
+                                       'icon' => 'fa-file-csv',
+                                   ],
+                                   'stix_xml' => [
+                                       'label' => __('STIX 1 XML'),
+                                       'url' => $baseurl . '/events/restSearch/stix/eventid:' . $eventId,
+                                       'checkbox' => true,
+                                       'checkbox_label' => __('Encode Attachments'),
+                                       'checkbox_url' => $baseurl . '/events/restSearch/stix/eventid:' . $eventId . '/withAttachments:1',
+                                       'icon' => 'fa-file-alt',
+                                   ],
+                                   'stix_json' => [
+                                       'label' => __('STIX 1 JSON'),
+                                       'url' => $baseurl . '/events/restSearch/stix-json/eventid:' . $eventId,
+                                       'checkbox' => true,
+                                       'checkbox_label' => __('Encode Attachments'),
+                                       'checkbox_url' => $baseurl . '/events/restSearch/stix-json/withAttachments:1/eventid:' . $eventId,
+                                       'icon' => 'fa-file-alt',
+                                   ],
+                                   'stix2' => [
+                                       'label' => __('STIX 2'),
+                                       'url' => $baseurl . '/events/restSearch/stix2/eventid:' . $eventId,
+                                       'checkbox' => true,
+                                       'checkbox_label' => __('Encode Attachments'),
+                                       'checkbox_url' => $baseurl . '/events/restSearch/stix2/eventid:' . $eventId . '/withAttachments:1',
+                                       'icon' => 'fa-file-alt',
+                                   ],
+                                   'openioc' => [
+                                       'label' => __('OpenIOC'),
+                                       'url' => $baseurl . '/events/restSearch/openioc/to_ids:1/published:1/eventid:' . $eventId . '.json',
+                                       'checkbox' => false,
+                                       'icon' => 'fa-file-alt',
+                                   ],
+                                   'rpz' => [
+                                       'label' => __('RPZ Zone file'),
+                                       'url' => $baseurl . '/attributes/restSearch/returnFormat:rpz/published:1||0/eventid:' . $eventId,
+                                       'checkbox' => false,
+                                       'icon' => 'fa-file-alt',
+                                   ],
+                                   'suricata' => [
+                                       'label' => __('Suricata rules'),
+                                       'url' => $baseurl . '/events/restSearch/returnFormat:suricata/published:1||0/eventid:' . $eventId,
+                                       'checkbox' => false,
+                                       'icon' => 'fa-shield-alt',
+                                   ],
+                                   'snort' => [
+                                       'label' => __('Snort rules'),
+                                       'url' => $baseurl . '/events/restSearch/returnFormat:snort/published:1||0/eventid:' . $eventId,
+                                       'checkbox' => false,
+                                       'icon' => 'fa-shield-alt',
+                                   ],
+                                   'text' => [
+                                       'label' => __('Text (attribute values)'),
+                                       'url' => $baseurl . '/attributes/restSearch/returnFormat:text/published:1||0/eventid:' . $eventId,
+                                       'checkbox' => true,
+                                       'checkbox_label' => __('Include non-IDS marked attributes'),
+                                       'checkbox_url' => $baseurl . '/attributes/restSearch/returnFormat:text/published:1||0/to_ids:1||0/eventid:' . $eventId,
+                                       'icon' => 'fa-file-alt',
+                                   ],
+                               ];
+                           ?>
+                           <div class="beta-card summary-card" id="beta-export-card">
+                               <div class="beta-card-header">
+                                   <i class="fa fa-download" style="margin-right: 6px;"></i><?php echo __('Export'); ?>
+                               </div>
+                               <div class="beta-card-body">
+                                   <div style="margin-bottom: 10px;">
+                                       <label for="beta-export-format" style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 4px;"><?php echo __('Format'); ?></label>
+                                       <select id="beta-export-format" class="form-control input-sm" onchange="betaExportFormatChanged(this.value)" style="width: 100%;">
+                                           <?php foreach ($betaExportFormats as $fmtKey => $fmt): ?>
+                                               <option value="<?php echo h($fmtKey); ?>"
+                                                   data-url="<?php echo h($fmt['url']); ?>"
+                                                   data-checkbox="<?php echo $fmt['checkbox'] ? '1' : '0'; ?>"
+                                                   data-checkbox-label="<?php echo isset($fmt['checkbox_label']) ? h($fmt['checkbox_label']) : ''; ?>"
+                                                   data-checkbox-url="<?php echo isset($fmt['checkbox_url']) ? h($fmt['checkbox_url']) : ''; ?>"
+                                               ><?php echo h($fmt['label']); ?></option>
+                                           <?php endforeach; ?>
+                                       </select>
+                                   </div>
+                                   <div id="beta-export-checkbox-row" style="margin-bottom: 10px; display: none;">
+                                       <label style="font-size: 12px; font-weight: normal; color: #555; cursor: pointer;">
+                                           <input type="checkbox" id="beta-export-checkbox" style="margin-right: 5px; vertical-align: middle;">
+                                           <span id="beta-export-checkbox-label"></span>
+                                       </label>
+                                   </div>
+                                   <a id="beta-export-download-btn"
+                                      href="#"
+                                      class="btn btn-primary btn-sm"
+                                      style="display: block; text-align: center;"
+                                      onclick="betaExportDownload(); return false;">
+                                       <i class="fa fa-download"></i> <?php echo __('Download'); ?>
+                                   </a>
+                               </div>
+                           </div>
+                       </div>
                   </div>
                  </div>
 
@@ -1149,7 +1282,54 @@
                 $("#history-content-container").html('<div class="alert alert-danger"><?php echo __('Failed to load history.'); ?></div>');
             });
         }
+
+        // Initialize export card
+        var initialExportKey = $('#beta-export-format').val();
+        if (initialExportKey) {
+            betaExportFormatChanged(initialExportKey);
+        }
     });
+
+    // Export card logic
+    var betaExportFormats = <?php
+        $betaExportFormatsJs = [];
+        foreach ($betaExportFormats as $k => $fmt) {
+            $betaExportFormatsJs[$k] = [
+                'url' => $fmt['url'],
+                'checkbox' => !empty($fmt['checkbox']),
+                'checkbox_label' => isset($fmt['checkbox_label']) ? $fmt['checkbox_label'] : '',
+                'checkbox_url' => isset($fmt['checkbox_url']) ? $fmt['checkbox_url'] : '',
+            ];
+        }
+        echo json_encode($betaExportFormatsJs);
+    ?>;
+
+    function betaExportFormatChanged(key) {
+        var fmt = betaExportFormats[key];
+        if (!fmt) return;
+        var $row = $('#beta-export-checkbox-row');
+        var $label = $('#beta-export-checkbox-label');
+        var $cb = $('#beta-export-checkbox');
+        if (fmt.checkbox && fmt.checkbox_label) {
+            $label.text(fmt.checkbox_label);
+            $cb.prop('checked', false);
+            $row.show();
+        } else {
+            $row.hide();
+            $cb.prop('checked', false);
+        }
+    }
+
+    function betaExportDownload() {
+        var key = $('#beta-export-format').val();
+        var fmt = betaExportFormats[key];
+        if (!fmt) return;
+        var url = fmt.url;
+        if (fmt.checkbox && $('#beta-export-checkbox').prop('checked') && fmt.checkbox_url) {
+            url = fmt.checkbox_url;
+        }
+        window.location.href = url;
+    }
 
     function betaClearAttributeFilter() {
         $('.filter-active-msg').remove();
