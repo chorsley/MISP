@@ -543,10 +543,14 @@
 
                         <!-- Related Events -->
                         <td class="col-related">
-                            <?php 
+                            <?php
                                 $relatedCount = 0;
-                                if (isset($item['RelatedAttribute'])) {
-                                    $relatedCount = count($item['RelatedAttribute']);
+                                if (!empty($item['RelatedAttribute'])) {
+                                    $uniqueEventIds = [];
+                                    foreach ($item['RelatedAttribute'] as $ra) {
+                                        $uniqueEventIds[$ra['id']] = true;
+                                    }
+                                    $relatedCount = count($uniqueEventIds);
                                 }
                             ?>
                             <?php if ($relatedCount > 0): ?>
@@ -787,10 +791,14 @@
 
                             <!-- Related -->
                             <td class="col-related">
-                                <?php 
+                                <?php
                                     $subRelatedCount = 0;
-                                    if (isset($subAttr['RelatedAttribute'])) {
-                                        $subRelatedCount = count($subAttr['RelatedAttribute']);
+                                    if (!empty($subAttr['RelatedAttribute'])) {
+                                        $subUniqueEventIds = [];
+                                        foreach ($subAttr['RelatedAttribute'] as $ra) {
+                                            $subUniqueEventIds[$ra['id']] = true;
+                                        }
+                                        $subRelatedCount = count($subUniqueEventIds);
                                     }
                                 ?>
                                 <?php if ($subRelatedCount > 0): ?>
