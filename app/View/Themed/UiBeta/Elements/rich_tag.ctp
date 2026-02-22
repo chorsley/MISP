@@ -39,6 +39,27 @@ $aStyle = 'background-color: transparent; border: 1px solid #d0d0d0; color: #000
 $aClass = 'tag nowrap';
 
 $aText = trim($tag['Tag']['name']);
+$aTextDisplay = null;
+if (strpos($aText, ':') !== false) {
+    $parts = explode(':', $aText, 2);
+    $taxonomyPart = $parts[0];
+    $restPart = $parts[1];
+    $predicatePart = $restPart;
+    $valuePart = null;
+    if (strpos($restPart, '=') !== false) {
+        $restParts = explode('=', $restPart, 2);
+        $predicatePart = $restParts[0];
+        $valuePart = trim($restParts[1], '"');
+    }
+    $displayPredicate = str_replace(['_', '-'], ' ', $predicatePart);
+    $displayValue = $valuePart !== null ? str_replace(['_', '-'], ' ', $valuePart) : null;
+    $aTextDisplay = sprintf(
+        '<span class="tag-line tag-family">%s</span><span class="tag-line tag-detail"><span class="tag-part-pragma">%s</span>%s</span>',
+        h($taxonomyPart),
+        h($displayPredicate),
+        $displayValue !== null ? '=<span class="tag-part-value">' . h($displayValue) . '</span>' : ''
+    );
+}
 $aTextModified = null;
 if (isset($tag_display_style)) {
     if ($tag_display_style == 1) {
@@ -62,7 +83,7 @@ $aText = h($aText);
 
 // Scope icon: Icon color adapts to background brightness (white for dark, black for light)
 $span_scope = !empty($hide_global_scope) ? '' : sprintf(
-    '<span class="%s" title="%s" role="img" aria-label="%s" style="background-color: %s; color: %s; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px 0 0 4px; border: 1px solid #d0d0d0; border-right: none;"><i class="fas fa-%s" style="font-size: 11px;"></i></span>',
+    '<span class="%s" title="%s" role="img" aria-label="%s" style="background-color: %s; color: %s; display: inline-flex; align-items: center; justify-content: center;"><i class="fas fa-%s" style="font-size: 11px;"></i></span>',
     'tag-scope-icon',
     !empty($tag['local']) ? __('Local tag') : __('Global tag'),
     !empty($tag['local']) ? __('Local tag') : __('Global tag'),
@@ -86,14 +107,14 @@ if (!empty($tag['Tag']['id'])) {
         $aClass,
         isset($aTextModified) ? ' title="' . $aText . '"' : '',
         intval($tag['Tag']['id']),
-        isset($aTextModified) ? $aTextModified : $aText
+        isset($aTextModified) ? $aTextModified : ($aTextDisplay ?? $aText)
     );
 } else {
     $span_tag = sprintf(
         '<span style="%s" class="%s">%s</span>',
         $aStyle,
         $aClass,
-        $aText
+        $aTextDisplay ?? $aText
     );
 }
 

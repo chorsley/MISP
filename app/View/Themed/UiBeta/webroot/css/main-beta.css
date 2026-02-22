@@ -655,7 +655,7 @@ pre {
 
 /* Ensure consistent font size for all text elements */
 .beta-events-table td,
-.beta-events-table td span,
+.beta-events-table td span:not(.tag-line):not(.tag-part-pragma):not(.tag-part-value):not(.beta-galaxy-cluster-label):not(.beta-galaxy-cluster-values):not(.beta-galaxy-relationship):not(.beta-galaxy-relationship-after),
 .beta-events-table td time,
 .beta-events-table td p {
     font-size: 0.875rem;
@@ -1492,7 +1492,7 @@ body.beta-ui-enabled .beta-view-events {
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     padding: 2px 6px;
-    font-size: 10px;
+    font-size: 11px !important;
     line-height: 1.2;
     margin-right: 2px;
     margin-bottom: 2px;
@@ -1548,19 +1548,19 @@ body.beta-ui-enabled .beta-view-events {
     margin-right: 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-size: 9px;
+    font-size: 10px !important;
     transition: color 0.2s ease;
 }
 
 .beta-galaxy-relationship {
     font-style: italic;
     color: #888;
-    font-size: 10px;
+    font-size: 11px !important;
 }
 
 .beta-galaxy-cluster-values {
     font-weight: 600;
-    font-size: 10px;
+    font-size: 11px !important;
     word-break: break-all;
     transition: color 0.2s ease;
 }
@@ -1569,7 +1569,7 @@ body.beta-ui-enabled .beta-view-events {
     font-style: italic;
     color: #888;
     margin: 2px 0 0 0;
-    font-size: 10px;
+    font-size: 11px !important;
     display: block;
 }
 
@@ -1622,23 +1622,23 @@ body.beta-ui-enabled .beta-view-events {
 }
 
 .beta-events-table .beta-galaxy-cluster {
-    padding: 1px 4px;
-    font-size: 9px;
-    line-height: 1.1;
-    margin-right: 1px;
-    margin-bottom: 1px;
+    padding: 2px 6px;
+    font-size: 11px !important;
+    line-height: 1.2;
+    margin-right: 2px;
+    margin-bottom: 2px;
 }
 
 .beta-events-table .beta-galaxy-cluster-label {
-    font-size: 8px;
-    margin-right: 2px;
+    font-size: 10px !important;
+    margin-right: 4px;
     white-space: nowrap;
 }
 
 .beta-events-table .beta-galaxy-cluster-values,
 .beta-events-table .beta-galaxy-relationship,
 .beta-events-table .beta-galaxy-relationship-after {
-    font-size: 9px;
+    font-size: 11px !important;
 }
 
 /* Emphasize the cluster description/value line in the index */
@@ -1696,6 +1696,35 @@ body.beta-ui-enabled .beta-view-events {
     display: inline-block;
     /* Ensure it respects padding/margins */
     line-height: 1.2;
+    font-size: 11px !important;
+}
+
+.tag .tag-line {
+    display: block;
+    line-height: 1.1;
+    font-size: inherit;
+}
+
+.tag .tag-family {
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 10px !important;
+    color: #555;
+}
+
+.tag .tag-detail {
+    color: #111;
+    font-size: 11px !important;
+}
+
+.tag .tag-part-pragma {
+    color: #777;
+}
+
+.tag .tag-part-value {
+    color: #000;
+    font-weight: 400;
+    font-size: 11px !important;
 }
 
 .tag:hover {
@@ -1716,7 +1745,7 @@ body.beta-ui-enabled .beta-view-events {
 
 .tag-wrapper-beta {
     display: inline-flex;
-    align-items: center;
+    align-items: stretch;
     gap: 2px;
     background: #fff;
     border: 1px solid #d0d0d0;
@@ -1732,6 +1761,17 @@ body.beta-ui-enabled .beta-view-events {
 .tag-scope-icon {
     /* Circular colored background with black icon - styling in inline styles */
     flex-shrink: 0;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 6px;
+    padding-right: 6px;
+    border: 1px solid #d0d0d0;
+    border-right: none;
+    border-radius: 4px 0 0 4px;
 }
 
 .tag-action {
@@ -1739,6 +1779,25 @@ body.beta-ui-enabled .beta-view-events {
     opacity: 0.5;
     transition: opacity 0.2s;
     padding: 0 2px;
+}
+
+.beta-events-table .tag {
+    font-size: 11px !important;
+    padding: 2px 6px;
+}
+
+.beta-events-table .tag .tag-family {
+    font-size: 10px !important;
+}
+
+.beta-events-table .tag .tag-detail,
+.beta-events-table .tag .tag-part-value {
+    font-size: 11px !important;
+}
+
+.beta-events-table .tag-wrapper-beta {
+    margin-right: 2px;
+    margin-bottom: 2px;
 }
 
 .tag-action:hover {
