@@ -861,6 +861,10 @@
                         </h4>
                         <div id="correlations-sankey" style="width: 100%; height: 400px;"></div>
                     </div>
+                    <div id="correlations-table-filter-banner" style="display: none; margin-bottom: 15px; padding: 10px 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; align-items: center; justify-content: space-between;">
+                        <span><i class="fa fa-filter" style="color: #856404;"></i> <strong><?php echo __('Filtered view'); ?></strong> &mdash; <span id="correlations-table-filter-msg"></span></span>
+                        <a href="#" onclick="resetCorrelationFilter(); return false;" class="btn btn-xs btn-warning" style="margin-left: 10px;"><i class="fa fa-times"></i> <?php echo __('Clear Filter'); ?></a>
+                    </div>
                     <div id="correlations-table-container"></div>
                 </div>
             </div>
@@ -1894,24 +1898,43 @@
             }
         }
 
-        // Filter the correlations table cards
+        // Filter the correlations table cards and rows within them
         var cards = $('.correlation-event-card');
         if (attributeId) {
-            // Show only cards that contain this attribute (using data-attribute-ids for fast lookup)
-            cards.each(function() {
-                var card = $(this);
-                var attrIds = card.data('attribute-ids') || '';
-                var hasAttr = attrIds.indexOf(',' + attributeId + ',') !== -1;
-                card.toggle(hasAttr);
-            });
             var attrValue = attributeId;
             if (_correlationData && _correlationData[attributeId] && _correlationData[attributeId].length > 0) {
                 attrValue = _correlationData[attributeId][0].value || attributeId;
             }
+
+            // Show only cards that contain this attribute; within each card, show only matching rows
+            cards.each(function() {
+                var card = $(this);
+                var attrIds = card.data('attribute-ids') || '';
+                var hasAttr = attrIds.indexOf(',' + attributeId + ',') !== -1;
+                if (hasAttr) {
+                    card.show();
+                    // Hide non-matching rows, show matching rows
+                    card.find('.standalone-attr-row').each(function() {
+                        var row = $(this);
+                        var rowAttrId = row.data('attribute-id');
+                        row.toggle(rowAttrId == attributeId);
+                    });
+                } else {
+                    card.hide();
+                }
+            });
+
+            // Show filter banner above the table
+            $('#correlations-table-filter-msg').text('<?php echo __('Showing correlations for'); ?>: ' + attrValue);
+            $('#correlations-table-filter-banner').css('display', 'flex');
+
             $('#correlation-filter-msg').text('<?php echo __('Filtered by'); ?>: ' + attrValue);
             $('#correlation-filter-controls').show();
         } else {
+            // Restore all cards and all rows
             cards.show();
+            cards.find('.standalone-attr-row').show();
+            $('#correlations-table-filter-banner').hide();
             $('#correlation-filter-controls').hide();
         }
     }
