@@ -475,7 +475,17 @@
                                 </div>
                                 
                                 <div class="beta-attr-value-container">
-                                    <span class="attr-value"><?php echo h($item['value']); ?></span>
+                                    <?php
+                                        $relatedCountForValue = 0;
+                                        if (isset($item['RelatedAttribute'])) {
+                                            $relatedCountForValue = count($item['RelatedAttribute']);
+                                        }
+                                    ?>
+                                    <?php if ($relatedCountForValue > 0): ?>
+                                        <span class="attr-value attr-value-correlatable" style="cursor: pointer; border-bottom: 1px dashed #428bca;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo h($item['value']); ?></span>
+                                    <?php else: ?>
+                                        <span class="attr-value"><?php echo h($item['value']); ?></span>
+                                    <?php endif; ?>
                                     <?php if (isset($item['warnings'])): ?>
                                         <?php
                                             $temp = '';
@@ -709,7 +719,17 @@
                                     </div>
 
                                     <div class="beta-attr-value-container">
-                                        <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
+                                        <?php
+                                            $subRelatedCountForValue = 0;
+                                            if (isset($subAttr['RelatedAttribute'])) {
+                                                $subRelatedCountForValue = count($subAttr['RelatedAttribute']);
+                                            }
+                                        ?>
+                                        <?php if ($subRelatedCountForValue > 0): ?>
+                                            <span class="attr-value attr-value-correlatable" style="cursor: pointer; border-bottom: 1px dashed #428bca;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><?php echo h($subAttr['value']); ?></span>
+                                        <?php else: ?>
+                                            <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
+                                        <?php endif; ?>
                                         <?php if (isset($subAttr['warnings'])): ?>
                                             <?php
                                                 $temp = '';

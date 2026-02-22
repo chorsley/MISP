@@ -851,7 +851,13 @@
                     <div id="correlations-sankey-container" style="margin-bottom: 30px; background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; display: none;">
                         <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #555; display: flex; justify-content: space-between; align-items: center;">
                             <span><?php echo __('Correlation Flow'); ?></span>
-                            <span id="sankey-limit-msg" style="font-weight: normal; font-size: 12px; color: #888;"></span>
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <span id="sankey-filter-badge" style="display: none; background: #d9534f; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; white-space: nowrap;">
+                                    <i class="fa fa-filter"></i> <span id="sankey-filter-label"></span>
+                                    <a href="#" onclick="resetCorrelationFilter(); return false;" style="color: #fff; margin-left: 6px; text-decoration: none;" title="<?php echo __('Remove filter'); ?>"><i class="fa fa-times-circle"></i></a>
+                                </span>
+                                <span id="sankey-limit-msg" style="font-weight: normal; font-size: 12px; color: #888;"></span>
+                            </span>
                         </h4>
                         <div id="correlations-sankey" style="width: 100%; height: 400px;"></div>
                     </div>
@@ -1252,34 +1258,41 @@
         }
     }
 
-    $(document).ready(function() {
-        $('a[data-toggle="tab"][href="#correlations"]').on('shown.bs.tab', function (e) {
-            loadCorrelations();
-        });
+    var _correlationData = null;
+    var _correlationEventDetails = null;
+    var _correlationsLoading = false;
 
-        // Check if we are already on the correlations tab on page load
-        if (window.location.hash === '#correlations') {
-            loadCorrelations();
-        }
-
-        function loadCorrelations() {
-            if ($('#correlations-table').length > 0) return;
-            var eventId = '<?php echo h($event['Event']['id']); ?>';
-            $.ajax({
-                url: '<?php echo $baseurl; ?>/correlations/eventCorrelations/' + eventId + '.json?extended=1',
-                type: 'GET',
-                success: function(response) {
-                    $('#correlations-loader').hide();
-                    $('#correlations-content').show();
-                    renderCorrelations(response);
-                },
-                error: function() {
-                    $('#correlations-loader').html('<p class="text-danger"><?php echo __('Failed to load correlations.'); ?></p>');
+    function loadCorrelations() {
+        if (_correlationData !== null || _correlationsLoading) return;
+        _correlationsLoading = true;
+        var eventId = '<?php echo h($event['Event']['id']); ?>';
+        $.ajax({
+            url: '<?php echo $baseurl; ?>/correlations/eventCorrelations/' + eventId + '.json?extended=1',
+            type: 'GET',
+            success: function(response) {
+                _correlationsLoading = false;
+                $('#correlations-loader').hide();
+                $('#correlations-content').show();
+                renderCorrelations(response);
+                // Apply any pending filter
+                if (_pendingCorrelationFilter !== null) {
+                    var pendingFilter = _pendingCorrelationFilter;
+                    _pendingCorrelationFilter = null;
+                    _applyCorrelationFilter(pendingFilter);
+                    $('html, body').animate({
+                        scrollTop: $(".beta-tabs-container").offset().top
+                    }, 500);
                 }
-            });
-        }
+            },
+            error: function() {
+                _correlationsLoading = false;
+                $('#correlations-loader').html('<p class="text-danger"><?php echo __('Failed to load correlations.'); ?></p>');
+            }
+        });
+    }
 
-        function renderCorrelations(data) {
+    function renderCorrelations(data) {
+            _correlationData = data;
             var eventCounts = {};
             var eventDetails = {};
             var attributeMap = {};
@@ -1319,8 +1332,9 @@
                 var details = eventDetails[eid];
                 var percent = (count / max) * 100;
                 var attrs = attributeMap[eid];
+                var attrIds = attrs.map(function(a) { return a.id; }).join(',');
                 
-                html += '<div class="beta-card correlation-event-card" style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
+                html += '<div class="beta-card correlation-event-card" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
                 html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8fbfe;">';
                 html += '    <div style="display: flex; align-items: center; gap: 10px;">';
                 html += '      <a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 700; font-size: 1.1em;">#' + eid + ' ' + details.info + '</a>';
@@ -1340,7 +1354,7 @@
                 attrs.forEach(function(a) {
                     var attr = a.attribute;
                     if (attr) {
-                        html += '        <tr class="beta-attr-row standalone-attr-row">';
+                        html += '        <tr class="beta-attr-row standalone-attr-row" data-attribute-id="' + a.id + '">';
                         html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-link" style="color: #ccc;"></i></td>';
                         html += '          <td colspan="2">';
                         html += '            <div class="beta-attr-meta-block">';
@@ -1427,10 +1441,11 @@
             html += '</div>';
             $('#correlations-table-container').html(html);
             
+            _correlationEventDetails = eventDetails;
             renderSankey(data, eventDetails);
         }
 
-        function renderSankey(data, eventDetails) {
+        function renderSankey(data, eventDetails, filterAttributeId) {
             var nodes = [];
             var links = [];
             var nodeMap = {};
@@ -1458,14 +1473,20 @@
 
             var sourceIdx = addNode(currentEventName, 'source', currentEventId, currentEventFullTitle);
             
-            // Limit to top correlations to keep diagram readable
+            // If a filter is active, only show the filtered attribute; otherwise limit to top correlations
             var maxSankeyAttributes = 100;
-            var parentIds = Object.keys(data).sort(function(a, b) {
-                return data[b].length - data[a].length;
-            });
+            var parentIds;
+            if (filterAttributeId) {
+                // Only include the filtered attribute if it exists in data
+                parentIds = Object.keys(data).filter(function(id) { return id == filterAttributeId; });
+            } else {
+                parentIds = Object.keys(data).sort(function(a, b) {
+                    return data[b].length - data[a].length;
+                });
+            }
             
             var totalAttributes = parentIds.length;
-            if (parentIds.length > maxSankeyAttributes) {
+            if (!filterAttributeId && parentIds.length > maxSankeyAttributes) {
                 parentIds = parentIds.slice(0, maxSankeyAttributes);
             }
 
@@ -1767,6 +1788,16 @@
                 });
         }
 
+    $(document).ready(function() {
+        $('a[data-toggle="tab"][href="#correlations"]').on('shown.bs.tab', function (e) {
+            loadCorrelations();
+        });
+
+        // Check if we are already on the correlations tab on page load
+        if (window.location.hash === '#correlations') {
+            loadCorrelations();
+        }
+
         $('#publishedToggle').change(function() {
             var $toggle = $(this);
             var id = $toggle.data('id');
@@ -1823,25 +1854,66 @@
         $('body').append(modalHtml);
         $('#reportViewModal').modal();
     };
+    // Pending filter to apply once correlations are loaded
+    var _pendingCorrelationFilter = null;
+
     function filterCorrelations(attributeId) {
-        $('.nav-tabs a[href="#attributes"]').tab('show');
-        if (attributeId && typeof filterAttributes === 'function') {
-            filterAttributes(attributeId);
+        // Always switch to correlations tab
+        $('.nav-tabs a[href="#correlations"]').tab('show');
+
+        // If correlations haven't loaded yet, store the filter and apply it once loaded
+        if (!_correlationData) {
+            _pendingCorrelationFilter = attributeId;
+            return;
         }
-        var rows = $('#correlations-table tbody tr');
-        if (attributeId) {
-            rows.hide();
-            rows.filter('[data-attribute-id="' + attributeId + '"]').show();
-            $('#correlation-filter-msg').text('<?php echo __('Filtering by Attribute ID'); ?>: ' + attributeId);
-            $('#correlation-filter-controls').show();
-        } else {
-            rows.show();
-            $('#correlation-filter-controls').hide();
-        }
-        // Scroll to top of tab content
+
+        _applyCorrelationFilter(attributeId);
+
+        // Scroll to top of correlations tab
         $('html, body').animate({
             scrollTop: $(".beta-tabs-container").offset().top
         }, 500);
+    }
+
+    function _applyCorrelationFilter(attributeId) {
+        // Re-render the Sankey with or without filter
+        if (_correlationData && _correlationEventDetails) {
+            if (attributeId) {
+                // Get the attribute value for the label
+                var attrValue = attributeId;
+                if (_correlationData[attributeId] && _correlationData[attributeId].length > 0) {
+                    attrValue = _correlationData[attributeId][0].value || attributeId;
+                }
+                renderSankey(_correlationData, _correlationEventDetails, attributeId);
+                $('#sankey-filter-label').text('<?php echo __('Filtered'); ?>: ' + attrValue);
+                $('#sankey-filter-badge').show();
+            } else {
+                renderSankey(_correlationData, _correlationEventDetails);
+                $('#sankey-filter-badge').hide();
+                $('#sankey-filter-label').text('');
+            }
+        }
+
+        // Filter the correlations table cards
+        var cards = $('.correlation-event-card');
+        if (attributeId) {
+            // Show only cards that contain this attribute (using data-attribute-ids for fast lookup)
+            cards.each(function() {
+                var card = $(this);
+                var attrIds = card.data('attribute-ids') || '';
+                var hasAttr = attrIds.indexOf(',' + attributeId + ',') !== -1;
+                card.toggle(hasAttr);
+            });
+            var attrValue = attributeId;
+            if (_correlationData && _correlationData[attributeId] && _correlationData[attributeId].length > 0) {
+                attrValue = _correlationData[attributeId][0].value || attributeId;
+            }
+            $('#correlation-filter-msg').text('<?php echo __('Filtered by'); ?>: ' + attrValue);
+            $('#correlation-filter-controls').show();
+        } else {
+            cards.show();
+            $('#correlation-filter-controls').hide();
+        }
     }
 
     function resetCorrelationFilter() {
