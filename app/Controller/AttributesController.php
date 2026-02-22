@@ -1059,7 +1059,7 @@ class AttributesController extends AppController
                 throw new MethodNotAllowedException(__('Invalid input.'));
             }
         }
-        $validFields = array('value', 'category', 'type', 'comment', 'to_ids', 'distribution', 'first_seen', 'last_seen');
+        $validFields = array('value', 'category', 'type', 'comment', 'to_ids', 'distribution', 'first_seen', 'last_seen', 'disable_correlation');
         $changed = false;
         foreach ($this->request->data['Attribute'] as $changedKey => $changedField) {
             if (!in_array($changedKey, $validFields, true)) {
