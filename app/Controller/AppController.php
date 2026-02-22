@@ -273,12 +273,30 @@ class AppController extends Controller
             }
         }
 
+<<<<<<< HEAD
         if (!$this->_isRest()) {
             $themesEnabled = (bool)Configure::read('MISP.enable_themes');
             $currentTheme = 'Default';
             if ($themesEnabled) {
                 if ($this->Auth->user()) {
                     $currentTheme = $this->User->UserSetting->getUserTheme($this->Auth->user('id')) ?? 'Default';
+=======
+        $themes = [];
+        $themeLabels = [];
+        $this->set('theme', 'Default');
+        if (!$this->_isRest() && Configure::read('MISP.enable_themes')) {
+            if ($this->Auth->user()) {
+                $userTheme = $this->User->UserSetting->getUserTheme($this->Auth->user('id'));
+                if ($userTheme) {
+                    $this->theme = $userTheme;
+                    $this->viewClass = 'Theme';
+                } else {
+                    $default_theme = Configure::read('MISP.default_theme');
+                    if ($default_theme) {
+                        $this->theme = $default_theme;
+                        $this->viewClass = 'Theme';
+                    }
+>>>>>>> 48337774c4e1c8b3233e6d4d6f6f9785a9c9a99d
                 }
                 if ($currentTheme === 'Default') {
                     $currentTheme = Configure::read('MISP.default_theme') ?? 'Default';
@@ -295,6 +313,8 @@ class AppController extends Controller
             $this->set('themesEnabled', $themesEnabled);
             $this->set('themes', MispTheme::getAvailableThemes($currentTheme, (bool)Configure::read('debug')));
         }
+        $this->set('themes', $themes);
+        $this->set('themeLabels', $themeLabels);
 
         $user = $this->Auth->user();
         if ($user) {
