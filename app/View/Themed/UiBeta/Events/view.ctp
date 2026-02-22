@@ -1898,12 +1898,24 @@
             }
         }
 
+        // Remove any existing "this event" card
+        $('#correlations-this-event-card').remove();
+
         // Filter the correlations table cards and rows within them
         var cards = $('.correlation-event-card');
         if (attributeId) {
             var attrValue = attributeId;
+            var attrType = '';
+            var attrCategory = '';
             if (_correlationData && _correlationData[attributeId] && _correlationData[attributeId].length > 0) {
-                attrValue = _correlationData[attributeId][0].value || attributeId;
+                var firstRel = _correlationData[attributeId][0];
+                attrValue = firstRel.value || attributeId;
+            }
+            // Try to get type/category from the DOM (attributes table)
+            var domRow = $('[data-primary-id="' + attributeId + '"]');
+            if (domRow.length) {
+                attrType = domRow.find('.beta-type-insight').first().text().trim();
+                attrCategory = domRow.find('.beta-category-label').first().text().trim();
             }
 
             // Show only cards that contain this attribute; within each card, show only matching rows
@@ -1923,6 +1935,119 @@
                     card.hide();
                 }
             });
+
+            // Build "This Event" card showing the current event's attribute
+            // Clone the meta block from the DOM to include tags, comments, etc.
+            var currentEventId = '<?php echo h($event['Event']['id']); ?>';
+            var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
+
+            // Clone cells from the DOM row for a complete display
+            var metaBlockHtml = '';
+            var attrComment = '';
+            var idsHtml = '';
+            var correlationHtml = '';
+            var sightingsHtml = '';
+            var distributionHtml = '';
+            var dateHtml = '';
+
+            if (domRow.length) {
+                // Clone the full meta block (includes type path, value, tags, galaxies)
+                var metaBlock = domRow.find('.beta-attr-meta-block').first().clone();
+                metaBlock.find('.beta-tagging-links').remove();
+                metaBlock.find('.beta-row-menu').remove();
+                // Make the attr-value non-clickable
+                metaBlock.find('.attr-value-correlatable').removeClass('attr-value-correlatable').removeAttr('onclick').css({'cursor': 'default', 'border-bottom': 'none'});
+                metaBlockHtml = metaBlock.prop('outerHTML');
+
+                // Clone other cells
+                attrComment = domRow.find('.col-comment').first().html() || '';
+                // IDS toggle cell (the shield icon)
+                var idsCell = domRow.find('td:has(.beta-ids-toggle)').first();
+                if (idsCell.length) {
+                    var idsClone = idsCell.clone();
+                    idsClone.find('.beta-ids-toggle').removeAttr('onclick').css('cursor', 'default');
+                    idsHtml = idsClone.html();
+                }
+                // Correlation toggle cell
+                var corrCell = domRow.find('.col-correlation').first();
+                if (corrCell.length) {
+                    var corrClone = corrCell.clone();
+                    corrClone.find('.beta-correlation-toggle').removeAttr('onclick').css('cursor', 'default');
+                    correlationHtml = corrClone.html();
+                }
+                // Sightings cell
+                var sightCell = domRow.find('.col-sightings').first();
+                if (sightCell.length) {
+                    sightingsHtml = sightCell.clone().html();
+                }
+                // Distribution cell
+                var distCell = domRow.find('.col-distribution').first();
+                if (distCell.length) {
+                    distributionHtml = distCell.clone().html();
+                }
+                // Date cell
+                var dateCell = domRow.find('.col-date').first();
+                if (dateCell.length) {
+                    dateHtml = dateCell.clone().html();
+                }
+            }
+
+            var thisEventHtml = '<div id="correlations-this-event-card" class="beta-card" style="margin-bottom: 20px; border-left: 4px solid #5cb85c; background: #f0fff4;">';
+            thisEventHtml += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #e8f8ed;">';
+            thisEventHtml += '    <div style="display: flex; align-items: center; gap: 10px;">';
+            thisEventHtml += '      <span class="label label-success" style="font-size: 12px; padding: 4px 8px;"><i class="fa fa-star"></i> <?php echo __('This Event'); ?></span>';
+            thisEventHtml += '      <a href="<?php echo $baseurl; ?>/events/view/' + currentEventId + '" style="font-weight: 700; font-size: 1.1em;">#' + currentEventId + ' ' + currentEventInfo + '</a>';
+            thisEventHtml += '    </div>';
+            thisEventHtml += '    <span style="font-size: 11px; color: #3d8b5e; font-style: italic;"><?php echo __('Source attribute'); ?></span>';
+            thisEventHtml += '  </div>';
+            thisEventHtml += '  <div class="beta-card-body" style="padding: 0;">';
+            thisEventHtml += '    <table class="beta-attr-table" style="margin-top: 0;">';
+            thisEventHtml += '      <tbody>';
+            thisEventHtml += '        <tr class="beta-attr-row standalone-attr-row" style="background: #f0fff4;">';
+            thisEventHtml += '          <td style="width: 40px; text-align: center;"><i class="fa fa-star" style="color: #5cb85c;"></i></td>';
+            if (metaBlockHtml) {
+                thisEventHtml += '          <td colspan="2">' + metaBlockHtml + '</td>';
+            } else {
+                // Fallback: build manually
+                thisEventHtml += '          <td colspan="2">';
+                thisEventHtml += '            <div class="beta-attr-meta-block">';
+                if (attrCategory || attrType) {
+                    thisEventHtml += '              <div class="beta-attr-type-path">';
+                    if (attrCategory) {
+                        thisEventHtml += '                <span class="beta-category-label">' + attrCategory + '</span>';
+                        thisEventHtml += '                <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>';
+                    }
+                    if (attrType) {
+                        thisEventHtml += '                <span class="beta-type-insight">' + attrType + '</span>';
+                    }
+                    thisEventHtml += '              </div>';
+                }
+                thisEventHtml += '              <div class="beta-attr-value-container">';
+                thisEventHtml += '                <span class="attr-value" style="font-weight: 600;">' + attrValue + '</span>';
+                thisEventHtml += '              </div>';
+                thisEventHtml += '            </div>';
+                thisEventHtml += '          </td>';
+            }
+            thisEventHtml += '          <td class="col-related"></td>';
+            thisEventHtml += '          <td class="col-comment" style="width: 20%;">' + attrComment + '</td>';
+            thisEventHtml += '          <td style="text-align: center;">' + idsHtml + '</td>';
+            thisEventHtml += '          <td class="col-correlation" style="text-align: center;">' + correlationHtml + '</td>';
+            thisEventHtml += '          <td class="col-sightings" style="text-align: center;">' + sightingsHtml + '</td>';
+            thisEventHtml += '          <td class="col-distribution" style="text-align: center;">' + distributionHtml + '</td>';
+            thisEventHtml += '          <td class="col-date" style="width: 80px;">' + dateHtml + '</td>';
+            thisEventHtml += '        </tr>';
+            thisEventHtml += '      </tbody>';
+            thisEventHtml += '    </table>';
+            thisEventHtml += '  </div>';
+            thisEventHtml += '</div>';
+
+            // Insert "This Event" card before the first correlation card
+            var container = $('#correlations-table-container .beta-correlations-container');
+            if (container.length) {
+                container.prepend(thisEventHtml);
+            } else {
+                $('#correlations-table-container').prepend(thisEventHtml);
+            }
 
             // Show filter banner above the table
             $('#correlations-table-filter-msg').text('<?php echo __('Showing correlations for'); ?>: ' + attrValue);
