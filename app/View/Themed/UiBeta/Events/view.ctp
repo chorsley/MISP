@@ -688,12 +688,21 @@
                                  <strong><?php echo __('Galaxies'); ?></strong><br>
                                  <div class="beta-galaxies-container" id="galaxies_div" style="margin-top: 5px;">
                                    <?php
+                                       // Compute permissions before the loop
+                                       $tagAccess = $this->Acl->canModifyTag($event);
+                                       $localTagAccess = $this->Acl->canModifyTag($event, true);
+                                       $targetId = $event['Event']['id'];
+
                                        if (!empty($event['Galaxy'])) {
                                            foreach ($event['Galaxy'] as $galaxy) {
                                                echo $this->element('Events/View/galaxy_compact_beta', [
                                                    'galaxyName' => $galaxy['name'],
                                                    'clusters' => $galaxy['GalaxyCluster'],
-                                                   'baseurl' => $baseurl
+                                                   'baseurl' => $baseurl,
+                                                   'canModify' => $tagAccess,
+                                                   'canModifyLocal' => $localTagAccess,
+                                                   'target_type' => 'event',
+                                                   'target_id' => $targetId,
                                                ]);
                                            }
                                        } else {
@@ -701,9 +710,6 @@
                                        }
                                        
                                        // Add Buttons
-                                       $tagAccess = $this->Acl->canModifyTag($event);
-                                       $localTagAccess = $this->Acl->canModifyTag($event, true);
-                                       $targetId = $event['Event']['id'];
                                        
                                         if ($tagAccess) {
                                             $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";

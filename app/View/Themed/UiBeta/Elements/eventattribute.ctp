@@ -521,7 +521,7 @@
                                 <!-- Galaxies Inline -->
                                 <div class="beta-attr-tags-inline beta-attr-galaxies" id="attribute_<?php echo $item['id']; ?>_galaxy" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
                                     <?php if (!empty($item['Galaxy'])): ?>
-                                        <?php 
+                                        <?php
                                             $clustersByGalaxy = [];
                                             foreach ($item['Galaxy'] as $galaxy) {
                                                 foreach ($galaxy['GalaxyCluster'] as $cluster) {
@@ -532,7 +532,11 @@
                                                 echo $this->element('Events/View/galaxy_compact_beta', [
                                                     'galaxyName' => $galaxyName,
                                                     'clusters' => $clusters,
-                                                    'baseurl' => $baseurl
+                                                    'baseurl' => $baseurl,
+                                                    'canModify' => $mayModify,
+                                                    'canModifyLocal' => $this->Acl->canModifyTag($event, true),
+                                                    'target_type' => 'attribute',
+                                                    'target_id' => $item['id'],
                                                 ]);
                                             endforeach;
                                         ?>
@@ -769,7 +773,7 @@
                                     <!-- Galaxies Inline -->
                                     <div class="beta-attr-tags-inline beta-attr-galaxies" data-attribute-id="<?php echo h($subAttr['id']); ?>" style="margin-top: 4px;">
                                         <?php if (!empty($subAttr['Galaxy'])): ?>
-                                            <?php 
+                                            <?php
                                                 $subClustersByGalaxy = [];
                                                 foreach ($subAttr['Galaxy'] as $galaxy) {
                                                     foreach ($galaxy['GalaxyCluster'] as $cluster) {
@@ -780,7 +784,11 @@
                                                     echo $this->element('Events/View/galaxy_compact_beta', [
                                                         'galaxyName' => $galaxyName,
                                                         'clusters' => $clusters,
-                                                        'baseurl' => $baseurl
+                                                        'baseurl' => $baseurl,
+                                                        'canModify' => $mayModify,
+                                                        'canModifyLocal' => $this->Acl->canModifyTag($event, true),
+                                                        'target_type' => 'attribute',
+                                                        'target_id' => $subAttr['id'],
                                                     ]);
                                                 endforeach;
                                             ?>
