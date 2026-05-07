@@ -1899,3 +1899,556 @@ body.beta-ui-enabled .beta-view-events {
     opacity: 1;
     text-decoration: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Beta Event Collections — Index (card grid)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Full-width layout, same as beta events index */
+body.beta-ui-enabled .collections.index.beta-collections-index {
+    float: none !important;
+    width: 100% !important;
+    border-left: none !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    margin-left: 0 !important;
+    box-sizing: border-box !important;
+}
+
+body.beta-ui-enabled .collections.index.beta-collections-index + div.actions,
+body.beta-ui-enabled .collections.index.beta-collections-index ~ div.actions {
+    display: none !important;
+}
+
+/* Card grid */
+.beta-collections-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+    .beta-collections-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+    .beta-collections-grid { grid-template-columns: 1fr; }
+}
+
+/* Individual collection card */
+.beta-collection-card {
+    background: #ffffff;
+    border: 1px solid #e0e6ed;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+    min-height: 170px;
+}
+
+.beta-collection-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.11);
+    transform: translateY(-2px);
+}
+
+.beta-collection-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.beta-collection-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    text-decoration: none;
+    line-height: 1.3;
+    flex: 1;
+    transition: color 0.15s ease;
+}
+
+.beta-collection-name:hover {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+/* Description: clamped to 3 lines */
+.beta-collection-description {
+    font-size: 0.8125rem;
+    color: #555;
+    line-height: 1.5;
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    margin-bottom: 0.75rem;
+}
+
+.beta-collection-no-desc {
+    color: #bbb !important;
+}
+
+/* Card footer */
+.beta-collection-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f0f0;
+    margin-top: auto;
+    font-size: 0.75rem;
+    color: #777;
+}
+
+.beta-collection-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.beta-collection-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 0.25rem;
+}
+
+/* Empty state */
+.beta-collections-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #888;
+}
+
+/* ── Collection type badges ──────────────────────────────────────────────── */
+.beta-collection-type-badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.beta-type-campaign       { background: #fff3e0; color: #bf6000; border: 1px solid #ffd699; }
+.beta-type-intrusion_set  { background: #fce4ec; color: #b71c1c; border: 1px solid #f48fb1; }
+.beta-type-named_threat   { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+.beta-type-research       { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+.beta-type-other          { background: #f1f3f5; color: #495057; border: 1px solid #dee2e6; }
+
+/* Pagination top */
+.beta-pagination-top {
+    margin-bottom: 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Beta Event Collections — View (hero + element list)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.beta-collections-view {
+    padding: 20px;
+}
+
+body.beta-ui-enabled .collections.view .beta-collections-view + div.actions,
+body.beta-ui-enabled .collections.view ~ div.actions {
+    display: none !important;
+}
+
+/* Hero */
+.beta-collection-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: #ffffff;
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    margin-bottom: 1.75rem;
+}
+
+@media (max-width: 900px) {
+    .beta-collection-hero {
+        flex-direction: column;
+    }
+}
+
+.beta-collection-hero-main {
+    flex: 1;
+}
+
+.beta-collection-hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.beta-collection-hero-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.beta-collection-hero-desc {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    max-width: 750px;
+}
+
+.beta-collection-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.8125rem;
+    color: #666;
+}
+
+.beta-hero-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.beta-collection-hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    align-items: flex-end;
+}
+
+@media (max-width: 900px) {
+    .beta-collection-hero-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+}
+
+/* Elements section */
+.beta-collection-elements-section {
+    background: #ffffff;
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.beta-collection-elements-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.beta-collection-elements-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.beta-element-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e9ecef;
+    color: #495057;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.1rem 0.55rem;
+    min-width: 24px;
+}
+
+.beta-collection-element-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.beta-element-filter-count {
+    font-size: 0.75rem;
+    color: #888;
+    white-space: nowrap;
+}
+
+/* Type section label */
+.beta-elements-type-section {
+    margin-bottom: 1rem;
+}
+
+.beta-elements-type-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #888;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.beta-type-count {
+    background: #f1f3f5;
+    color: #666;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.45rem;
+    font-weight: 600;
+}
+
+/* Element rows */
+.beta-elements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.beta-element-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f4f4f6;
+    transition: background 0.15s ease;
+}
+
+.beta-element-row:last-child {
+    border-bottom: none;
+}
+
+.beta-element-row:hover {
+    background: #fafbff;
+}
+
+.beta-element-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #f1f4f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.beta-element-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.beta-element-title {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.beta-element-event-link {
+    font-weight: 600;
+    color: #0066cc;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.beta-element-event-link:hover {
+    color: #0052a3;
+    text-decoration: underline;
+}
+
+.beta-element-id-badge {
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: 400;
+    background: #f1f3f5;
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+}
+
+.beta-element-desc {
+    font-size: 0.8rem;
+    color: #777;
+    line-height: 1.4;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+.beta-element-type-chip {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: #e9ecef;
+    color: #666;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+}
+
+.beta-element-row-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.beta-element-row:hover .beta-element-row-actions {
+    opacity: 1;
+}
+
+/* Empty elements state */
+.beta-collection-empty-elements {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #888;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Beta Event View — "Collections" chips in the Context card
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.beta-event-collections-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+}
+
+.beta-collection-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #e8f0fe;
+    color: #1a56db;
+    border: 1px solid #c3d9fb;
+    text-decoration: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.beta-collection-chip:hover {
+    background: #d0e3ff;
+    color: #1240a8;
+    box-shadow: 0 1px 4px rgba(26, 86, 219, 0.2);
+    text-decoration: none;
+}
+
+/* Type-coloured chips */
+.beta-collection-chip.beta-type-campaign       { background: #fff8e1; color: #bf6000; border-color: #ffd699; }
+.beta-collection-chip.beta-type-intrusion_set  { background: #fce4ec; color: #b71c1c; border-color: #f48fb1; }
+.beta-collection-chip.beta-type-named_threat   { background: #f3e5f5; color: #6a1b9a; border-color: #ce93d8; }
+.beta-collection-chip.beta-type-research       { background: #e3f2fd; color: #0d47a1; border-color: #90caf9; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Beta Add-to-Collection Modal
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.beta-add-to-collection-modal {
+    padding: 0.25rem;
+}
+
+.beta-modal-header-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Beta Collection View — Intra-collection correlation graph
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.beta-collection-corr-card {
+    background: #ffffff;
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    margin-bottom: 1.75rem;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.beta-collection-corr-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #333;
+    background: #fafbfc;
+}
+
+.beta-collection-corr-graph {
+    width: 100%;
+    min-height: 160px;
+    background: #fdfdff;
+}
+
+.beta-corr-svg {
+    display: block;
+    width: 100%;
+}
+
+/* Node hover */
+.beta-corr-node {
+    transition: opacity 0.15s ease;
+}
+
+.beta-corr-node:hover circle {
+    filter: brightness(1.12);
+    stroke: #333;
+    stroke-width: 2.5px;
+}
+
+.beta-corr-node:hover text {
+    font-weight: 800;
+}
+
+/* Legend strip */
+.beta-collection-corr-legend {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.55rem 1.25rem;
+    border-top: 1px solid #f0f0f0;
+    background: #fafbfc;
+    font-size: 0.75rem;
+    color: #777;
+}
+
+.beta-collection-corr-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}

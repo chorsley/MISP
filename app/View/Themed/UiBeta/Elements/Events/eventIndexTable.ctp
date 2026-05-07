@@ -67,6 +67,8 @@
                             <li><a href="<?= $baseurl."/events/edit/".$eventId ?>" title="<?= __('Edit') ?>"><i class="fa fa-edit"></i> <?= __('Edit') ?></a></li>
                             <li><a href="#" class="beta-delete-action" onclick="event.preventDefault();deleteEventPopup(<?= $eventId ?>)" title="<?= __('Delete') ?>"><i class="fa fa-trash"></i> <?= __('Delete') ?></a></li>
                         <?php endif; ?>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="event.preventDefault();openGenericModal('<?= $baseurl ?>/collectionElements/addElementToCollection/Event/<?= h($event['Event']['uuid']) ?>')" title="<?= __('Add to Collection') ?>"><i class="fa fa-folder-plus"></i> <?= __('Add to Collection') ?></a></li>
                         <?php if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)): ?>
                             <li class="divider"></li>
                             <li><a href="#" class="beta-publish-action" onclick="event.preventDefault();publishPopup(<?= $eventId ?>)" title="<?= __('Publish Event') ?>"><i class="fa fa-upload"></i> <?= __('Publish Event') ?></a></li>

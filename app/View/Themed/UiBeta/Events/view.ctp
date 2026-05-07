@@ -731,8 +731,24 @@
                                         }
                                    ?>
                                  </div>
+
+                                  <!-- Collections this event belongs to -->
+                                  <hr>
+                                  <strong><?php echo __('Collections'); ?></strong><br>
+                                  <div id="event-collections-container" style="margin-top:5px; min-height:20px;">
+                                      <span class="muted" style="font-size:11px;"><?php echo __('Loading…'); ?></span>
                                   </div>
-                              </div>
+                                  <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
+                                      <div style="margin-top:6px;">
+                                          <a href="#"
+                                             onclick="openGenericModal('<?php echo $baseurl; ?>/collectionElements/addElementToCollection/Event/<?php echo h($event['Event']['uuid']); ?>'); return false;"
+                                             class="btn btn-xs btn-default">
+                                              <i class="fa fa-folder-plus"></i> <?php echo __('Add to Collection'); ?>
+                                          </a>
+                                      </div>
+                                  <?php endif; ?>
+                                   </div>
+                               </div>
                           <!-- Warninglist Matches -->
                           <?php
                               $warninglistMatches = [];
@@ -2253,4 +2269,49 @@
     function resetCorrelationFilter() {
         filterCorrelations(null);
     }
+
+    // ── Collections widget ────────────────────────────────────────────────────
+    // Load all collections that contain this event and render compact linked
+    // chips in the Context card. Uses the dedicated read-only JSON endpoint.
+    (function loadEventCollections() {
+        var eventUuid = <?php echo json_encode($event['Event']['uuid']); ?>;
+        var baseurl   = <?php echo json_encode($baseurl); ?>;
+        var container = document.getElementById('event-collections-container');
+        if (!container) return;
+
+        container.innerHTML = ''; // Clear "Loading…" placeholder immediately
+
+        $.ajax({
+            url: baseurl + '/collections/getForElement/Event/' + eventUuid + '.json',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (!data || data.length === 0) {
+                    container.innerHTML =
+                        '<span class="muted" style="font-size:11px;">' +
+                        <?php echo json_encode(__('Not in any collections.')); ?> +
+                        '</span>';
+                    return;
+                }
+                var html = '<div class="beta-event-collections-chips">';
+                data.forEach(function(c) {
+                    html += '<a href="' + baseurl + '/collections/view/' + c.id + '" ' +
+                            'class="beta-collection-chip beta-type-' + (c.type || 'other').replace(/[^a-z0-9_-]/gi, '') + '" ' +
+                            'title="' + (c.type || '') + (c.description ? ': ' + c.description.substring(0, 80) : '') + '">' +
+                            '<i class="fa fa-folder" style="font-size:10px;margin-right:3px;"></i>' +
+                            c.name +
+                            '</a>';
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            },
+            error: function() {
+                container.innerHTML =
+                    '<span class="muted" style="font-size:11px;">' +
+                    <?php echo json_encode(__('Not in any collections.')); ?> +
+                    '</span>';
+            }
+        });
+    })();
+    // ─────────────────────────────────────────────────────────────────────────
 </script>

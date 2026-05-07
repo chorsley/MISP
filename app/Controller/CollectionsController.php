@@ -191,4 +191,45 @@ class CollectionsController extends AppController
             return $this->restResponsePayload;
         }
     }
+
+    /**
+     * Returns the collections that contain a given element (by type + uuid).
+     * Read-only, JSON only. Used by the beta UI event view widget.
+     *
+     * GET /collections/getForElement/Event/<uuid>.json
+     */
+    public function getForElement($element_type, $element_uuid)
+    {
+        if (!$this->_isRest()) {
+            throw new MethodNotAllowedException(__('This endpoint is JSON only.'));
+        }
+        $this->loadModel('CollectionElement');
+        $elements = $this->CollectionElement->find('all', [
+            'recursive' => -1,
+            'conditions' => [
+                'CollectionElement.element_type' => $element_type,
+                'CollectionElement.element_uuid' => $element_uuid
+            ],
+            'fields' => ['CollectionElement.collection_id']
+        ]);
+        if (empty($elements)) {
+            return $this->RestResponse->viewData([], $this->response->type());
+        }
+        $collectionIds = array_column(array_column($elements, 'CollectionElement'), 'collection_id');
+        $userId = $this->Auth->user('id');
+        $conditions = ['Collection.id' => $collectionIds];
+        if (!$this->_isSiteAdmin()) {
+            $conditions['AND'][] = $this->Collection->buildConditions($userId);
+        }
+        $collections = $this->Collection->find('all', [
+            'recursive' => -1,
+            'conditions' => $conditions,
+            'fields' => ['Collection.id', 'Collection.name', 'Collection.type', 'Collection.description', 'Collection.uuid']
+        ]);
+        $result = [];
+        foreach ($collections as $c) {
+            $result[] = $c['Collection'];
+        }
+        return $this->RestResponse->viewData($result, $this->response->type());
+    }
 }
