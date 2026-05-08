@@ -1045,6 +1045,65 @@ body.beta-ui-enabled .container-fluid {
     align-items: center;
 }
 
+.beta-collections-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.beta-collections-filters .beta-filter-button {
+    height: 42px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.beta-collections-filters .beta-search-controls {
+    margin-left: 0.5rem;
+    display: flex;
+    align-items: center;
+    align-self: center;
+}
+
+.beta-collections-filters .beta-search-input-group {
+    align-items: stretch;
+    height: 42px;
+}
+
+.beta-collections-filters .beta-search-input-wrap {
+    height: 42px;
+    display: flex;
+    align-items: stretch;
+}
+
+.beta-collections-filters .beta-search-input {
+    height: 100%;
+    min-width: 300px;
+    line-height: 1.2;
+    padding-top: 0;
+    padding-bottom: 0;
+    box-sizing: border-box;
+}
+
+.beta-collections-filters .btn {
+    height: 42px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.beta-search-input-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+}
+
 .beta-search-scope {
     width: 150px;
     font-size: 0.875rem;
@@ -1056,6 +1115,36 @@ body.beta-ui-enabled .container-fluid {
     min-width: 200px;
     font-size: 0.875rem;
     height: 34px;
+    padding-right: 34px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    line-height: 1.2;
+}
+
+.beta-search-clear {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    text-decoration: none;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.beta-search-clear:hover,
+.beta-search-clear:focus {
+    background: #dfe3e7;
+    color: #495057;
+    text-decoration: none;
 }
 
 .beta-search-button {
@@ -1063,6 +1152,13 @@ body.beta-ui-enabled .container-fluid {
     font-weight: 500;
     height: 34px;
     padding: 6px 12px;
+}
+
+.beta-collections-filters .beta-search-button {
+    height: 42px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
 }
 
 .beta-advanced-filter-button {
@@ -1079,6 +1175,11 @@ body.beta-ui-enabled .container-fluid {
     font-size: 0.875rem;
     height: 34px;
     padding: 6px 12px;
+}
+
+.beta-collections-filters .beta-search-input-group .btn {
+    height: 42px;
+    padding: 0 14px;
 }
 
 /* Columns control on right side, aligned with search */
@@ -2299,6 +2400,24 @@ body.beta-ui-enabled .collections.view ~ div.actions {
     font-style: italic;
 }
 
+.beta-element-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.beta-element-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.beta-element-date i {
+    color: #9aa7b2;
+}
+
 .beta-element-type-chip {
     font-size: 0.7rem;
     font-weight: 700;
@@ -2320,6 +2439,81 @@ body.beta-ui-enabled .collections.view ~ div.actions {
 
 .beta-element-row:hover .beta-element-row-actions {
     opacity: 1;
+}
+
+.beta-element-row-highlight {
+    background: #f2f7ff;
+    box-shadow: inset 0 0 0 1px #9ec4f3;
+}
+
+.beta-event-timeline {
+    background: #f8fafc;
+    border: 1px solid #e6ecf2;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+}
+
+.beta-event-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #667;
+    margin-bottom: 8px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.beta-event-timeline-title {
+    font-weight: 600;
+    color: #334;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.beta-event-timeline-track {
+    position: relative;
+    height: 18px;
+}
+
+.beta-event-timeline-track:before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50%;
+    height: 2px;
+    background: linear-gradient(90deg, #cbd5e1, #94a3b8);
+    transform: translateY(-50%);
+    border-radius: 2px;
+}
+
+.beta-event-timeline-markers {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.beta-event-timeline-marker {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #428bca;
+    border: 2px solid #fff;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 1px rgba(66, 139, 202, 0.4);
+    cursor: pointer;
+    padding: 0;
+}
+
+.beta-event-timeline-marker:hover {
+    transform: translate(-50%, -50%) scale(1.15);
 }
 
 /* Empty elements state */
@@ -2451,4 +2645,101 @@ body.beta-ui-enabled .collections.view ~ div.actions {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Beta Event Reports — Timeline + meta rows
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.beta-report-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 6px;
+}
+
+.beta-report-event-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.beta-report-event-date i {
+    color: #9aa7b2;
+}
+
+.beta-report-timeline {
+    background: #f8fafc;
+    border: 1px solid #e6ecf2;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 15px;
+}
+
+.beta-report-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #667;
+    margin-bottom: 8px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.beta-report-timeline-title {
+    font-weight: 600;
+    color: #334;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.beta-report-timeline-track {
+    position: relative;
+    height: 18px;
+}
+
+.beta-report-timeline-track:before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50%;
+    height: 2px;
+    background: linear-gradient(90deg, #cbd5e1, #94a3b8);
+    transform: translateY(-50%);
+    border-radius: 2px;
+}
+
+.beta-report-timeline-markers {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.beta-report-timeline-marker {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #428bca;
+    border: 2px solid #fff;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 1px rgba(66, 139, 202, 0.4);
+    cursor: pointer;
+    padding: 0;
+}
+
+.beta-report-timeline-marker:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+}
+
+.beta-report-tile-highlight {
+    box-shadow: 0 0 0 2px #7fb1e3, 0 6px 16px rgba(66, 139, 202, 0.2);
 }

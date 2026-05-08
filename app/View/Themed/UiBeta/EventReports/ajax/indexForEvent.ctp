@@ -36,6 +36,49 @@
         </div>
     <?php endif; ?>
 
+    <?php
+        $timelineItems = [];
+        foreach ($reports as $report) {
+            $ts = isset($report['EventReport']['timestamp']) ? (int)$report['EventReport']['timestamp'] : 0;
+            if ($ts > 0) {
+                $timelineItems[] = [
+                    'id' => $report['EventReport']['id'],
+                    'ts' => $ts,
+                    'name' => $report['EventReport']['name'] ?? ''
+                ];
+            }
+        }
+        $timelineStart = '';
+        $timelineEnd = '';
+        if (!empty($timelineItems)) {
+            $timestamps = array_column($timelineItems, 'ts');
+            $minTs = min($timestamps);
+            $maxTs = max($timestamps);
+            $timelineStart = date('Y-m-d', $minTs);
+            $timelineEnd = date('Y-m-d', $maxTs);
+        }
+    ?>
+
+    <?php if (!empty($timelineItems)): ?>
+        <div class="beta-report-timeline" id="eventReportTimeline" data-items='<?php echo json_encode($timelineItems); ?>'>
+            <div class="beta-report-timeline-header">
+                <span class="beta-report-timeline-title"><i class="fa fa-stream"></i> <?php echo __('Report timeline'); ?></span>
+                <span class="beta-report-timeline-range">
+                    <?php if ($timelineStart === $timelineEnd): ?>
+                        <?php echo h($timelineStart); ?>
+                    <?php else: ?>
+                        <?php echo h($timelineStart); ?> 
+                        <span class="beta-report-timeline-sep">&rarr;</span>
+                        <?php echo h($timelineEnd); ?>
+                    <?php endif; ?>
+                </span>
+            </div>
+            <div class="beta-report-timeline-track">
+                <div class="beta-report-timeline-markers"></div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="beta-reports-grid">
         <?php if (empty($reports)): ?>
             <div class="beta-no-reports text-center muted" style="padding: 40px; border: 1px dashed #ddd; border-radius: 8px; grid-column: 1 / -1;">
@@ -43,7 +86,7 @@
             </div>
         <?php else: ?>
             <?php foreach ($reports as $report): ?>
-                <div class="beta-report-tile" data-primary-id="<?php echo h($report['EventReport']['id']); ?>">
+                <div class="beta-report-tile" id="event-report-<?php echo h($report['EventReport']['id']); ?>" data-primary-id="<?php echo h($report['EventReport']['id']); ?>">
                     <div class="beta-report-tile-header">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                             <span class="beta-id-badge">#<?php echo h($report['EventReport']['id']); ?></span>
@@ -70,6 +113,12 @@
                         </div>
                         <div class="report-name-cell" title="<?php echo __('Click to view summary'); ?>" style="font-weight: 700; font-size: 15px; color: #333; cursor: pointer; line-height: 1.3; margin-bottom: 4px;">
                             <?php echo h($report['EventReport']['name']); ?>
+                        </div>
+                        <div class="beta-report-meta-row">
+                            <span class="beta-report-event-date">
+                                <i class="fa fa-calendar"></i>
+                                <?php echo h($report['Event']['date'] ?? __('Unknown date')); ?>
+                            </span>
                         </div>
                         <div class="beta-uuid-compact" style="margin-bottom: 10px;" title="<?php echo h($report['EventReport']['uuid']); ?>" onclick="copyToClipboard('<?php echo h($report['EventReport']['uuid']); ?>'); showMessage('success', 'UUID copied');">
                             <?php echo h($report['EventReport']['uuid']); ?>
@@ -187,6 +236,52 @@
             url: url
         });
     }
+
+    (function setupReportTimeline() {
+        var timeline = document.getElementById('eventReportTimeline');
+        if (!timeline) return;
+        var raw = timeline.getAttribute('data-items');
+        if (!raw) return;
+        var items;
+        try {
+            items = JSON.parse(raw) || [];
+        } catch (e) {
+            return;
+        }
+        if (!items.length) return;
+
+        items.sort(function (a, b) { return a.ts - b.ts; });
+        var minTs = items[0].ts;
+        var maxTs = items[items.length - 1].ts;
+        var range = Math.max(1, maxTs - minTs);
+        var markers = timeline.querySelector('.beta-report-timeline-markers');
+        if (!markers) return;
+
+        items.forEach(function (item) {
+            var dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'beta-report-timeline-marker';
+            var pct = range > 0 ? ((item.ts - minTs) / range) * 100 : 50;
+            dot.style.left = pct + '%';
+            var date = new Date(item.ts * 1000);
+            dot.title = (item.name || 'Report') + ' - ' + date.toLocaleString();
+            dot.setAttribute('data-report-id', item.id);
+            markers.appendChild(dot);
+        });
+
+        markers.addEventListener('click', function (e) {
+            var target = e.target.closest('.beta-report-timeline-marker');
+            if (!target) return;
+            var reportId = target.getAttribute('data-report-id');
+            var reportEl = document.getElementById('event-report-' + reportId);
+            if (!reportEl) return;
+            reportEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            reportEl.classList.add('beta-report-tile-highlight');
+            setTimeout(function () {
+                reportEl.classList.remove('beta-report-tile-highlight');
+            }, 1400);
+        });
+    })();
 </script>
 
 <style>
