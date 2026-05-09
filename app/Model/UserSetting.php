@@ -123,9 +123,14 @@ class UserSetting extends AppModel
             'validation' => 'validate_json',
         ],
         'ui_theme' => [
-            'placeholder' => 'Default, Overmind, UiBeta',
-            'options' => ['Default', 'Overmind', 'UiBeta'],
+            'placeholder' => 'Default, Overmind, UiBeta, EventTest',
+            'options' => ['Default', 'Overmind', 'UiBeta', 'EventTest'],
             'validation' => 'validate_theme',
+        ],
+        'event_template_user_form_mode' => [
+            'placeholder' => 'all',
+            'options' => ['all', 'wizard'],
+            'validation' => 'validate_event_template_user_form_mode',
         ],
     );
 
@@ -196,6 +201,13 @@ class UserSetting extends AppModel
 
             return true;
         }
+    public static function validate_event_template_user_form_mode($value, $user)
+    {
+        if (empty($value)) {
+            return true;
+        }
+        return in_array($value, self::VALID_SETTINGS['event_template_user_form_mode']['options'], true);
+    }
 
     public static function validate_json($value, $user)
     {
