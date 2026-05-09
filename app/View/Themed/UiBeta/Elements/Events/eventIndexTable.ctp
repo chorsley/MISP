@@ -106,6 +106,31 @@
                 <?php endif; ?>
             </div>
 
+            <?php if (!empty($event['Event']['CollectionMemberships'])): ?>
+                <div class="beta-event-collections-chips" style="margin-top: 0.35em;">
+                    <?php foreach ($event['Event']['CollectionMemberships'] as $collection): ?>
+                        <?php
+                            $collectionType = !empty($collection['type']) ? $collection['type'] : 'other';
+                            $collectionTypeClass = preg_replace('/[^a-z0-9_-]/i', '', $collectionType);
+                            $collectionDescription = !empty($collection['description']) ? mb_substr($collection['description'], 0, 80) : '';
+                            $collectionTitle = h($collectionType);
+                            if ($collectionDescription !== '') {
+                                $collectionTitle .= ': ' . h($collectionDescription);
+                            }
+                        ?>
+                        <a
+                            href="<?= h($baseurl) ?>/collections/view/<?= h($collection['id']) ?>"
+                            class="beta-collection-chip beta-type-<?= h($collectionTypeClass) ?>"
+                            title="<?= $collectionTitle ?>"
+                            aria-label="<?= __('View collection %s', h($collection['name'])) ?>"
+                        >
+                            <i class="fa fa-folder" style="font-size:10px;margin-right:3px;"></i>
+                            <?= h($collection['name']) ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
             <?php if ($extends_info): ?>
                 <?php if (in_array('is_extension', $columns, true)): ?>
                     <div style="padding-left: 1em;">
@@ -386,5 +411,6 @@
                 distributionData: <?= json_encode($this->DistributionGraph->getGraphData(-1), JSON_UNESCAPED_UNICODE); ?>,
             });
         });
+
     });
 </script>
