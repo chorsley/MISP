@@ -918,6 +918,7 @@
         totalAttributes: <?php echo $betaTotalAttributes; ?>,
         eventId: <?php echo (int)$event['Event']['id']; ?>,
         baseUrl: "<?php echo $baseurl; ?>",
+        attributeType: "<?php echo isset($filters['attributeType']) ? h($filters['attributeType']) : ''; ?>",
         activeXhr: null,
         loading: false
     };
@@ -944,8 +945,12 @@
             + '/limit:' + (limit === 0 ? 0 : limit)
             + '/sort:timestamp/direction:desc/beta:1';
 
-        // Find the container to replace
-        var $container = $('.beta-attributes-list').closest('#attributes');
+        if (window.betaPagination.attributeType) {
+            url += '/attributeType:' + encodeURIComponent(window.betaPagination.attributeType);
+        }
+
+        // Find the attributes-only container to replace (keep composition card intact)
+        var $container = $('#beta-attributes-container');
         if (!$container.length) {
             $container = $('.beta-attributes-list').parent();
         }
@@ -1089,7 +1094,10 @@
                         + '/searchFor:' + encodeURIComponent(val)
                         + '/page:1/limit:' + window.betaPagination.pageSize
                         + '/sort:timestamp/direction:desc/beta:1';
-                    var $container = $('.beta-attributes-list').closest('#attributes');
+                    if (window.betaPagination.attributeType) {
+                        url += '/attributeType:' + encodeURIComponent(window.betaPagination.attributeType);
+                    }
+                    var $container = $('#beta-attributes-container');
                     if (!$container.length) $container = $('.beta-attributes-list').parent();
                     $container.css('opacity', '0.5');
                     window.betaPagination.activeXhr = $.ajax({

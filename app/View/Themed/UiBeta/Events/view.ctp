@@ -133,6 +133,60 @@
         z-index: 2;
         color: #444;
     }
+    .composition-singlebar-wrap {
+        width: 100%;
+    }
+    .composition-singlebar {
+        width: 100%;
+        height: 30px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #d7dfe8;
+        background: #f7f9fc;
+        display: flex;
+    }
+    .composition-singlebar .segment {
+        height: 100%;
+        min-width: 1px;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+    }
+    .composition-singlebar .segment:hover {
+        opacity: 0.82;
+    }
+    .composition-label-grid {
+        margin-top: 14px;
+        position: relative;
+        min-height: 84px;
+    }
+    .composition-label-item {
+        position: absolute;
+        transform: rotate(-35deg);
+        transform-origin: left center;
+        font-size: 11px;
+        line-height: 1.2;
+        color: #4a5560;
+        white-space: nowrap;
+        cursor: pointer;
+        user-select: none;
+    }
+    .composition-label-item strong {
+        color: #26313d;
+    }
+    .composition-label-leader {
+        position: absolute;
+        width: 1px;
+        background: #9ca9b7;
+        transform-origin: top center;
+        pointer-events: none;
+    }
+    .composition-inline-label {
+        font-size: 11px;
+        font-weight: 600;
+        fill: #ffffff;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+    }
     /* Toggle Switch */
     .switch {
         position: relative;
@@ -648,14 +702,6 @@
                               </div>
                           </div>
                          
-                         <!-- Composition -->
-                         <div class="beta-card summary-card">
-                             <div class="beta-card-header"><?php echo __('Composition'); ?></div>
-                             <div class="beta-card-body">
-                                  <div id="composition-treemap" style="width: 100%; min-height: 200px;"></div>
-                             </div>
-                         </div>
-
                          <!-- Analysis comments -->
                          <div class="beta-card summary-card">
                              <div class="beta-card-header"><?php echo __('Analysis comments'); ?></div>
@@ -976,17 +1022,26 @@
 
             <!-- Attributes Tab -->
             <div role="tabpanel" class="tab-pane" id="attributes">
-                 <?php echo $this->element('eventattribute', [
-                     'items' => $items,
-                     'betaTotalAttributes' => $betaTotalAttributes,
-                     'paging' => $paging,
-                     'betaCurrentPage' => $betaCurrentPage,
-                     'betaPageSize' => $betaPageSize,
-                     'betaTotalItems' => $betaTotalItems,
-                     'betaTotalPages' => $betaTotalPages,
-                     'betaShowStart' => $betaShowStart,
-                     'betaShowEnd' => $betaShowEnd
-                 ]); ?>
+                 <div class="beta-card" style="margin-bottom: 15px;">
+                     <div class="beta-card-header"><?php echo __('Composition'); ?></div>
+                     <div class="beta-card-body">
+                         <div id="composition-treemap" class="composition-singlebar-wrap"></div>
+                     </div>
+                 </div>
+                 <div id="beta-filter-banner-slot"></div>
+                 <div id="beta-attributes-container">
+                     <?php echo $this->element('eventattribute', [
+                         'items' => $items,
+                         'betaTotalAttributes' => $betaTotalAttributes,
+                         'paging' => $paging,
+                         'betaCurrentPage' => $betaCurrentPage,
+                         'betaPageSize' => $betaPageSize,
+                         'betaTotalItems' => $betaTotalItems,
+                         'betaTotalPages' => $betaTotalPages,
+                         'betaShowStart' => $betaShowStart,
+                         'betaShowEnd' => $betaShowEnd
+                     ]); ?>
+                 </div>
             </div>
             
             <!-- Other Tabs Placeholders -->
@@ -1048,24 +1103,50 @@
     <?php
         $compositionData = [];
         $attrTypes = [];
-        $objTypes = [];
+        $seenAttrKeys = [];
         $commentCounts = [];
+
+        $registerAttrType = function($attr) use (&$attrTypes, &$seenAttrKeys) {
+            if (empty($attr) || empty($attr['type'])) {
+                return;
+            }
+
+            $key = null;
+            if (!empty($attr['id'])) {
+                $key = 'id:' . $attr['id'];
+            } elseif (!empty($attr['uuid'])) {
+                $key = 'uuid:' . $attr['uuid'];
+            }
+
+            if ($key !== null) {
+                if (isset($seenAttrKeys[$key])) {
+                    return;
+                }
+                $seenAttrKeys[$key] = true;
+            }
+
+            $t = $attr['type'];
+            if (!isset($attrTypes[$t])) {
+                $attrTypes[$t] = 0;
+            }
+            $attrTypes[$t]++;
+        };
 
         if (!empty($event['objects'])) {
             foreach ($event['objects'] as $obj) {
                 if ($obj['objectType'] === 'attribute') {
-                    $t = $obj['type'];
-                    if (!isset($attrTypes[$t])) $attrTypes[$t] = 0;
-                    $attrTypes[$t]++;
+                    $registerAttrType($obj);
                     if (!empty($obj['comment'])) {
                         $c = $obj['comment'];
                         if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
                         $commentCounts[$c]++;
                     }
                 } elseif ($obj['objectType'] === 'object') {
-                    $t = $obj['name'];
-                    if (!isset($objTypes[$t])) $objTypes[$t] = 0;
-                    $objTypes[$t]++;
+                    if (!empty($obj['Attribute'])) {
+                        foreach ($obj['Attribute'] as $attr) {
+                            $registerAttrType($attr);
+                        }
+                    }
                     if (!empty($obj['comment'])) {
                         $c = $obj['comment'];
                         if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
@@ -1082,49 +1163,44 @@
                     }
                 }
             }
-        } elseif (!empty($event['Attribute'])) {
+        }
+
+        if (!empty($event['Attribute'])) {
              foreach ($event['Attribute'] as $attr) {
-                $t = $attr['type'];
-                if (!isset($attrTypes[$t])) $attrTypes[$t] = 0;
-                $attrTypes[$t]++;
+                $registerAttrType($attr);
                 if (!empty($attr['comment'])) {
                     $c = $attr['comment'];
                     if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
                     $commentCounts[$c]++;
                 }
             }
-            if (!empty($event['Object'])) {
-                 foreach ($event['Object'] as $obj) {
-                    $t = $obj['name'];
-                    if (!isset($objTypes[$t])) $objTypes[$t] = 0;
-                    $objTypes[$t]++;
-                    if (!empty($obj['comment'])) {
-                        $c = $obj['comment'];
-                        if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                        $commentCounts[$c]++;
+        }
+
+        if (!empty($event['Object'])) {
+             foreach ($event['Object'] as $obj) {
+                if (!empty($obj['Attribute'])) {
+                    foreach ($obj['Attribute'] as $attr) {
+                        $registerAttrType($attr);
                     }
-                    if (!empty($obj['Attribute'])) {
-                        foreach ($obj['Attribute'] as $attr) {
-                            if (!empty($attr['comment'])) {
-                                $c = $attr['comment'];
-                                if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                                $commentCounts[$c]++;
-                            }
+                }
+                if (!empty($obj['comment'])) {
+                    $c = $obj['comment'];
+                    if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                    $commentCounts[$c]++;
+                }
+                if (!empty($obj['Attribute'])) {
+                    foreach ($obj['Attribute'] as $attr) {
+                        if (!empty($attr['comment'])) {
+                            $c = $attr['comment'];
+                            if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
+                            $commentCounts[$c]++;
                         }
                     }
                 }
             }
         }
         
-        foreach ($objTypes as $type => $count) {
-            $compositionData[] = [
-                'label' => "Object: $type",
-                'name' => $type,
-                'value' => $count,
-                'type' => 'object'
-            ];
-        }
-         foreach ($attrTypes as $type => $count) {
+        foreach ($attrTypes as $type => $count) {
             $compositionData[] = [
                 'label' => "Attribute: $type",
                 'name' => $type,
@@ -1137,6 +1213,13 @@
         usort($compositionData, function($a, $b) {
             return $b['value'] - $a['value'];
         });
+
+        if (isset($betaCompositionData) && is_array($betaCompositionData)) {
+            $compositionData = $betaCompositionData;
+            usort($compositionData, function($a, $b) {
+                return $b['value'] - $a['value'];
+            });
+        }
 
         $commentData = [];
         foreach ($commentCounts as $comment => $count) {
@@ -1152,65 +1235,129 @@
     var compositionData = <?php echo json_encode($compositionData); ?>;
     var commentData = <?php echo json_encode($commentData); ?>;
 
+    function betaEscapeHtml(value) {
+        return $('<div/>').text(value == null ? '' : String(value)).html();
+    }
+
+    function betaRenderCompositionBar() {
+        var compositionContainer = $('#composition-treemap');
+        if (!compositionContainer.length) return;
+
+        if (!compositionData || compositionData.length === 0) {
+             d3.select("#composition-treemap").html('<div class="alert alert-info" style="margin: 20px;">No composition data available.</div>');
+            return;
+        }
+
+        var width = compositionContainer.width() || 0;
+        if (width < 10) return;
+
+        compositionContainer.empty();
+        compositionContainer.css('position', 'relative');
+
+        var total = d3.sum(compositionData, function(d) { return d.value; });
+        var color = d3.scale.ordinal()
+            .range(["#3f6f9e", "#66a683", "#d3a259", "#c66b6b", "#5f98ad", "#8a7bb8", "#8aa05d", "#b58562"])
+            .domain(compositionData.map(function(d) { return d.label; }));
+
+        var barWrap = $('<div class="composition-singlebar"></div>');
+        compositionContainer.append(barWrap);
+
+        var xOffset = 0;
+        var layout = [];
+
+        compositionData.forEach(function(d) {
+            var percent = total > 0 ? (d.value / total) * 100 : 0;
+            var pixelWidth = (percent / 100) * width;
+            var segmentColor = color(d.label);
+
+            var segment = $('<div class="segment" title="' + betaEscapeHtml(d.label) + ' (' + d.value + ', ' + percent.toFixed(2) + '%)"></div>');
+            segment.css({
+                width: percent + '%',
+                background: segmentColor
+            });
+            segment.on('click', function() {
+                betaFilterAttributesByComposition(d.type, d.name);
+            });
+            barWrap.append(segment);
+
+            layout.push({
+                data: d,
+                centerX: xOffset + (pixelWidth / 2),
+                pixelWidth: pixelWidth,
+                color: segmentColor
+            });
+
+            xOffset += pixelWidth;
+        });
+
+        var overlaySvg = d3.select('#composition-treemap')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', 30)
+            .style('position', 'absolute')
+            .style('top', '0')
+            .style('left', '0')
+            .style('pointer-events', 'none');
+
+        layout.forEach(function(item) {
+            if (item.pixelWidth >= 70) {
+                overlaySvg.append('text')
+                    .attr('class', 'composition-inline-label')
+                    .attr('x', item.centerX)
+                    .attr('y', 19)
+                    .attr('text-anchor', 'middle')
+                    .text(item.data.name + ' (' + item.data.value + ')');
+            }
+        });
+
+        var labelGrid = $('<div class="composition-label-grid"></div>');
+        compositionContainer.append(labelGrid);
+
+        layout.forEach(function(item, idx) {
+            if (item.pixelWidth < 70) {
+                var isUpperRow = (idx % 2 === 0);
+                var leaderHeight = isUpperRow ? 16 : 28;
+                var labelTop = isUpperRow ? 18 : 34;
+
+                var leader = $('<div class="composition-label-leader"></div>');
+                leader.css({
+                    left: item.centerX + 'px',
+                    top: '0px',
+                    height: leaderHeight + 'px',
+                    transform: 'rotate(22deg)'
+                });
+                labelGrid.append(leader);
+
+                var label = $('<div class="composition-label-item" title="' + betaEscapeHtml(item.data.label) + '"></div>');
+                label.css({
+                    left: (item.centerX + 6) + 'px',
+                    top: labelTop + 'px',
+                    color: item.color
+                });
+                label.html('<strong>' + betaEscapeHtml(item.data.name) + '</strong> (' + item.data.value + ')');
+                label.on('click', function() {
+                    betaFilterAttributesByComposition(item.data.type, item.data.name);
+                });
+                labelGrid.append(label);
+            }
+        });
+    }
+
     $(function() {
         popoverStartup();
 
-        // Horizontal Bar Chart
-        if (compositionData && compositionData.length > 0) {
-            var margin = {top: 20, right: 20, bottom: 20, left: 150};
-            var width = $('#composition-treemap').width() - margin.left - margin.right;
-            var barHeight = 25;
-            var height = Math.max(100, compositionData.length * barHeight) + margin.top + margin.bottom;
+        $('a[data-toggle="tab"][href="#attributes"]').on('shown.bs.tab', function () {
+            betaRenderCompositionBar();
+        });
 
-            var svg = d3.select("#composition-treemap").append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height)
-                .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        $(window).on('resize', function() {
+            if ($('#attributes').hasClass('active')) {
+                betaRenderCompositionBar();
+            }
+        });
 
-            var x = d3.scale.linear()
-                .range([0, width])
-                .domain([0, d3.max(compositionData, function(d) { return d.value; })]);
-
-            var y = d3.scale.ordinal()
-                .rangeRoundBands([0, height - margin.top - margin.bottom], .1)
-                .domain(compositionData.map(function(d) { return d.label; }));
-
-            var color = d3.scale.ordinal()
-                .range(["#428bca", "#5cb85c", "#f0ad4e", "#d9534f", "#5bc0de"])
-                .domain(compositionData.map(function(d) { return d.label; }));
-
-            var bars = svg.selectAll(".bar")
-                .data(compositionData)
-                .enter().append("g")
-                .attr("class", "bar-group")
-                .style("cursor", "pointer")
-                .on("click", function(d) {
-                    betaFilterAttributesByComposition(d.type, d.name);
-                });
-
-            bars.append("rect")
-                .attr("class", "bar")
-                .attr("y", function(d) { return y(d.label); })
-                .attr("height", y.rangeBand())
-                .attr("x", 0)
-                .attr("width", function(d) { return x(d.value); })
-                .attr("fill", function(d) { return color(d.label); });
-
-            bars.append("text")
-                .attr("class", "label")
-                .attr("y", function(d) { return y(d.label) + y.rangeBand() / 2 + 4; })
-                .attr("x", -10)
-                .attr("text-anchor", "end")
-                .text(function(d) { return d.label; });
-
-            bars.append("text")
-                .attr("class", "value")
-                .attr("y", function(d) { return y(d.label) + y.rangeBand() / 2 + 4; })
-                .attr("x", function(d) { return x(d.value) + 5; })
-                .text(function(d) { return d.value; });
-        } else {
-             d3.select("#composition-treemap").html('<div class="alert alert-info" style="margin: 20px;">No composition data available.</div>');
+        if ($('#attributes').hasClass('active')) {
+            betaRenderCompositionBar();
         }
 
         // Comments Bar Chart
@@ -1357,8 +1504,13 @@
         $('.filter-active-msg').remove();
         if (typeof betaPagination !== 'undefined') {
             betaPagination.searchActive = false;
+            betaPagination.attributeType = '';
             $('.beta-pagination-container').show();
-            betaPaginationApply();
+            if (typeof window.betaPaginationLoadPage === 'function') {
+                window.betaPaginationLoadPage(1, window.betaPagination.pageSize);
+            } else {
+                $('.beta-attr-row').show();
+            }
         } else {
             $('.beta-attr-row').show();
         }
@@ -1367,28 +1519,24 @@
     function betaFilterAttributesByComposition(type, name) {
         // Switch to Attributes tab
         $('.nav-tabs a[href="#attributes"]').tab('show');
-        
-        // Disable pagination during filtering
-        if (typeof betaPagination !== 'undefined') {
-            betaPagination.searchActive = true;
-            $('.beta-pagination-container').hide();
-        }
 
-        // Reset previous filters
-        $('.beta-attr-row').show();
         $('.filter-active-msg').remove();
 
-        // Apply filter
-        $('.beta-attr-row').hide();
-        
-        if (type === 'object') {
-            // Show the object header
-            $('.beta-attr-row[data-object-name="' + name + '"]').show();
-            // Show the attributes belonging to the object
-            $('.beta-attr-row[data-parent-object="' + name + '"]').show();
+        if (type === 'attribute' && typeof betaPagination !== 'undefined' && typeof window.betaPaginationLoadPage === 'function') {
+            betaPagination.searchActive = false;
+            betaPagination.attributeType = name;
+            $('.beta-pagination-container').show();
+            window.betaPaginationLoadPage(1, betaPagination.pageSize);
         } else {
-            // Show attributes of this type (both standalone and inside objects)
-            $('.beta-attr-row[data-attribute-type="' + name + '"]').show();
+            // Fallback for non-attribute data
+            $('.beta-attr-row').show();
+            $('.beta-attr-row').hide();
+            if (type === 'object') {
+                $('.beta-attr-row[data-object-name="' + name + '"]').show();
+                $('.beta-attr-row[data-parent-object="' + name + '"]').show();
+            } else {
+                $('.beta-attr-row[data-attribute-type="' + name + '"]').show();
+            }
         }
 
         // Show message
@@ -1397,13 +1545,11 @@
         msg += 'Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>';
         msg += ' <a href="#" onclick="betaClearAttributeFilter(); return false;">(Clear Filter)</a>';
         msg += '</div>';
-        
-        // Insert message after toolbar in attributes tab
-        if ($('.beta-toolbar').length) {
-             $('.beta-toolbar').after(msg);
+
+        if ($('#beta-filter-banner-slot').length) {
+            $('#beta-filter-banner-slot').html(msg);
         } else {
-             // Fallback
-             $('#attributes').prepend(msg);
+            $('#attributes').prepend(msg);
         }
     }
 
