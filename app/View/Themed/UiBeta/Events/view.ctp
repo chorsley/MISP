@@ -155,30 +155,31 @@
         opacity: 0.82;
     }
     .composition-label-grid {
-        margin-top: 14px;
+        margin-top: 4px;
         position: relative;
-        min-height: 84px;
+        min-height: 20px;
+    }
+    .composition-label-connectors {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
     }
     .composition-label-item {
         position: absolute;
-        transform: rotate(-35deg);
-        transform-origin: left center;
         font-size: 11px;
         line-height: 1.2;
         color: #4a5560;
         white-space: nowrap;
         cursor: pointer;
         user-select: none;
+        z-index: 2;
     }
     .composition-label-item strong {
         color: #26313d;
-    }
-    .composition-label-leader {
-        position: absolute;
-        width: 1px;
-        background: #9ca9b7;
-        transform-origin: top center;
-        pointer-events: none;
     }
     .composition-inline-label {
         font-size: 11px;
@@ -1282,6 +1283,7 @@
 
             layout.push({
                 data: d,
+                startX: xOffset,
                 centerX: xOffset + (pixelWidth / 2),
                 pixelWidth: pixelWidth,
                 color: segmentColor
@@ -1312,35 +1314,125 @@
 
         var labelGrid = $('<div class="composition-label-grid"></div>');
         compositionContainer.append(labelGrid);
-
-        layout.forEach(function(item, idx) {
-            if (item.pixelWidth < 70) {
-                var isUpperRow = (idx % 2 === 0);
-                var leaderHeight = isUpperRow ? 16 : 28;
-                var labelTop = isUpperRow ? 18 : 34;
-
-                var leader = $('<div class="composition-label-leader"></div>');
-                leader.css({
-                    left: item.centerX + 'px',
-                    top: '0px',
-                    height: leaderHeight + 'px',
-                    transform: 'rotate(22deg)'
-                });
-                labelGrid.append(leader);
-
-                var label = $('<div class="composition-label-item" title="' + betaEscapeHtml(item.data.label) + '"></div>');
-                label.css({
-                    left: (item.centerX + 6) + 'px',
-                    top: labelTop + 'px',
-                    color: item.color
-                });
-                label.html('<strong>' + betaEscapeHtml(item.data.name) + '</strong> (' + item.data.value + ')');
-                label.on('click', function() {
-                    betaFilterAttributesByComposition(item.data.type, item.data.name);
-                });
-                labelGrid.append(label);
-            }
+        var smallItems = layout.filter(function(item) {
+            return item.pixelWidth < 70;
         });
+        smallItems.sort(function(a, b) {
+            return a.centerX - b.centerX;
+        });
+
+        var laneCount = 4;
+        var laneStep = 18;
+        var laneTop = [];
+        var laneRight = [];
+        for (var laneIdx = 0; laneIdx < laneCount; laneIdx++) {
+            laneTop.push(2 + (laneIdx * laneStep));
+            laneRight.push(-999);
+        }
+        var labelGap = 10;
+        var lanesUsed = 0;
+        var connectors = [];
+
+        smallItems.forEach(function(item) {
+            var labelHtml = '<strong>' + betaEscapeHtml(item.data.name) + '</strong> (' + item.data.value + ')';
+            var measure = $('<div class="composition-label-item" style="left:-9999px;top:-9999px;visibility:hidden;">' + labelHtml + '</div>');
+            labelGrid.append(measure);
+            var rawW = measure.outerWidth() || 0;
+            var rawH = measure.outerHeight() || 12;
+            measure.remove();
+
+            var desiredLeft = item.centerX - (rawW / 2);
+            var maxLeft = Math.max(0, width - rawW - 4);
+            desiredLeft = Math.max(0, Math.min(desiredLeft, maxLeft));
+
+            var lane = -1;
+            var labelLeft = desiredLeft;
+
+            for (var i = 0; i < laneRight.length; i++) {
+                if (desiredLeft >= laneRight[i] + labelGap) {
+                    lane = i;
+                    labelLeft = desiredLeft;
+                    break;
+                }
+            }
+
+            if (lane === -1) {
+                lane = 0;
+                for (var j = 1; j < laneRight.length; j++) {
+                    if (laneRight[j] < laneRight[lane]) {
+                        lane = j;
+                    }
+                }
+                labelLeft = Math.max(desiredLeft, laneRight[lane] + labelGap);
+            }
+
+            labelLeft = Math.min(labelLeft, maxLeft);
+
+            var label = $('<div class="composition-label-item" title="' + betaEscapeHtml(item.data.label) + '"></div>');
+            label.css({
+                left: labelLeft + 'px',
+                top: laneTop[lane] + 'px',
+                color: item.color
+            });
+            label.html(labelHtml);
+            label.on('click', function() {
+                betaFilterAttributesByComposition(item.data.type, item.data.name);
+            });
+            labelGrid.append(label);
+
+            var renderedLabelHeight = label.outerHeight() || rawH;
+            var labelMidY = laneTop[lane] + Math.round(renderedLabelHeight / 2);
+
+            connectors.push({
+                anchorX: Math.max(2, Math.min(width - 2, item.centerX)),
+                labelLeft: labelLeft,
+                labelWidth: rawW,
+                labelMidY: labelMidY,
+                color: item.color
+            });
+
+            laneRight[lane] = labelLeft + rawW;
+            lanesUsed = Math.max(lanesUsed, lane + 1);
+        });
+
+        if (smallItems.length > 0) {
+            var labelHeight = laneTop[Math.max(0, lanesUsed - 1)] + laneStep;
+            labelGrid.css('min-height', labelHeight + 'px');
+
+            var connectorSvg = d3.select(labelGrid[0])
+                .append('svg')
+                .attr('class', 'composition-label-connectors')
+                .attr('width', width)
+                .attr('height', labelHeight);
+
+            connectors.forEach(function(connector) {
+                var labelRight = connector.labelLeft + connector.labelWidth;
+                var labelEdgeX;
+
+                if (connector.anchorX <= connector.labelLeft) {
+                    labelEdgeX = connector.labelLeft - 3;
+                } else if (connector.anchorX >= labelRight) {
+                    labelEdgeX = labelRight + 3;
+                } else {
+                    var distToLeft = connector.anchorX - connector.labelLeft;
+                    var distToRight = labelRight - connector.anchorX;
+                    labelEdgeX = distToLeft <= distToRight
+                        ? connector.labelLeft - 3
+                        : labelRight + 3;
+                }
+
+                var endX = Math.max(1, Math.min(width - 1, labelEdgeX));
+                var endY = connector.labelMidY;
+                var elbowX = connector.anchorX + (endX >= connector.anchorX ? 10 : -10);
+
+                connectorSvg.append('path')
+                    .attr('d', 'M' + connector.anchorX + ',0 L' + elbowX + ',' + endY + ' L' + endX + ',' + endY)
+                    .attr('fill', 'none')
+                    .attr('stroke', connector.color)
+                    .attr('stroke-width', 1.2)
+                    .attr('stroke-opacity', 0.85);
+            });
+        }
     }
 
     $(function() {
