@@ -29,8 +29,8 @@ foreach ($elements as $el) {
     }
 }
 
-// Build JS-safe UUID list for batch lookup
-$eventUuids = array_values(array_map(fn($el) => $el['element_uuid'], $eventElements));
+// Build JS-safe UUID list for batch lookup (de-duplicated)
+$eventUuids = array_values(array_unique(array_map(fn($el) => $el['element_uuid'], $eventElements)));
 
 // Theme-local enrichment for creator org + tags + galaxies
 $eventDetailsByUuid = [];
@@ -126,8 +126,8 @@ if (!empty($eventUuids)) {
                 </a>
             </li>
             <li role="presentation">
-                <a href="#collection-force" aria-controls="collection-force" role="tab" data-toggle="tab">
-                    <?= __('Force Graph') ?>
+                <a href="#collection-interconnectivity" aria-controls="collection-interconnectivity" role="tab" data-toggle="tab">
+                    <?= __('Interconnectivity') ?>
                 </a>
             </li>
         </ul>
@@ -408,33 +408,31 @@ if (!empty($eventUuids)) {
                 <?php endif; ?>
             </div>
 
-            <div role="tabpanel" class="tab-pane" id="collection-force">
-                <!-- ── Force-Directed Graph ─────────────────────────────────── -->
+            <div role="tabpanel" class="tab-pane" id="collection-interconnectivity">
                 <?php if (count($eventElements) > 1): ?>
-                <div class="beta-card beta-collection-corr-card" id="collectionForceCard">
+                <div class="beta-card beta-collection-corr-card" id="collectionInterconnectivityCard">
                     <div class="beta-collection-corr-header">
-                        <span><i class="fa fa-project-diagram"></i> <?= __('Common Attribute Links') ?></span>
-                        <span id="forceGraphStatus" class="muted" style="font-size:11px;"><?= __('Loading…') ?></span>
+                        <span><i class="fa fa-circle-notch"></i> <?= __('Report Attribute Chord') ?></span>
+                        <span id="interconnectivityStatus" class="muted" style="font-size:11px;"><?= __('Loading…') ?></span>
                     </div>
-                    <div id="collectionCorrForce" class="beta-collection-corr-graph">
+                    <div id="collectionInterconnectivityGraph" class="beta-collection-corr-graph beta-chord-graph">
                         <div class="text-center" style="padding:30px;color:#aaa;">
-                            <i class="fa fa-spinner fa-spin"></i> <?= __('Fetching correlation data…') ?>
+                            <i class="fa fa-spinner fa-spin"></i> <?= __('Fetching report attribute data…') ?>
                         </div>
                     </div>
                     <div class="beta-collection-corr-legend">
-                        <span><svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#4e9af1"/></svg> <?= __('Event') ?></span>
-                        <span><svg width="14" height="14"><rect x="1" y="1" width="12" height="12" fill="#f0ad4e"/></svg> <?= __('Attribute') ?></span>
-                        <span><svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#999" stroke-width="2"/></svg> <?= __('Link') ?></span>
-                        <span><svg width="18" height="14"><rect x="1" y="1" width="16" height="12" fill="rgba(70,130,180,0.18)" stroke="rgba(70,130,180,0.6)" stroke-width="1"/></svg> <?= __('Organisation region') ?></span>
-                        <span id="collectionForceOrgLegend"></span>
+                        <span><svg width="14" height="14"><rect x="1" y="1" width="12" height="12" fill="#4e9af1"/></svg> <?= __('Report arc') ?></span>
+                        <span><svg width="18" height="10"><line x1="2" y1="5" x2="16" y2="5" stroke="#6c757d" stroke-width="1.5"/></svg> <?= __('Tick = report attribute') ?></span>
+                        <span><svg width="24" height="10"><path d="M1,8 Q12,1 23,8" stroke="#f0ad4e" stroke-width="1.5" fill="none"/></svg> <?= __('Shared attribute chord') ?></span>
                     </div>
                 </div>
                 <?php else: ?>
                 <div class="beta-card" style="padding:20px;color:#888;">
-                    <i class="fa fa-info-circle"></i> <?= __('Add at least two events to view correlations.') ?>
+                    <i class="fa fa-info-circle"></i> <?= __('Add at least two events to view interconnectivity.') ?>
                 </div>
                 <?php endif; ?>
             </div>
+
         </div>
     </div>
 </div>
@@ -446,6 +444,7 @@ if (!empty($eventUuids)) {
     var baseurl   = <?= json_encode($baseurl) ?>;
     var eventUuids = <?= json_encode($eventUuids) ?>;
     var sortSelector = document.getElementById('elementSortSelector');
+    var chordState = null;
 
     function getSortableRows() {
         return Array.prototype.slice.call(document.querySelectorAll('.beta-element-row[data-uuid]'));
@@ -558,6 +557,7 @@ if (!empty($eventUuids)) {
                 // Build correlation graph once we have event data
                 if (eventUuids.length > 1) {
                     buildCorrGraph(eventMap);
+                    buildInterconnectivityChord(eventMap);
                 }
             },
             error: function () {
@@ -571,6 +571,8 @@ if (!empty($eventUuids)) {
                 });
                 var s = document.getElementById('corrGraphStatus');
                 if (s) s.textContent = '<?= __('Could not load event data') ?>';
+                var interStatus = document.getElementById('interconnectivityStatus');
+                if (interStatus) interStatus.textContent = '<?= __('Could not load event data') ?>';
             }
         });
     }
@@ -853,14 +855,6 @@ if (!empty($eventUuids)) {
             });
         }
 
-        var _forceGraphReady = false;
-        var _forceGraphRendered = false;
-
-        function isForceTabActive() {
-            var tab = document.getElementById('collection-force');
-            return tab && tab.classList.contains('active');
-        }
-
         function finalizeGraph() {
             var attrEntries = Object.keys(attrMap).map(function (attrKey) {
                 return { key: attrKey, record: attrMap[attrKey] };
@@ -882,11 +876,6 @@ if (!empty($eventUuids)) {
 
             if (links.length === 0) return;
             renderSankey();
-            _forceGraphReady = true;
-            if (isForceTabActive()) {
-                renderForceGraph();
-                _forceGraphRendered = true;
-            }
         }
 
         function renderSankey() {
@@ -1017,487 +1006,442 @@ if (!empty($eventUuids)) {
             label.on('mouseover', highlight).on('mouseout', resetHighlight);
         }
 
-        function renderForceGraph() {
-            var container = document.getElementById('collectionCorrForce');
-            var statusEl  = document.getElementById('forceGraphStatus');
-            var orgLegendEl = document.getElementById('collectionForceOrgLegend');
-            if (!container || typeof d3 === 'undefined') {
-                if (statusEl) statusEl.textContent = '<?= __('Correlation graph unavailable') ?>';
-                return;
-            }
+    }
 
-            if (container.clientWidth < 100) {
-                if (statusEl) statusEl.textContent = '<?= __('Waiting for layout…') ?>';
-                return;
-            }
-
-            var nodes = [];
-            var links = [];
-            var nodeIndex = {};
-
-            function addNode(key, data) {
-                if (nodeIndex[key] !== undefined) return nodeIndex[key];
-                nodes.push(data);
-                nodeIndex[key] = nodes.length - 1;
-                return nodeIndex[key];
-            }
-
-            function getOrgMeta(ev) {
-                var orgName = '';
-                var orgId = '';
-                if (ev) {
-                    orgName =
-                        (ev.Orgc && ev.Orgc.name) ||
-                        ev.orgc_name ||
-                        (ev.orgc && ev.orgc.name) ||
-                        (ev.Org && ev.Org.name) ||
-                        ev.org_name ||
-                        '';
-                    orgId =
-                        (ev.Orgc && ev.Orgc.id) ||
-                        ev.orgc_id ||
-                        (ev.orgc && ev.orgc.id) ||
-                        (ev.Org && ev.Org.id) ||
-                        ev.org_id ||
-                        '';
-                }
-                var key = orgId ? ('org|' + orgId) : ('name|' + (orgName || 'unknown').toLowerCase());
-                var label = orgName || '<?= __('Unknown organisation') ?>';
-                return { key: key, label: label };
-            }
-
-            Object.keys(attrMap).forEach(function (attrKey) {
-                var record = attrMap[attrKey];
-                var eventList = Object.keys(record.events);
-                if (eventList.length < 2) return;
-
-                var attrLabel = buildAttrLabel(record.attr);
-                var attrIdx = addNode('attr|' + attrKey, {
-                    id: attrKey,
-                    type: 'attribute',
-                    attrType: record.attr ? record.attr.type : '',
-                    name: attrLabel.name,
-                    fullTitle: attrLabel.full
-                });
-
-                eventList.forEach(function (uuid) {
-                    var ev = nodeData[uuid];
-                    if (!ev) return;
-                    var evLabel = buildEventLabel(ev, uuid);
-                    var org = getOrgMeta(ev);
-                    var evIdx = addNode('event|' + uuid, {
-                        id: ev.id,
-                        uuid: uuid,
-                        type: 'event',
-                        name: evLabel.name,
-                        fullTitle: evLabel.full,
-                        orgKey: org.key,
-                        orgLabel: org.label
-                    });
-                    links.push({ source: evIdx, target: attrIdx, weight: 1 });
-                });
-            });
-
-            if (nodes.length === 0 || links.length === 0) {
-                container.innerHTML = '<div class="text-center" style="padding:30px;color:#aaa;"><i class="fa fa-info-circle"></i> <?= __('No common-attribute links found.') ?></div>';
-                if (statusEl) statusEl.textContent = '<?= __('No common attributes between collection events') ?>';
-                return;
-            }
-
-            if (statusEl) statusEl.textContent = links.length + ' <?= __('links') ?>';
-            container.innerHTML = '';
-
-            var bounds = container.getBoundingClientRect();
-            var width  = Math.max(240, bounds.width || container.clientWidth || 760);
-            var viewportH = window.innerHeight || 800;
-            var availableH = Math.max(260, viewportH - bounds.top - 180);
-            var height = Math.max(320, Math.min(availableH, Math.max(360, nodes.length * 18)));
-
-            container.style.height = height + 'px';
-
-            var svg = d3.select(container).append('svg')
-                .attr('width', width)
-                .attr('height', height)
-                .attr('class', 'beta-corr-svg');
-
-            var zoomLayer = svg.append('g').attr('class', 'force-zoom-layer');
-            svg.style('cursor', 'move');
-
-            var orgLayer = zoomLayer.append('g').attr('class', 'force-org-regions');
-
-            function hashHue(str) {
-                var h = 0;
-                for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-                return Math.abs(h) % 360;
-            }
-
-            function orgFill(key) {
-                var hue = hashHue(key || 'org');
-                return 'hsla(' + hue + ', 68%, 54%, 0.20)';
-            }
-
-            function orgStroke(key) {
-                var hue = hashHue(key || 'org');
-                return 'hsla(' + hue + ', 72%, 40%, 0.75)';
-            }
-
-            var color = function (d) {
-                return d.type === 'attribute' ? '#f0ad4e' : '#4e9af1';
-            };
-
-            var degree = {};
-            links.forEach(function (l) {
-                var s = typeof l.source === 'number' ? l.source : l.source.index;
-                var t = typeof l.target === 'number' ? l.target : l.target.index;
-                degree[s] = (degree[s] || 0) + 1;
-                degree[t] = (degree[t] || 0) + 1;
-            });
-
-            function renderOrgLegend() {
-                if (!orgLegendEl) return;
-                function escapeHtml(str) {
-                    return String(str || '').replace(/[&<>"']/g, function (ch) {
-                        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch] || ch;
-                    });
-                }
-                var orgEntries = {};
-                nodes.forEach(function (n) {
-                    if (n.type !== 'event') return;
-                    if (!orgEntries[n.orgKey]) {
-                        orgEntries[n.orgKey] = {
-                            key: n.orgKey,
-                            label: n.orgLabel || '<?= __('Unknown organisation') ?>'
-                        };
-                    }
-                });
-                var list = Object.keys(orgEntries).map(function (k) { return orgEntries[k]; });
-                list.sort(function (a, b) {
-                    return (a.label || '').localeCompare(b.label || '');
-                });
-                orgLegendEl.innerHTML = list.map(function (entry) {
-                    var fill = orgFill(entry.key);
-                    var stroke = orgStroke(entry.key);
-                    return '<span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;">'
-                        + '<svg width="14" height="14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" fill="' + fill + '" stroke="' + stroke + '" stroke-width="1"/></svg>'
-                        + '<span>' + escapeHtml(entry.label) + '</span>'
-                        + '</span>';
-                }).join('');
-            }
-
-            function buildCirclePath(cx, cy, r) {
-                return 'M' + (cx - r) + ',' + cy
-                    + 'a' + r + ',' + r + ' 0 1,0 ' + (2 * r) + ',0'
-                    + 'a' + r + ',' + r + ' 0 1,0 ' + (-2 * r) + ',0';
-            }
-
-            function nodeEnvelopePoints(n, radius) {
-                var points = [[n.x, n.y]];
-                var step = Math.PI / 4;
-                for (var a = 0; a < Math.PI * 2; a += step) {
-                    points.push([n.x + Math.cos(a) * radius, n.y + Math.sin(a) * radius]);
-                }
-                return points;
-            }
-
-            function computeHull(points) {
-                if (!points || points.length < 3) return null;
-                if (d3.polygonHull) {
-                    return d3.polygonHull(points);
-                }
-                if (d3.geom && typeof d3.geom.hull === 'function') {
-                    return d3.geom.hull(points);
-                }
-                return null;
-            }
-
-            function hullPath(points) {
-                if (!points || points.length < 3) return null;
-                return 'M' + points.map(function (p) { return p[0] + ',' + p[1]; }).join('L') + 'Z';
-            }
-
-            function updateOrganisationRegions() {
-                var byOrg = {};
-                nodes.forEach(function (n) {
-                    if (n.type !== 'event') return;
-                    var orgKey = n.orgKey || 'org|unknown';
-                    if (!byOrg[orgKey]) {
-                        byOrg[orgKey] = {
-                            key: orgKey,
-                            label: n.orgLabel || '<?= __('Unknown organisation') ?>',
-                            eventNodes: [],
-                            attrNodes: {}
-                        };
-                    }
-                    byOrg[orgKey].eventNodes.push(n);
-                });
-
-                links.forEach(function (l) {
-                    var src = l.source;
-                    var tgt = l.target;
-                    var ev = src.type === 'event' ? src : (tgt.type === 'event' ? tgt : null);
-                    var attr = src.type === 'attribute' ? src : (tgt.type === 'attribute' ? tgt : null);
-                    if (!ev || !attr) return;
-                    var orgKey = ev.orgKey || 'org|unknown';
-                    if (!byOrg[orgKey]) return;
-                    byOrg[orgKey].attrNodes[attr.id || attr.name] = attr;
-                });
-
-                var regions = Object.keys(byOrg).map(function (k) {
-                    var bucket = byOrg[k];
-                    var members = bucket.eventNodes.slice();
-                    Object.keys(bucket.attrNodes).forEach(function (attrKey) {
-                        members.push(bucket.attrNodes[attrKey]);
-                    });
-                    members = members.filter(function (n) {
-                        return isFinite(n.x) && isFinite(n.y);
-                    });
-                    if (!members.length) return null;
-
-                    var points = [];
-                    members.forEach(function (n) {
-                        var radius = n.type === 'event' ? 24 : 16;
-                        points = points.concat(nodeEnvelopePoints(n, radius));
-                    });
-
-                    var hull = computeHull(points);
-                    var path = hullPath(hull);
-                    if (!path) {
-                        var cx = 0;
-                        var cy = 0;
-                        members.forEach(function (n) { cx += n.x; cy += n.y; });
-                        cx = cx / members.length;
-                        cy = cy / members.length;
-                        var maxR = 36;
-                        members.forEach(function (n) {
-                            var dx = n.x - cx;
-                            var dy = n.y - cy;
-                            maxR = Math.max(maxR, Math.sqrt(dx * dx + dy * dy) + (n.type === 'event' ? 30 : 20));
-                        });
-                        path = buildCirclePath(cx, cy, maxR);
-                    }
-
-                    return {
-                        key: bucket.key,
-                        label: bucket.label,
-                        path: path
-                    };
-                }).filter(function (r) { return !!r; });
-
-                var regionPaths = orgLayer.selectAll('path').data(regions, function (d) { return d.key; });
-
-                regionPaths.enter()
-                    .append('path')
-                    .attr('pointer-events', 'none')
-                    .attr('fill-opacity', 1)
-                    .attr('stroke-width', 1.5);
-
-                regionPaths
-                    .attr('d', function (d) { return d.path; })
-                    .attr('fill', function (d) { return orgFill(d.key); })
-                    .attr('stroke', function (d) { return orgStroke(d.key); });
-
-                regionPaths.exit().remove();
-            }
-
-            var link = zoomLayer.append('g')
-                .attr('stroke', '#b0c4de')
-                .attr('stroke-opacity', 0.4)
-                .selectAll('line')
-                .data(links)
-                .enter().append('line')
-                .attr('stroke-width', 1.2);
-
-            var node = zoomLayer.append('g')
-                .selectAll('g')
-                .data(nodes)
-                .enter().append('g')
-                .attr('class', 'beta-corr-node')
-                .style('cursor', function (d) { return d.type === 'event' ? 'pointer' : 'default'; });
-
-            node.append(function (d) {
-                return document.createElementNS('http://www.w3.org/2000/svg', d.type === 'attribute' ? 'rect' : 'circle');
-            })
-                .attr('r', function (d) { return d.type === 'event' ? 8 : null; })
-                .attr('width', function (d) { return d.type === 'attribute' ? 12 : null; })
-                .attr('height', function (d) { return d.type === 'attribute' ? 12 : null; })
-                .attr('x', function (d) { return d.type === 'attribute' ? -6 : null; })
-                .attr('y', function (d) { return d.type === 'attribute' ? -6 : null; })
-                .attr('fill', color)
-                .attr('stroke', '#fff')
-                .attr('stroke-width', 1.5);
-
-            node.append('title')
-                .text(function (d) {
-                    if (d.type === 'event') {
-                        return (d.fullTitle || d.name) + '\n<?= __('Organisation') ?>: ' + (d.orgLabel || '<?= __('Unknown organisation') ?>');
-                    }
-                    return d.fullTitle || d.name;
-                });
-
-            node.on('click', function (d) {
-                if (d.type === 'event' && d.id) window.location.href = baseurl + '/events/view/' + d.id;
-            });
-
-            var label = zoomLayer.append('g')
-                .selectAll('text')
-                .data(nodes)
-                .enter().append('text')
-                .attr('font-size', 9)
-                .attr('fill', '#555')
-                .attr('dx', 10)
-                .attr('dy', '0.35em')
-                .style('opacity', function (d) { return d.type === 'event' ? 0.85 : 0; })
-                .text(function (d) { return d.name; });
-
-            renderOrgLegend();
-
-            if (d3.zoom) {
-                var zoom = d3.zoom().scaleExtent([0.3, 4]).on('zoom', function () {
-                    zoomLayer.attr('transform', d3.event.transform);
-                });
-                svg.call(zoom);
-            } else if (d3.behavior && d3.behavior.zoom) {
-                var zoomV3 = d3.behavior.zoom().scaleExtent([0.3, 4]).on('zoom', function () {
-                    zoomLayer.attr('transform', 'translate(' + d3.event.translate + ') scale(' + d3.event.scale + ')');
-                });
-                svg.call(zoomV3);
-            }
-
-            if (d3.forceSimulation && d3.forceLink) {
-                nodes.forEach(function (n, i) {
-                    var colX = n.type === 'event' ? width * 0.32 : width * 0.68;
-                    var bandCenter = n.type === 'event' ? height * 0.45 : height * 0.55;
-                    var bandSpread = Math.max(140, height * 0.6);
-                    var jitter = (Math.random() - 0.5) * bandSpread;
-                    n.x = n.x || colX + (Math.random() * 40 - 20);
-                    n.y = n.y || Math.max(24, Math.min(height - 24, bandCenter + jitter + (i % 9) * 5));
-                    n._targetY = bandCenter + jitter;
-                });
-
-                var simulation = d3.forceSimulation(nodes)
-                    .force('link', d3.forceLink(links)
-                        .distance(function (d) {
-                            var s = d.source.index;
-                            var t = d.target.index;
-                            var weight = (degree[s] || 1) + (degree[t] || 1);
-                            return Math.max(80, Math.min(140, 70 + weight * 6));
-                        })
-                        .strength(0.65))
-                    .force('charge', d3.forceManyBody().strength(-190))
-                    .force('center', d3.forceCenter(width / 2, height / 2))
-                    .force('collision', d3.forceCollide(function (d) { return d.type === 'event' ? 18 : 14; }))
-                    .force('x', d3.forceX(function (d) { return d.type === 'event' ? width * 0.32 : width * 0.68; }).strength(0.18))
-                    .force('y', d3.forceY(function (d) { return d._targetY || (d.type === 'event' ? height * 0.45 : height * 0.55); }).strength(0.12));
-
-                var tickCount = 0;
-                simulation.on('tick', function () {
-                    link
-                        .attr('x1', function (d) { return d.source.x; })
-                        .attr('y1', function (d) { return d.source.y; })
-                        .attr('x2', function (d) { return d.target.x; })
-                        .attr('y2', function (d) { return d.target.y; });
-
-                    node.attr('transform', function (d) {
-                        d.x = Math.max(10, Math.min(width - 10, d.x));
-                        d.y = Math.max(10, Math.min(height - 10, d.y));
-                        return 'translate(' + d.x + ',' + d.y + ')';
-                    });
-
-                    label
-                        .attr('x', function (d) { return d.x; })
-                        .attr('y', function (d) { return d.y; });
-                    tickCount++;
-                    if (tickCount % 4 === 0) updateOrganisationRegions();
-                });
-            } else if (d3.layout && d3.layout.force) {
-                nodes.forEach(function (n, i) {
-                    var colX = n.type === 'event' ? width * 0.32 : width * 0.68;
-                    var bandCenter = n.type === 'event' ? height * 0.45 : height * 0.55;
-                    var bandSpread = Math.max(140, height * 0.6);
-                    var jitter = (Math.random() - 0.5) * bandSpread;
-                    n.x = n.x || colX + (Math.random() * 40 - 20);
-                    n.y = n.y || Math.max(24, Math.min(height - 24, bandCenter + jitter + (i % 9) * 5));
-                    n._targetY = bandCenter + jitter;
-                });
-                var force = d3.layout.force()
-                    .nodes(nodes)
-                    .links(links)
-                    .size([width, height])
-                    .linkDistance(function (d) {
-                        var s = d.source.index || 0;
-                        var t = d.target.index || 0;
-                        var weight = (degree[s] || 1) + (degree[t] || 1);
-                        return Math.max(80, Math.min(140, 70 + weight * 6));
-                    })
-                    .charge(-260)
-                    .start();
-
-                var tickCountV3 = 0;
-                force.on('tick', function () {
-                    nodes.forEach(function (n) {
-                        if (n._targetY) n.y += (n._targetY - n.y) * 0.04;
-                    });
-                    link
-                        .attr('x1', function (d) { return d.source.x; })
-                        .attr('y1', function (d) { return d.source.y; })
-                        .attr('x2', function (d) { return d.target.x; })
-                        .attr('y2', function (d) { return d.target.y; });
-
-                    node.attr('transform', function (d) {
-                        d.x = Math.max(10, Math.min(width - 10, d.x));
-                        d.y = Math.max(10, Math.min(height - 10, d.y));
-                        return 'translate(' + d.x + ',' + d.y + ')';
-                    });
-
-                    label
-                        .attr('x', function (d) { return d.x; })
-                        .attr('y', function (d) { return d.y; });
-                    tickCountV3++;
-                    if (tickCountV3 % 4 === 0) updateOrganisationRegions();
-                });
-            }
-
-            updateOrganisationRegions();
-
-            function isConnected(a, b) {
-                return links.some(function (l) {
-                    return (l.source === a && l.target === b) || (l.source === b && l.target === a);
-                });
-            }
-
-            function highlight(d) {
-                link.style('stroke-opacity', function (l) {
-                    return (l.source === d || l.target === d) ? 0.7 : 0.05;
-                });
-                node.style('opacity', function (n) {
-                    return (n === d || isConnected(n, d)) ? 1 : 0.2;
-                });
-                label.style('opacity', function (n) {
-                    if (n.type === 'attribute') return (n === d || isConnected(n, d)) ? 0.9 : 0.05;
-                    return (n === d || isConnected(n, d)) ? 1 : 0.2;
-                });
-            }
-
-            function resetHighlight() {
-                link.style('stroke-opacity', 0.4);
-                node.style('opacity', 1);
-                label.style('opacity', function (d) { return d.type === 'event' ? 0.85 : 0; });
-            }
-
-            node.on('mouseover', highlight).on('mouseout', resetHighlight);
-            label.on('mouseover', highlight).on('mouseout', resetHighlight);
+    function buildInterconnectivityChord(eventMap) {
+        var statusEl = document.getElementById('interconnectivityStatus');
+        if (!statusEl) return;
+        if (typeof d3 === 'undefined') {
+            statusEl.textContent = '<?= __('D3 unavailable') ?>';
+            return;
         }
 
-        // Defer force graph render until tab is visible
-        $('a[href="#collection-force"]').on('shown.bs.tab', function () {
-            if (_forceGraphReady && !_forceGraphRendered) {
-                setTimeout(function () {
-                    renderForceGraph();
-                    _forceGraphRendered = true;
-                }, 50);
-            }
+        var targets = eventUuids
+            .map(function (uuid) {
+                return {
+                    uuid: uuid,
+                    event: eventMap[uuid] || null
+                };
+            })
+            .filter(function (entry) {
+                return entry.event && entry.event.id;
+            });
+
+        if (targets.length < 2) {
+            statusEl.textContent = '<?= __('Need at least two reports with IDs') ?>';
+            return;
+        }
+
+        var reportAttrSets = {};
+        var attrPresence = {};
+        var pending = targets.length;
+        statusEl.textContent = '<?= __('Loading attributes…') ?>';
+
+        targets.forEach(function (entry) {
+            $.ajax({
+                url: baseurl + '/events/view/' + entry.event.id + '.json',
+                method: 'GET',
+                dataType: 'json',
+                data: {
+                    noEventReports: 1,
+                    noSightings: 1,
+                    fetchFullClusters: 0,
+                    includeDecayScore: 0,
+                    includeGranularCorrelations: 0
+                },
+                success: function (data) {
+                    var payload = data && data.Event ? data.Event : data;
+                    var attrs = collectEventAttributes(payload);
+                    var setForReport = {};
+
+                    attrs.forEach(function (attr) {
+                        var norm = normalizeAttributeKey(attr);
+                        if (!norm) return;
+                        if (setForReport[norm.key]) return;
+
+                        setForReport[norm.key] = {
+                            key: norm.key,
+                            type: norm.type,
+                            value: norm.value,
+                            label: norm.label
+                        };
+
+                        if (!attrPresence[norm.key]) {
+                            attrPresence[norm.key] = {
+                                type: norm.type,
+                                value: norm.value,
+                                label: norm.label,
+                                reports: {}
+                            };
+                        }
+                        attrPresence[norm.key].reports[entry.uuid] = true;
+                    });
+
+                    reportAttrSets[entry.uuid] = setForReport;
+                },
+                complete: function () {
+                    pending--;
+                    if (pending <= 0) {
+                        chordState = {
+                            reportAttrSets: reportAttrSets,
+                            attrPresence: attrPresence,
+                            eventMap: eventMap
+                        };
+                        renderInterconnectivityChord(chordState);
+                    }
+                }
+            });
         });
     }
+
+    function collectEventAttributes(eventPayload) {
+        var attrs = [];
+        if (!eventPayload) return attrs;
+
+        if (Array.isArray(eventPayload.Attribute)) {
+            attrs = attrs.concat(eventPayload.Attribute);
+        }
+
+        if (Array.isArray(eventPayload.Object)) {
+            eventPayload.Object.forEach(function (objectEntry) {
+                if (objectEntry && Array.isArray(objectEntry.Attribute)) {
+                    attrs = attrs.concat(objectEntry.Attribute);
+                }
+            });
+        }
+
+        return attrs;
+    }
+
+    function normalizeAttributeKey(attr) {
+        if (!attr) return null;
+        var value = (attr.value || '').toString().trim();
+        var type = (attr.type || 'attribute').toString().trim();
+        if (!value) return null;
+
+        var normalizedType = type.toLowerCase();
+        var normalizedValue = value.toLowerCase();
+        return {
+            key: normalizedType + '|' + normalizedValue,
+            type: type,
+            value: value,
+            label: type + ': ' + value
+        };
+    }
+
+    function renderInterconnectivityChord(state) {
+        var container = document.getElementById('collectionInterconnectivityGraph');
+        var statusEl = document.getElementById('interconnectivityStatus');
+        if (!container || !statusEl || !state) return;
+
+        var reportAttrSets = state.reportAttrSets || {};
+        var attrPresence = state.attrPresence || {};
+        var eventMap = state.eventMap || {};
+
+        var reports = eventUuids
+            .map(function (uuid) {
+                var ev = eventMap[uuid] || {};
+                var attrs = reportAttrSets[uuid] || {};
+                return {
+                    uuid: uuid,
+                    id: ev.id || null,
+                    name: '#'+ (ev.id || '?') + (ev.info ? ': ' + ev.info : ''),
+                    attrs: attrs,
+                    attrKeys: Object.keys(attrs)
+                };
+            })
+            .filter(function (report) {
+                return report.id && report.attrKeys.length > 0;
+            });
+
+        reports.sort(function (a, b) {
+            return (a.id || 0) - (b.id || 0);
+        });
+
+        if (reports.length < 2) {
+            container.innerHTML = '<div class="text-center" style="padding:30px;color:#888;"><i class="fa fa-info-circle"></i> <?= __('Not enough report attributes to build the chord diagram.') ?></div>';
+            statusEl.textContent = '<?= __('Not enough data') ?>';
+            return;
+        }
+
+        reports.forEach(function (report) {
+            report.attrKeys.sort(function (a, b) {
+                var aCount = Object.keys((attrPresence[a] && attrPresence[a].reports) || {}).length;
+                var bCount = Object.keys((attrPresence[b] && attrPresence[b].reports) || {}).length;
+                if (bCount !== aCount) return bCount - aCount;
+                return a.localeCompare(b);
+            });
+        });
+
+        var totalTicks = reports.reduce(function (acc, report) { return acc + report.attrKeys.length; }, 0);
+        var connectedAttrCount = 0;
+        var uniqueAttrCount = 0;
+        Object.keys(attrPresence).forEach(function (attrKey) {
+            var count = Object.keys(attrPresence[attrKey].reports || {}).length;
+            if (count > 1) connectedAttrCount++;
+            else if (count === 1) uniqueAttrCount++;
+        });
+
+        var width = Math.max(620, container.clientWidth || 620);
+        var height = Math.max(620, Math.min(1100, width));
+        var outerRadius = Math.min(width, height) / 2 - 56;
+        var innerRadius = outerRadius - 24;
+        var centerX = width / 2;
+        var centerY = height / 2;
+
+        var gap = 0;
+        var full = Math.PI * 2;
+        var usable = full - (reports.length * gap);
+        var cursor = -Math.PI / 2;
+        var slotAngles = {};
+        var reportArcs = [];
+        var reportByUuid = {};
+
+        reports.forEach(function (report) {
+            var slice = usable * (report.attrKeys.length / totalTicks);
+            var start = cursor;
+            var end = cursor + slice;
+            reportArcs.push({ report: report, startAngle: start, endAngle: end });
+            reportByUuid[report.uuid] = true;
+
+            if (report.attrKeys.length > 0) {
+                var unit = slice / report.attrKeys.length;
+                report.attrKeys.forEach(function (attrKey, idx) {
+                    slotAngles[report.uuid + '|' + attrKey] = start + (idx + 0.5) * unit;
+                });
+            }
+            cursor = end + gap;
+        });
+
+        var links = [];
+        Object.keys(attrPresence).forEach(function (attrKey) {
+            var record = attrPresence[attrKey];
+            var reportList = Object.keys(record.reports || {}).filter(function (uuid) {
+                return !!reportByUuid[uuid];
+            });
+            if (reportList.length < 2) return;
+            for (var i = 0; i < reportList.length; i++) {
+                for (var j = i + 1; j < reportList.length; j++) {
+                    var sourceUuid = reportList[i];
+                    var targetUuid = reportList[j];
+                    if (sourceUuid === targetUuid) continue;
+                    var sourceAngle = slotAngles[sourceUuid + '|' + attrKey];
+                    var targetAngle = slotAngles[targetUuid + '|' + attrKey];
+                    if (!isFinite(sourceAngle) || !isFinite(targetAngle)) continue;
+                    links.push({
+                        sourceUuid: sourceUuid,
+                        targetUuid: targetUuid,
+                        sourceAngle: sourceAngle,
+                        targetAngle: targetAngle,
+                        attrKey: attrKey,
+                        attrLabel: record.label || attrKey,
+                        reportCount: reportList.length
+                    });
+                }
+            }
+        });
+
+        var maxLinks = 4000;
+        if (links.length > maxLinks) {
+            links = links.slice(0, maxLinks);
+        }
+
+        container.innerHTML = '';
+        var svg = d3.select(container)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr('transform', 'translate(' + centerX + ',' + centerY + ')');
+
+        var reportColor = d3.scale.category10();
+        var reportColorByUuid = {};
+        reports.forEach(function (report, idx) {
+            reportColorByUuid[report.uuid] = reportColor(idx);
+        });
+
+        // d3.svg.arc uses 0 rad at 12 o'clock (not 3 o'clock), so shift
+        // manual polar calculations by -PI/2 to keep labels/ticks/chords aligned.
+        var radialPoint = function (angle, radius) {
+            var a = angle - (Math.PI / 2);
+            return {
+                x: Math.cos(a) * radius,
+                y: Math.sin(a) * radius
+            };
+        };
+
+        var arc = d3.svg.arc()
+            .innerRadius(innerRadius)
+            .outerRadius(outerRadius);
+
+        var arcGroup = svg.append('g').attr('class', 'beta-chord-report-arcs');
+        var linkGroup = svg.append('g').attr('class', 'beta-chord-links');
+        var tickGroup = svg.append('g').attr('class', 'beta-chord-ticks');
+
+        arcGroup.selectAll('path')
+            .data(reportArcs)
+            .enter()
+            .append('path')
+            .attr('d', function (d) {
+                return arc({ startAngle: d.startAngle, endAngle: d.endAngle });
+            })
+            .style('fill', function (d) { return reportColorByUuid[d.report.uuid]; })
+            .style('stroke', '#f5f5f5')
+            .style('stroke-width', 2)
+            .style('cursor', 'pointer')
+            .on('click', function (d) {
+                if (d.report.id) {
+                    window.location.href = baseurl + '/events/view/' + d.report.id;
+                }
+            })
+            .append('title')
+            .text(function (d) {
+                return d.report.name + '\n' + d.report.attrKeys.length + ' <?= __('attribute(s)') ?>';
+            });
+
+        var arcLabelGroup = svg.append('g').attr('class', 'beta-chord-report-labels');
+        arcLabelGroup.selectAll('text')
+            .data(reportArcs)
+            .enter()
+            .append('text')
+            .attr('x', function (d) {
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return radialPoint(angle, outerRadius + 20).x;
+            })
+            .attr('y', function (d) {
+                var angle = (d.startAngle + d.endAngle) / 2;
+                return radialPoint(angle, outerRadius + 20).y;
+            })
+            .attr('dy', '0.35em')
+            .attr('text-anchor', function (d) {
+                var angle = (d.startAngle + d.endAngle) / 2;
+                var p = radialPoint(angle, 1);
+                return p.x >= 0 ? 'start' : 'end';
+            })
+            .style('font-size', '10px')
+            .style('font-weight', 'bold')
+            .style('fill', '#333')
+            .style('pointer-events', 'none')
+            .text(function (d) {
+                var label = d.report.name || '';
+                return label.length > 34 ? label.substring(0, 33) + '…' : label;
+            });
+
+        var tickData = [];
+        reports.forEach(function (report) {
+            report.attrKeys.forEach(function (attrKey) {
+                var angle = slotAngles[report.uuid + '|' + attrKey];
+                var sharedCount = Object.keys((attrPresence[attrKey] && attrPresence[attrKey].reports) || {}).length;
+                tickData.push({
+                    reportUuid: report.uuid,
+                    angle: angle,
+                    attrKey: attrKey,
+                    attrLabel: (attrPresence[attrKey] && attrPresence[attrKey].label) || attrKey,
+                    sharedCount: sharedCount
+                });
+            });
+        });
+
+        tickGroup.selectAll('line')
+            .data(tickData)
+            .enter()
+            .append('line')
+            .attr('x1', function (d) {
+                var p = radialPoint(d.angle, outerRadius);
+                return p.x;
+            })
+            .attr('y1', function (d) {
+                var p = radialPoint(d.angle, outerRadius);
+                return p.y;
+            })
+            .attr('x2', function (d) {
+                var p = radialPoint(d.angle, outerRadius + 7);
+                return p.x;
+            })
+            .attr('y2', function (d) {
+                var p = radialPoint(d.angle, outerRadius + 7);
+                return p.y;
+            })
+            .style('stroke', function (d) { return d.sharedCount > 1 ? '#2c3e50' : '#c3c9ce'; })
+            .style('stroke-width', function (d) { return d.sharedCount > 1 ? 1.2 : 0.8; })
+            .append('title')
+            .text(function (d) {
+                return d.attrLabel + '\n' + (d.sharedCount > 1
+                    ? d.sharedCount + ' <?= __('reports share this attribute') ?>'
+                    : '<?= __('Unique to this report') ?>');
+            });
+
+        var linkSelection = linkGroup.selectAll('path')
+            .data(links)
+            .enter()
+            .append('path')
+            .attr('d', function (d) {
+                var p1 = radialPoint(d.sourceAngle, innerRadius);
+                var p2 = radialPoint(d.targetAngle, innerRadius);
+                var cRadius = Math.max(0, innerRadius - 18);
+                var c1 = radialPoint(d.sourceAngle, cRadius);
+                var c2 = radialPoint(d.targetAngle, cRadius);
+                return 'M' + p1.x + ',' + p1.y
+                    + ' C' + c1.x + ',' + c1.y
+                    + ' ' + c2.x + ',' + c2.y
+                    + ' ' + p2.x + ',' + p2.y;
+            })
+            .style('fill', 'none')
+            .style('stroke', function (d) {
+                return reportColorByUuid[d.sourceUuid] || '#f0ad4e';
+            })
+            .style('stroke-opacity', 0.28)
+            .style('stroke-width', 1.25);
+
+        linkSelection.append('title')
+            .text(function (d) {
+                return d.attrLabel + '\n' +
+                    '<?= __('Shared between') ?> ' +
+                    ((eventMap[d.sourceUuid] && eventMap[d.sourceUuid].id) ? ('#' + eventMap[d.sourceUuid].id) : d.sourceUuid) +
+                    ' <?= __('and') ?> ' +
+                    ((eventMap[d.targetUuid] && eventMap[d.targetUuid].id) ? ('#' + eventMap[d.targetUuid].id) : d.targetUuid);
+            });
+
+        function highlightAttr(attrKey) {
+            linkSelection.style('stroke-opacity', function (d) {
+                return d.attrKey === attrKey ? 0.85 : 0.04;
+            });
+            tickGroup.selectAll('line').style('opacity', function (d) {
+                return d.attrKey === attrKey ? 1 : 0.18;
+            });
+        }
+
+        function resetHighlight() {
+            linkSelection.style('stroke-opacity', 0.28);
+            tickGroup.selectAll('line').style('opacity', 1);
+        }
+
+        tickGroup.selectAll('line')
+            .on('mouseover', function (d) { highlightAttr(d.attrKey); })
+            .on('mouseout', resetHighlight);
+
+        statusEl.textContent =
+            reports.length + ' <?= __('reports') ?> · ' +
+            totalTicks + ' <?= __('attribute ticks') ?> · ' +
+            links.length + ' <?= __('chord(s)') ?> · ' +
+            connectedAttrCount + ' <?= __('shared attributes') ?> · ' +
+            uniqueAttrCount + ' <?= __('unique attributes') ?>';
+    }
+
+    $(document).on('shown.bs.tab', 'a[href="#collection-interconnectivity"]', function () {
+        if (chordState) {
+            renderInterconnectivityChord(chordState);
+        }
+    });
+
+    var debounceChordRerender = null;
+    $(window).on('resize', function () {
+        if (!chordState || !$('#collection-interconnectivity').hasClass('active')) return;
+        clearTimeout(debounceChordRerender);
+        debounceChordRerender = setTimeout(function () {
+            renderInterconnectivityChord(chordState);
+        }, 180);
+    });
 
 })();
 </script>
