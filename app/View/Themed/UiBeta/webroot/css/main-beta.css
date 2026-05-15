@@ -2287,6 +2287,27 @@ body.beta-ui-enabled .collections.view ~ div.actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.beta-element-sort {
+    min-width: 190px;
+    padding-left: 1.85rem;
+}
+
+.beta-element-sort-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.beta-element-sort-icon {
+    position: absolute;
+    left: 0.6rem;
+    color: #8a94a6;
+    font-size: 0.8rem;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .beta-element-filter-count {
@@ -2406,6 +2427,7 @@ body.beta-ui-enabled .collections.view ~ div.actions {
     gap: 0.5rem;
     font-size: 0.75rem;
     color: #888;
+    flex-wrap: wrap;
 }
 
 .beta-element-date {
@@ -2416,6 +2438,101 @@ body.beta-ui-enabled .collections.view ~ div.actions {
 
 .beta-element-date i {
     color: #9aa7b2;
+}
+
+.beta-element-context-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.45rem;
+}
+
+.beta-element-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    border: 1px solid #dbe3ec;
+    background: #f5f8fc;
+    color: #506074;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    padding: 0.16rem 0.5rem;
+    max-width: 100%;
+}
+
+.beta-element-chip strong {
+    font-weight: 600;
+    color: #33465c;
+}
+
+.beta-chip-signals {
+    background: #eef6ff;
+    border-color: #cfe4ff;
+    color: #2a5f93;
+}
+
+.beta-chip-comment {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #5b6778;
+}
+
+.beta-element-context-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.beta-element-context-label {
+    min-width: 86px;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #8c96a8;
+    font-weight: 700;
+    padding-top: 0.16rem;
+}
+
+.beta-element-context-values {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.beta-context-hidden-items {
+    display: contents;
+}
+
+.beta-context-hidden-items .beta-galaxy-wrapper {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.beta-context-hidden-items .tag,
+.beta-context-hidden-items .tag-wrapper-beta {
+    display: inline-flex;
+}
+
+.beta-context-hidden-items.hidden {
+    display: none !important;
+}
+
+.beta-context-toggle {
+    padding: 0 0.25rem;
+    font-size: 0.72rem;
+    color: #4b6b99;
+    text-decoration: none;
+}
+
+.beta-context-toggle:hover,
+.beta-context-toggle:focus {
+    color: #31507a;
+    text-decoration: underline;
 }
 
 .beta-element-type-chip {
@@ -2501,8 +2618,8 @@ body.beta-ui-enabled .collections.view ~ div.actions {
 .beta-event-timeline-marker {
     position: absolute;
     top: 50%;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: #428bca;
     border: 2px solid #fff;

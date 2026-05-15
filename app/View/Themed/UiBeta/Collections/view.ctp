@@ -142,6 +142,14 @@ if (!empty($eventUuids)) {
                         </h4>
                         <?php if (!empty($eventElements)): ?>
                             <div class="beta-collection-element-filter">
+                                <span class="beta-element-sort-wrap" title="<?= __('Sort event list') ?>">
+                                <i class="fa fa-sort beta-element-sort-icon" aria-hidden="true"></i>
+                                <select id="elementSortSelector" class="form-control input-sm beta-element-sort" title="<?= __('Sort event list') ?>">
+                                    <option value="event_date_desc"><?= __('Newest event date') ?></option>
+                                    <option value="title_asc"><?= __('Title (A-Z)') ?></option>
+                                    <option value="updated_desc"><?= __('Recently updated') ?></option>
+                                </select>
+                                </span>
                                 <input type="text" id="elementQuickFilter" class="form-control input-sm"
                                        placeholder="<?= __('Filter by title, ID, date, or comment…') ?>"
                                        style="width:320px;">
@@ -186,6 +194,11 @@ if (!empty($eventUuids)) {
                                 ?>
                                 <div class="beta-element-row"
                                      data-uuid="<?= h($el['element_uuid']) ?>"
+                                     data-event-id="<?= !empty($ev['Event']['id']) ? (int)$ev['Event']['id'] : '' ?>"
+                                     id="<?= !empty($ev['Event']['id']) ? 'event_' . (int)$ev['Event']['id'] : '' ?>"
+                                     data-sort-title="<?= h(mb_strtolower($ev['Event']['info'] ?? '')) ?>"
+                                     data-sort-date="<?= !empty($ev['Event']['date']) ? h($ev['Event']['date']) : '' ?>"
+                                     data-sort-updated="<?= !empty($ev['Event']['timestamp']) ? (int)$ev['Event']['timestamp'] : 0 ?>"
                                      data-search="<?= h($searchBase) ?>">
                                     <div class="beta-element-icon">
                                         <i class="fa fa-calendar-alt" style="color:#428bca;"></i>
@@ -210,46 +223,135 @@ if (!empty($eventUuids)) {
                                                     <span><?= h($orgName) ?></span>
                                                 </span>
                                             <?php endif; ?>
+                                            <?php if (!empty($ev['Event']['timestamp'])): ?>
+                                                <span class="beta-element-date" style="margin-left:10px;">
+                                                    <i class="fa fa-clock"></i>
+                                                    <span><?= __('Updated %s', $this->Time->time($ev['Event']['timestamp'])) ?></span>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
 
-                                        <?php if (!empty($ev['GalaxyCluster'])): ?>
-                                            <div class="beta-element-desc" style="margin-top:6px;">
-                                                <?php
-                                                    $galaxies = [];
-                                                    foreach ($ev['GalaxyCluster'] as $galaxyCluster) {
-                                                        $galaxyName = $galaxyCluster['Galaxy']['name'] ?? null;
-                                                        if (!$galaxyName) {
-                                                            continue;
-                                                        }
-                                                        if (!isset($galaxies[$galaxyName])) {
-                                                            $galaxies[$galaxyName] = [];
-                                                        }
-                                                        $galaxies[$galaxyName][] = $galaxyCluster;
+                                        <?php
+                                            $signalStats = [];
+                                            if (!empty($ev['Event']['correlation_count'])) {
+                                                $signalStats[] = sprintf('C:%d', (int)$ev['Event']['correlation_count']);
+                                            }
+                                            if (!empty($ev['Event']['sightings_count'])) {
+                                                $signalStats[] = sprintf('S:%d', (int)$ev['Event']['sightings_count']);
+                                            }
+                                            if (!empty($ev['Event']['report_count'])) {
+                                                $signalStats[] = sprintf('R:%d', (int)$ev['Event']['report_count']);
+                                            }
+
+                                            $contextTagPool = [];
+                                            if (!empty($ev['EventTag'])) {
+                                                foreach ($ev['EventTag'] as $eventTag) {
+                                                    if (empty($eventTag['Tag']['name']) || !empty($eventTag['Tag']['is_galaxy'])) {
+                                                        continue;
                                                     }
-                                                    foreach ($galaxies as $galaxyName => $clusters) {
-                                                        echo $this->element('Events/View/galaxy_compact_beta', [
-                                                            'galaxyName' => $galaxyName,
-                                                            'clusters' => $clusters,
-                                                            'baseurl' => $baseurl
-                                                        ]);
+                                                    $contextTagPool[] = $eventTag;
+                                                }
+                                            }
+
+                                            $visibleTagLimit = 4;
+                                            $visibleTags = array_slice($contextTagPool, 0, $visibleTagLimit);
+                                            $hiddenTags = array_slice($contextTagPool, $visibleTagLimit);
+
+                                            $galaxyCards = [];
+                                            if (!empty($ev['GalaxyCluster'])) {
+                                                $galaxies = [];
+                                                foreach ($ev['GalaxyCluster'] as $galaxyCluster) {
+                                                    $galaxyName = $galaxyCluster['Galaxy']['name'] ?? null;
+                                                    if (!$galaxyName) {
+                                                        continue;
                                                     }
-                                                ?>
+                                                    if (!isset($galaxies[$galaxyName])) {
+                                                        $galaxies[$galaxyName] = [];
+                                                    }
+                                                    $galaxies[$galaxyName][] = $galaxyCluster;
+                                                }
+                                                foreach ($galaxies as $galaxyName => $clusters) {
+                                                    $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', [
+                                                        'galaxyName' => $galaxyName,
+                                                        'clusters' => $clusters,
+                                                        'baseurl' => $baseurl
+                                                    ]);
+                                                }
+                                            }
+                                            $visibleGalaxyLimit = 2;
+                                            $visibleGalaxies = array_slice($galaxyCards, 0, $visibleGalaxyLimit);
+                                            $hiddenGalaxies = array_slice($galaxyCards, $visibleGalaxyLimit);
+
+                                            $hiddenIdSuffix = 'event-' . (int)$el['id'];
+                                        ?>
+
+                                        <div class="beta-element-context-row">
+                                            <?php if (!empty($signalStats)): ?>
+                                                <span class="beta-element-chip beta-chip-signals">
+                                                    <i class="fa fa-chart-line"></i>
+                                                    <strong><?= __('Signals') ?></strong>
+                                                    <?= h(implode(' ', $signalStats)) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($el['description'])): ?>
+                                                <span class="beta-element-chip beta-chip-comment" title="<?= h($el['description']) ?>">
+                                                    <i class="fa fa-comment-alt"></i>
+                                                    <?= h(mb_strimwidth($el['description'], 0, 84, '...')) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <?php if (!empty($visibleGalaxies)): ?>
+                                            <div class="beta-element-context-group" style="margin-top:6px;">
+                                                <span class="beta-element-context-label"><?= __('Galaxies') ?></span>
+                                                <div class="beta-element-context-values">
+                                                    <?php foreach ($visibleGalaxies as $galaxyHtml): ?>
+                                                        <?= $galaxyHtml ?>
+                                                    <?php endforeach; ?>
+                                                    <?php if (!empty($hiddenGalaxies)): ?>
+                                                        <span id="hidden-galaxies-<?= h($hiddenIdSuffix) ?>" class="hidden beta-context-hidden-items">
+                                                            <?php foreach ($hiddenGalaxies as $galaxyHtml): ?>
+                                                                <?= $galaxyHtml ?>
+                                                            <?php endforeach; ?>
+                                                        </span>
+                                                        <button type="button" class="btn btn-link btn-xs beta-context-toggle" data-target-id="hidden-galaxies-<?= h($hiddenIdSuffix) ?>" data-expand-label="+<?= count($hiddenGalaxies) ?> <?= __('more') ?>" data-collapse-label="<?= __('Show less') ?>">+<?= count($hiddenGalaxies) ?> <?= __('more') ?></button>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
 
-                                        <?php if (!empty($ev['EventTag'])): ?>
-                                            <div class="beta-element-desc" style="margin-top:6px;">
-                                                <?= $this->element('ajaxTags', [
-                                                    'event' => $ev,
-                                                    'tags' => $ev['EventTag'],
-                                                    'tagAccess' => false,
-                                                    'localTagAccess' => false,
-                                                    'missingTaxonomies' => false,
-                                                    'columnised' => true,
-                                                    'static_tags_only' => 1,
-                                                    'tag_display_style' => Configure::check('MISP.full_tags_on_event_index') ? Configure::read('MISP.full_tags_on_event_index') : 1,
-                                                    'highlightedTags' => []
-                                                ]) ?>
+                                        <?php if (!empty($visibleTags)): ?>
+                                            <div class="beta-element-context-group" style="margin-top:6px;">
+                                                <span class="beta-element-context-label"><?= __('Tags') ?></span>
+                                                <div class="beta-element-context-values">
+                                                    <?php foreach ($visibleTags as $tag): ?>
+                                                        <?= $this->element('rich_tag', [
+                                                            'tag' => $tag,
+                                                            'tagAccess' => false,
+                                                            'localTagAccess' => false,
+                                                            'searchUrl' => '/events/index/searchtag:',
+                                                            'scope' => 'event',
+                                                            'id' => $ev['Event']['id'] ?? null,
+                                                            'tag_display_style' => 1
+                                                        ]) ?>
+                                                    <?php endforeach; ?>
+                                                    <?php if (!empty($hiddenTags)): ?>
+                                                        <span id="hidden-tags-<?= h($hiddenIdSuffix) ?>" class="hidden beta-context-hidden-items">
+                                                            <?php foreach ($hiddenTags as $tag): ?>
+                                                                <?= $this->element('rich_tag', [
+                                                                    'tag' => $tag,
+                                                                    'tagAccess' => false,
+                                                                    'localTagAccess' => false,
+                                                                    'searchUrl' => '/events/index/searchtag:',
+                                                                    'scope' => 'event',
+                                                                    'id' => $ev['Event']['id'] ?? null,
+                                                                    'tag_display_style' => 1
+                                                                ]) ?>
+                                                            <?php endforeach; ?>
+                                                        </span>
+                                                        <button type="button" class="btn btn-link btn-xs beta-context-toggle" data-target-id="hidden-tags-<?= h($hiddenIdSuffix) ?>" data-expand-label="+<?= count($hiddenTags) ?> <?= __('more') ?>" data-collapse-label="<?= __('Show less') ?>">+<?= count($hiddenTags) ?> <?= __('more') ?></button>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         <?php endif; ?>
 
@@ -343,6 +445,50 @@ if (!empty($eventUuids)) {
 
     var baseurl   = <?= json_encode($baseurl) ?>;
     var eventUuids = <?= json_encode($eventUuids) ?>;
+    var sortSelector = document.getElementById('elementSortSelector');
+
+    function getSortableRows() {
+        return Array.prototype.slice.call(document.querySelectorAll('.beta-element-row[data-uuid]'));
+    }
+
+    function safeParseEventDate(rawDate) {
+        if (!rawDate) return 0;
+        var ts = Date.parse(rawDate + 'T00:00:00Z');
+        return isFinite(ts) ? ts : 0;
+    }
+
+    function sortRowsInList(mode) {
+        var listEl = document.getElementById('eventElementsList');
+        if (!listEl) return;
+
+        var rows = getSortableRows();
+        rows.sort(function (a, b) {
+            var titleA = a.getAttribute('data-sort-title') || '';
+            var titleB = b.getAttribute('data-sort-title') || '';
+            var dateA = safeParseEventDate(a.getAttribute('data-sort-date'));
+            var dateB = safeParseEventDate(b.getAttribute('data-sort-date'));
+            var updatedA = parseInt(a.getAttribute('data-sort-updated') || '0', 10) || 0;
+            var updatedB = parseInt(b.getAttribute('data-sort-updated') || '0', 10) || 0;
+
+            if (mode === 'title_asc') {
+                var cmp = titleA.localeCompare(titleB);
+                if (cmp !== 0) return cmp;
+                return dateB - dateA;
+            }
+
+            if (mode === 'updated_desc') {
+                if (updatedB !== updatedA) return updatedB - updatedA;
+                return dateB - dateA;
+            }
+
+            if (dateB !== dateA) return dateB - dateA;
+            return updatedB - updatedA;
+        });
+
+        rows.forEach(function (row) {
+            listEl.appendChild(row);
+        });
+    }
 
     // ── 1. Batch-resolve event titles & IDs ────────────────────────────────
     if (eventUuids.length > 0) {
@@ -379,6 +525,11 @@ if (!empty($eventUuids)) {
                     var links   = row.querySelectorAll('.event-title-link, .event-view-btn');
 
                     if (idEl)    idEl.textContent = ev.id;
+                    row.setAttribute('data-event-id', ev.id);
+                    row.id = 'event_' + ev.id;
+                    row.setAttribute('data-sort-title', (ev.info || '').toLowerCase());
+                    row.setAttribute('data-sort-date', ev.date || '');
+                    row.setAttribute('data-sort-updated', ev.timestamp || 0);
                     if (titleEl) {
                         titleEl.textContent = ev.info;
                         titleEl.style.color      = '';
@@ -397,20 +548,7 @@ if (!empty($eventUuids)) {
                     row.setAttribute('data-search', (cur + ' ' + ev.id + ' ' + ev.info + ' ' + (ev.date || '') + ' ' + commentText).toLowerCase());
                 });
 
-                // Sort event rows by date desc (newest first)
-                var listEl = document.getElementById('eventElementsList');
-                if (listEl) {
-                    rows.sort(function (a, b) {
-                        var evA = eventMap[a.getAttribute('data-uuid')];
-                        var evB = eventMap[b.getAttribute('data-uuid')];
-                        var tsA = evA && evA.date ? Date.parse(evA.date + 'T00:00:00Z') : 0;
-                        var tsB = evB && evB.date ? Date.parse(evB.date + 'T00:00:00Z') : 0;
-                        return tsB - tsA;
-                    });
-                    rows.forEach(function (row) {
-                        listEl.appendChild(row);
-                    });
-                }
+                sortRowsInList(sortSelector ? sortSelector.value : 'event_date_desc');
 
                 // Build event timeline once we have event data
                 if (eventUuids.length > 0) {
@@ -455,6 +593,31 @@ if (!empty($eventUuids)) {
             }
         });
     }
+
+    if (sortSelector) {
+        sortSelector.addEventListener('change', function () {
+            sortRowsInList(this.value || 'event_date_desc');
+        });
+    }
+
+    document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('.beta-context-toggle');
+        if (!toggle) return;
+        event.preventDefault();
+        var targetId = toggle.getAttribute('data-target-id');
+        if (!targetId) return;
+        var target = document.getElementById(targetId);
+        if (!target) return;
+
+        var isHidden = target.classList.contains('hidden');
+        if (isHidden) {
+            target.classList.remove('hidden');
+            toggle.textContent = toggle.getAttribute('data-collapse-label') || '<?= __('Show less') ?>';
+        } else {
+            target.classList.add('hidden');
+            toggle.textContent = toggle.getAttribute('data-expand-label') || '<?= __('Show more') ?>';
+        }
+    });
 
     // ── 3. D3 intra-collection correlation graph ───────────────────────────
     function buildCorrGraph(eventMap) {
@@ -564,10 +727,15 @@ if (!empty($eventUuids)) {
             var eventId = target.getAttribute('data-event-id');
             var row = eventId ? document.getElementById('event_' + eventId) : null;
             if (!row) return;
+
+            document.querySelectorAll('.beta-element-row.beta-element-row-highlight').forEach(function (highlightedRow) {
+                highlightedRow.classList.remove('beta-element-row-highlight');
+            });
+
             row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            row.classList.add('warning');
+            row.classList.add('beta-element-row-highlight');
             setTimeout(function () {
-                row.classList.remove('warning');
+                row.classList.remove('beta-element-row-highlight');
             }, 1400);
         });
     }
