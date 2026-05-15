@@ -413,6 +413,10 @@ if (!empty($eventUuids)) {
                 <div class="beta-card beta-collection-corr-card" id="collectionInterconnectivityCard">
                     <div class="beta-collection-corr-header">
                         <span><i class="fa fa-circle-notch"></i> <?= __('Report Attribute Chord') ?></span>
+                        <label for="interconnectivityConnectedOnlyToggle" style="margin:0 8px 0 auto; font-size:11px; color:#666; font-weight:normal; display:flex; align-items:center; gap:5px;">
+                            <input type="checkbox" id="interconnectivityConnectedOnlyToggle" style="margin:0;" />
+                            <span><?= __('Only interconnected ticks') ?></span>
+                        </label>
                         <span id="interconnectivityStatus" class="muted" style="font-size:11px;"><?= __('Loading…') ?></span>
                     </div>
                     <div id="collectionInterconnectivityGraph" class="beta-collection-corr-graph beta-chord-graph">
@@ -445,6 +449,7 @@ if (!empty($eventUuids)) {
     var eventUuids = <?= json_encode($eventUuids) ?>;
     var sortSelector = document.getElementById('elementSortSelector');
     var chordState = null;
+    var interconnectivityConnectedOnly = false;
 
     function getSortableRows() {
         return Array.prototype.slice.call(document.querySelectorAll('.beta-element-row[data-uuid]'));
@@ -1147,15 +1152,34 @@ if (!empty($eventUuids)) {
                     id: ev.id || null,
                     name: '#'+ (ev.id || '?') + (ev.info ? ': ' + ev.info : ''),
                     attrs: attrs,
-                    attrKeys: Object.keys(attrs)
+                    allAttrKeys: Object.keys(attrs),
+                    attrKeys: []
                 };
             })
             .filter(function (report) {
-                return report.id && report.attrKeys.length > 0;
+                return report.id && report.allAttrKeys.length > 0;
             });
 
         reports.sort(function (a, b) {
             return (a.id || 0) - (b.id || 0);
+        });
+
+        reports.forEach(function (report) {
+            report.allAttrKeys.sort(function (a, b) {
+                var aCount = Object.keys((attrPresence[a] && attrPresence[a].reports) || {}).length;
+                var bCount = Object.keys((attrPresence[b] && attrPresence[b].reports) || {}).length;
+                if (bCount !== aCount) return bCount - aCount;
+                return a.localeCompare(b);
+            });
+            report.attrKeys = interconnectivityConnectedOnly
+                ? report.allAttrKeys.filter(function (attrKey) {
+                    return Object.keys((attrPresence[attrKey] && attrPresence[attrKey].reports) || {}).length > 1;
+                })
+                : report.allAttrKeys.slice();
+        });
+
+        reports = reports.filter(function (report) {
+            return report.attrKeys.length > 0;
         });
 
         if (reports.length < 2) {
@@ -1163,15 +1187,6 @@ if (!empty($eventUuids)) {
             statusEl.textContent = '<?= __('Not enough data') ?>';
             return;
         }
-
-        reports.forEach(function (report) {
-            report.attrKeys.sort(function (a, b) {
-                var aCount = Object.keys((attrPresence[a] && attrPresence[a].reports) || {}).length;
-                var bCount = Object.keys((attrPresence[b] && attrPresence[b].reports) || {}).length;
-                if (bCount !== aCount) return bCount - aCount;
-                return a.localeCompare(b);
-            });
-        });
 
         var totalTicks = reports.reduce(function (acc, report) { return acc + report.attrKeys.length; }, 0);
         var connectedAttrCount = 0;
@@ -1196,6 +1211,7 @@ if (!empty($eventUuids)) {
         var slotAngles = {};
         var reportArcs = [];
         var reportByUuid = {};
+        var reportTickWidth = {};
 
         reports.forEach(function (report) {
             var slice = usable * (report.attrKeys.length / totalTicks);
@@ -1206,6 +1222,7 @@ if (!empty($eventUuids)) {
 
             if (report.attrKeys.length > 0) {
                 var unit = slice / report.attrKeys.length;
+                reportTickWidth[report.uuid] = unit;
                 report.attrKeys.forEach(function (attrKey, idx) {
                     slotAngles[report.uuid + '|' + attrKey] = start + (idx + 0.5) * unit;
                 });
@@ -1233,6 +1250,8 @@ if (!empty($eventUuids)) {
                         targetUuid: targetUuid,
                         sourceAngle: sourceAngle,
                         targetAngle: targetAngle,
+                        sourceTickWidth: reportTickWidth[sourceUuid] || 0,
+                        targetTickWidth: reportTickWidth[targetUuid] || 0,
                         attrKey: attrKey,
                         attrLabel: record.label || attrKey,
                         reportCount: reportList.length
@@ -1296,7 +1315,7 @@ if (!empty($eventUuids)) {
             })
             .append('title')
             .text(function (d) {
-                return d.report.name + '\n' + d.report.attrKeys.length + ' <?= __('attribute(s)') ?>';
+                return d.report.name + '\n' + d.report.attrKeys.length + ' <?= __('visible attribute tick(s)') ?>';
             });
 
         var arcLabelGroup = svg.append('g').attr('class', 'beta-chord-report-labels');
@@ -1376,22 +1395,45 @@ if (!empty($eventUuids)) {
             .enter()
             .append('path')
             .attr('d', function (d) {
-                var p1 = radialPoint(d.sourceAngle, innerRadius);
-                var p2 = radialPoint(d.targetAngle, innerRadius);
-                var cRadius = Math.max(0, innerRadius - 18);
-                var c1 = radialPoint(d.sourceAngle, cRadius);
-                var c2 = radialPoint(d.targetAngle, cRadius);
-                return 'M' + p1.x + ',' + p1.y
-                    + ' C' + c1.x + ',' + c1.y
-                    + ' ' + c2.x + ',' + c2.y
-                    + ' ' + p2.x + ',' + p2.y;
+                var halfSource = Math.max(0.0012, (d.sourceTickWidth || 0) * 0.45);
+                var halfTarget = Math.max(0.0012, (d.targetTickWidth || 0) * 0.45);
+
+                var a0s = d.sourceAngle - halfSource;
+                var a1s = d.sourceAngle + halfSource;
+                var a0t = d.targetAngle - halfTarget;
+                var a1t = d.targetAngle + halfTarget;
+
+                var s0 = radialPoint(a0s, innerRadius);
+                var s1 = radialPoint(a1s, innerRadius);
+                var t0 = radialPoint(a0t, innerRadius);
+                var t1 = radialPoint(a1t, innerRadius);
+
+                var cRadius = Math.max(0, innerRadius - 28);
+                var cS0 = radialPoint(a0s, cRadius);
+                var cS1 = radialPoint(a1s, cRadius);
+                var cT0 = radialPoint(a0t, cRadius);
+                var cT1 = radialPoint(a1t, cRadius);
+
+                return 'M' + s0.x + ',' + s0.y
+                    + ' C' + cS0.x + ',' + cS0.y
+                    + ' ' + cT0.x + ',' + cT0.y
+                    + ' ' + t0.x + ',' + t0.y
+                    + ' A' + innerRadius + ',' + innerRadius + ' 0 0,1 ' + t1.x + ',' + t1.y
+                    + ' C' + cT1.x + ',' + cT1.y
+                    + ' ' + cS1.x + ',' + cS1.y
+                    + ' ' + s1.x + ',' + s1.y
+                    + ' A' + innerRadius + ',' + innerRadius + ' 0 0,0 ' + s0.x + ',' + s0.y
+                    + ' Z';
             })
-            .style('fill', 'none')
+            .style('fill', function (d) {
+                return reportColorByUuid[d.sourceUuid] || '#f0ad4e';
+            })
             .style('stroke', function (d) {
                 return reportColorByUuid[d.sourceUuid] || '#f0ad4e';
             })
-            .style('stroke-opacity', 0.28)
-            .style('stroke-width', 1.25);
+            .style('fill-opacity', 0.20)
+            .style('stroke-opacity', 0.36)
+            .style('stroke-width', 0.8);
 
         linkSelection.append('title')
             .text(function (d) {
@@ -1403,21 +1445,74 @@ if (!empty($eventUuids)) {
             });
 
         function highlightAttr(attrKey) {
-            linkSelection.style('stroke-opacity', function (d) {
-                return d.attrKey === attrKey ? 0.85 : 0.04;
-            });
+            linkSelection
+                .style('fill-opacity', function (d) {
+                    return d.attrKey === attrKey ? 0.52 : 0.03;
+                })
+                .style('stroke-opacity', function (d) {
+                    return d.attrKey === attrKey ? 0.75 : 0.05;
+                });
             tickGroup.selectAll('line').style('opacity', function (d) {
                 return d.attrKey === attrKey ? 1 : 0.18;
             });
         }
 
         function resetHighlight() {
-            linkSelection.style('stroke-opacity', 0.28);
+            linkSelection
+                .style('fill-opacity', 0.20)
+                .style('stroke-opacity', 0.36);
             tickGroup.selectAll('line').style('opacity', 1);
+            arcGroup.selectAll('path').style('opacity', 1);
+            arcLabelGroup.selectAll('text').style('opacity', 1);
+        }
+
+        function highlightReport(reportUuid) {
+            linkSelection
+                .style('fill-opacity', function (d) {
+                    return (d.sourceUuid === reportUuid || d.targetUuid === reportUuid) ? 0.58 : 0.02;
+                })
+                .style('stroke-opacity', function (d) {
+                    return (d.sourceUuid === reportUuid || d.targetUuid === reportUuid) ? 0.82 : 0.04;
+                });
+
+            tickGroup.selectAll('line').style('opacity', function (d) {
+                var isConnectedTick = d.reportUuid === reportUuid || links.some(function (l) {
+                    if (l.attrKey !== d.attrKey) return false;
+                    return (l.sourceUuid === reportUuid && l.targetUuid === d.reportUuid) ||
+                        (l.targetUuid === reportUuid && l.sourceUuid === d.reportUuid);
+                });
+                return isConnectedTick ? 1 : 0.12;
+            });
+
+            arcGroup.selectAll('path').style('opacity', function (d) {
+                if (d.report.uuid === reportUuid) return 1;
+                var connected = links.some(function (l) {
+                    return (l.sourceUuid === reportUuid && l.targetUuid === d.report.uuid) ||
+                        (l.targetUuid === reportUuid && l.sourceUuid === d.report.uuid);
+                });
+                return connected ? 0.72 : 0.20;
+            });
+
+            arcLabelGroup.selectAll('text').style('opacity', function (d) {
+                if (d.report.uuid === reportUuid) return 1;
+                var connected = links.some(function (l) {
+                    return (l.sourceUuid === reportUuid && l.targetUuid === d.report.uuid) ||
+                        (l.targetUuid === reportUuid && l.sourceUuid === d.report.uuid);
+                });
+                return connected ? 0.78 : 0.18;
+            });
         }
 
         tickGroup.selectAll('line')
             .on('mouseover', function (d) { highlightAttr(d.attrKey); })
+            .on('mouseout', resetHighlight);
+
+        arcGroup.selectAll('path')
+            .on('mouseover', function (d) { highlightReport(d.report.uuid); })
+            .on('mouseout', resetHighlight);
+
+        arcLabelGroup.selectAll('text')
+            .on('mouseover', function (d) { highlightReport(d.report.uuid); })
             .on('mouseout', resetHighlight);
 
         statusEl.textContent =
@@ -1425,7 +1520,8 @@ if (!empty($eventUuids)) {
             totalTicks + ' <?= __('attribute ticks') ?> · ' +
             links.length + ' <?= __('chord(s)') ?> · ' +
             connectedAttrCount + ' <?= __('shared attributes') ?> · ' +
-            uniqueAttrCount + ' <?= __('unique attributes') ?>';
+            uniqueAttrCount + ' <?= __('unique attributes') ?>' +
+            (interconnectivityConnectedOnly ? ' · <?= __('connected-only mode') ?>' : '');
     }
 
     $(document).on('shown.bs.tab', 'a[href="#collection-interconnectivity"]', function () {
@@ -1442,6 +1538,17 @@ if (!empty($eventUuids)) {
             renderInterconnectivityChord(chordState);
         }, 180);
     });
+
+    var connectedOnlyToggle = document.getElementById('interconnectivityConnectedOnlyToggle');
+    if (connectedOnlyToggle) {
+        connectedOnlyToggle.checked = interconnectivityConnectedOnly;
+        connectedOnlyToggle.addEventListener('change', function () {
+            interconnectivityConnectedOnly = !!this.checked;
+            if (chordState) {
+                renderInterconnectivityChord(chordState);
+            }
+        });
+    }
 
 })();
 </script>
