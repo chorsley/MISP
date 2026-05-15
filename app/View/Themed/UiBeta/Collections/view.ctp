@@ -58,6 +58,27 @@ if (!empty($eventUuids)) {
 ?>
 <?php echo $this->element('genericElements/assetLoader', ['js' => ['d3', 'd3.custom', 'd3-sankey.min']]); ?>
 
+<style>
+    .beta-tabs-container .beta-tabs {
+        margin-top: 20px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .beta-tabs-container .beta-tabs > li > a {
+        padding: 10px 20px;
+        font-weight: 600;
+        color: #666;
+    }
+
+    .beta-tabs-container .beta-tab-content {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-top: none;
+        padding: 20px;
+        border-radius: 0 0 4px 4px;
+    }
+</style>
+
 <div class="beta-collections-view">
 
     <!-- ── Collection Hero ──────────────────────────────────────────────────── -->
@@ -114,7 +135,7 @@ if (!empty($eventUuids)) {
 
     <!-- ── Reports / Correlations Tabs ──────────────────────────────────────── -->
     <div class="beta-tabs-container" style="margin-top: 20px;">
-        <ul class="nav nav-tabs" role="tablist">
+        <ul class="nav nav-tabs beta-tabs" role="tablist">
             <li role="presentation" class="active">
                 <a href="#collection-reports" aria-controls="collection-reports" role="tab" data-toggle="tab">
                     <?= __('Reports') ?>
@@ -132,7 +153,7 @@ if (!empty($eventUuids)) {
             </li>
         </ul>
 
-        <div class="tab-content" style="padding-top: 15px;">
+        <div class="tab-content beta-tab-content">
             <div role="tabpanel" class="tab-pane active" id="collection-reports">
                 <div class="beta-collection-elements-section">
                     <div class="beta-collection-elements-header">
