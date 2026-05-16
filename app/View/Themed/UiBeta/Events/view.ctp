@@ -627,6 +627,11 @@
                                          </div>
                                     <?php else: ?>
                                         <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
+                                        <?php if ((int)$eventReportCount === 0 && $this->Acl->canAccess('eventReports', 'add') && $this->Acl->canModifyEvent($event)): ?>
+                                            <a href="<?php echo $baseurl; ?>/eventReports/add/<?php echo h($event['Event']['id']); ?>" class="btn btn-link modal-open" style="padding-left: 0;" title="<?php echo __('Add Event Report'); ?>">
+                                                <i class="fa fa-plus"></i> <?php echo __('Add an event report'); ?>
+                                            </a>
+                                        <?php endif; ?>
                                     <?php endif; ?>
 
                                   <!-- Analysis Links Sub-section -->

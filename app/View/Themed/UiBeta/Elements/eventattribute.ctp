@@ -287,9 +287,13 @@
     <!-- Toolbar -->
     <div class="beta-toolbar clearfix" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
         <div class="pull-left" style="display: flex; gap: 10px; align-items: center;">
-             <?php if ($mayModify): ?>
+            <?php if ($mayModify): ?>
                 <a href="<?php echo $baseurl; ?>/attributes/add/<?php echo h($event['Event']['id']); ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> <?php echo __('Add Attribute'); ?></a>
                 <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'objectTemplates', 'objectMetaChoice'); return false;" class="btn btn-primary btn-sm"><i class="fa fa-cube"></i> <?php echo __('Add Object'); ?></a>
+                <a href="<?php echo $baseurl; ?>/attributes/add_attachment/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-paperclip"></i> <?php echo __('Add Attachment'); ?></a>
+                <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'events', 'importChoice'); return false;" class="btn btn-default btn-sm"><i class="fa fa-bars"></i> <?php echo __('Populate from...'); ?></a>
+                <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'events', 'freeTextImport'); return false;" class="btn btn-default btn-sm"><i class="fa fa-align-left"></i> <?php echo __('Freetext Import'); ?></a>
+                <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'attributes', 'attributeReplace'); return false;" class="btn btn-default btn-sm"><i class="fa fa-random"></i> <?php echo __('Replace Attributes'); ?></a>
             <?php endif; ?>
             
             <button id="btn-toggle-all" class="btn btn-default btn-sm" onclick="toggleAllObjectsAttributes()"><i class="fa fa-expand"></i> <span id="label-toggle-all"><?php echo __('Expand All'); ?></span></button>
