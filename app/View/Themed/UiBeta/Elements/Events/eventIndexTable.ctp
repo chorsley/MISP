@@ -102,7 +102,7 @@
                     <?= nl2br(h($event['Event']['info']), false) ?>
                 </a>
                 <?php if (!empty($event['Event']['report_count'])): ?>
-                    <a href="<?= "$baseurl/events/view/$eventId#reports" ?>" title="<?= __n('1 report available', '%s reports available', $event['Event']['report_count'], $event['Event']['report_count']) ?>">
+                    <a href="<?= "$baseurl/events/view/$eventId#summary-reports-section" ?>" title="<?= __n('1 report available', '%s reports available', $event['Event']['report_count'], $event['Event']['report_count']) ?>">
                         <i class="fas fa-file-alt" style="margin-left: 5px; color: #428bca;"></i>
                     </a>
                 <?php endif; ?>

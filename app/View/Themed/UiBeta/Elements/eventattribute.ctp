@@ -564,9 +564,9 @@
                     <?php endif; ?>
 
                     <!-- Comment -->
-                    <td class="col-comment" <?php if ($isObject) echo 'colspan="5"'; ?>>
+                    <?php $comment = $item['comment'] ?? ''; ?>
+                    <td class="col-comment" data-comment-full="<?php echo h($comment); ?>" <?php if ($isObject) echo 'colspan="5"'; ?>>
                         <?php 
-                            $comment = $item['comment'] ?? '';
                             if (mb_strlen($comment) > 50) {
                                 echo h(mb_substr($comment, 0, 50)) . '... ';
                                 echo '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';
@@ -815,9 +815,9 @@
                             </td>
 
                             <!-- Comment -->
-                            <td class="col-comment">
+                            <?php $comment = $subAttr['comment'] ?? ''; ?>
+                            <td class="col-comment" data-comment-full="<?php echo h($comment); ?>">
                                 <?php 
-                                    $comment = $subAttr['comment'] ?? '';
                                     if (mb_strlen($comment) > 50) {
                                         echo h(mb_substr($comment, 0, 50)) . '... ';
                                         echo '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';

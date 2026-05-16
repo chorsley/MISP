@@ -88,50 +88,48 @@
     .beta-card-body {
         padding: 15px;
     }
-    .comment-bar-container {
-        margin-bottom: 6px;
-        position: relative;
-        background-color: #deebfa;
-        border-radius: 4px;
-        overflow: hidden;
-        min-height: 30px;
-        display: flex;
-        align-items: center;
+    .beta-expandable-header {
         cursor: pointer;
+        user-select: none;
     }
-    .comment-bar-container:hover {
-        background-color: #d0e2f5;
+    .beta-expandable-header .fa {
+        color: #7b8791;
     }
-    .comment-bar-container:hover .comment-bar {
-        opacity: 0.5;
+    .beta-view-events #galaxies_div {
+        position: static;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        width: auto;
     }
-    .comment-bar {
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        background-color: #428bca;
-        opacity: 0.4;
-        z-index: 1;
+    .beta-view-events #galaxies_div > .title-section {
+        position: static;
+        padding: 0;
+        border: 0;
+        background: transparent;
     }
-    .comment-text {
-        position: relative;
-        z-index: 2;
-        padding: 0 12px;
+    .comment-bullet-list {
+        margin: 0;
+        padding-left: 18px;
+        list-style-type: disc;
+    }
+    .comment-bullet-item {
+        margin: 0 0 6px 0;
+        cursor: pointer;
+        color: #2f2f2f;
+    }
+    .comment-bullet-item:hover {
+        color: #0b6a9b;
+    }
+    .comment-bullet-label {
         font-size: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        width: 100%;
-        color: #222;
     }
-    .comment-count {
-        margin-left: auto;
-        padding-right: 12px;
-        font-weight: bold;
+    .comment-bullet-count {
         font-size: 12px;
-        z-index: 2;
-        color: #444;
+        font-weight: 600;
+        color: #5f6b76;
+        margin-left: 4px;
     }
     .composition-singlebar-wrap {
         width: 100%;
@@ -600,7 +598,6 @@
     <div class="beta-tabs-container">
         <ul class="nav nav-tabs beta-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#summary" aria-controls="summary" role="tab" data-toggle="tab"><?php echo __('Summary'); ?></a></li>
-            <li role="presentation"><a href="#reports" aria-controls="reports" role="tab" data-toggle="tab"><?php echo __('Reports'); ?> (<span class="beta-reports-count"><?php echo h($eventReportCount); ?></span>)</a></li>
             <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Data'); ?> (<?php echo h($betaTotalAttributes); ?>)</a></li>
             <li role="presentation"><a href="#correlations" aria-controls="correlations" role="tab" data-toggle="tab"><?php echo __('Correlations'); ?> (<?php echo isset($relatedEventCorrelationCount) ? count($relatedEventCorrelationCount) : 0; ?>)</a></li>
             <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
@@ -623,14 +620,14 @@
                                            scrolling="auto"
                                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                                            loading="lazy"></iframe>
-                                       <div style="margin-top: 10px;">
-                                           <a href="#" onclick="viewFullReport(<?php echo h($firstEventReportId); ?>); return false;"><?php echo __('View full report'); ?></a>
-                                           |
-                                           <a href="#reports" onclick="$('.nav-tabs a[href=\'#reports\']').tab('show'); return false;"><?php echo __('See all reports'); ?></a>
-                                       </div>
-                                   <?php else: ?>
-                                       <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
-                                   <?php endif; ?>
+                                        <div style="margin-top: 10px;">
+                                            <a href="#" onclick="viewFullReport(<?php echo h($firstEventReportId); ?>); return false;"><?php echo __('View full report'); ?></a>
+                                            |
+                                            <a href="#summary-reports-section" onclick="betaToggleSummaryReports(true); document.getElementById('summary-reports-section').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;"><?php echo __('See all reports'); ?></a>
+                                         </div>
+                                    <?php else: ?>
+                                        <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
+                                    <?php endif; ?>
 
                                   <!-- Analysis Links Sub-section -->
                                   <?php
@@ -703,20 +700,34 @@
                               </div>
                           </div>
                          
-                         <!-- Analysis comments -->
-                         <div class="beta-card summary-card">
-                             <div class="beta-card-header"><?php echo __('Analysis comments'); ?></div>
-                             <div class="beta-card-body">
-                                  <div id="comments-graph" style="width: 100%;"></div>
-                             </div>
+                          <!-- Analysis comments -->
+                          <div class="beta-card summary-card">
+                              <div class="beta-card-header"><?php echo __('Analysis comments'); ?></div>
+                              <div class="beta-card-body">
+                                   <div id="comments-graph" style="width: 100%;"></div>
+                              </div>
                          </div>
 
                       </div>
                       <div class="span4">
+                          <div class="beta-card summary-card" id="summary-reports-section">
+                              <div class="beta-card-header beta-expandable-header" onclick="betaToggleSummaryReports();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleSummaryReports();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle event reports'); ?>">
+                                  <?php echo __('Event reports'); ?> (<?php echo h($eventReportCount); ?>)
+                                  <i id="summary-reports-toggle-icon" class="fa fa-chevron-right pull-right"></i>
+                              </div>
+                              <div class="beta-card-body" id="summary-reports-content-wrap" style="display:none;">
+                                  <div id="summary-reports-content">
+                                      <div class="text-center" style="padding: 12px 0;">
+                                          <i class="fa fa-spinner fa-spin"></i>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
                           <!-- Context -->
                            <div class="beta-card summary-card">
-                             <div class="beta-card-header"><?php echo __('Context'); ?></div>
-                             <div class="beta-card-body">
+                              <div class="beta-card-header"><?php echo __('Context'); ?></div>
+                              <div class="beta-card-body">
                                  <strong><?php echo __('Tags'); ?></strong><br>
                                  <span class="eventTagContainer">
                                      <?php
@@ -1010,16 +1021,6 @@
                        </div>
                   </div>
                  </div>
-
-            <!-- Reports Tab -->
-            <div role="tabpanel" class="tab-pane" id="reports">
-                <div id="event-reports-tab-content">
-                    <div class="text-center" style="padding: 20px;">
-                        <i class="fa fa-spinner fa-spin fa-2x"></i><br>
-                        <?php echo __('Loading reports...'); ?>
-                    </div>
-                </div>
-            </div>
 
             <!-- Attributes Tab -->
             <div role="tabpanel" class="tab-pane" id="attributes">
@@ -1452,32 +1453,28 @@
             betaRenderCompositionBar();
         }
 
-        // Comments Bar Chart
+        // Comments List
         if (commentData && commentData.length > 0) {
-            var maxVal = d3.max(commentData, function(d) { return d.value; });
             var container = d3.select("#comments-graph");
             container.html(""); // Clear
+            var list = container.append("ul")
+                .attr("class", "comment-bullet-list");
 
             commentData.forEach(function(d) {
-                var percentage = (d.value / maxVal) * 100;
-                var row = container.append("div")
-                    .attr("class", "comment-bar-container")
+                var row = list.append("li")
+                    .attr("class", "comment-bullet-item")
                     .attr("title", d.label + " (" + d.value + ")")
                     .on("click", function() {
                         betaFilterAttributesByComment(d.label);
                     });
 
-                row.append("div")
-                    .attr("class", "comment-bar")
-                    .style("width", percentage + "%");
-
-                row.append("div")
-                    .attr("class", "comment-text")
+                row.append("span")
+                    .attr("class", "comment-bullet-label")
                     .text(d.label);
 
-                row.append("div")
-                    .attr("class", "comment-count")
-                    .text(d.value);
+                row.append("span")
+                    .attr("class", "comment-bullet-count")
+                    .text("[" + d.value + "]");
             });
         } else {
              d3.select("#comments-graph").html('<div class="alert alert-info" style="margin: 20px;">No comment data available.</div>');
@@ -1516,9 +1513,11 @@
             }
         };
 
-        // Load Reports
+        window.betaSummaryPrimaryReportId = <?php echo !empty($firstEventReportId) ? (int)$firstEventReportId : 0; ?>;
+
+        // Load reports into summary tab
         $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1/beta:1", function(data) {
-            $("#event-reports-tab-content").html(data);
+            $("#summary-reports-content").html(data);
             if (window.betaTimestamps && typeof window.betaTimestamps.update === 'function') {
                 window.betaTimestamps.update();
             }
@@ -1680,7 +1679,8 @@
         
         // Show rows where the comment column matches
         $('.beta-attr-row').each(function() {
-            var rowComment = $(this).find('.col-comment').text().trim();
+            var $commentCell = $(this).find('.col-comment').first();
+            var rowComment = ($commentCell.data('comment-full') || $commentCell.text() || '').trim();
             if (rowComment === comment) {
                 $(this).show();
             }
@@ -1699,6 +1699,22 @@
         } else {
              // Fallback
              $('#attributes').prepend(msg);
+        }
+    }
+
+    function betaToggleSummaryReports(forceOpen) {
+        var $wrap = $('#summary-reports-content-wrap');
+        if (!$wrap.length) return;
+
+        var open = (typeof forceOpen === 'boolean') ? forceOpen : !$wrap.is(':visible');
+        var $icon = $('#summary-reports-toggle-icon');
+
+        if (open) {
+            $wrap.stop(true, true).slideDown(140);
+            $icon.removeClass('fa-chevron-right').addClass('fa-chevron-down');
+        } else {
+            $wrap.stop(true, true).slideUp(140);
+            $icon.removeClass('fa-chevron-down').addClass('fa-chevron-right');
         }
     }
 
