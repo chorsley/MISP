@@ -28,6 +28,13 @@ if (strlen($hex) == 3) {
     $b = hexdec(substr($hex, 4, 2));
 }
 $rgba = "rgba($r, $g, $b, 0.7)"; // 70% opacity for icon backgrounds
+$tagColorSoft = "rgba($r, $g, $b, 0.12)";
+$tagTint1 = "rgba($r, $g, $b, 0.06)";
+$tagTint2 = "rgba($r, $g, $b, 0.11)";
+$tagTint3 = "rgba($r, $g, $b, 0.16)";
+$tagBorder1 = "rgba($r, $g, $b, 0.28)";
+$tagBorder2 = "rgba($r, $g, $b, 0.45)";
+$tagBorder3 = "rgba($r, $g, $b, 0.62)";
 
 // Calculate relative luminance to determine if we should use white or black icon
 // Using the formula: L = 0.2126 * R + 0.7152 * G + 0.0722 * B
@@ -35,7 +42,7 @@ $luminance = (0.2126 * $r + 0.7152 * $g + 0.0722 * $b) / 255;
 $iconColor = $luminance > 0.5 ? '#000' : '#fff'; // Black for light backgrounds, white for dark
 
 // Style: No background color, light gray border, black text
-$aStyle = 'background-color: transparent; border: 1px solid #d0d0d0; color: #000; border-left: none;';
+$aStyle = 'background-color: transparent; border: 1px solid #d0d0d0; color: #000; border-left: none; --tag-color:' . $tagColor . '; --tag-color-soft:' . $tagColorSoft . '; --tag-color-tint-1:' . $tagTint1 . '; --tag-color-tint-2:' . $tagTint2 . '; --tag-color-tint-3:' . $tagTint3 . '; --tag-color-border-1:' . $tagBorder1 . '; --tag-color-border-2:' . $tagBorder2 . '; --tag-color-border-3:' . $tagBorder3 . ';';
 $aClass = 'tag nowrap';
 
 $aText = trim($tag['Tag']['name']);
@@ -54,10 +61,15 @@ if (strpos($aText, ':') !== false) {
     $displayPredicate = str_replace(['_', '-'], ' ', $predicatePart);
     $displayValue = $valuePart !== null ? str_replace(['_', '-'], ' ', $valuePart) : null;
     $aTextDisplay = sprintf(
-        '<span class="tag-line tag-family">%s</span><span class="tag-line tag-detail"><span class="tag-part-pragma">%s</span>%s</span>',
+        '<span class="tag-machine"><span class="tag-segment tag-segment-taxonomy">%s</span><span class="tag-segment tag-segment-predicate">%s</span>%s</span>',
         h($taxonomyPart),
         h($displayPredicate),
-        $displayValue !== null ? '=<span class="tag-part-value">' . h($displayValue) . '</span>' : ''
+        $displayValue !== null ? '<span class="tag-segment tag-segment-value"><span class="tag-quoted-value">' . h($displayValue) . '</span></span>' : ''
+    );
+} else {
+    $aTextDisplay = sprintf(
+        '<span class="tag-machine"><span class="tag-segment tag-segment-single">%s</span></span>',
+        h($aText)
     );
 }
 $aTextModified = null;

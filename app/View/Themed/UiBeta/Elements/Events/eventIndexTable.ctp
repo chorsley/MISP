@@ -52,7 +52,9 @@
         <?php if (in_array('timestamp', $columns, true)): ?><th class="col-timestamp" title="<?= __('Last mod') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?><th class="col-publish-timestamp" title="<?= __('Pub time') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Pub time')) ?></th><?php endif; ?>
     </tr>
-    <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
+    <?php foreach ($events as $event):
+        $eventId = (int)$event['Event']['id'];
+    ?>
     <tr id="event_<?= $eventId ?>">
         <td style="width:10px" class="beta-checkbox-actions-cell">
             <div class="beta-checkbox-actions-wrapper">
@@ -205,13 +207,25 @@
                         }
                         $galaxies[$galaxy_name][] = $galaxy_cluster;
                     }
-                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    $galaxyCards = [];
                     foreach ($galaxies as $galaxyName => $clusters) {
-                        echo $this->element('Events/View/galaxy_compact_beta', array(
-                            'galaxyName' => $galaxyName,
-                            'clusters' => $clusters,
-                            'baseurl' => $baseurl
-                        ));
+                        $galaxyCards[] = [
+                            'html' => $this->element('Events/View/galaxy_compact_beta', array(
+                                'galaxyName' => $galaxyName,
+                                'clusters' => [reset($clusters)],
+                                'baseurl' => $baseurl
+                            )),
+                            'hidden_count' => max(0, count($clusters) - 1),
+                        ];
+                    }
+
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    foreach ($galaxyCards as $galaxyCard) {
+                        echo $galaxyCard['html'];
+                        if (!empty($galaxyCard['hidden_count'])) {
+                            $count = (int)$galaxyCard['hidden_count'];
+                            echo '<span class="beta-context-more-count" title="' . h(__n('%s additional galaxy cluster', '%s additional galaxy clusters', $count, $count)) . '">(+'. $count .')</span>';
+                        }
                     }
                     echo '</div>';
                 }
@@ -221,6 +235,7 @@
         <?php if (in_array('tags', $columns, true)): ?>
         <td class="shortish col-tags">
             <?php
+                $highlightedTags = $event['Event']['highlightedTags'] ?? [];
                 $tags = $event['EventTag'];
                 $galaxyTags = [];
                 foreach ($tags as $k => $tag) {
@@ -229,6 +244,56 @@
                         unset($tags[$k]);
                     }
                 }
+
+                if (!empty($highlightedTags)) {
+                    $highlightedTagNames = [];
+                    foreach ($highlightedTags as $highlightedTaxonomy) {
+                        if (empty($highlightedTaxonomy['tags'])) {
+                            continue;
+                        }
+
+                        foreach ($highlightedTaxonomy['tags'] as $highlightedTag) {
+                            if (!empty($highlightedTag['Tag']['name'])) {
+                                $highlightedTagNames[$highlightedTag['Tag']['name']] = true;
+                            }
+                        }
+                    }
+                    if (!empty($highlightedTagNames)) {
+                        foreach ($tags as $k => $tag) {
+                            $tagName = $tag['Tag']['name'] ?? null;
+                            if ($tagName !== null && isset($highlightedTagNames[$tagName])) {
+                                unset($tags[$k]);
+                            }
+                        }
+                    }
+                }
+
+                $tagFamilies = [];
+                foreach ($tags as $tag) {
+                    $tagName = $tag['Tag']['name'] ?? '';
+                    if ($tagName === '') {
+                        continue;
+                    }
+                    $tagFamily = strpos($tagName, ':') !== false ? explode(':', $tagName, 2)[0] : $tagName;
+                    if (!isset($tagFamilies[$tagFamily])) {
+                        $tagFamilies[$tagFamily] = [];
+                    }
+                    $tagFamilies[$tagFamily][] = $tag;
+                }
+
+                $totalRegularTagCount = count($tags);
+
+                $visibleTags = [];
+                foreach ($tagFamilies as $familyTags) {
+                    $visibleTags[] = reset($familyTags);
+                }
+
+                $maxVisibleTags = 3;
+                if (count($visibleTags) > $maxVisibleTags) {
+                    $visibleTags = array_slice($visibleTags, 0, $maxVisibleTags);
+                }
+                $hiddenTagCount = max(0, $totalRegularTagCount - count($visibleTags));
+
                 if (!empty($galaxyTags)) {
                     $galaxies = array();
                     foreach ($galaxyTags as $galaxyTag) {
@@ -257,28 +322,46 @@
                             }
                         }
                     }
-                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+
+                    $galaxyCards = [];
                     foreach ($galaxies as $galaxyName => $clusters) {
-                        echo $this->element('Events/View/galaxy_compact_beta', array(
-                            'galaxyName' => $galaxyName,
-                            'clusters' => $clusters,
-                            'baseurl' => $baseurl
-                        ));
+                        $galaxyCards[] = [
+                            'html' => $this->element('Events/View/galaxy_compact_beta', array(
+                                'galaxyName' => $galaxyName,
+                                'clusters' => [reset($clusters)],
+                                'baseurl' => $baseurl
+                            )),
+                            'hidden_count' => max(0, count($clusters) - 1),
+                        ];
+                    }
+
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    foreach ($galaxyCards as $galaxyCard) {
+                        echo $galaxyCard['html'];
+                        if (!empty($galaxyCard['hidden_count'])) {
+                            $count = (int)$galaxyCard['hidden_count'];
+                            echo '<span class="beta-context-more-count" title="' . h(__n('%s additional galaxy cluster', '%s additional galaxy clusters', $count, $count)) . '">(+'. $count .')</span>';
+                        }
                     }
                     echo '</div>';
                 }
             ?>
-            <?= $this->element('ajaxTags', [
-                'event' => $event,
-                'tags' => $tags,
-                'tagAccess' => false,
-                'localTagAccess' => false,
-                'missingTaxonomies' => false,
-                'columnised' => true,
-                'static_tags_only' => 1,
-                'tag_display_style' => Configure::check('MISP.full_tags_on_event_index') ? Configure::read('MISP.full_tags_on_event_index') : 1,
-                'highlightedTags' => $event['Event']['highlightedTags'] ?? [],
-            ]);
+            <?php
+                $tagElementOptions = [
+                    'event' => $event,
+                    'tagAccess' => false,
+                    'localTagAccess' => false,
+                    'missingTaxonomies' => false,
+                    'columnised' => true,
+                    'static_tags_only' => 1,
+                    'tag_display_style' => Configure::check('MISP.full_tags_on_event_index') ? Configure::read('MISP.full_tags_on_event_index') : 1,
+                    'highlightedTags' => $highlightedTags
+                ];
+
+                echo $this->element('ajaxTags', $tagElementOptions + ['tags' => $visibleTags]);
+                if ($hiddenTagCount > 0) {
+                    echo '<span class="beta-context-more-count" title="' . h(__n('%s additional tag', '%s additional tags', $hiddenTagCount, $hiddenTagCount)) . '">(+'. (int)$hiddenTagCount .')</span>';
+                }
             ?>
         </td>
         <?php endif; ?>

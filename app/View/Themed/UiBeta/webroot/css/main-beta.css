@@ -655,7 +655,7 @@ pre {
 
 /* Ensure consistent font size for all text elements */
 .beta-events-table td,
-.beta-events-table td span:not(.tag-line):not(.tag-part-pragma):not(.tag-part-value):not(.beta-galaxy-cluster-label):not(.beta-galaxy-cluster-values):not(.beta-galaxy-relationship):not(.beta-galaxy-relationship-after),
+.beta-events-table td span:not(.tag-line):not(.tag-part-pragma):not(.tag-part-value):not(.tag-machine):not(.tag-segment):not(.tag-segment-taxonomy):not(.tag-segment-predicate):not(.tag-segment-value):not(.tag-delim):not(.tag-quoted-value):not(.beta-galaxy-cluster-label):not(.beta-galaxy-cluster-values):not(.beta-galaxy-relationship):not(.beta-galaxy-relationship-after),
 .beta-events-table td time,
 .beta-events-table td p {
     font-size: 0.875rem;
@@ -1895,32 +1895,71 @@ body.beta-ui-enabled .beta-view-events {
     font-size: 11px !important;
 }
 
-.tag .tag-line {
-    display: block;
-    line-height: 1.1;
-    font-size: inherit;
+.tag .tag-machine {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-wrap: wrap;
 }
 
-.tag .tag-family {
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+.tag .tag-segment {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 1px 4px;
+    border: 1px solid var(--tag-color-border-1, #8d8d8d);
     font-size: 10px !important;
-    color: #555;
-}
-
-.tag .tag-detail {
-    color: #111;
-    font-size: 11px !important;
-}
-
-.tag .tag-part-pragma {
-    color: #777;
-}
-
-.tag .tag-part-value {
-    color: #000;
+    line-height: 1.2;
+    white-space: nowrap;
+    background: var(--tag-color-tint-1, transparent);
+    color: #2f2f2f;
     font-weight: 400;
-    font-size: 11px !important;
+}
+
+.tag .tag-segment-taxonomy {
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-style: dotted;
+}
+
+.tag .tag-segment-predicate {
+    border-style: dashed;
+    border-color: var(--tag-color-border-2, #8d8d8d);
+    background: var(--tag-color-tint-2, transparent);
+}
+
+.tag .tag-segment-value {
+    border-style: solid;
+    border-color: var(--tag-color-border-3, #8d8d8d);
+    background: var(--tag-color-tint-3, var(--tag-color-soft, transparent));
+    color: #111;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.tag .tag-segment-single {
+    border-style: solid;
+    border-color: var(--tag-color-border-2, #8d8d8d);
+    background: var(--tag-color-tint-2, transparent);
+}
+
+.tag .tag-delim {
+    font-size: 10px !important;
+    font-weight: 400;
+    line-height: 1;
+    opacity: 0.65;
+    color: var(--tag-color-border-2, #666);
+}
+
+.tag .tag-quoted-value::before,
+.tag .tag-quoted-value::after {
+    opacity: 0.7;
+}
+
+.tag .tag-quoted-value::before {
+    content: '"';
+}
+
+.tag .tag-quoted-value::after {
+    content: '"';
 }
 
 .tag:hover {
@@ -1982,13 +2021,8 @@ body.beta-ui-enabled .beta-view-events {
     padding: 2px 6px;
 }
 
-.beta-events-table .tag .tag-family {
+.beta-events-table .tag .tag-segment {
     font-size: 10px !important;
-}
-
-.beta-events-table .tag .tag-detail,
-.beta-events-table .tag .tag-part-value {
-    font-size: 11px !important;
 }
 
 .beta-events-table .tag-wrapper-beta {
