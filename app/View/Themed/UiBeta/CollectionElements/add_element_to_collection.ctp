@@ -11,6 +11,13 @@
  */
 $currentElementType = !empty($this->request->params['pass'][0]) ? $this->request->params['pass'][0] : 'Event';
 $currentElementUuid = !empty($this->request->params['pass'][1]) ? $this->request->params['pass'][1] : '';
+$canCreateCollection = $this->Acl->canAccess('collections', 'add');
+$createCollectionOptionValue = '__create_new_collection__';
+$collectionOptions = $dropdownData['collections'];
+asort($collectionOptions, SORT_NATURAL | SORT_FLAG_CASE);
+if ($canCreateCollection) {
+    $collectionOptions[$createCollectionOptionValue] = __('Create new collection...');
+}
 ?>
 
 <?php
@@ -19,7 +26,7 @@ $fields = [
         [
             'field' => 'collection_id',
             'class' => 'input span6',
-            'options' => $dropdownData['collections'],
+            'options' => $collectionOptions,
             'type' => 'dropdown',
             'label' => __('Collection')
         ],
@@ -47,18 +54,13 @@ $description = sprintf(
 );
 
 $metaFields = [];
-if ($this->Acl->canAccess('collections', 'add')) {
+if ($canCreateCollection) {
     $createCollectionUrl = sprintf(
         '%s/collections/add/attach_element_type:%s/attach_element_uuid:%s',
         h($baseurl),
         rawurlencode($currentElementType),
         rawurlencode($currentElementUuid)
     );
-    $metaFields[] = '<div style="margin-top:8px; text-align:center;"><small>'
-        . __('Don\'t have a collection yet?')
-        . ' <a href="#" onclick="openGenericModal(\'' . $createCollectionUrl . '\'); return false;">'
-        . '<i class="fa fa-plus"></i> ' . __('Create a new collection')
-        . '</a></small></div>';
 }
 
 echo $this->element('genericElements/Form/genericForm', [
@@ -77,6 +79,31 @@ echo $this->element('genericElements/Form/genericForm', [
 ?>
 
 <script>
+<?php if ($canCreateCollection): ?>
+$(document)
+    .off('focus.betaCollectionCreateOption', '#genericModal select[name="data[CollectionElement][collection_id]"]')
+    .on('focus.betaCollectionCreateOption', '#genericModal select[name="data[CollectionElement][collection_id]"]', function() {
+        $(this).data('betaPrevValue', $(this).val());
+    })
+    .off('change.betaCollectionCreateOption', '#genericModal select[name="data[CollectionElement][collection_id]"]')
+    .on('change.betaCollectionCreateOption', '#genericModal select[name="data[CollectionElement][collection_id]"]', function() {
+        var createValue = <?php echo json_encode($createCollectionOptionValue); ?>;
+        if ($(this).val() !== createValue) {
+            $(this).data('betaPrevValue', $(this).val());
+            return;
+        }
+
+        var prevValue = $(this).data('betaPrevValue');
+        if (prevValue && prevValue !== createValue) {
+            $(this).val(prevValue);
+        } else if (this.options.length > 0) {
+            this.selectedIndex = 0;
+        }
+
+        openGenericModal(<?php echo json_encode($createCollectionUrl); ?>);
+    });
+<?php endif; ?>
+
 function submitAddElementToCollectionBeta() {
     var normalizeMessage = function(message, fallback) {
         if (typeof message === 'string') {
