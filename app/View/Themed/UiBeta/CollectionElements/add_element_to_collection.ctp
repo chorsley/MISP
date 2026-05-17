@@ -48,9 +48,15 @@ $description = sprintf(
 
 $metaFields = [];
 if ($this->Acl->canAccess('collections', 'add')) {
+    $createCollectionUrl = sprintf(
+        '%s/collections/add/attach_element_type:%s/attach_element_uuid:%s',
+        h($baseurl),
+        rawurlencode($currentElementType),
+        rawurlencode($currentElementUuid)
+    );
     $metaFields[] = '<div style="margin-top:8px; text-align:center;"><small>'
         . __('Don\'t have a collection yet?')
-        . ' <a href="#" onclick="openGenericModal(\'' . h($baseurl) . '/collections/add\'); return false;">'
+        . ' <a href="#" onclick="openGenericModal(\'' . $createCollectionUrl . '\'); return false;">'
         . '<i class="fa fa-plus"></i> ' . __('Create a new collection')
         . '</a></small></div>';
 }

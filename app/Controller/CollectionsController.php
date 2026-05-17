@@ -26,6 +26,24 @@ class CollectionsController extends AppController
     {
         $this->Collection->current_user = $this->Auth->user();
         $currentUser = $this->Auth->user();
+        $attachElementType = $this->request->query('attach_element_type');
+        if (empty($attachElementType) && !empty($this->request->params['named']['attach_element_type'])) {
+            $attachElementType = $this->request->params['named']['attach_element_type'];
+        }
+        if (empty($attachElementType) && !empty($this->request->data['Collection']['_attach_element_type'])) {
+            $attachElementType = $this->request->data['Collection']['_attach_element_type'];
+        }
+        $attachElementUuid = $this->request->query('attach_element_uuid');
+        if (empty($attachElementUuid) && !empty($this->request->params['named']['attach_element_uuid'])) {
+            $attachElementUuid = $this->request->params['named']['attach_element_uuid'];
+        }
+        if (empty($attachElementUuid) && !empty($this->request->data['Collection']['_attach_element_uuid'])) {
+            $attachElementUuid = $this->request->data['Collection']['_attach_element_uuid'];
+        }
+        $isAttachRequested = !empty($attachElementType) && !empty($attachElementUuid);
+        if ($isAttachRequested && !in_array($attachElementType, $this->Collection->CollectionElement->valid_types, true)) {
+            throw new BadRequestException(__('Invalid element type for collection attachment.'));
+        }
         $params = [];
         $this->loadModel('Event');
         if ($this->request->is('post')) {
@@ -40,8 +58,26 @@ class CollectionsController extends AppController
                     }
                     return $collection;
                 },
-                'afterSave' => function (array $collection) use ($data) {
+                'afterSave' => function (array $collection) use ($data, $isAttachRequested, $attachElementType, $attachElementUuid) {
                     $this->Collection->CollectionElement->captureElements($collection);
+                    if ($isAttachRequested) {
+                        $this->Collection->CollectionElement->create();
+                        try {
+                            $this->Collection->CollectionElement->save([
+                                'CollectionElement' => [
+                                    'collection_id' => $collection['Collection']['id'],
+                                    'element_type' => $attachElementType,
+                                    'element_uuid' => $attachElementUuid,
+                                    'description' => ''
+                                ]
+                            ]);
+                        } catch (PDOException $e) {
+                            // ignore duplicate relation if it already exists
+                            if (empty($e->errorInfo[0]) || $e->errorInfo[0] != 23000) {
+                                throw $e;
+                            }
+                        }
+                    }
                     return $collection;
                 }
             ];
@@ -57,7 +93,7 @@ class CollectionsController extends AppController
             'sgs' => $this->Event->SharingGroup->fetchAllAuthorised($this->Auth->user(), 'name', 1)  
         ];
         $this->set('initialDistribution', Configure::read('MISP.default_event_distribution'));
-        $this->set(compact('dropdownData'));
+        $this->set(compact('dropdownData', 'attachElementType', 'attachElementUuid'));
         if($this->theme === "Overmind"){
             $this->layout = false;
         }
