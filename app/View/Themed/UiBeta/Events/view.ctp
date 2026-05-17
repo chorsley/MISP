@@ -45,6 +45,9 @@
         padding: 5px 12px;
         display: flex;
         flex-direction: column;
+        justify-content: center;
+        min-height: 58px;
+        box-sizing: border-box;
     }
     .meta-label {
         font-size: 10px;
@@ -153,30 +156,39 @@
         opacity: 0.82;
     }
     .composition-label-grid {
-        margin-top: 4px;
-        position: relative;
-        min-height: 20px;
+        margin-top: 8px;
     }
-    .composition-label-connectors {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1;
+    .composition-label-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
     }
-    .composition-label-item {
-        position: absolute;
+    .composition-label-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         font-size: 11px;
         line-height: 1.2;
-        color: #4a5560;
-        white-space: nowrap;
+        color: #3c4854;
+        border: 1px solid #d7dfe8;
+        border-radius: 12px;
+        padding: 3px 8px;
+        background: #fbfdff;
         cursor: pointer;
         user-select: none;
-        z-index: 2;
     }
-    .composition-label-item strong {
+    .composition-label-chip:hover {
+        background: #f0f6ff;
+        border-color: #c2d2e6;
+    }
+    .composition-label-chip .swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: 0 0 8px;
+    }
+    .composition-label-chip strong {
         color: #26313d;
     }
     .composition-inline-label {
@@ -234,13 +246,25 @@
         -ms-transform: translateX(20px);
         transform: translateX(20px);
     }
+    .publish-box .meta-value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .edit-box .meta-value {
+        display: flex;
+        align-items: center;
+    }
     .published-label {
-        margin-right: 8px;
-        font-weight: 600;
-        color: #666;
-        vertical-align: middle;
+        font-weight: 700;
         font-size: 12px;
-        text-transform: uppercase;
+        line-height: 1;
+    }
+    .published-label.state-published {
+        color: #2f8f46;
+    }
+    .published-label.state-unpublished {
+        color: #c0392b;
     }
 
 
@@ -461,18 +485,27 @@
                 </span>
             </span>
             
-            <div class="beta-header-actions" style="margin-left: auto;">
-                 <?php if ($this->Acl->canAccess('events', 'edit') && $this->Acl->canAccess('events', 'publish')): ?>
-                    <div style="display: inline-block; margin-right: 15px; vertical-align: middle;" title="<?php echo __('Toggle publication status'); ?>">
-                        <span class="published-label"><?php echo __('Published'); ?></span>
+            <?php if ($this->Acl->canAccess('events', 'publish')): ?>
+                <span class="meta-box publish-box" title="<?php echo __('Toggle publication status'); ?>">
+                    <span class="meta-label"><?php echo __('Published'); ?></span>
+                    <span class="meta-value">
+                        <span id="publishedLabel" class="published-label <?php echo !empty($event['Event']['published']) ? 'state-published' : 'state-unpublished'; ?>"><?php echo !empty($event['Event']['published']) ? __('Published') : __('Unpublished'); ?></span>
                         <label class="switch">
                             <input type="checkbox" id="publishedToggle" data-id="<?php echo h($event['Event']['id']); ?>" <?php echo $event['Event']['published'] ? 'checked' : ''; ?>>
                             <span class="slider round"></span>
                         </label>
-                    </div>
-                    <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit'); ?></a>
-                 <?php endif; ?>
-            </div>
+                    </span>
+                </span>
+            <?php endif; ?>
+
+            <?php if ($this->Acl->canAccess('events', 'edit')): ?>
+                <span class="meta-box edit-box">
+                    <span class="meta-label"><?php echo __('Action'); ?></span>
+                    <span class="meta-value">
+                        <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit'); ?></a>
+                    </span>
+                </span>
+            <?php endif; ?>
         </div>
         
         <?php if (!empty($warnings)): ?>
@@ -1323,120 +1356,26 @@
         var smallItems = layout.filter(function(item) {
             return item.pixelWidth < 70;
         });
-        smallItems.sort(function(a, b) {
-            return a.centerX - b.centerX;
-        });
-
-        var laneCount = 4;
-        var laneStep = 18;
-        var laneTop = [];
-        var laneRight = [];
-        for (var laneIdx = 0; laneIdx < laneCount; laneIdx++) {
-            laneTop.push(2 + (laneIdx * laneStep));
-            laneRight.push(-999);
-        }
-        var labelGap = 10;
-        var lanesUsed = 0;
-        var connectors = [];
-
-        smallItems.forEach(function(item) {
-            var labelHtml = '<strong>' + betaEscapeHtml(item.data.name) + '</strong> (' + item.data.value + ')';
-            var measure = $('<div class="composition-label-item" style="left:-9999px;top:-9999px;visibility:hidden;">' + labelHtml + '</div>');
-            labelGrid.append(measure);
-            var rawW = measure.outerWidth() || 0;
-            var rawH = measure.outerHeight() || 12;
-            measure.remove();
-
-            var desiredLeft = item.centerX - (rawW / 2);
-            var maxLeft = Math.max(0, width - rawW - 4);
-            desiredLeft = Math.max(0, Math.min(desiredLeft, maxLeft));
-
-            var lane = -1;
-            var labelLeft = desiredLeft;
-
-            for (var i = 0; i < laneRight.length; i++) {
-                if (desiredLeft >= laneRight[i] + labelGap) {
-                    lane = i;
-                    labelLeft = desiredLeft;
-                    break;
-                }
-            }
-
-            if (lane === -1) {
-                lane = 0;
-                for (var j = 1; j < laneRight.length; j++) {
-                    if (laneRight[j] < laneRight[lane]) {
-                        lane = j;
-                    }
-                }
-                labelLeft = Math.max(desiredLeft, laneRight[lane] + labelGap);
-            }
-
-            labelLeft = Math.min(labelLeft, maxLeft);
-
-            var label = $('<div class="composition-label-item" title="' + betaEscapeHtml(item.data.label) + '"></div>');
-            label.css({
-                left: labelLeft + 'px',
-                top: laneTop[lane] + 'px',
-                color: item.color
-            });
-            label.html(labelHtml);
-            label.on('click', function() {
-                betaFilterAttributesByComposition(item.data.type, item.data.name);
-            });
-            labelGrid.append(label);
-
-            var renderedLabelHeight = label.outerHeight() || rawH;
-            var labelMidY = laneTop[lane] + Math.round(renderedLabelHeight / 2);
-
-            connectors.push({
-                anchorX: Math.max(2, Math.min(width - 2, item.centerX)),
-                labelLeft: labelLeft,
-                labelWidth: rawW,
-                labelMidY: labelMidY,
-                color: item.color
-            });
-
-            laneRight[lane] = labelLeft + rawW;
-            lanesUsed = Math.max(lanesUsed, lane + 1);
-        });
 
         if (smallItems.length > 0) {
-            var labelHeight = laneTop[Math.max(0, lanesUsed - 1)] + laneStep;
-            labelGrid.css('min-height', labelHeight + 'px');
-
-            var connectorSvg = d3.select(labelGrid[0])
-                .append('svg')
-                .attr('class', 'composition-label-connectors')
-                .attr('width', width)
-                .attr('height', labelHeight);
-
-            connectors.forEach(function(connector) {
-                var labelRight = connector.labelLeft + connector.labelWidth;
-                var labelEdgeX;
-
-                if (connector.anchorX <= connector.labelLeft) {
-                    labelEdgeX = connector.labelLeft - 3;
-                } else if (connector.anchorX >= labelRight) {
-                    labelEdgeX = labelRight + 3;
-                } else {
-                    var distToLeft = connector.anchorX - connector.labelLeft;
-                    var distToRight = labelRight - connector.anchorX;
-                    labelEdgeX = distToLeft <= distToRight
-                        ? connector.labelLeft - 3
-                        : labelRight + 3;
+            smallItems.sort(function(a, b) {
+                if (b.data.value !== a.data.value) {
+                    return b.data.value - a.data.value;
                 }
+                return a.data.name.localeCompare(b.data.name);
+            });
 
-                var endX = Math.max(1, Math.min(width - 1, labelEdgeX));
-                var endY = connector.labelMidY;
-                var elbowX = connector.anchorX + (endX >= connector.anchorX ? 10 : -10);
+            var labelList = $('<div class="composition-label-list"></div>');
+            labelGrid.append(labelList);
 
-                connectorSvg.append('path')
-                    .attr('d', 'M' + connector.anchorX + ',0 L' + elbowX + ',' + endY + ' L' + endX + ',' + endY)
-                    .attr('fill', 'none')
-                    .attr('stroke', connector.color)
-                    .attr('stroke-width', 1.2)
-                    .attr('stroke-opacity', 0.85);
+            smallItems.forEach(function(item) {
+                var chip = $('<div class="composition-label-chip" title="' + betaEscapeHtml(item.data.label) + '"></div>');
+                chip.append('<span class="swatch" style="background:' + item.color + ';"></span>');
+                chip.append('<span><strong>' + betaEscapeHtml(item.data.name) + '</strong> (' + item.data.value + ')</span>');
+                chip.on('click', function() {
+                    betaFilterAttributesByComposition(item.data.type, item.data.name);
+                });
+                labelList.append(chip);
             });
         }
     }
@@ -2254,6 +2193,16 @@
         }
 
     $(document).ready(function() {
+        function updatePublishedLabelState(isPublished) {
+            var $label = $('#publishedLabel');
+            if (!$label.length) {
+                return;
+            }
+            $label.removeClass('state-published state-unpublished')
+                .addClass(isPublished ? 'state-published' : 'state-unpublished')
+                .text(isPublished ? '<?php echo addslashes(__('Published')); ?>' : '<?php echo addslashes(__('Unpublished')); ?>');
+        }
+
         $('a[data-toggle="tab"][href="#correlations"]').on('shown.bs.tab', function (e) {
             loadCorrelations();
         });
@@ -2261,6 +2210,10 @@
         // Check if we are already on the correlations tab on page load
         if (window.location.hash === '#correlations') {
             loadCorrelations();
+        }
+
+        if ($('#publishedToggle').length) {
+            updatePublishedLabelState($('#publishedToggle').is(':checked'));
         }
 
         $('#publishedToggle').change(function() {
@@ -2280,10 +2233,12 @@
                 success: function(response) {
                     $toggle.prop('disabled', false);
                     if (response.saved || (response.response && response.response.saved)) {
+                         updatePublishedLabelState(isChecked);
                          showMessage('success', response.message || (response.response ? response.response.message : 'Event updated'));
                     } else {
                         // Revert
                         $toggle.prop('checked', !isChecked);
+                        updatePublishedLabelState(!isChecked);
                         showMessage('fail', response.message || (response.response ? response.response.message : 'Action failed'));
                         if (response.errors) {
                              console.error(response.errors);
@@ -2293,6 +2248,7 @@
                 error: function(xhr) {
                     $toggle.prop('disabled', false);
                     $toggle.prop('checked', !isChecked);
+                    updatePublishedLabelState(!isChecked);
                     xhrFailCallback(xhr);
                 }
             });
