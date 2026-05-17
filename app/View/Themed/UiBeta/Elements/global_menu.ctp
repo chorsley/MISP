@@ -239,6 +239,11 @@ if (!empty($me)) {
                             'html' => '<i class="fas fa-cubes fa-fw"></i> ' . __('List Object Templates'),
                             'url' => $baseurl . '/objectTemplates/index'
                         ),
+                        array(
+                            'html' => '<i class="fas fa-file-signature fa-fw"></i> ' . __('List Event Templates'),
+                            'url' => $baseurl . '/event_templates/index',
+                            'requirement' => $this->Acl->canAccess('eventTemplates', 'index'),
+                        ),
                     )
                 ),
                 array(

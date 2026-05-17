@@ -2632,7 +2632,7 @@ body.beta-ui-enabled .collections.view ~ div.actions {
 
 .beta-event-timeline-track {
     position: relative;
-    height: 18px;
+    height: 34px;
 }
 
 .beta-event-timeline-track:before {
@@ -2653,6 +2653,53 @@ body.beta-ui-enabled .collections.view ~ div.actions {
     right: 0;
     top: 0;
     bottom: 0;
+    z-index: 2;
+}
+
+.beta-event-timeline-ticks {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.beta-event-timeline-tick {
+    position: absolute;
+    top: 50%;
+    width: 1px;
+    height: 10px;
+    background: #b7c4d5;
+    transform: translate(-50%, -50%);
+}
+
+.beta-event-timeline-tick-edge {
+    height: 12px;
+    background: #9daec4;
+}
+
+.beta-event-timeline-tick-label {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    line-height: 1;
+    color: #7a8699;
+    white-space: nowrap;
+}
+
+.beta-event-timeline-tick-label-start {
+    left: 0;
+    transform: none;
+}
+
+.beta-event-timeline-tick-label-end {
+    left: auto;
+    right: 0;
+    transform: none;
 }
 
 .beta-event-timeline-marker {
@@ -2667,6 +2714,7 @@ body.beta-ui-enabled .collections.view ~ div.actions {
     box-shadow: 0 0 0 1px rgba(66, 139, 202, 0.4);
     cursor: pointer;
     padding: 0;
+    z-index: 3;
 }
 
 .beta-event-timeline-marker:hover {

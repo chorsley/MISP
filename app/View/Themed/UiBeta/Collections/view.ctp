@@ -70,6 +70,23 @@ if (!empty($eventUuids)) {
         color: #666;
     }
 
+    .beta-tab-count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 7px;
+        margin-left: 6px;
+        border-radius: 999px;
+        background: #e9ecef;
+        color: #495057;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        vertical-align: middle;
+    }
+
     .beta-tabs-container .beta-tab-content {
         background: #fff;
         border: 1px solid #ddd;
@@ -139,11 +156,15 @@ if (!empty($eventUuids)) {
             <li role="presentation" class="active">
                 <a href="#collection-reports" aria-controls="collection-reports" role="tab" data-toggle="tab">
                     <?= __('Reports') ?>
+                    <span class="beta-tab-count-badge" title="<?= __('Number of reports in this collection') ?>">
+                        <?= count($eventElements) ?>
+                    </span>
                 </a>
             </li>
             <li role="presentation">
                 <a href="#collection-correlations" aria-controls="collection-correlations" role="tab" data-toggle="tab">
                     <?= __('Correlations') ?>
+                    <span class="beta-tab-count-badge" id="collectionCorrelationsTabCount" title="<?= __('Correlations between reports in this collection') ?>">0</span>
                 </a>
             </li>
             <li role="presentation">
@@ -191,6 +212,7 @@ if (!empty($eventUuids)) {
                                 <span class="beta-event-timeline-range" id="collectionEventTimelineRange"></span>
                             </div>
                             <div class="beta-event-timeline-track">
+                                <div class="beta-event-timeline-ticks" aria-hidden="true"></div>
                                 <div class="beta-event-timeline-markers"></div>
                             </div>
                         </div>
@@ -705,8 +727,17 @@ if (!empty($eventUuids)) {
         var timeline = document.getElementById('collectionEventTimeline');
         if (!timeline) return;
         var markers = timeline.querySelector('.beta-event-timeline-markers');
+        var ticks = timeline.querySelector('.beta-event-timeline-ticks');
         var rangeLabel = document.getElementById('collectionEventTimelineRange');
         if (!markers) return;
+
+        function formatDateUtc(ts) {
+            var d = new Date(ts);
+            var y = d.getUTCFullYear();
+            var m = String(d.getUTCMonth() + 1).padStart(2, '0');
+            var day = String(d.getUTCDate()).padStart(2, '0');
+            return y + '-' + m + '-' + day;
+        }
 
         var items = [];
         eventUuids.forEach(function (uuid) {
@@ -727,7 +758,35 @@ if (!empty($eventUuids)) {
         items.sort(function (a, b) { return a.ts - b.ts; });
         var minTs = items[0].ts;
         var maxTs = items[items.length - 1].ts;
-        var range = Math.max(1, maxTs - minTs);
+        var rawRange = maxTs - minTs;
+        var range = Math.max(1, rawRange);
+
+        if (ticks) {
+            ticks.innerHTML = '';
+            var tickCount = rawRange === 0 ? 1 : Math.min(7, Math.max(3, items.length + 1));
+            for (var i = 0; i < tickCount; i++) {
+                var tick = document.createElement('span');
+                var pctTick = tickCount === 1 ? 50 : (i / (tickCount - 1)) * 100;
+                var isEdgeTick = i === 0 || i === tickCount - 1;
+                tick.className = 'beta-event-timeline-tick' + (isEdgeTick ? ' beta-event-timeline-tick-edge' : '');
+                tick.style.left = pctTick + '%';
+
+                var tickTs = rawRange === 0
+                    ? minTs
+                    : minTs + ((range * i) / Math.max(1, tickCount - 1));
+                var label = document.createElement('span');
+                label.className = 'beta-event-timeline-tick-label';
+                if (i === 0) {
+                    label.className += ' beta-event-timeline-tick-label-start';
+                } else if (i === tickCount - 1) {
+                    label.className += ' beta-event-timeline-tick-label-end';
+                }
+                label.textContent = formatDateUtc(tickTs);
+                tick.appendChild(label);
+
+                ticks.appendChild(tick);
+            }
+        }
 
         markers.innerHTML = '';
         items.forEach(function (item) {
@@ -775,6 +834,10 @@ if (!empty($eventUuids)) {
         });
 
         var edgeCount = edges.length;
+        var tabCountEl = document.getElementById('collectionCorrelationsTabCount');
+        if (tabCountEl) {
+            tabCountEl.textContent = edgeCount;
+        }
         if (statusEl) {
             statusEl.textContent = edgeCount > 0
                 ? edgeCount + ' <?= __('correlation(s) found between collection events') ?>'
