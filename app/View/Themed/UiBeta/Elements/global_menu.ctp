@@ -64,9 +64,21 @@ if (!empty($me)) {
                             'url' => $baseurl . '/events/index'
                         ),
                         array(
-                            'html' => '<i class="fas fa-plus fa-fw"></i> ' . __('Add'),
+                            'html' => '<i class="fas fa-plus fa-fw"></i> ' . __('Add event'),
                             'url' => $baseurl . '/events/add',
                             'requirement' => $this->Acl->canAccess('events', 'add'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-file-import fa-fw"></i> ' . __('Add event from import'),
+                            'url' => $baseurl . '/events/add_misp_export',
+                            'requirement' => $this->Acl->canAccess('events', 'add'),
+                        ),
+                        array(
+                            'html' => '<i class="fas fa-clone fa-fw"></i> ' . __('Add event from template'),
+                            'url' => $baseurl . '/event_templates/index',
+                            'requirement' =>
+                                $this->Acl->canAccess('eventTemplates', 'index') &&
+                                $this->Acl->canAccess('eventTemplates', 'instantiate'),
                         ),
                     )
                 ),

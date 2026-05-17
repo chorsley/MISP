@@ -77,6 +77,9 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li><a href="<?= $baseurl ?>/events/add_misp_export"><i class="fa fa-file-import"></i> <?= __('Create event from import') ?></a></li>
+                            <?php if ($this->Acl->canAccess('eventTemplates', 'index') && $this->Acl->canAccess('eventTemplates', 'instantiate')): ?>
+                                <li><a href="#" onclick="event.preventDefault();openEventTemplatePicker();"><i class="fa fa-clone"></i> <?= __('Create event from template') ?></a></li>
+                            <?php endif; ?>
                         </ul>
                     </div>
                 <?php endif; ?>
@@ -183,4 +186,10 @@ echo $this->element('genericElements/assetLoader', [
     'css' => ['vis', 'distribution-graph'],
     'js' => ['vis', 'jquery-ui.min', 'network-distribution-graph', 'beta-events-timestamps'],
 ]);
+if (!$ajax
+    && $this->Acl->canAccess('eventTemplates', 'index')
+    && $this->Acl->canAccess('eventTemplates', 'instantiate')
+) {
+    echo $this->element('eventTemplates/templatePickerModal');
+}
 ?>
