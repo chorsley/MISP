@@ -1586,6 +1586,12 @@ body.beta-ui-enabled .beta-view-events {
     padding: 2px;
 }
 
+/* In beta event view, do not clip galaxy action dropdowns */
+body.beta-ui-enabled .beta-view-events #galaxies_div.beta-galaxies-container {
+    max-height: none;
+    overflow: visible;
+}
+
 .beta-galaxy-cluster {
     display: inline-flex;
     flex-direction: column;

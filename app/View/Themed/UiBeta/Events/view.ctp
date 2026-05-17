@@ -2488,7 +2488,7 @@
     // ── Collections widget ────────────────────────────────────────────────────
     // Load all collections that contain this event and render compact linked
     // chips in the Context card. Uses the dedicated read-only JSON endpoint.
-    (function loadEventCollections() {
+    window.betaLoadEventCollections = function() {
         var eventUuid = <?php echo json_encode($event['Event']['uuid']); ?>;
         var baseurl   = <?php echo json_encode($baseurl); ?>;
         var container = document.getElementById('event-collections-container');
@@ -2527,6 +2527,7 @@
                     '</span>';
             }
         });
-    })();
+    };
+    window.betaLoadEventCollections();
     // ─────────────────────────────────────────────────────────────────────────
 </script>
