@@ -786,13 +786,20 @@
                                       usort($analysisLinks, function($a, $b) {
                                           return strcasecmp($a['value'], $b['value']);
                                       });
+                                      $analysisLinkCount = count($analysisLinks);
+                                      $analysisInitialVisible = 3;
+                                      $analysisHiddenCount = max($analysisLinkCount - $analysisInitialVisible, 0);
                                   ?>
                                   <div class="analysis-links-section" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-                                      <h5 style="margin-top: 0; font-size: 13px; color: #666;"><?php echo __('Analysis Links <i class="fa fa-exclamation-triangle"></i> (open links cautiously!)'); ?></h5>
+                                      <h5 style="margin-top: 0; font-size: 13px; color: #666;">
+                                          <?php echo __('Analysis links'); ?> <span class="beta-header-count"><?php echo '(' . h($analysisLinkCount) . ')'; ?></span>
+                                          <span style="font-weight: normal; margin-left: 6px;"><i class="fa fa-exclamation-triangle"></i> <?php echo __('Open links cautiously'); ?></span>
+                                      </h5>
                                       <?php if (!empty($analysisLinks)): ?>
-                                          <ul style="list-style: none; padding: 0; margin: 0;">
-                                              <?php foreach ($analysisLinks as $link): ?>
-                                                  <li style="margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; word-break: break-all;">
+                                          <ul id="analysis-links-list" style="list-style: none; padding: 0; margin: 0;">
+                                              <?php foreach ($analysisLinks as $index => $link): ?>
+                                                  <?php $isHidden = $index >= $analysisInitialVisible; ?>
+                                                  <li class="analysis-link-item<?php echo $isHidden ? ' analysis-link-item-extra' : ''; ?>" style="margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; word-break: break-all;<?php echo $isHidden ? ' display: none;' : ''; ?>">
                                                       <?php if ($link['type'] === 'link'): ?>
                                                           <i class="fa fa-external-link-alt" style="color: #428bca; margin-right: 5px;"></i>
                                                           <a href="<?php echo h($link['value']); ?>" target="_blank" rel="noreferrer noopener"><?php echo h($link['value']); ?></a>
@@ -803,8 +810,11 @@
                                                   </li>
                                               <?php endforeach; ?>
                                           </ul>
-                                      <?php else: ?>
-                                          <p class="muted" style="font-size: 12px;"><?php echo __('No external analysis links or PDF attachments available.'); ?></p>
+                                          <?php if ($analysisHiddenCount > 0): ?>
+                                              <a href="#" id="analysis-links-toggle" data-expanded="0" data-show-more-label="<?php echo h(__('Show all')); ?>" data-show-less-label="<?php echo h(__('Show less')); ?>" data-hidden-count="<?php echo h($analysisHiddenCount); ?>" onclick="betaToggleAnalysisLinks(); return false;" style="display: inline-block; margin-top: 8px;">
+                                                  <?php echo __('Show all'); ?> (<?php echo h($analysisHiddenCount); ?> <?php echo __('more'); ?>)
+                                              </a>
+                                          <?php endif; ?>
                                       <?php endif; ?>
                                   </div>
                               </div>
@@ -1842,6 +1852,23 @@
         }
     });
     <?php endif; ?>
+
+    function betaToggleAnalysisLinks() {
+        var toggle = document.getElementById('analysis-links-toggle');
+        if (!toggle) {
+            return;
+        }
+        var expanded = toggle.getAttribute('data-expanded') === '1';
+        var items = document.querySelectorAll('.analysis-link-item-extra');
+        for (var i = 0; i < items.length; i++) {
+            items[i].style.display = expanded ? 'none' : '';
+        }
+        var showMoreLabel = toggle.getAttribute('data-show-more-label') || 'Show all';
+        var showLessLabel = toggle.getAttribute('data-show-less-label') || 'Show less';
+        var hiddenCount = parseInt(toggle.getAttribute('data-hidden-count'), 10) || 0;
+        toggle.textContent = expanded ? (showMoreLabel + ' (' + hiddenCount + ' <?php echo h(__('more')); ?>)') : showLessLabel;
+        toggle.setAttribute('data-expanded', expanded ? '0' : '1');
+    }
 
     function betaFilterAttributesByComment(comment) {
         // Switch to Attributes tab
