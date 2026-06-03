@@ -91,6 +91,33 @@
     .beta-card-body {
         padding: 15px;
     }
+    .summary-report-preview-wrap {
+        width: 100%;
+    }
+    .summary-report-expand-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 20px;
+        margin-top: -1px;
+        border: 1px solid #e0e0e0;
+        border-top: 0;
+        border-radius: 0 0 4px 4px;
+        background: #f7f8f9;
+        color: #6f7a83;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .summary-report-expand-toggle:hover,
+    .summary-report-expand-toggle:focus {
+        background: #eef2f5;
+        color: #4f5b67;
+        text-decoration: none;
+    }
+    .summary-report-expand-toggle .fa {
+        font-size: 14px;
+    }
     .beta-expandable-header {
         cursor: pointer;
         user-select: none;
@@ -686,18 +713,23 @@
                               <div class="beta-card-header"><?php echo __('Report preview'); ?></div>
                               <div class="beta-card-body">
                                   <?php if (!empty($firstEventReportMarkdown)): ?>
-                                       <iframe id="summary-report-iframe"
-                                           src="<?php echo $baseurl; ?>/eventReports/viewRendered/<?php echo h($firstEventReportId); ?>"
-                                           style="width: 100%; max-height: 400px; min-height: 120px; border: 1px solid #e0e0e0; border-radius: 4px; background: #fff; overflow: hidden;"
-                                           frameborder="0"
-                                           scrolling="auto"
-                                           sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                                           loading="lazy"></iframe>
-                                        <div style="margin-top: 10px;">
-                                            <a href="#" onclick="viewFullReport(<?php echo h($firstEventReportId); ?>); return false;"><?php echo __('View full report'); ?></a>
-                                            |
-                                            <a href="#summary-reports-section" onclick="betaToggleSummaryReports(true); document.getElementById('summary-reports-section').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;"><?php echo __('See all reports'); ?></a>
-                                         </div>
+                                        <div class="summary-report-preview-wrap">
+                                        <iframe id="summary-report-iframe"
+                                            src="<?php echo $baseurl; ?>/eventReports/viewRendered/<?php echo h($firstEventReportId); ?>"
+                                            style="width: 100%; min-height: 120px; border: 1px solid #e0e0e0; border-radius: 4px 4px 0 0; background: #fff; overflow: hidden;"
+                                            frameborder="0"
+                                            scrolling="auto"
+                                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                                            loading="lazy"></iframe>
+                                            <a href="#" id="summary-report-expand-toggle" class="summary-report-expand-toggle" onclick="betaToggleReportPreviewSize(); return false;" data-expand-label="<?php echo h(__('Expand preview')); ?>" data-collapse-label="<?php echo h(__('Collapse preview')); ?>" aria-label="<?php echo h(__('Expand preview')); ?>" title="<?php echo h(__('Expand preview')); ?>">
+                                                <i id="summary-report-expand-icon" class="fa fa-angle-double-down" aria-hidden="true"></i>
+                                            </a>
+                                        </div>
+                                          <div style="margin-top: 10px;">
+                                              <a href="#" onclick="viewFullReport(<?php echo h($firstEventReportId); ?>); return false;"><?php echo __('View full report'); ?></a>
+                                              |
+                                              <a href="#summary-reports-section" onclick="betaToggleSummaryReports(true); document.getElementById('summary-reports-section').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;"><?php echo __('See all reports'); ?></a>
+                                           </div>
                                     <?php else: ?>
                                         <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
                                         <?php if ((int)$eventReportCount === 0 && $this->Acl->canAccess('eventReports', 'add') && $this->Acl->canModifyEvent($event)): ?>
@@ -1751,16 +1783,62 @@
 
     // Auto-resize report preview iframe based on content height
     <?php if (!empty($firstEventReportId)): ?>
+    window.betaSummaryReportExpanded = false;
+    window.betaSummaryReportContentHeight = 0;
+
+    function betaGetReportPreviewMaxHeight() {
+        if (!window.betaSummaryReportExpanded) {
+            return 300;
+        }
+        var iframe = document.getElementById('summary-report-iframe');
+        if (!iframe) {
+            return Math.max(window.innerHeight - 40, 300);
+        }
+        var rect = iframe.getBoundingClientRect();
+        var viewportBottomPadding = 104;
+        return Math.max(window.innerHeight - rect.top - viewportBottomPadding, 300);
+    }
+
+    function betaApplyReportPreviewHeight() {
+        var iframe = document.getElementById('summary-report-iframe');
+        if (!iframe) {
+            return;
+        }
+        var maxHeight = betaGetReportPreviewMaxHeight();
+        var targetHeight = window.betaSummaryReportExpanded
+            ? maxHeight
+            : Math.min(window.betaSummaryReportContentHeight + 10, maxHeight);
+        iframe.style.height = Math.max(targetHeight, 120) + 'px';
+        iframe.scrolling = window.betaSummaryReportContentHeight > maxHeight ? 'auto' : 'no';
+    }
+
+    function betaToggleReportPreviewSize() {
+        window.betaSummaryReportExpanded = !window.betaSummaryReportExpanded;
+        var expandToggle = document.getElementById('summary-report-expand-toggle');
+        var expandIcon = document.getElementById('summary-report-expand-icon');
+        if (expandToggle) {
+            var expandLabel = expandToggle.getAttribute('data-expand-label') || 'Expand preview';
+            var collapseLabel = expandToggle.getAttribute('data-collapse-label') || 'Collapse preview';
+            var label = window.betaSummaryReportExpanded ? collapseLabel : expandLabel;
+            expandToggle.setAttribute('aria-label', label);
+            expandToggle.setAttribute('title', label);
+        }
+        if (expandIcon) {
+            expandIcon.className = window.betaSummaryReportExpanded ? 'fa fa-angle-double-up' : 'fa fa-angle-double-down';
+        }
+        betaApplyReportPreviewHeight();
+    }
+
     window.addEventListener('message', function(event) {
         if (event.data && event.data.type === 'reportPreviewResize') {
-            var iframe = document.getElementById('summary-report-iframe');
-            if (iframe) {
-                var maxHeight = 300;
-                var newHeight = Math.min(event.data.height + 10, maxHeight);
-                iframe.style.height = newHeight + 'px';
-                // Show scrollbar if content exceeds max height
-                iframe.scrolling = event.data.height > maxHeight ? 'auto' : 'no';
-            }
+            window.betaSummaryReportContentHeight = parseInt(event.data.height, 10) || 0;
+            betaApplyReportPreviewHeight();
+        }
+    });
+
+    window.addEventListener('resize', function() {
+        if (window.betaSummaryReportExpanded) {
+            betaApplyReportPreviewHeight();
         }
     });
     <?php endif; ?>
