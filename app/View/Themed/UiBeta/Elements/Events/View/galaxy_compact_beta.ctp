@@ -51,8 +51,9 @@
                     $targetTagId = $cluster[$target_type . '_tag_id'] ?? null;
                 }
 
-                // Determine if we can show action buttons for this cluster
-                $showActions = ($canModify || ($canModifyLocal && $local)) && $target_type && $target_id;
+                $hasUtilityActions = !empty($id) || !empty($tagId);
+                $showEditActions = ($canModify || ($canModifyLocal && $local)) && $target_type && $target_id;
+                $showActions = $hasUtilityActions || $showEditActions;
             ?>
             <div class="beta-galaxy-cluster<?php echo $showActions ? ' beta-galaxy-cluster-editable' : ''; ?>" data-pattern="<?php echo $patternIndex; ?>" style="background-color: <?php echo $bgColor; ?>; border-color: <?php echo $borderColor; ?>;">
                 <div class="beta-galaxy-header">
@@ -69,17 +70,22 @@
                         <div class="beta-galaxy-actions noPrint">
                             <span class="beta-galaxy-actions-toggle" title="<?php echo __('Actions'); ?>"><i class="fas fa-caret-down"></i></span>
                             <div class="beta-galaxy-actions-dropdown">
+                                <?php if ($id): ?>
+                                    <a href="<?php echo $baseurl; ?>/galaxy_clusters/view/<?php echo h($id); ?>" class="beta-galaxy-action-item">
+                                        <i class="fas fa-sitemap"></i> <?php echo __('View cluster'); ?>
+                                    </a>
+                                <?php endif; ?>
                                 <?php if ($tagId): ?>
                                     <a href="<?php echo $baseurl; ?>/events/index/searchtag:<?php echo intval($tagId); ?>" class="beta-galaxy-action-item">
                                         <i class="fas fa-search"></i> <?php echo __('Search events'); ?>
                                     </a>
                                 <?php endif; ?>
-                                <?php if ($target_type !== 'tag_collection' && $targetTagId): ?>
+                                <?php if ($showEditActions && $target_type !== 'tag_collection' && $targetTagId): ?>
                                     <a href="<?php echo $baseurl; ?>/tags/modifyTagRelationship/<?php echo h($target_type); ?>/<?php echo intval($targetTagId); ?>" class="beta-galaxy-action-item modal-open">
                                         <i class="fas fa-project-diagram"></i> <?php echo __('Modify relationship'); ?>
                                     </a>
                                 <?php endif; ?>
-                                <?php if ($tagId): ?>
+                                <?php if ($showEditActions && $tagId): ?>
                                     <a href="<?php echo $baseurl; ?>/galaxy_clusters/detach/<?php echo intval($target_id); ?>/<?php echo h($target_type); ?>/<?php echo intval($tagId); ?>"
                                        class="beta-galaxy-action-item beta-galaxy-action-delete"
                                        onclick="confirmClusterDetach(this, '<?php echo h($target_type); ?>', <?php echo intval($target_id); ?>); return false;"
@@ -93,7 +99,9 @@
                 </div>
 
                 <div class="beta-galaxy-cluster-values">
-                    <?php if ($id && !empty($baseurl)): ?>
+                    <?php if ($tagId && !empty($baseurl)): ?>
+                        <a href="<?php echo $baseurl; ?>/events/index/searchtag:<?php echo intval($tagId); ?>" class="beta-galaxy-link" style="color: <?php echo $labelColor; ?>;"><?php echo h($val); ?></a>
+                    <?php elseif ($id && !empty($baseurl)): ?>
                         <a href="<?php echo $baseurl; ?>/galaxy_clusters/view/<?php echo h($id); ?>" class="beta-galaxy-link" style="color: <?php echo $labelColor; ?>;"><?php echo h($val); ?></a>
                     <?php else: ?>
                         <span style="color: <?php echo $labelColor; ?>;"><?php echo h($val); ?></span>
