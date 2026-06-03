@@ -98,6 +98,43 @@
     .beta-expandable-header .fa {
         color: #7b8791;
     }
+    .beta-header-count {
+        color: #8a939c;
+    }
+    .beta-collections-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 2px;
+    }
+    .beta-collections-header-actions {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .beta-collections-header-left {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .beta-collections-header-left .addButton {
+        padding-top: 1px;
+        padding-bottom: 1px;
+        line-height: 1.2;
+    }
+    .beta-view-events .eventTagContainer .addButton,
+    .beta-view-events .beta-collections-header-left .addButton {
+        opacity: 0.6;
+        transition: opacity 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+    }
+    .beta-view-events .eventTagContainer .addButton:hover,
+    .beta-view-events .eventTagContainer .addButton:focus,
+    .beta-view-events .beta-collections-header-left .addButton:hover,
+    .beta-view-events .beta-collections-header-left .addButton:focus {
+        opacity: 1;
+        filter: brightness(1.08);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
+    }
     .beta-view-events #galaxies_div {
         position: static;
         padding: 0;
@@ -750,7 +787,7 @@
                       <div class="span4">
                           <div class="beta-card summary-card" id="summary-reports-section">
                               <div class="beta-card-header beta-expandable-header" onclick="betaToggleSummaryReports();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleSummaryReports();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle event reports'); ?>">
-                                  <?php echo __('Event reports'); ?> (<?php echo h($eventReportCount); ?>)
+                                  <?php echo __('Event reports'); ?> <span class="beta-header-count">(<?php echo h($eventReportCount); ?>)</span>
                                   <i id="summary-reports-toggle-icon" class="fa fa-chevron-right pull-right"></i>
                               </div>
                               <div class="beta-card-body" id="summary-reports-content-wrap" style="display:none;">
@@ -766,7 +803,7 @@
                            <div class="beta-card summary-card">
                               <div class="beta-card-header"><?php echo __('Context'); ?></div>
                               <div class="beta-card-body">
-                                 <strong><?php echo __('Tags'); ?></strong><br>
+                                 <strong><?php echo __('Tags'); ?> <span class="beta-header-count">(<?php echo h(!empty($event['EventTag']) ? count($event['EventTag']) : 0); ?>)</span></strong><br>
                                  <span class="eventTagContainer">
                                      <?php
                                            echo $this->element('ajaxTags', [
@@ -779,73 +816,86 @@
                                                'popoverPlacement' => 'left'
                                            ]);
                                      ?>
-                                 </span>
-                                 <hr>
-                                 <strong><?php echo __('Galaxies'); ?></strong><br>
-                                 <div class="beta-galaxies-container" id="galaxies_div" style="margin-top: 5px;">
-                                   <?php
-                                       // Compute permissions before the loop
-                                       $tagAccess = $this->Acl->canModifyTag($event);
-                                       $localTagAccess = $this->Acl->canModifyTag($event, true);
-                                       $targetId = $event['Event']['id'];
-
-                                       if (!empty($event['Galaxy'])) {
-                                           foreach ($event['Galaxy'] as $galaxy) {
-                                               echo $this->element('Events/View/galaxy_compact_beta', [
-                                                   'galaxyName' => $galaxy['name'],
-                                                   'clusters' => $galaxy['GalaxyCluster'],
-                                                   'baseurl' => $baseurl,
-                                                   'canModify' => $tagAccess,
-                                                   'canModifyLocal' => $localTagAccess,
-                                                   'target_type' => 'event',
-                                                   'target_id' => $targetId,
-                                               ]);
-                                           }
-                                       } else {
-                                           echo '<span class="muted" style="font-size: 11px;">' . __('No galaxies attached.') . ' </span>';
-                                       }
-                                       
-                                       // Add Buttons
-                                       
-                                        if ($tagAccess) {
-                                            $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";
-                                            echo sprintf(
-                                                '<button class="%s" data-popover-popup="%s" data-popover-placement="left" role="button" tabindex="0" aria-label="' . __('Add new cluster') . '" title="' . __('Add new cluster') . '">%s</button>',
-                                                'useCursorPointer addButton btn btn-inverse noPrint',
-                                                $link,
-                                                '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
-                                            );
+                                  </span>
+                                  <hr>
+                                  <?php
+                                      $tagAccess = $this->Acl->canModifyTag($event);
+                                      $localTagAccess = $this->Acl->canModifyTag($event, true);
+                                      $targetId = $event['Event']['id'];
+                                      $galaxyCount = !empty($event['Galaxy']) ? count($event['Galaxy']) : 0;
+                                  ?>
+                                  <div class="beta-collections-header-row" style="margin-bottom:5px;">
+                                      <span class="beta-collections-header-left">
+                                          <strong><?php echo __('Galaxies'); ?> <span class="beta-header-count">(<?php echo h($galaxyCount); ?>)</span></strong>
+                                          <?php
+                                              if ($tagAccess) {
+                                                  $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";
+                                                  echo sprintf(
+                                                      '<button class="%s" data-popover-popup="%s" data-popover-placement="left" role="button" tabindex="0" aria-label="' . __('Add new cluster') . '" title="' . __('Add new cluster') . '">%s</button>',
+                                                      'useCursorPointer addButton btn btn-inverse noPrint',
+                                                      $link,
+                                                      '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
+                                                  );
+                                              }
+                                              if ($localTagAccess) {
+                                                  $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:1";
+                                                  echo sprintf(
+                                                      '<button class="%s" data-popover-popup="%s" data-popover-placement="left" role="button" tabindex="0" aria-label="' . __('Add new local cluster') . '" title="' . __('Add new local cluster') . '">%s</button>',
+                                                      'useCursorPointer addButton btn btn-inverse noPrint',
+                                                      $link,
+                                                      '<i class="fas fa-user"></i> <i class="fas fa-plus"></i>'
+                                                  );
+                                              }
+                                          ?>
+                                      </span>
+                                  </div>
+                                  <div class="beta-galaxies-container" id="galaxies_div" style="margin-top: 5px;">
+                                    <?php
+                                        if (!empty($event['Galaxy'])) {
+                                            foreach ($event['Galaxy'] as $galaxy) {
+                                                echo $this->element('Events/View/galaxy_compact_beta', [
+                                                    'galaxyName' => $galaxy['name'],
+                                                    'clusters' => $galaxy['GalaxyCluster'],
+                                                    'baseurl' => $baseurl,
+                                                    'canModify' => $tagAccess,
+                                                    'canModifyLocal' => $localTagAccess,
+                                                    'target_type' => 'event',
+                                                    'target_id' => $targetId,
+                                                ]);
+                                            }
                                         }
-                                        if ($localTagAccess) {
-                                            $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:1";
-                                            echo sprintf(
-                                                '<button class="%s" data-popover-popup="%s" data-popover-placement="left" role="button" tabindex="0" aria-label="' . __('Add new local cluster') . '" title="' . __('Add new local cluster') . '">%s</button>',
-                                                'useCursorPointer addButton btn btn-inverse noPrint',
-                                                $link,
-                                                '<i class="fas fa-user"></i> <i class="fas fa-plus"></i>'
-                                            );
-                                        }
-                                   ?>
-                                 </div>
+                                    ?>
+                                  </div>
 
                                   <!-- Collections this event belongs to -->
                                   <hr>
-                                  <strong><?php echo __('Collections'); ?></strong><br>
-                                  <div id="event-collections-container" style="margin-top:5px; min-height:20px;">
-                                      <span class="muted" style="font-size:11px;"><?php echo __('Loading…'); ?></span>
+                                  <div class="beta-expandable-header beta-collections-header-row" onclick="betaToggleCollectionsSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleCollectionsSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle collections'); ?>">
+                                      <span class="beta-collections-header-left">
+                                          <strong><?php echo __('Collections'); ?> <span class="beta-header-count">(<span id="beta-collections-count">0</span>)</span></strong>
+                                          <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
+                                              <a href="#"
+                                                 onclick="event.stopPropagation(); openGenericModal('<?php echo $baseurl; ?>/collectionElements/addElementToCollection/Event/<?php echo h($event['Event']['uuid']); ?>'); return false;"
+                                                 class="useCursorPointer addButton btn btn-inverse noPrint"
+                                                 role="button"
+                                                 tabindex="0"
+                                                 aria-label="<?php echo __('Add to Collection'); ?>"
+                                                 title="<?php echo __('Add to Collection'); ?>">
+                                                  <i class="fa fa-folder-plus icon-white" style="color:#fff;"></i>
+                                              </a>
+                                          <?php endif; ?>
+                                      </span>
+                                      <span class="beta-collections-header-actions">
+                                          <i id="beta-collections-toggle-icon" class="fa fa-chevron-down"></i>
+                                      </span>
                                   </div>
-                                  <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
-                                      <div style="margin-top:6px;">
-                                          <a href="#"
-                                             onclick="openGenericModal('<?php echo $baseurl; ?>/collectionElements/addElementToCollection/Event/<?php echo h($event['Event']['uuid']); ?>'); return false;"
-                                             class="btn btn-xs btn-default">
-                                              <i class="fa fa-folder-plus"></i> <?php echo __('Add to Collection'); ?>
-                                          </a>
+                                  <div id="beta-collections-content-wrap" style="margin-top:5px;">
+                                      <div id="event-collections-container">
+                                          <span class="muted" style="font-size:11px;"><?php echo __('Loading…'); ?></span>
                                       </div>
-                                  <?php endif; ?>
-                                   </div>
-                               </div>
-                          <!-- Warninglist Matches -->
+                                  </div>
+                                    </div>
+                                </div>
+                           <!-- Warninglist Matches -->
                           <?php
                               $warninglistMatches = [];
                               $extractWarnings = function($attributes) use (&$warninglistMatches) {
@@ -893,13 +943,18 @@
                               usort($warninglistMatches, function($a, $b) {
                                   return strcasecmp($a['warninglist_name'], $b['warninglist_name']) ?: strcasecmp($a['value'], $b['value']);
                               });
+                              $warninglistMatchCount = count($warninglistMatches);
+                              $warninglistExpanded = $warninglistMatchCount > 0;
                           ?>
                           <div class="beta-card summary-card">
-                               <div class="beta-card-header"><?php echo __('Warninglist Matches'); ?></div>
-                               <div class="beta-card-body">
-                                   <?php if (!empty($warninglistMatches)): ?>
-                                       <table class="table table-condensed table-hover" style="font-size: 12px; margin-bottom: 0;">
-                                           <thead>
+                                <div class="beta-card-header beta-expandable-header" onclick="betaToggleWarninglistSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleWarninglistSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle warninglist matches'); ?>">
+                                    <?php echo __('Warninglist Matches'); ?> <span class="beta-header-count">(<?php echo h($warninglistMatchCount); ?>)</span>
+                                    <i id="beta-warninglist-toggle-icon" class="fa <?php echo $warninglistExpanded ? 'fa-chevron-down' : 'fa-chevron-right'; ?> pull-right"></i>
+                                </div>
+                                <div class="beta-card-body" id="beta-warninglist-content-wrap" style="display: <?php echo $warninglistExpanded ? 'block' : 'none'; ?>;">
+                                    <?php if (!empty($warninglistMatches)): ?>
+                                        <table class="table table-condensed table-hover" style="font-size: 12px; margin-bottom: 0;">
+                                            <thead>
                                                <tr>
                                                    <th><?php echo __('Warninglist'); ?></th>
                                                    <th><?php echo __('Value'); ?></th>
@@ -1023,14 +1078,15 @@
                                    ],
                                ];
                            ?>
-                           <div class="beta-card summary-card" id="beta-export-card">
-                               <div class="beta-card-header">
-                                   <i class="fa fa-download" style="margin-right: 6px;"></i><?php echo __('Export'); ?>
-                               </div>
-                               <div class="beta-card-body">
-                                   <div style="margin-bottom: 10px;">
-                                       <label for="beta-export-format" style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 4px;"><?php echo __('Format'); ?></label>
-                                       <select id="beta-export-format" class="form-control input-sm" onchange="betaExportFormatChanged(this.value)" style="width: 100%;">
+                            <div class="beta-card summary-card" id="beta-export-card">
+                                <div class="beta-card-header beta-expandable-header" onclick="betaToggleExportSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleExportSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle export options'); ?>">
+                                    <i class="fa fa-download" style="margin-right: 6px;"></i><?php echo __('Export'); ?>
+                                    <i id="beta-export-toggle-icon" class="fa fa-chevron-right pull-right"></i>
+                                </div>
+                                <div class="beta-card-body" id="beta-export-content-wrap" style="display:none;">
+                                    <div style="margin-bottom: 10px;">
+                                        <label for="beta-export-format" style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 4px;"><?php echo __('Format'); ?></label>
+                                        <select id="beta-export-format" class="form-control input-sm" onchange="betaExportFormatChanged(this.value)" style="width: 100%;">
                                            <?php foreach ($betaExportFormats as $fmtKey => $fmt): ?>
                                                <option value="<?php echo h($fmtKey); ?>"
                                                    data-url="<?php echo h($fmt['url']); ?>"
@@ -1493,6 +1549,31 @@
             betaExportFormatChanged(initialExportKey);
         }
     });
+
+    function betaSetSidebarSectionExpanded(contentSelector, iconSelector, expanded) {
+        var $content = $(contentSelector);
+        var $icon = $(iconSelector);
+        if (!$content.length || !$icon.length) {
+            return;
+        }
+        $content.toggle(!!expanded);
+        $icon.toggleClass('fa-chevron-down', !!expanded).toggleClass('fa-chevron-right', !expanded);
+    }
+
+    function betaToggleWarninglistSection() {
+        var isExpanded = $('#beta-warninglist-content-wrap').is(':visible');
+        betaSetSidebarSectionExpanded('#beta-warninglist-content-wrap', '#beta-warninglist-toggle-icon', !isExpanded);
+    }
+
+    function betaToggleExportSection() {
+        var isExpanded = $('#beta-export-content-wrap').is(':visible');
+        betaSetSidebarSectionExpanded('#beta-export-content-wrap', '#beta-export-toggle-icon', !isExpanded);
+    }
+
+    function betaToggleCollectionsSection() {
+        var isExpanded = $('#beta-collections-content-wrap').is(':visible');
+        betaSetSidebarSectionExpanded('#beta-collections-content-wrap', '#beta-collections-toggle-icon', !isExpanded);
+    }
 
     // Export card logic
     var betaExportFormats = <?php
@@ -2492,6 +2573,7 @@
         var eventUuid = <?php echo json_encode($event['Event']['uuid']); ?>;
         var baseurl   = <?php echo json_encode($baseurl); ?>;
         var container = document.getElementById('event-collections-container');
+        var countNode = document.getElementById('beta-collections-count');
         if (!container) return;
 
         container.innerHTML = ''; // Clear "Loading…" placeholder immediately
@@ -2502,11 +2584,14 @@
             dataType: 'json',
             success: function(data) {
                 if (!data || data.length === 0) {
-                    container.innerHTML =
-                        '<span class="muted" style="font-size:11px;">' +
-                        <?php echo json_encode(__('Not in any collections.')); ?> +
-                        '</span>';
+                    container.innerHTML = '';
+                    if (countNode) {
+                        countNode.textContent = '0';
+                    }
                     return;
+                }
+                if (countNode) {
+                    countNode.textContent = String(data.length);
                 }
                 var html = '<div class="beta-event-collections-chips">';
                 data.forEach(function(c) {
@@ -2521,10 +2606,10 @@
                 container.innerHTML = html;
             },
             error: function() {
-                container.innerHTML =
-                    '<span class="muted" style="font-size:11px;">' +
-                    <?php echo json_encode(__('Not in any collections.')); ?> +
-                    '</span>';
+                container.innerHTML = '';
+                if (countNode) {
+                    countNode.textContent = '0';
+                }
             }
         });
     };
