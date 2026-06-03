@@ -30,9 +30,10 @@
     $tagData = "";
     $tag_display_style = $tag_display_style ?? 1;
     $buttonData = [];
+    $renderAddButtons = empty($hide_add_buttons);
     $popoverPlacement = $popoverPlacement ?? 'right';
 
-    if ($full) {
+    if ($renderAddButtons && $full) {
         $buttonData[] = sprintf(
             '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s" data-popover-placement="%s">%s</button>',
             __('Add a tag'),
@@ -43,7 +44,7 @@
             '<i class="fas fa-globe-americas"></i> <i class="fas fa-plus"></i>'
         );
     }
-    if ($full || $fullLocal) {
+    if ($renderAddButtons && ($full || $fullLocal)) {
         $buttonData[] = sprintf(
             '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s" data-popover-placement="%s">%s</button>',
             __('Add a local tag'),
@@ -59,7 +60,7 @@
     if (isset($highlightedTags) && $scope === 'event') {
         foreach ($highlightedTags as $hTaxonomy) {
             $hButtonData = [];
-            if ($full) {
+            if ($renderAddButtons && $full) {
                 $hButtonData[] = sprintf(
                     '<button title="%s" role="button" tabindex="0" aria-label="%s" class="%s" data-popover-popup="%s" data-popover-placement="%s">%s</button>',
                     __('Add a tag'),

@@ -127,6 +127,9 @@
         opacity: 0.6;
         transition: opacity 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
     }
+    .beta-view-events .eventTagContainer .tag-list-container .addButton {
+        display: none !important;
+    }
     .beta-view-events .eventTagContainer .addButton:hover,
     .beta-view-events .eventTagContainer .addButton:focus,
     .beta-view-events .beta-collections-header-left .addButton:hover,
@@ -803,30 +806,59 @@
                            <div class="beta-card summary-card">
                               <div class="beta-card-header"><?php echo __('Context'); ?></div>
                               <div class="beta-card-body">
-                                 <strong><?php echo __('Tags'); ?> <span class="beta-header-count">(<?php echo h(!empty($event['EventTag']) ? count($event['EventTag']) : 0); ?>)</span></strong><br>
+                                 <?php
+                                     $eventTagCount = !empty($event['EventTag']) ? count($event['EventTag']) : 0;
+                                     $eventTagAccess = $this->Acl->canAccess('tags', 'edit');
+                                     $eventLocalTagAccess = $this->Acl->canModifyTag($event, true);
+                                     $canAddGlobalTag = !empty($isAclTagger) && $eventTagAccess;
+                                     $canAddLocalTag = !empty($isAclTagger) && $eventLocalTagAccess;
+                                 ?>
+                                 <div class="beta-collections-header-row" style="margin-bottom:5px;">
+                                      <span class="beta-collections-header-left">
+                                          <strong><?php echo __('Tags'); ?> <span class="beta-header-count">(<span id="beta-tags-count"><?php echo h($eventTagCount); ?></span>)</span></strong>
+                                          <?php if ($canAddGlobalTag): ?>
+                                              <button title="<?php echo __('Add a tag'); ?>" role="button" tabindex="0" aria-label="<?php echo __('Add a tag'); ?>" class="addTagButton addButton btn btn-inverse noPrint" data-popover-popup="<?php echo h($baseurl . '/tags/selectTaxonomy/' . $event['Event']['id']); ?>" data-popover-placement="left">
+                                                  <i class="fas fa-globe-americas icon-white" style="color:#fff;"></i> <i class="fas fa-plus icon-white" style="color:#fff;"></i>
+                                              </button>
+                                          <?php endif; ?>
+                                          <?php if ($canAddGlobalTag || $canAddLocalTag): ?>
+                                              <button title="<?php echo __('Add a local tag'); ?>" role="button" tabindex="0" aria-label="<?php echo __('Add a local tag'); ?>" class="addLocalTagButton addButton btn btn-inverse noPrint" data-popover-popup="<?php echo h($baseurl . '/tags/selectTaxonomy/local:1/' . $event['Event']['id']); ?>" data-popover-placement="left">
+                                                  <i class="fas fa-user icon-white" style="color:#fff;"></i> <i class="fas fa-plus icon-white" style="color:#fff;"></i>
+                                              </button>
+                                          <?php endif; ?>
+                                      </span>
+                                 </div>
                                  <span class="eventTagContainer">
-                                     <?php
-                                           echo $this->element('ajaxTags', [
-                                               'event' => $event,
-                                               'tags' => $event['EventTag'],
-                                               'tagAccess' => $this->Acl->canAccess('tags', 'edit'),
-                                               'localTagAccess' => $this->Acl->canModifyTag($event, true),
-                                               'missingTaxonomies' => $missingTaxonomies,
-                                               'tagConflicts' => $tagConflicts,
-                                               'popoverPlacement' => 'left'
-                                           ]);
-                                     ?>
+                                      <?php
+                                            echo $this->element('ajaxTags', [
+                                                'event' => $event,
+                                                'tags' => $event['EventTag'],
+                                                'tagAccess' => $eventTagAccess,
+                                                'localTagAccess' => $eventLocalTagAccess,
+                                                'missingTaxonomies' => $missingTaxonomies,
+                                                'tagConflicts' => $tagConflicts,
+                                                'popoverPlacement' => 'left',
+                                                'hide_add_buttons' => true
+                                            ]);
+                                      ?>
                                   </span>
                                   <hr>
                                   <?php
                                       $tagAccess = $this->Acl->canModifyTag($event);
                                       $localTagAccess = $this->Acl->canModifyTag($event, true);
                                       $targetId = $event['Event']['id'];
-                                      $galaxyCount = !empty($event['Galaxy']) ? count($event['Galaxy']) : 0;
+                                       $galaxyCount = 0;
+                                       if (!empty($event['Galaxy'])) {
+                                           foreach ($event['Galaxy'] as $galaxyGroup) {
+                                               if (!empty($galaxyGroup['GalaxyCluster'])) {
+                                                   $galaxyCount += count($galaxyGroup['GalaxyCluster']);
+                                               }
+                                           }
+                                       }
                                   ?>
                                   <div class="beta-collections-header-row" style="margin-bottom:5px;">
                                       <span class="beta-collections-header-left">
-                                          <strong><?php echo __('Galaxies'); ?> <span class="beta-header-count">(<?php echo h($galaxyCount); ?>)</span></strong>
+                                          <strong><?php echo __('Galaxies'); ?> <span class="beta-header-count">(<span id="beta-galaxies-count"><?php echo h($galaxyCount); ?></span>)</span></strong>
                                           <?php
                                               if ($tagAccess) {
                                                   $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";
@@ -1548,6 +1580,9 @@
         if (initialExportKey) {
             betaExportFormatChanged(initialExportKey);
         }
+
+        betaInitContextCountObservers();
+        betaRefreshContextCounts();
     });
 
     function betaSetSidebarSectionExpanded(contentSelector, iconSelector, expanded) {
@@ -1573,6 +1608,51 @@
     function betaToggleCollectionsSection() {
         var isExpanded = $('#beta-collections-content-wrap').is(':visible');
         betaSetSidebarSectionExpanded('#beta-collections-content-wrap', '#beta-collections-toggle-icon', !isExpanded);
+    }
+
+    function betaUpdateTagCount() {
+        var count = $('.eventTagContainer .tag-container').length;
+        $('#beta-tags-count').text(count);
+    }
+
+    function betaUpdateGalaxyCount() {
+        var count = $('#galaxies_div .beta-galaxy-cluster, #galaxies_div .galaxy').length;
+        $('#beta-galaxies-count').text(count);
+    }
+
+    function betaUpdateCollectionsCount() {
+        var count = $('#event-collections-container .beta-collection-chip').length;
+        $('#beta-collections-count').text(count);
+    }
+
+    function betaRefreshContextCounts() {
+        betaUpdateTagCount();
+        betaUpdateGalaxyCount();
+        betaUpdateCollectionsCount();
+    }
+
+    function betaObserveCountContainer(selector, updateFn) {
+        if (typeof MutationObserver === 'undefined') {
+            return;
+        }
+        var target = document.querySelector(selector);
+        if (!target) {
+            return;
+        }
+        var observer = new MutationObserver(function() {
+            updateFn();
+        });
+        observer.observe(target, { childList: true, subtree: true });
+    }
+
+    function betaInitContextCountObservers() {
+        if (window._betaContextCountObserversInit) {
+            return;
+        }
+        window._betaContextCountObserversInit = true;
+        betaObserveCountContainer('.eventTagContainer', betaUpdateTagCount);
+        betaObserveCountContainer('#galaxies_div', betaUpdateGalaxyCount);
+        betaObserveCountContainer('#event-collections-container', betaUpdateCollectionsCount);
     }
 
     // Export card logic
