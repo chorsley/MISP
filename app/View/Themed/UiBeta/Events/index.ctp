@@ -169,6 +169,67 @@
 </div>
 <script>
     var passedArgsArray = <?php echo $passedArgs; ?>;
+    var betaEventsIndexBaseurl = <?php echo json_encode($baseurl); ?>;
+
+    window.betaEventCollectionContext = null;
+
+    window.betaOpenAddToCollectionModal = function(eventUuid, eventId) {
+        window.betaEventCollectionContext = {
+            eventUuid: eventUuid,
+            eventId: parseInt(eventId, 10)
+        };
+        openGenericModal(betaEventsIndexBaseurl + '/collectionElements/addElementToCollection/Event/' + encodeURIComponent(eventUuid));
+    };
+
+    window.betaLoadEventCollections = function() {
+        var context = window.betaEventCollectionContext;
+        if (!context || !context.eventUuid || !context.eventId) {
+            return;
+        }
+
+        var container = document.getElementById('event-collections-container-' + context.eventId);
+        if (!container) {
+            return;
+        }
+
+        $.ajax({
+            url: betaEventsIndexBaseurl + '/collections/getForElement/Event/' + encodeURIComponent(context.eventUuid) + '.json',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                container.innerHTML = '';
+                if (!Array.isArray(data) || data.length === 0) {
+                    return;
+                }
+
+                var chips = document.createElement('div');
+                chips.className = 'beta-event-collections-chips';
+
+                data.forEach(function(collection) {
+                    var collectionType = (collection && collection.type) ? String(collection.type) : 'other';
+                    var collectionTypeClass = collectionType.replace(/[^a-z0-9_-]/gi, '');
+                    var link = document.createElement('a');
+                    link.href = betaEventsIndexBaseurl + '/collections/view/' + encodeURIComponent(collection.id);
+                    link.className = 'beta-collection-chip beta-type-' + collectionTypeClass;
+                    var collectionDescription = collection && collection.description ? String(collection.description).substring(0, 80) : '';
+                    link.title = collectionType + (collectionDescription ? ': ' + collectionDescription : '');
+                    link.setAttribute('aria-label', <?php echo json_encode(__('View collection')); ?> + ' ' + (collection.name || ''));
+
+                    var icon = document.createElement('i');
+                    icon.className = 'fa fa-folder';
+                    icon.style.fontSize = '10px';
+                    icon.style.marginRight = '3px';
+                    link.appendChild(icon);
+
+                    link.appendChild(document.createTextNode(collection && collection.name ? String(collection.name) : ''));
+                    chips.appendChild(link);
+                });
+
+                container.appendChild(chips);
+            }
+        });
+    };
+
     $(function() {
         $('.searchFilterButton').click(function() {
             runIndexFilter(this);

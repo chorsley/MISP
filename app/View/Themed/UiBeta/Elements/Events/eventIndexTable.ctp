@@ -70,7 +70,7 @@
                             <li><a href="#" class="beta-delete-action" onclick="event.preventDefault();deleteEventPopup(<?= $eventId ?>)" title="<?= __('Delete') ?>"><i class="fa fa-trash"></i> <?= __('Delete') ?></a></li>
                         <?php endif; ?>
                         <li class="divider"></li>
-                        <li><a href="#" onclick="event.preventDefault();openGenericModal('<?= $baseurl ?>/collectionElements/addElementToCollection/Event/<?= h($event['Event']['uuid']) ?>')" title="<?= __('Add to Collection') ?>"><i class="fa fa-folder-plus"></i> <?= __('Add to Collection') ?></a></li>
+                        <li><a href="#" onclick="event.preventDefault();betaOpenAddToCollectionModal('<?= h($event['Event']['uuid']) ?>', <?= $eventId ?>)" title="<?= __('Add to Collection') ?>"><i class="fa fa-folder-plus"></i> <?= __('Add to Collection') ?></a></li>
                         <?php if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)): ?>
                             <li class="divider"></li>
                             <li><a href="#" class="beta-publish-action" onclick="event.preventDefault();publishPopup(<?= $eventId ?>)" title="<?= __('Publish Event') ?>"><i class="fa fa-upload"></i> <?= __('Publish Event') ?></a></li>
@@ -108,30 +108,32 @@
                 <?php endif; ?>
             </div>
 
-            <?php if (!empty($event['Event']['CollectionMemberships'])): ?>
-                <div class="beta-event-collections-chips" style="margin-top: 0.35em;">
-                    <?php foreach ($event['Event']['CollectionMemberships'] as $collection): ?>
-                        <?php
-                            $collectionType = !empty($collection['type']) ? $collection['type'] : 'other';
-                            $collectionTypeClass = preg_replace('/[^a-z0-9_-]/i', '', $collectionType);
-                            $collectionDescription = !empty($collection['description']) ? mb_substr($collection['description'], 0, 80) : '';
-                            $collectionTitle = h($collectionType);
-                            if ($collectionDescription !== '') {
-                                $collectionTitle .= ': ' . h($collectionDescription);
-                            }
-                        ?>
-                        <a
-                            href="<?= h($baseurl) ?>/collections/view/<?= h($collection['id']) ?>"
-                            class="beta-collection-chip beta-type-<?= h($collectionTypeClass) ?>"
-                            title="<?= $collectionTitle ?>"
-                            aria-label="<?= __('View collection %s', h($collection['name'])) ?>"
-                        >
-                            <i class="fa fa-folder" style="font-size:10px;margin-right:3px;"></i>
-                            <?= h($collection['name']) ?>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+            <div id="event-collections-container-<?= $eventId ?>" data-event-uuid="<?= h($event['Event']['uuid']) ?>" style="margin-top: 0.35em;">
+                <?php if (!empty($event['Event']['CollectionMemberships'])): ?>
+                    <div class="beta-event-collections-chips">
+                        <?php foreach ($event['Event']['CollectionMemberships'] as $collection): ?>
+                            <?php
+                                $collectionType = !empty($collection['type']) ? $collection['type'] : 'other';
+                                $collectionTypeClass = preg_replace('/[^a-z0-9_-]/i', '', $collectionType);
+                                $collectionDescription = !empty($collection['description']) ? mb_substr($collection['description'], 0, 80) : '';
+                                $collectionTitle = h($collectionType);
+                                if ($collectionDescription !== '') {
+                                    $collectionTitle .= ': ' . h($collectionDescription);
+                                }
+                            ?>
+                            <a
+                                href="<?= h($baseurl) ?>/collections/view/<?= h($collection['id']) ?>"
+                                class="beta-collection-chip beta-type-<?= h($collectionTypeClass) ?>"
+                                title="<?= $collectionTitle ?>"
+                                aria-label="<?= __('View collection %s', h($collection['name'])) ?>"
+                            >
+                                <i class="fa fa-folder" style="font-size:10px;margin-right:3px;"></i>
+                                <?= h($collection['name']) ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
 
             <?php if ($extends_info): ?>
                 <?php if (in_array('is_extension', $columns, true)): ?>
