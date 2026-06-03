@@ -235,9 +235,13 @@ class CorrelationsController extends AppController
         $correlations = $this->Correlation->getAttributesRelatedToEvent($this->Auth->user(), $eventId, $sgids);
         if ($this->request->query('extended')) {
             $attributeIds = [];
+            $orgIds = [];
             foreach ($correlations as $parentId => $relations) {
                 foreach ($relations as $rel) {
                     $attributeIds[] = $rel['attribute_id'];
+                    if (!empty($rel['org_id'])) {
+                        $orgIds[(int)$rel['org_id']] = (int)$rel['org_id'];
+                    }
                 }
             }
             if (!empty($attributeIds)) {
@@ -266,6 +270,22 @@ class CorrelationsController extends AppController
                         }
                     }
                 }
+            }
+            if (!empty($orgIds)) {
+                $this->loadModel('Organisation');
+                $organisations = $this->Organisation->find('list', [
+                    'recursive' => -1,
+                    'conditions' => ['Organisation.id' => array_values($orgIds)],
+                    'fields' => ['Organisation.id', 'Organisation.name']
+                ]);
+                foreach ($correlations as &$relations) {
+                    foreach ($relations as &$rel) {
+                        if (!empty($rel['org_id']) && isset($organisations[$rel['org_id']])) {
+                            $rel['org_name'] = $organisations[$rel['org_id']];
+                        }
+                    }
+                }
+                unset($relations, $rel);
             }
         }
         return $this->RestResponse->viewData($correlations, 'json');

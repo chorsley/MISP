@@ -91,6 +91,23 @@
     .beta-card-body {
         padding: 15px;
     }
+    .beta-correlation-org {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 8px;
+        border: 1px solid #d7e5f2;
+        border-radius: 999px;
+        background: #eff6fc;
+        color: #2f5f87;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .beta-correlation-org .fa {
+        font-size: 10px;
+    }
     .summary-report-preview-wrap {
         width: 100%;
     }
@@ -1974,7 +1991,7 @@
                     var eid = rel.id;
                     if (!eventCounts[eid]) {
                         eventCounts[eid] = 0;
-                        eventDetails[eid] = {info: rel.info, date: rel.date, org: rel.org_id};
+                        eventDetails[eid] = {info: rel.info, date: rel.date, org: rel.org_id, orgName: rel.org_name || ''};
                     }
                     eventCounts[eid]++;
                     
@@ -2003,12 +2020,16 @@
                 var percent = (count / max) * 100;
                 var attrs = attributeMap[eid];
                 var attrIds = attrs.map(function(a) { return a.id; }).join(',');
+                var creatorOrg = details.orgName ? $('<div/>').text(details.orgName).html() : '';
                 
                 html += '<div class="beta-card correlation-event-card" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
                 html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8fbfe;">';
                 html += '    <div style="display: flex; align-items: center; gap: 10px;">';
-                html += '      <a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 700; font-size: 1.1em;">#' + eid + ' ' + details.info + '</a>';
                 html += '      <span class="label label-default" style="font-weight: normal;">' + details.date + '</span>';
+                if (creatorOrg) {
+                    html += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + creatorOrg + '</span>';
+                }
+                html += '      <a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 700; font-size: 1.1em;">#' + eid + ' ' + details.info + '</a>';
                 html += '    </div>';
                 html += '    <div style="text-align: right;">';
                 html += '      <span style="font-size: 12px; font-weight: 600; color: #666;">' + count + ' ' + (count === 1 ? 'match' : 'matches') + '</span>';
@@ -2623,6 +2644,10 @@
             // Clone the meta block from the DOM to include tags, comments, etc.
             var currentEventId = '<?php echo h($event['Event']['id']); ?>';
             var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
+            var currentEventDate = '<?php echo addslashes(h($event['Event']['date'])); ?>';
+            var currentEventOrgName = '<?php echo addslashes(h(isset($event['Orgc']['name']) ? $event['Orgc']['name'] : '')); ?>';
+            var currentEventOrg = currentEventOrgName ? $('<div/>').text(currentEventOrgName).html() : '';
+            var currentEventDateSafe = currentEventDate ? $('<div/>').text(currentEventDate).html() : '';
 
             // Clone cells from the DOM row for a complete display
             var metaBlockHtml = '';
@@ -2678,8 +2703,14 @@
             var thisEventHtml = '<div id="correlations-this-event-card" class="beta-card" style="margin-bottom: 20px; border-left: 4px solid #5cb85c; background: #f0fff4;">';
             thisEventHtml += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #e8f8ed;">';
             thisEventHtml += '    <div style="display: flex; align-items: center; gap: 10px;">';
-            thisEventHtml += '      <span class="label label-success" style="font-size: 12px; padding: 4px 8px;"><i class="fa fa-star"></i> <?php echo __('This Event'); ?></span>';
+            if (currentEventDateSafe) {
+                thisEventHtml += '      <span class="label label-default" style="font-weight: normal;">' + currentEventDateSafe + '</span>';
+            }
+            if (currentEventOrg) {
+                thisEventHtml += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + currentEventOrg + '</span>';
+            }
             thisEventHtml += '      <a href="<?php echo $baseurl; ?>/events/view/' + currentEventId + '" style="font-weight: 700; font-size: 1.1em;">#' + currentEventId + ' ' + currentEventInfo + '</a>';
+            thisEventHtml += '      <span class="label label-success" style="font-size: 12px; padding: 4px 8px;"><i class="fa fa-star"></i> <?php echo __('This Event'); ?></span>';
             thisEventHtml += '    </div>';
             thisEventHtml += '    <span style="font-size: 11px; color: #3d8b5e; font-style: italic;"><?php echo __('Source attribute'); ?></span>';
             thisEventHtml += '  </div>';
