@@ -910,7 +910,7 @@ if (!empty($eventUuids)) {
             attrFetchTargets.forEach(function (uuid) {
                 var ev = nodeData[uuid];
                 $.ajax({
-                    url: baseurl + '/correlations/eventCorrelations/' + ev.id + '.json?extended=1',
+                    url: baseurl + '/correlations/eventCorrelations/' + ev.id + '.json?include_attributes=1&include_org_names=1',
                     method: 'GET',
                     dataType: 'json',
                     success: function (data) {

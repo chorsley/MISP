@@ -349,7 +349,7 @@
         </div>
     </div>
 
-    <table class="beta-attr-table">
+    <table class="beta-attr-table" id="attributeList">
         <thead>
             <tr>
                 <th style="width: 40px;"><input type="checkbox" class="select-all"></th>
@@ -383,8 +383,10 @@
                     }
                 ?>
                 <tr class="beta-attr-row <?php echo $rowClass; ?>"
+                    id="<?php echo $isObject ? 'Object_' . h($item['id']) . '_tr' : 'Attribute_' . h($item['id']) . '_tr'; ?>"
                     data-object-type="<?php echo $dataType; ?>"
                     data-primary-id="<?php echo h($item['id']); ?>"
+                    <?php if (!empty($item['uuid'])): ?>data-uuid="<?php echo h($item['uuid']); ?>"<?php endif; ?>
                     <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
@@ -669,7 +671,7 @@
                             $hasGalaxies = !empty($subAttr['Galaxy']);
                             $attributeIsLast = $isLast && !$hasTags && !$hasGalaxies;
                         ?>
-                        <tr class="beta-attr-row object-attr-row" data-object-type="attribute" data-primary-id="<?php echo h($subAttr['id']); ?>" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
+                        <tr class="beta-attr-row object-attr-row" id="Attribute_<?php echo h($subAttr['id']); ?>_tr" data-object-type="attribute" data-primary-id="<?php echo h($subAttr['id']); ?>" data-uuid="<?php echo h($subAttr['uuid']); ?>" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">

@@ -498,6 +498,13 @@
         color: #2f5a93;
         border: 1px solid #d1e9f5;
     }
+    .beta-deeplink-highlight {
+        background-color: #ffe9a3;
+        box-shadow: inset 0 0 0 1px #e2bd4f;
+    }
+    .beta-deeplink-highlight td {
+        background-color: #ffe9a3 !important;
+    }
     .beta-id-badge {
         font-size: 0.8em;
         color: #999;
@@ -1529,9 +1536,52 @@
 
     $(function() {
         popoverStartup();
+        var betaInitialAttributeAnchor = null;
+        var betaInitialFocusUuid = null;
+        var betaFocusRetryCount = 0;
+        var focusMatch = window.location.pathname.match(/\/focus:([^\/]+)/);
+        if (focusMatch && focusMatch[1]) {
+            betaInitialFocusUuid = decodeURIComponent(focusMatch[1]);
+        }
+
+        function betaApplyFocusUuid() {
+            if (!betaInitialFocusUuid || typeof focusObjectByUuid !== 'function') {
+                return;
+            }
+            if (focusObjectByUuid(betaInitialFocusUuid)) {
+                betaInitialFocusUuid = null;
+                betaFocusRetryCount = 0;
+                return;
+            }
+            if (betaFocusRetryCount < 10) {
+                betaFocusRetryCount++;
+                setTimeout(betaApplyFocusUuid, 150);
+            }
+        }
+
+        function betaScrollToAttributeAnchor(attempt) {
+            var hash = betaInitialAttributeAnchor || window.location.hash || '';
+            if (hash.indexOf('#Attribute_') !== 0) {
+                return;
+            }
+            var targetId = hash.substring(1);
+            var target = document.getElementById(targetId);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $('.beta-deeplink-highlight').removeClass('beta-deeplink-highlight');
+                $(target).addClass('beta-deeplink-highlight');
+                betaInitialAttributeAnchor = null;
+            } else if ((attempt || 0) < 12) {
+                setTimeout(function() {
+                    betaScrollToAttributeAnchor((attempt || 0) + 1);
+                }, 150);
+            }
+        }
 
         $('a[data-toggle="tab"][href="#attributes"]').on('shown.bs.tab', function () {
             betaRenderCompositionBar();
+            betaApplyFocusUuid();
+            betaScrollToAttributeAnchor();
         });
 
         $(window).on('resize', function() {
@@ -1572,16 +1622,28 @@
         }
 
         // Initialize history state on load
-        var initialTab = window.location.hash || '#summary';
-        if (window.location.hash) {
-            $('.nav-tabs a[href="' + window.location.hash + '"]').tab('show');
+        var rawHash = window.location.hash || '';
+        var initialTab = '#summary';
+        var initialUrlHash = '#summary';
+        if (rawHash === '#summary' || rawHash === '#attributes' || rawHash === '#correlations' || rawHash === '#history') {
+            initialTab = rawHash;
+            initialUrlHash = rawHash;
+        } else if (rawHash.indexOf('#Attribute_') === 0) {
+            initialTab = '#attributes';
+            initialUrlHash = rawHash;
+            betaInitialAttributeAnchor = rawHash;
+        }
+
+        window.ignoreTabPush = true;
+        if (initialTab !== '#summary') {
+            $('.nav-tabs a[href="' + initialTab + '"]').tab('show');
         }
 
         var initialState = {
             tab: initialTab,
             filter: null
         };
-        history.replaceState(initialState, '', window.location.pathname + initialTab);
+        history.replaceState(initialState, '', window.location.pathname + initialUrlHash);
 
         window.ignoreTabPush = false;
 
@@ -1954,7 +2016,7 @@
         _correlationsLoading = true;
         var eventId = '<?php echo h($event['Event']['id']); ?>';
         $.ajax({
-            url: '<?php echo $baseurl; ?>/correlations/eventCorrelations/' + eventId + '.json?extended=1',
+            url: '<?php echo $baseurl; ?>/correlations/eventCorrelations/' + eventId + '.json?include_attributes=1&include_org_names=1',
             type: 'GET',
             success: function(response) {
                 _correlationsLoading = false;
@@ -2050,16 +2112,35 @@
                         html += '          <td colspan="2">';
                         html += '            <div class="beta-attr-meta-block">';
                         html += '              <div class="beta-attr-type-path">';
-                        html += '                <span class="beta-category-label">' + attr.category + '</span>';
-                        html += '                <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>';
-                        html += '                <span class="beta-type-insight">' + attr.type + '</span>';
-                        if (attr.Object) {
+                        if (attr.Object && attr.Object.name) {
                             html += '                <i class="fa fa-cube" style="font-size: 10px; color: #31708f; margin-left: 5px;"></i>';
                             html += '                <span class="beta-object-relation-insight">' + attr.Object.name + '</span>';
+                            if (attr.object_relation) {
+                                html += '                <span style="font-size: 11px; color: #6b8aa8; font-weight: 700; line-height: 1;">&#9656;</span>';
+                                html += '                <span class="beta-object-relation-insight" style="opacity: 0.85;">' + attr.object_relation + '</span>';
+                            }
                         }
+                        html += '                <span class="beta-type-insight">' + attr.type + '</span>';
                         html += '              </div>';
                         html += '              <div class="beta-attr-value-container">';
-                        html += '                <span class="attr-value">' + attr.value + '</span>';
+                        var focusUuid = '';
+                        if (attr.Object && attr.Object.uuid) {
+                            focusUuid = attr.Object.uuid;
+                        } else if (attr.uuid) {
+                            focusUuid = attr.uuid;
+                        }
+                        var attrAnchor = attr.id ? ('#Attribute_' + attr.id + '_tr') : '#attributes';
+                        var linkHref = '';
+                        if (focusUuid) {
+                            linkHref = '<?php echo $baseurl; ?>/events/view/' + eid + '/focus:' + encodeURIComponent(focusUuid) + attrAnchor;
+                        }
+                        if (attr.uuid) {
+                            html += '                <a class="attr-value attr-value-correlatable" href="' + (linkHref || ('<?php echo $baseurl; ?>/events/view/' + eid + attrAnchor)) + '" title="<?php echo h(__('Open attribute in related event')); ?>" style="cursor: pointer; border-bottom: 1px dashed #428bca; text-decoration: none; color: inherit;">' + attr.value + '</a>';
+                        } else if (attr.id) {
+                            html += '                <a class="attr-value attr-value-correlatable" href="<?php echo $baseurl; ?>/events/view/' + eid + '#Attribute_' + attr.id + '_tr" title="<?php echo h(__('Open attribute in related event')); ?>" style="cursor: pointer; border-bottom: 1px dashed #428bca; text-decoration: none; color: inherit;">' + attr.value + '</a>';
+                        } else {
+                            html += '                <span class="attr-value">' + attr.value + '</span>';
+                        }
                         html += '              </div>';
                         
                         if (attr.AttributeTag && attr.AttributeTag.length > 0) {
