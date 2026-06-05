@@ -2031,6 +2031,138 @@
             var eventDetails = {};
             var attributeMap = {};
 
+            function betaBuildCorrelationEventHeader(eid, details, count, percent, creatorOrg) {
+                var html = '';
+                html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8fbfe;">';
+                html += '    <div style="display: flex; align-items: center; gap: 10px;">';
+                html += '      <span class="label label-default" style="font-weight: normal;">' + details.date + '</span>';
+                if (creatorOrg) {
+                    html += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + creatorOrg + '</span>';
+                }
+                html += '      <a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 700; font-size: 1.1em;">#' + eid + ' ' + details.info + '</a>';
+                html += '    </div>';
+                html += '    <div style="text-align: right;">';
+                html += '      <span style="font-size: 12px; font-weight: 600; color: #666;">' + count + ' ' + (count === 1 ? 'match' : 'matches') + '</span>';
+                html += '      <div style="width: 100px; height: 4px; background: #eee; border-radius: 2px; margin-top: 4px;">';
+                html += '        <div style="width: ' + percent + '%; height: 100%; background: #428bca; border-radius: 2px;"></div>';
+                html += '      </div>';
+                html += '    </div>';
+                html += '  </div>';
+                return html;
+            }
+
+            function betaBuildCorrelationAttributeHref(eid, attr) {
+                var focusUuid = '';
+                if (attr.Object && attr.Object.uuid) {
+                    focusUuid = attr.Object.uuid;
+                } else if (attr.uuid) {
+                    focusUuid = attr.uuid;
+                }
+                var attrAnchor = attr.id ? ('#Attribute_' + attr.id + '_tr') : '#attributes';
+                if (focusUuid) {
+                    return '<?php echo $baseurl; ?>/events/view/' + eid + '/focus:' + encodeURIComponent(focusUuid) + attrAnchor;
+                }
+                if (attr.id) {
+                    return '<?php echo $baseurl; ?>/events/view/' + eid + '#Attribute_' + attr.id + '_tr';
+                }
+                return '';
+            }
+
+            function betaBuildCorrelationTagHtml(tag) {
+                var tagColor = tag.colour || '#0088cc';
+                var hex = tagColor.replace('#', '');
+                var r, g, b;
+                if (hex.length === 3) {
+                    r = parseInt(hex[0] + hex[0], 16);
+                    g = parseInt(hex[1] + hex[1], 16);
+                    b = parseInt(hex[2] + hex[2], 16);
+                } else {
+                    r = parseInt(hex.substring(0, 2), 16);
+                    g = parseInt(hex.substring(2, 4), 16);
+                    b = parseInt(hex.substring(4, 6), 16);
+                }
+                var rgba = 'rgba(' + r + ', ' + g + ', ' + b + ', 0.7)';
+                var luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+                var iconColor = luminance > 0.5 ? '#000' : '#fff';
+
+                var html = '';
+                html += '<div class="tag-container tag-wrapper-beta" style="display: inline-flex; align-items: stretch; margin-right: 4px; margin-bottom: 2px;">';
+                html += '  <span class="tag-scope-icon" style="background-color: ' + rgba + '; color: ' + iconColor + '; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px 0 0 4px; border: 1px solid #d0d0d0; border-right: none;"><i class="fas fa-' + (tag.local ? 'user' : 'globe-americas') + '" style="font-size: 11px;"></i></span>';
+                html += '  <span class="tag nowrap" style="background-color: transparent; border: 1px solid #d0d0d0; color: #000; padding: 3px 8px; font-size: 12px; border-radius: 0 4px 4px 0;">' + tag.name + '</span>';
+                html += '</div>';
+                return html;
+            }
+
+            function betaBuildCorrelationCommentHtml(comment) {
+                if (!comment) {
+                    return '';
+                }
+                if (comment.length > 50) {
+                    return comment.substring(0, 50) + '... '
+                        + '<i class="fa fa-comment-dots" style="cursor: pointer;" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' + comment + '"></i>';
+                }
+                return comment;
+            }
+
+            function betaBuildCorrelationAttributeRow(eid, entry) {
+                var attr = entry.attribute;
+                if (!attr) {
+                    return '        <tr class="beta-attr-row">'
+                        + '          <td style="width: 40px;"></td>'
+                        + '          <td colspan="5"><span class="label label-info">' + entry.value + '</span></td>'
+                        + '        </tr>';
+                }
+
+                var html = '';
+                var linkHref = betaBuildCorrelationAttributeHref(eid, attr);
+                html += '        <tr class="beta-attr-row standalone-attr-row" data-attribute-id="' + entry.id + '">';
+                html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-link" style="color: #ccc;"></i></td>';
+                html += '          <td colspan="2">';
+                html += '            <div class="beta-attr-meta-block">';
+                html += '              <div class="beta-attr-type-path">';
+                if (attr.Object && attr.Object.name) {
+                    html += '                <i class="fa fa-cube" style="font-size: 10px; color: #31708f; margin-left: 5px;"></i>';
+                    html += '                <span class="beta-object-relation-insight">' + attr.Object.name + '</span>';
+                    if (attr.object_relation) {
+                        html += '                <span style="font-size: 11px; color: #6b8aa8; font-weight: 700; line-height: 1;">&#9656;</span>';
+                        html += '                <span class="beta-object-relation-insight" style="opacity: 0.85;">' + attr.object_relation + '</span>';
+                    }
+                }
+                html += '                <span class="beta-type-insight">' + attr.type + '</span>';
+                html += '              </div>';
+                html += '              <div class="beta-attr-value-container">';
+                if (attr.uuid || attr.id) {
+                    html += '                <a class="attr-value attr-value-correlatable" href="' + linkHref + '" title="<?php echo h(__('Open attribute in related event')); ?>" style="cursor: pointer; border-bottom: 1px dashed #428bca; text-decoration: none; color: inherit;">' + attr.value + '</a>';
+                } else {
+                    html += '                <span class="attr-value">' + attr.value + '</span>';
+                }
+                html += '              </div>';
+                if (attr.AttributeTag && attr.AttributeTag.length > 0) {
+                    html += '              <div class="beta-attr-tags-inline">';
+                    attr.AttributeTag.forEach(function(at) {
+                        html += betaBuildCorrelationTagHtml(at.Tag);
+                    });
+                    html += '              </div>';
+                }
+                html += '            </div>';
+                html += '          </td>';
+                html += '          <td class="col-related"></td>';
+                html += '          <td class="col-comment" style="width: 20%;">' + betaBuildCorrelationCommentHtml(attr.comment) + '</td>';
+                html += '          <td style="text-align: center;">';
+                html += '            <i class="fa fa-shield-alt" style="font-size: 1.5em; ' + (attr.to_ids ? 'color: #ff8c00;' : 'opacity: 0.2;') + '" title="' + (attr.to_ids ? 'Recommended for blocking / alerting' : 'Not recommended for blocking / alerting') + '"></i>';
+                html += '          </td>';
+                html += '          <td class="col-correlation" style="text-align: center;">';
+                html += '            <i class="fa fa-project-diagram" style="' + (attr.disable_correlation ? 'opacity: 0.2;' : 'color: #428bca;') + '" title="' + (attr.disable_correlation ? 'Correlation disabled' : 'Correlation enabled') + '"></i>';
+                html += '          </td>';
+                html += '          <td class="col-sightings" style="text-align: center;"><i class="fa fa-eye" style="color: #ccc;"></i></td>';
+                html += '          <td class="col-distribution" style="text-align: center;">';
+                html += '            <div class="dist-widget dist-' + parseInt(attr.distribution, 10) + '" title="' + (attr.SharingGroup ? attr.SharingGroup.name : '') + '"></div>';
+                html += '          </td>';
+                html += '          <td class="col-date" style="width: 80px;">' + moment.unix(attr.timestamp).format('YYYY-MM-DD') + '</td>';
+                html += '        </tr>';
+                return html;
+            }
+
             // Process data
             for (var parentId in data) {
                 var relations = data[parentId];
@@ -2070,123 +2202,13 @@
                 var creatorOrg = details.orgName ? $('<div/>').text(details.orgName).html() : '';
                 
                 html += '<div class="beta-card correlation-event-card" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
-                html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8fbfe;">';
-                html += '    <div style="display: flex; align-items: center; gap: 10px;">';
-                html += '      <span class="label label-default" style="font-weight: normal;">' + details.date + '</span>';
-                if (creatorOrg) {
-                    html += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + creatorOrg + '</span>';
-                }
-                html += '      <a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 700; font-size: 1.1em;">#' + eid + ' ' + details.info + '</a>';
-                html += '    </div>';
-                html += '    <div style="text-align: right;">';
-                html += '      <span style="font-size: 12px; font-weight: 600; color: #666;">' + count + ' ' + (count === 1 ? 'match' : 'matches') + '</span>';
-                html += '      <div style="width: 100px; height: 4px; background: #eee; border-radius: 2px; margin-top: 4px;">';
-                html += '        <div style="width: ' + percent + '%; height: 100%; background: #428bca; border-radius: 2px;"></div>';
-                html += '      </div>';
-                html += '    </div>';
-                html += '  </div>';
+                html += betaBuildCorrelationEventHeader(eid, details, count, percent, creatorOrg);
                 html += '  <div class="beta-card-body" style="padding: 0;">';
                 html += '    <table class="beta-attr-table" style="margin-top: 0;">';
                 html += '      <tbody>';
                 
                 attrs.forEach(function(a) {
-                    var attr = a.attribute;
-                    if (attr) {
-                        html += '        <tr class="beta-attr-row standalone-attr-row" data-attribute-id="' + a.id + '">';
-                        html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-link" style="color: #ccc;"></i></td>';
-                        html += '          <td colspan="2">';
-                        html += '            <div class="beta-attr-meta-block">';
-                        html += '              <div class="beta-attr-type-path">';
-                        if (attr.Object && attr.Object.name) {
-                            html += '                <i class="fa fa-cube" style="font-size: 10px; color: #31708f; margin-left: 5px;"></i>';
-                            html += '                <span class="beta-object-relation-insight">' + attr.Object.name + '</span>';
-                            if (attr.object_relation) {
-                                html += '                <span style="font-size: 11px; color: #6b8aa8; font-weight: 700; line-height: 1;">&#9656;</span>';
-                                html += '                <span class="beta-object-relation-insight" style="opacity: 0.85;">' + attr.object_relation + '</span>';
-                            }
-                        }
-                        html += '                <span class="beta-type-insight">' + attr.type + '</span>';
-                        html += '              </div>';
-                        html += '              <div class="beta-attr-value-container">';
-                        var focusUuid = '';
-                        if (attr.Object && attr.Object.uuid) {
-                            focusUuid = attr.Object.uuid;
-                        } else if (attr.uuid) {
-                            focusUuid = attr.uuid;
-                        }
-                        var attrAnchor = attr.id ? ('#Attribute_' + attr.id + '_tr') : '#attributes';
-                        var linkHref = '';
-                        if (focusUuid) {
-                            linkHref = '<?php echo $baseurl; ?>/events/view/' + eid + '/focus:' + encodeURIComponent(focusUuid) + attrAnchor;
-                        }
-                        if (attr.uuid) {
-                            html += '                <a class="attr-value attr-value-correlatable" href="' + (linkHref || ('<?php echo $baseurl; ?>/events/view/' + eid + attrAnchor)) + '" title="<?php echo h(__('Open attribute in related event')); ?>" style="cursor: pointer; border-bottom: 1px dashed #428bca; text-decoration: none; color: inherit;">' + attr.value + '</a>';
-                        } else if (attr.id) {
-                            html += '                <a class="attr-value attr-value-correlatable" href="<?php echo $baseurl; ?>/events/view/' + eid + '#Attribute_' + attr.id + '_tr" title="<?php echo h(__('Open attribute in related event')); ?>" style="cursor: pointer; border-bottom: 1px dashed #428bca; text-decoration: none; color: inherit;">' + attr.value + '</a>';
-                        } else {
-                            html += '                <span class="attr-value">' + attr.value + '</span>';
-                        }
-                        html += '              </div>';
-                        
-                        if (attr.AttributeTag && attr.AttributeTag.length > 0) {
-                            html += '              <div class="beta-attr-tags-inline">';
-                            attr.AttributeTag.forEach(function(at) {
-                                var tag = at.Tag;
-                                var tagColor = tag.colour || '#0088cc';
-                                var hex = tagColor.replace('#', '');
-                                var r, g, b;
-                                if (hex.length === 3) {
-                                    r = parseInt(hex[0] + hex[0], 16);
-                                    g = parseInt(hex[1] + hex[1], 16);
-                                    b = parseInt(hex[2] + hex[2], 16);
-                                } else {
-                                    r = parseInt(hex.substring(0, 2), 16);
-                                    g = parseInt(hex.substring(2, 4), 16);
-                                    b = parseInt(hex.substring(4, 6), 16);
-                                }
-                                var rgba = 'rgba(' + r + ', ' + g + ', ' + b + ', 0.7)';
-                                var luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-                                var iconColor = luminance > 0.5 ? '#000' : '#fff';
-                                
-                                 html += '<div class="tag-container tag-wrapper-beta" style="display: inline-flex; align-items: stretch; margin-right: 4px; margin-bottom: 2px;">';
-                                 html += '  <span class="tag-scope-icon" style="background-color: ' + rgba + '; color: ' + iconColor + '; display: inline-flex; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 4px 0 0 4px; border: 1px solid #d0d0d0; border-right: none;"><i class="fas fa-' + (tag.local ? 'user' : 'globe-americas') + '" style="font-size: 11px;"></i></span>';
-                                html += '  <span class="tag nowrap" style="background-color: transparent; border: 1px solid #d0d0d0; color: #000; padding: 3px 8px; font-size: 12px; border-radius: 0 4px 4px 0;">' + tag.name + '</span>';
-                                html += '</div>';
-                            });
-                            html += '              </div>';
-                        }
-                        html += '            </div>';
-                        html += '          </td>';
-                        html += '          <td class="col-related"></td>';
-                        html += '          <td class="col-comment" style="width: 20%;">';
-                        if (attr.comment) {
-                            if (attr.comment.length > 50) {
-                                html += attr.comment.substring(0, 50) + '... ';
-                                html += '<i class="fa fa-comment-dots" style="cursor: pointer;" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' + attr.comment + '"></i>';
-                            } else {
-                                html += attr.comment;
-                            }
-                        }
-                        html += '          </td>';
-                        html += '          <td style="text-align: center;">';
-                        html += '            <i class="fa fa-shield-alt" style="font-size: 1.5em; ' + (attr.to_ids ? 'color: #ff8c00;' : 'opacity: 0.2;') + '" title="' + (attr.to_ids ? 'Recommended for blocking / alerting' : 'Not recommended for blocking / alerting') + '"></i>';
-                        html += '          </td>';
-                        html += '          <td class="col-correlation" style="text-align: center;">';
-                        html += '            <i class="fa fa-project-diagram" style="' + (attr.disable_correlation ? 'opacity: 0.2;' : 'color: #428bca;') + '" title="' + (attr.disable_correlation ? 'Correlation disabled' : 'Correlation enabled') + '"></i>';
-                        html += '          </td>';
-                        html += '          <td class="col-sightings" style="text-align: center;"><i class="fa fa-eye" style="color: #ccc;"></i></td>';
-                        html += '          <td class="col-distribution" style="text-align: center;">';
-                        html += '            <div class="dist-widget dist-' + parseInt(attr.distribution) + '" title="' + (attr.SharingGroup ? attr.SharingGroup.name : "") + '"></div>';
-                        html += '          </td>';
-                        html += '          <td class="col-date" style="width: 80px;">' + moment.unix(attr.timestamp).format('YYYY-MM-DD') + '</td>';
-                        html += '        </tr>';
-                    } else {
-                        // Fallback for when attribute data is missing
-                        html += '        <tr class="beta-attr-row">';
-                        html += '          <td style="width: 40px;"></td>';
-                        html += '          <td colspan="5"><span class="label label-info">' + a.value + '</span></td>';
-                        html += '        </tr>';
-                    }
+                    html += betaBuildCorrelationAttributeRow(eid, a);
                 });
                 
                 html += '      </tbody>';
