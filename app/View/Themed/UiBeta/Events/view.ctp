@@ -1685,6 +1685,24 @@
         betaRefreshContextCounts();
     });
 
+    function betaBuildFilterMessage(text) {
+        var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
+        msg += '<button type="button" class="close" onclick="betaClearAttributeFilter(); $(this).parent().remove();">×</button>';
+        msg += text;
+        msg += ' <a href="#" onclick="betaClearAttributeFilter(); return false;">(Clear Filter)</a>';
+        msg += '</div>';
+        return msg;
+    }
+
+    function betaRenderFilterMessage(message, preferredSelector) {
+        var $target = $(preferredSelector);
+        if ($target.length) {
+            $target.html(message);
+        } else {
+            $('#attributes').prepend(message);
+        }
+    }
+
     function betaSetSidebarSectionExpanded(contentSelector, iconSelector, expanded) {
         var $content = $(contentSelector);
         var $icon = $(iconSelector);
@@ -1695,19 +1713,21 @@
         $icon.toggleClass('fa-chevron-down', !!expanded).toggleClass('fa-chevron-right', !expanded);
     }
 
+    function betaToggleSidebarSection(contentSelector, iconSelector) {
+        var isExpanded = $(contentSelector).is(':visible');
+        betaSetSidebarSectionExpanded(contentSelector, iconSelector, !isExpanded);
+    }
+
     function betaToggleWarninglistSection() {
-        var isExpanded = $('#beta-warninglist-content-wrap').is(':visible');
-        betaSetSidebarSectionExpanded('#beta-warninglist-content-wrap', '#beta-warninglist-toggle-icon', !isExpanded);
+        betaToggleSidebarSection('#beta-warninglist-content-wrap', '#beta-warninglist-toggle-icon');
     }
 
     function betaToggleExportSection() {
-        var isExpanded = $('#beta-export-content-wrap').is(':visible');
-        betaSetSidebarSectionExpanded('#beta-export-content-wrap', '#beta-export-toggle-icon', !isExpanded);
+        betaToggleSidebarSection('#beta-export-content-wrap', '#beta-export-toggle-icon');
     }
 
     function betaToggleCollectionsSection() {
-        var isExpanded = $('#beta-collections-content-wrap').is(':visible');
-        betaSetSidebarSectionExpanded('#beta-collections-content-wrap', '#beta-collections-toggle-icon', !isExpanded);
+        betaToggleSidebarSection('#beta-collections-content-wrap', '#beta-collections-toggle-icon');
     }
 
     function betaUpdateTagCount() {
@@ -1835,18 +1855,10 @@
             }
         }
 
-        // Show message
-        var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
-        msg += '<button type="button" class="close" onclick="betaClearAttributeFilter(); $(this).parent().remove();">×</button>';
-        msg += 'Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>';
-        msg += ' <a href="#" onclick="betaClearAttributeFilter(); return false;">(Clear Filter)</a>';
-        msg += '</div>';
-
-        if ($('#beta-filter-banner-slot').length) {
-            $('#beta-filter-banner-slot').html(msg);
-        } else {
-            $('#attributes').prepend(msg);
-        }
+        betaRenderFilterMessage(
+            betaBuildFilterMessage('Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>'),
+            '#beta-filter-banner-slot'
+        );
     }
 
     // Auto-resize report preview iframe based on content height
@@ -1954,19 +1966,13 @@
             }
         });
 
-        // Show message
-        var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
-        msg += '<button type="button" class="close" onclick="betaClearAttributeFilter(); $(this).parent().remove();">×</button>';
-        msg += 'Filtering by Comment: <strong>' + comment + '</strong>';
-        msg += ' <a href="#" onclick="betaClearAttributeFilter(); return false;">(Clear Filter)</a>';
-        msg += '</div>';
-        
-        // Insert message after toolbar in attributes tab
         if ($('.beta-toolbar').length) {
-             $('.beta-toolbar').after(msg);
+            $('.beta-toolbar').after(betaBuildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'));
         } else {
-             // Fallback
-             $('#attributes').prepend(msg);
+            betaRenderFilterMessage(
+                betaBuildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'),
+                ''
+            );
         }
     }
 

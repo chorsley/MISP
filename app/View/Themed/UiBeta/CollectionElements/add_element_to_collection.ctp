@@ -104,28 +104,41 @@ $(document)
     });
 <?php endif; ?>
 
-function submitAddElementToCollectionBeta() {
-    var normalizeMessage = function(message, fallback) {
-        if (typeof message === 'string') {
-            return message;
-        }
-        if (Array.isArray(message)) {
-            return message.join(', ');
-        }
-        if (message && typeof message === 'object') {
-            try {
-                return Object.values(message).flat().join(', ');
-            } catch (e) {
-                return fallback;
-            }
-        }
-        return fallback;
-    };
-
-    var $genericForm = $('#genericModal .genericForm');
-    if (!$genericForm.length) {
-        $genericForm = $('.genericForm').first();
+function betaNormalizeCollectionModalMessage(message, fallback) {
+    if (typeof message === 'string') {
+        return message;
     }
+    if (Array.isArray(message)) {
+        return message.join(', ');
+    }
+    if (message && typeof message === 'object') {
+        try {
+            return Object.values(message).flat().join(', ');
+        } catch (e) {
+            return fallback;
+        }
+    }
+    return fallback;
+}
+
+function betaGetCollectionModalForm() {
+    var $genericForm = $('#genericModal .genericForm');
+    return $genericForm.length ? $genericForm : $('.genericForm').first();
+}
+
+function betaParseCollectionModalResponse(data) {
+    if (typeof data !== 'string') {
+        return data;
+    }
+    try {
+        return JSON.parse(data);
+    } catch (e) {
+        return null;
+    }
+}
+
+function submitAddElementToCollectionBeta() {
+    var $genericForm = betaGetCollectionModalForm();
 
     $.ajax({
         type: 'POST',
@@ -133,17 +146,10 @@ function submitAddElementToCollectionBeta() {
         data: $genericForm.serialize(),
         headers: { Accept: 'application/json' },
         success: function(data) {
-            var response = data;
-            if (typeof data === 'string') {
-                try {
-                    response = JSON.parse(data);
-                } catch (e) {
-                    response = null;
-                }
-            }
+            var response = betaParseCollectionModalResponse(data);
 
             if (response && response.saved) {
-                showMessage('success', normalizeMessage(response.success || response.message, 'Element added to the Collection.'));
+                showMessage('success', betaNormalizeCollectionModalMessage(response.success || response.message, 'Element added to the Collection.'));
                 $('#genericModal').modal('hide').remove();
                 if (typeof window.betaLoadEventCollections === 'function') {
                     window.betaLoadEventCollections();
@@ -152,7 +158,7 @@ function submitAddElementToCollectionBeta() {
             }
 
             if (response) {
-                showMessage('fail', normalizeMessage(response.errors || response.error || response.message, 'Element could not be added to the Collection.'));
+                showMessage('fail', betaNormalizeCollectionModalMessage(response.errors || response.error || response.message, 'Element could not be added to the Collection.'));
                 return;
             }
 
