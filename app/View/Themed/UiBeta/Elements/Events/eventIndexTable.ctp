@@ -11,6 +11,74 @@
  * 
  * @since 2.5.x (beta)
  */
+
+$buildVisibleTagFamilies = function (array $tags) {
+    $tagFamilies = [];
+    foreach ($tags as $tag) {
+        $tagName = $tag['Tag']['name'] ?? '';
+        if ($tagName === '') {
+            continue;
+        }
+        $tagFamily = strpos($tagName, ':') !== false ? explode(':', $tagName, 2)[0] : $tagName;
+        if (!isset($tagFamilies[$tagFamily])) {
+            $tagFamilies[$tagFamily] = [];
+        }
+        $tagFamilies[$tagFamily][] = $tag;
+    }
+
+    $visibleTags = [];
+    foreach ($tagFamilies as $familyTags) {
+        $visibleTags[] = reset($familyTags);
+    }
+    return $visibleTags;
+};
+
+$buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
+    if (empty($galaxyTags)) {
+        return [];
+    }
+    $galaxies = [];
+    foreach ($galaxyTags as $galaxyTag) {
+        $tagName = $galaxyTag['Tag']['name'] ?? '';
+        if (strpos($tagName, 'misp-galaxy:') !== 0) {
+            continue;
+        }
+        $parts = explode(':', $tagName);
+        if (count($parts) < 2) {
+            continue;
+        }
+        $galaxyName = $parts[1];
+        $clusterValue = '';
+        if (count($parts) >= 3) {
+            $clusterValue = trim($parts[2], '"');
+            $clusterValue = explode('=', $clusterValue);
+            $clusterValue = end($clusterValue);
+            $clusterValue = trim($clusterValue, '"');
+        }
+        if (!isset($galaxies[$galaxyName])) {
+            $galaxies[$galaxyName] = [];
+        }
+        $galaxies[$galaxyName][] = [
+            'value' => $clusterValue,
+            'local' => $galaxyTag['local'],
+            'relationship_type' => $galaxyTag['relationship_type'],
+            'tag_id' => $galaxyTag['Tag']['id'],
+        ];
+    }
+
+    $galaxyCards = [];
+    foreach ($galaxies as $galaxyName => $clusters) {
+        $galaxyCards[] = [
+            'html' => $this->element('Events/View/galaxy_compact_beta', [
+                'galaxyName' => $galaxyName,
+                'clusters' => [reset($clusters)],
+                'baseurl' => $baseurl,
+            ]),
+            'hidden_count' => max(0, count($clusters) - 1),
+        ];
+    }
+    return $galaxyCards;
+};
 ?>
 <table class="table table-striped table-hover table-condensed beta-events-table">
     <tr>
@@ -270,25 +338,8 @@
                     }
                 }
 
-                $tagFamilies = [];
-                foreach ($tags as $tag) {
-                    $tagName = $tag['Tag']['name'] ?? '';
-                    if ($tagName === '') {
-                        continue;
-                    }
-                    $tagFamily = strpos($tagName, ':') !== false ? explode(':', $tagName, 2)[0] : $tagName;
-                    if (!isset($tagFamilies[$tagFamily])) {
-                        $tagFamilies[$tagFamily] = [];
-                    }
-                    $tagFamilies[$tagFamily][] = $tag;
-                }
-
                 $totalRegularTagCount = count($tags);
-
-                $visibleTags = [];
-                foreach ($tagFamilies as $familyTags) {
-                    $visibleTags[] = reset($familyTags);
-                }
+                $visibleTags = $buildVisibleTagFamilies($tags);
 
                 $maxVisibleTags = 3;
                 if (count($visibleTags) > $maxVisibleTags) {
@@ -296,47 +347,8 @@
                 }
                 $hiddenTagCount = max(0, $totalRegularTagCount - count($visibleTags));
 
-                if (!empty($galaxyTags)) {
-                    $galaxies = array();
-                    foreach ($galaxyTags as $galaxyTag) {
-                        $tagName = $galaxyTag['Tag']['name'];
-                        if (strpos($tagName, 'misp-galaxy:') === 0) {
-                            $parts = explode(':', $tagName);
-                            if (count($parts) >= 2) {
-                                $galaxyName = $parts[1];
-                                $clusterValue = '';
-                                if (count($parts) >= 3) {
-                                    $clusterValue = $parts[2];
-                                    $clusterValue = trim($clusterValue, '"');
-                                    $clusterValue = explode('=', $clusterValue);
-                                    $clusterValue = end($clusterValue);
-                                    $clusterValue = trim($clusterValue, '"');
-                                }
-                                if (!isset($galaxies[$galaxyName])) {
-                                    $galaxies[$galaxyName] = array();
-                                }
-                                $galaxies[$galaxyName][] = [
-                                    'value' => $clusterValue,
-                                    'local' => $galaxyTag['local'],
-                                    'relationship_type' => $galaxyTag['relationship_type'],
-                                    'tag_id' => $galaxyTag['Tag']['id']
-                                ];
-                            }
-                        }
-                    }
-
-                    $galaxyCards = [];
-                    foreach ($galaxies as $galaxyName => $clusters) {
-                        $galaxyCards[] = [
-                            'html' => $this->element('Events/View/galaxy_compact_beta', array(
-                                'galaxyName' => $galaxyName,
-                                'clusters' => [reset($clusters)],
-                                'baseurl' => $baseurl
-                            )),
-                            'hidden_count' => max(0, count($clusters) - 1),
-                        ];
-                    }
-
+                $galaxyCards = $buildGalaxyCardsFromTags($galaxyTags);
+                if (!empty($galaxyCards)) {
                     echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
                     foreach ($galaxyCards as $galaxyCard) {
                         echo $galaxyCard['html'];

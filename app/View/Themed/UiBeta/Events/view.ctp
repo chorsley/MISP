@@ -1326,71 +1326,50 @@
             $attrTypes[$t]++;
         };
 
+        $registerComment = function($value) use (&$commentCounts) {
+            if (empty($value)) {
+                return;
+            }
+            if (!isset($commentCounts[$value])) {
+                $commentCounts[$value] = 0;
+            }
+            $commentCounts[$value]++;
+        };
+
+        $processAttribute = function($attr) use ($registerAttrType, $registerComment) {
+            $registerAttrType($attr);
+            $registerComment($attr['comment'] ?? null);
+        };
+
+        $processObject = function($obj) use ($processAttribute, $registerComment) {
+            $registerComment($obj['comment'] ?? null);
+            if (empty($obj['Attribute'])) {
+                return;
+            }
+            foreach ($obj['Attribute'] as $attr) {
+                $processAttribute($attr);
+            }
+        };
+
         if (!empty($event['objects'])) {
             foreach ($event['objects'] as $obj) {
                 if ($obj['objectType'] === 'attribute') {
-                    $registerAttrType($obj);
-                    if (!empty($obj['comment'])) {
-                        $c = $obj['comment'];
-                        if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                        $commentCounts[$c]++;
-                    }
+                    $processAttribute($obj);
                 } elseif ($obj['objectType'] === 'object') {
-                    if (!empty($obj['Attribute'])) {
-                        foreach ($obj['Attribute'] as $attr) {
-                            $registerAttrType($attr);
-                        }
-                    }
-                    if (!empty($obj['comment'])) {
-                        $c = $obj['comment'];
-                        if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                        $commentCounts[$c]++;
-                    }
-                    if (!empty($obj['Attribute'])) {
-                        foreach ($obj['Attribute'] as $attr) {
-                            if (!empty($attr['comment'])) {
-                                $c = $attr['comment'];
-                                if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                                $commentCounts[$c]++;
-                            }
-                        }
-                    }
+                    $processObject($obj);
                 }
             }
         }
 
         if (!empty($event['Attribute'])) {
              foreach ($event['Attribute'] as $attr) {
-                $registerAttrType($attr);
-                if (!empty($attr['comment'])) {
-                    $c = $attr['comment'];
-                    if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                    $commentCounts[$c]++;
-                }
+                $processAttribute($attr);
             }
         }
 
         if (!empty($event['Object'])) {
              foreach ($event['Object'] as $obj) {
-                if (!empty($obj['Attribute'])) {
-                    foreach ($obj['Attribute'] as $attr) {
-                        $registerAttrType($attr);
-                    }
-                }
-                if (!empty($obj['comment'])) {
-                    $c = $obj['comment'];
-                    if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                    $commentCounts[$c]++;
-                }
-                if (!empty($obj['Attribute'])) {
-                    foreach ($obj['Attribute'] as $attr) {
-                        if (!empty($attr['comment'])) {
-                            $c = $attr['comment'];
-                            if (!isset($commentCounts[$c])) $commentCounts[$c] = 0;
-                            $commentCounts[$c]++;
-                        }
-                    }
-                }
+                $processObject($obj);
             }
         }
         
