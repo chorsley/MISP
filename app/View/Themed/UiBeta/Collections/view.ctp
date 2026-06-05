@@ -20,17 +20,16 @@ $elements     = !empty($collection['CollectionElement'])    ? $collection['Colle
 $mayModify    = !empty($mayModify);
 
 $eventElements = [];
-$otherElements = [];
 foreach ($elements as $el) {
     if ($el['element_type'] === 'Event') {
         $eventElements[] = $el;
-    } else {
-        $otherElements[] = $el;
     }
 }
 
 // Build JS-safe UUID list for batch lookup (de-duplicated)
-$eventUuids = array_values(array_unique(array_map(fn($el) => $el['element_uuid'], $eventElements)));
+$eventUuids = array_values(array_unique(array_map(function ($el) {
+    return $el['element_uuid'];
+}, $eventElements)));
 
 // Theme-local enrichment for creator org + tags + galaxies
 $eventDetailsByUuid = [];
@@ -55,6 +54,44 @@ if (!empty($eventUuids)) {
         }
     }
 }
+
+$renderContextTag = function ($tag, $eventId) use ($baseurl) {
+    return $this->element('rich_tag', [
+        'tag' => $tag,
+        'tagAccess' => false,
+        'localTagAccess' => false,
+        'searchUrl' => '/events/index/searchtag:',
+        'scope' => 'event',
+        'id' => $eventId,
+        'tag_display_style' => 1,
+    ]);
+};
+
+$buildGalaxyCards = function ($event) use ($baseurl) {
+    if (empty($event['GalaxyCluster'])) {
+        return [];
+    }
+    $galaxies = [];
+    foreach ($event['GalaxyCluster'] as $galaxyCluster) {
+        $galaxyName = $galaxyCluster['Galaxy']['name'] ?? null;
+        if (!$galaxyName) {
+            continue;
+        }
+        if (!isset($galaxies[$galaxyName])) {
+            $galaxies[$galaxyName] = [];
+        }
+        $galaxies[$galaxyName][] = $galaxyCluster;
+    }
+    $galaxyCards = [];
+    foreach ($galaxies as $galaxyName => $clusters) {
+        $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', [
+            'galaxyName' => $galaxyName,
+            'clusters' => $clusters,
+            'baseurl' => $baseurl,
+        ]);
+    }
+    return $galaxyCards;
+};
 ?>
 <?php echo $this->element('genericElements/assetLoader', ['js' => ['d3', 'd3.custom', 'd3-sankey.min']]); ?>
 
@@ -300,27 +337,7 @@ if (!empty($eventUuids)) {
                                             $visibleTags = array_slice($contextTagPool, 0, $visibleTagLimit);
                                             $hiddenTags = array_slice($contextTagPool, $visibleTagLimit);
 
-                                            $galaxyCards = [];
-                                            if (!empty($ev['GalaxyCluster'])) {
-                                                $galaxies = [];
-                                                foreach ($ev['GalaxyCluster'] as $galaxyCluster) {
-                                                    $galaxyName = $galaxyCluster['Galaxy']['name'] ?? null;
-                                                    if (!$galaxyName) {
-                                                        continue;
-                                                    }
-                                                    if (!isset($galaxies[$galaxyName])) {
-                                                        $galaxies[$galaxyName] = [];
-                                                    }
-                                                    $galaxies[$galaxyName][] = $galaxyCluster;
-                                                }
-                                                foreach ($galaxies as $galaxyName => $clusters) {
-                                                    $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', [
-                                                        'galaxyName' => $galaxyName,
-                                                        'clusters' => $clusters,
-                                                        'baseurl' => $baseurl
-                                                    ]);
-                                                }
-                                            }
+                                            $galaxyCards = $buildGalaxyCards($ev);
                                             $visibleGalaxyLimit = 2;
                                             $visibleGalaxies = array_slice($galaxyCards, 0, $visibleGalaxyLimit);
                                             $hiddenGalaxies = array_slice($galaxyCards, $visibleGalaxyLimit);
@@ -368,28 +385,12 @@ if (!empty($eventUuids)) {
                                                 <span class="beta-element-context-label"><?= __('Tags') ?></span>
                                                 <div class="beta-element-context-values">
                                                     <?php foreach ($visibleTags as $tag): ?>
-                                                        <?= $this->element('rich_tag', [
-                                                            'tag' => $tag,
-                                                            'tagAccess' => false,
-                                                            'localTagAccess' => false,
-                                                            'searchUrl' => '/events/index/searchtag:',
-                                                            'scope' => 'event',
-                                                            'id' => $ev['Event']['id'] ?? null,
-                                                            'tag_display_style' => 1
-                                                        ]) ?>
+                                                        <?= $renderContextTag($tag, $ev['Event']['id'] ?? null) ?>
                                                     <?php endforeach; ?>
                                                     <?php if (!empty($hiddenTags)): ?>
                                                         <span id="hidden-tags-<?= h($hiddenIdSuffix) ?>" class="hidden beta-context-hidden-items">
                                                             <?php foreach ($hiddenTags as $tag): ?>
-                                                                <?= $this->element('rich_tag', [
-                                                                    'tag' => $tag,
-                                                                    'tagAccess' => false,
-                                                                    'localTagAccess' => false,
-                                                                    'searchUrl' => '/events/index/searchtag:',
-                                                                    'scope' => 'event',
-                                                                    'id' => $ev['Event']['id'] ?? null,
-                                                                    'tag_display_style' => 1
-                                                                ]) ?>
+                                                                <?= $renderContextTag($tag, $ev['Event']['id'] ?? null) ?>
                                                             <?php endforeach; ?>
                                                         </span>
                                                         <button type="button" class="btn btn-link btn-xs beta-context-toggle" data-target-id="hidden-tags-<?= h($hiddenIdSuffix) ?>" data-expand-label="+<?= count($hiddenTags) ?> <?= __('more') ?>" data-collapse-label="<?= __('Show less') ?>">+<?= count($hiddenTags) ?> <?= __('more') ?></button>
