@@ -904,15 +904,87 @@
         loading: false
     };
 
-    window.betaPaginationLoadPage = function(page, limit) {
-        if (typeof page === 'undefined') page = window.betaPagination.currentPage;
-        if (typeof limit === 'undefined') limit = window.betaPagination.pageSize;
+    function betaGetAttributesContainer() {
+        var $container = $('#beta-attributes-container');
+        if (!$container.length) {
+            $container = $('.beta-attributes-list').parent();
+        }
+        return $container;
+    }
 
-        // Abort any in-flight request
+    function betaAbortActiveRequest() {
         if (window.betaPagination.activeXhr) {
             window.betaPagination.activeXhr.abort();
             window.betaPagination.activeXhr = null;
         }
+    }
+
+    function betaSetAttributesLoadingState(isLoading) {
+        var $container = betaGetAttributesContainer();
+        $container.css('opacity', isLoading ? '0.5' : '1');
+        if (isLoading) {
+            $('.beta-page-btn').prop('disabled', true);
+        }
+        return $container;
+    }
+
+    function betaBuildAttributesUrl(params) {
+        var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId;
+        if (params.searchFor) {
+            url += '/searchFor:' + encodeURIComponent(params.searchFor);
+        }
+        url += '/page:' + params.page + '/limit:' + params.limit + '/sort:timestamp/direction:desc/beta:1';
+        if (window.betaPagination.attributeType) {
+            url += '/attributeType:' + encodeURIComponent(window.betaPagination.attributeType);
+        }
+        return url;
+    }
+
+    function betaRenderAttributesResponse($container, data, shouldScroll) {
+        $container.html(data);
+        $container.css('opacity', '1');
+        if (shouldScroll) {
+            var offset = $container.offset();
+            if (offset) {
+                $('html, body').animate({ scrollTop: offset.top - 60 }, 200);
+            }
+        }
+        if (typeof popoverStartup === 'function') {
+            popoverStartup();
+        }
+    }
+
+    function betaRestoreMovedMenu(activeMenu) {
+        var $menu = activeMenu && activeMenu.length ? activeMenu : $('.beta-row-menu.active-moved');
+        if (!$menu.length) {
+            return false;
+        }
+        var oldTrigger = $menu.data('trigger');
+        $menu.hide().removeClass('active-moved').css({top: '', left: '', position: '', zIndex: ''});
+        if (oldTrigger && oldTrigger[0].parentNode) {
+            oldTrigger.after($menu);
+        } else {
+            $menu.remove();
+        }
+        return true;
+    }
+
+    function betaParseToggleResponse(data) {
+        if (typeof data !== 'string') {
+            return data;
+        }
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    window.betaPaginationLoadPage = function(page, limit) {
+        if (typeof page === 'undefined') page = window.betaPagination.currentPage;
+        if (typeof limit === 'undefined') limit = window.betaPagination.pageSize;
+
+        betaAbortActiveRequest();
 
         // Prevent duplicate requests while loading
         if (window.betaPagination.loading) return;
@@ -921,38 +993,17 @@
         // When limit is 0 ("All"), pass page:0 to disable server-side pagination
         var effectivePage = (limit === 0) ? 0 : page;
 
-        var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId
-            + '/page:' + effectivePage
-            + '/limit:' + (limit === 0 ? 0 : limit)
-            + '/sort:timestamp/direction:desc/beta:1';
-
-        if (window.betaPagination.attributeType) {
-            url += '/attributeType:' + encodeURIComponent(window.betaPagination.attributeType);
-        }
-
-        // Find the attributes-only container to replace (keep composition card intact)
-        var $container = $('#beta-attributes-container');
-        if (!$container.length) {
-            $container = $('.beta-attributes-list').parent();
-        }
-
-        // Disable all pagination buttons and show loading state
-        $('.beta-page-btn').prop('disabled', true);
-        $container.css('opacity', '0.5');
+        var url = betaBuildAttributesUrl({
+            page: effectivePage,
+            limit: (limit === 0 ? 0 : limit)
+        });
+        var $container = betaSetAttributesLoadingState(true);
 
         window.betaPagination.activeXhr = $.ajax({
             url: url,
             type: 'GET',
             success: function(data) {
-                $container.html(data);
-                $container.css('opacity', '1');
-                // Scroll to top of attributes section
-                var offset = $container.offset();
-                if (offset) {
-                    $('html, body').animate({ scrollTop: offset.top - 60 }, 200);
-                }
-                // Re-initialize popovers and distribution widgets
-                if (typeof popoverStartup === 'function') popoverStartup();
+                betaRenderAttributesResponse($container, data, true);
             },
             error: function(jqXHR, textStatus) {
                 if (textStatus === 'abort') return; // Intentional abort, ignore
@@ -1066,28 +1117,18 @@
 
             if (val.length > 0) {
                 window._betaSearchTimer = setTimeout(function() {
-                    // Abort any in-flight request
-                    if (window.betaPagination.activeXhr) {
-                        window.betaPagination.activeXhr.abort();
-                        window.betaPagination.activeXhr = null;
-                    }
-                    var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId
-                        + '/searchFor:' + encodeURIComponent(val)
-                        + '/page:1/limit:' + window.betaPagination.pageSize
-                        + '/sort:timestamp/direction:desc/beta:1';
-                    if (window.betaPagination.attributeType) {
-                        url += '/attributeType:' + encodeURIComponent(window.betaPagination.attributeType);
-                    }
-                    var $container = $('#beta-attributes-container');
-                    if (!$container.length) $container = $('.beta-attributes-list').parent();
-                    $container.css('opacity', '0.5');
+                    betaAbortActiveRequest();
+                    var url = betaBuildAttributesUrl({
+                        searchFor: val,
+                        page: 1,
+                        limit: window.betaPagination.pageSize
+                    });
+                    var $container = betaSetAttributesLoadingState(true);
                     window.betaPagination.activeXhr = $.ajax({
                         url: url,
                         type: 'GET',
                         success: function(data) {
-                            $container.html(data);
-                            $container.css('opacity', '1');
-                            if (typeof popoverStartup === 'function') popoverStartup();
+                            betaRenderAttributesResponse($container, data, false);
                         },
                         error: function(jqXHR, textStatus) {
                             if (textStatus === 'abort') return;
@@ -1160,14 +1201,7 @@
             var activeMenu = $('.beta-row-menu.active-moved');
             if (activeMenu.length) {
                 var oldTrigger = activeMenu.data('trigger');
-                
-                // Put it back
-                activeMenu.hide().removeClass('active-moved').css({top: '', left: '', position: '', zIndex: ''});
-                if (oldTrigger && oldTrigger[0].parentNode) {
-                    oldTrigger.after(activeMenu);
-                } else {
-                    activeMenu.remove();
-                }
+                betaRestoreMovedMenu(activeMenu);
                 
                 if (oldTrigger && oldTrigger[0] === trigger[0]) return; // Toggle off
             }
@@ -1204,14 +1238,7 @@
             var activeMenu = $('.beta-row-menu.active-moved');
             if (activeMenu.length) {
                 if ($(e.target).closest('.beta-row-menu.active-moved').length) return;
-                
-                var oldTrigger = activeMenu.data('trigger');
-                activeMenu.hide().removeClass('active-moved').css({top: '', left: '', position: '', zIndex: ''});
-                if (oldTrigger && oldTrigger[0].parentNode) {
-                    oldTrigger.after(activeMenu);
-                } else {
-                    activeMenu.remove();
-                }
+                betaRestoreMovedMenu(activeMenu);
             }
         });
 
@@ -1226,14 +1253,7 @@
             if (!activeMenu.length) {
                 return;
             }
-
-            var oldTrigger = activeMenu.data('trigger');
-            activeMenu.hide().removeClass('active-moved').css({top: '', left: '', position: '', zIndex: ''});
-            if (oldTrigger && oldTrigger[0].parentNode) {
-                oldTrigger.after(activeMenu);
-            } else {
-                activeMenu.remove();
-            }
+            betaRestoreMovedMenu(activeMenu);
         });
         
         // Select All checkboxes
@@ -1261,13 +1281,10 @@
                         }
                     },
                     success: function(data) {
-                        if (typeof data === 'string') {
-                            try {
-                                data = JSON.parse(data);
-                            } catch (e) {
-                                showMessage('fail', 'Invalid response from server.');
-                                return;
-                            }
+                        data = betaParseToggleResponse(data);
+                        if (!data) {
+                            showMessage('fail', 'Invalid response from server.');
+                            return;
                         }
                         if (data.saved) {
                             $this.data('to-ids', newStatus);
