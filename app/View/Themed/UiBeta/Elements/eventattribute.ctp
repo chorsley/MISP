@@ -980,6 +980,83 @@
         }
     }
 
+    function betaBuildToggleErrorMessage(defaultMessage, errors) {
+        var message = defaultMessage;
+        if (!errors) {
+            return message;
+        }
+        if (typeof errors === 'string') {
+            return message + ' ' + errors;
+        }
+        if (typeof errors === 'object') {
+            for (var key in errors) {
+                message += ' ' + errors[key];
+            }
+        }
+        return message;
+    }
+
+    function betaUpdateCorrelationToggleState($icon, isDisabled) {
+        $icon.data('disable-correlation', isDisabled ? 1 : 0);
+        if (isDisabled) {
+            $icon.css({ 'opacity': '0.2', 'color': '' });
+            $icon.attr('title', '<?= __('Correlation disabled') ?>');
+        } else {
+            $icon.css({ 'opacity': '1', 'color': '#428bca' });
+            $icon.attr('title', '<?= __('Correlation enabled') ?>');
+        }
+    }
+
+    function betaUpdateIdsToggleState($icon, isEnabled) {
+        $icon.data('to-ids', isEnabled ? 1 : 0);
+        if (isEnabled) {
+            $icon.removeClass('text-muted');
+            $icon.css({
+                'color': '#ff8c00',
+                'opacity': '1'
+            });
+            $icon.attr('title', '<?= __('Recommended for blocking / alerting') ?>');
+        } else {
+            $icon.addClass('text-muted');
+            $icon.css({
+                'color': '',
+                'opacity': '0.2'
+            });
+            $icon.attr('title', '<?= __('Not recommended for blocking / alerting') ?>');
+        }
+    }
+
+    function betaPostAttributeFieldToggle(id, field, value, onSuccess, defaultErrorMessage, onError) {
+        var payload = {
+            'Attribute': {}
+        };
+        payload.Attribute[field] = value;
+        xhr({
+            url: '/attributes/editField/' + id,
+            type: 'POST',
+            data: payload,
+            success: function(data) {
+                data = betaParseToggleResponse(data);
+                if (!data) {
+                    showMessage('fail', 'Invalid response from server.');
+                    return;
+                }
+                if (data.saved) {
+                    onSuccess(data);
+                    return;
+                }
+                showMessage('fail', betaBuildToggleErrorMessage(defaultErrorMessage, data.errors));
+            },
+            error: function(jqXHR, textStatus) {
+                if (typeof onError === 'function') {
+                    onError(jqXHR, textStatus);
+                    return;
+                }
+                showMessage('fail', 'An error occurred while updating the setting: ' + textStatus);
+            }
+        });
+    }
+
     window.betaPaginationLoadPage = function(page, limit) {
         if (typeof page === 'undefined') page = window.betaPagination.currentPage;
         if (typeof limit === 'undefined') limit = window.betaPagination.pageSize;
@@ -1159,33 +1236,18 @@
             <?php else: ?>
                 var $this = $(this);
                 var id = $this.data('id');
-                var currentStatus = $this.data('disable-correlation');
-                var newStatus = currentStatus === 1 ? 0 : 1;
-                
-                xhr({
-                    url: "/attributes/editField/" + id,
-                    type: "POST",
-                    data: {
-                        'Attribute': {
-                            'disable_correlation': newStatus
-                        }
+                var newStatus = $this.data('disable-correlation') === 1 ? 0 : 1;
+
+                betaPostAttributeFieldToggle(
+                    id,
+                    'disable_correlation',
+                    newStatus,
+                    function() {
+                        betaUpdateCorrelationToggleState($this, newStatus === 1);
+                        showMessage('success', 'Correlation flag updated.');
                     },
-                    success: function(data) {
-                        if (data.saved) {
-                            $this.data('disable-correlation', newStatus);
-                            if (newStatus === 1) {
-                                $this.css({ 'opacity': '0.2', 'color': '' });
-                                $this.attr('title', '<?= __('Correlation disabled') ?>');
-                            } else {
-                                $this.css({ 'opacity': '1', 'color': '#428bca' });
-                                $this.attr('title', '<?= __('Correlation enabled') ?>');
-                            }
-                            showMessage('success', 'Correlation flag updated.');
-                        } else {
-                            showMessage('fail', 'Failed to update correlation flag.');
-                        }
-                    }
-                });
+                    'Failed to update correlation flag.'
+                );
             <?php endif; ?>
         });
 
@@ -1269,61 +1331,24 @@
             <?php else: ?>
                 var $this = $(this);
                 var id = $this.data('id');
-                var currentStatus = $this.data('to-ids');
-                var newStatus = currentStatus === 1 ? 0 : 1;
-                
-                xhr({
-                    url: "/attributes/editField/" + id,
-                    type: "POST",
-                    data: {
-                        'Attribute': {
-                            'to_ids': newStatus
+                var newStatus = $this.data('to-ids') === 1 ? 0 : 1;
+
+                betaPostAttributeFieldToggle(
+                    id,
+                    'to_ids',
+                    newStatus,
+                    function() {
+                        betaUpdateIdsToggleState($this, newStatus === 1);
+                        showMessage('success', 'IDS flag updated.');
+                        if (typeof eventUnpublish === 'function') {
+                            eventUnpublish();
                         }
                     },
-                    success: function(data) {
-                        data = betaParseToggleResponse(data);
-                        if (!data) {
-                            showMessage('fail', 'Invalid response from server.');
-                            return;
-                        }
-                        if (data.saved) {
-                            $this.data('to-ids', newStatus);
-                            if (newStatus === 1) {
-                                $this.removeClass('text-muted');
-                                $this.css({
-                                    'color': '#ff8c00',
-                                    'opacity': '1'
-                                });
-                                $this.attr('title', '<?= __('Recommended for blocking / alerting') ?>');
-                            } else {
-                                $this.addClass('text-muted');
-                                $this.css({
-                                    'color': '',
-                                    'opacity': '0.2'
-                                });
-                                $this.attr('title', '<?= __('Not recommended for blocking / alerting') ?>');
-                            }
-                            showMessage('success', 'IDS flag updated.');
-                            if (typeof eventUnpublish === 'function') {
-                                eventUnpublish();
-                            }
-                        } else {
-                            var errorMsg = 'Failed to update IDS flag.';
-                            if (data.errors) {
-                                if (typeof data.errors === 'string') errorMsg += ' ' + data.errors;
-                                else if (typeof data.errors === 'object') {
-                                    for (var key in data.errors) {
-                                        errorMsg += ' ' + data.errors[key];
-                                    }
-                                }
-                            }
-                            showMessage('fail', errorMsg);
-                        }
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
+                    'Failed to update IDS flag.',
+                    function(jqXHR, textStatus) {
                         showMessage('fail', 'An error occurred while updating the IDS flag: ' + textStatus);
                     }
-                });
+                );
             <?php endif; ?>
         });
 
