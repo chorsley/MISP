@@ -2865,6 +2865,40 @@
     // ── Collections widget ────────────────────────────────────────────────────
     // Load all collections that contain this event and render compact linked
     // chips in the Context card. Uses the dedicated read-only JSON endpoint.
+    function betaBuildEventCollectionChip(collection, baseurl) {
+        var collectionType = collection && collection.type ? String(collection.type) : 'other';
+        var collectionTypeClass = collectionType.replace(/[^a-z0-9_-]/gi, '');
+        var collectionDescription = collection && collection.description ? String(collection.description).substring(0, 80) : '';
+        var link = document.createElement('a');
+
+        link.href = baseurl + '/collections/view/' + encodeURIComponent(collection.id);
+        link.className = 'beta-collection-chip beta-type-' + collectionTypeClass;
+        link.title = collectionType + (collectionDescription ? ': ' + collectionDescription : '');
+
+        var icon = document.createElement('i');
+        icon.className = 'fa fa-folder';
+        icon.style.fontSize = '10px';
+        icon.style.marginRight = '3px';
+        link.appendChild(icon);
+        link.appendChild(document.createTextNode(collection && collection.name ? String(collection.name) : ''));
+
+        return link;
+    }
+
+    function betaRenderEventCollectionChips(container, collections, baseurl) {
+        container.innerHTML = '';
+        if (!Array.isArray(collections) || collections.length === 0) {
+            return;
+        }
+
+        var chips = document.createElement('div');
+        chips.className = 'beta-event-collections-chips';
+        collections.forEach(function(collection) {
+            chips.appendChild(betaBuildEventCollectionChip(collection, baseurl));
+        });
+        container.appendChild(chips);
+    }
+
     window.betaLoadEventCollections = function() {
         var eventUuid = <?php echo json_encode($event['Event']['uuid']); ?>;
         var baseurl   = <?php echo json_encode($baseurl); ?>;
@@ -2879,27 +2913,10 @@
             method: 'GET',
             dataType: 'json',
             success: function(data) {
-                if (!data || data.length === 0) {
-                    container.innerHTML = '';
-                    if (countNode) {
-                        countNode.textContent = '0';
-                    }
-                    return;
-                }
                 if (countNode) {
-                    countNode.textContent = String(data.length);
+                    countNode.textContent = Array.isArray(data) ? String(data.length) : '0';
                 }
-                var html = '<div class="beta-event-collections-chips">';
-                data.forEach(function(c) {
-                    html += '<a href="' + baseurl + '/collections/view/' + c.id + '" ' +
-                            'class="beta-collection-chip beta-type-' + (c.type || 'other').replace(/[^a-z0-9_-]/gi, '') + '" ' +
-                            'title="' + (c.type || '') + (c.description ? ': ' + c.description.substring(0, 80) : '') + '">' +
-                            '<i class="fa fa-folder" style="font-size:10px;margin-right:3px;"></i>' +
-                            c.name +
-                            '</a>';
-                });
-                html += '</div>';
-                container.innerHTML = html;
+                betaRenderEventCollectionChips(container, data, baseurl);
             },
             error: function() {
                 container.innerHTML = '';
