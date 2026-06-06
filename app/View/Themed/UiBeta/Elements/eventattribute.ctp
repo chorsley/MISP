@@ -949,6 +949,15 @@
                 $('html, body').animate({ scrollTop: offset.top - 60 }, 200);
             }
         }
+        betaInitAttributeWidgets();
+    }
+
+    function betaInitAttributeWidgets() {
+        $('.distributionNetworkToggle').each(function() {
+            $(this).distributionNetwork({
+                distributionData: <?= json_encode($this->DistributionGraph->getGraphData($event['Event']['id']), JSON_UNESCAPED_UNICODE); ?>,
+            });
+        });
         if (typeof popoverStartup === 'function') {
             popoverStartup();
         }
@@ -1141,21 +1150,32 @@
     if (typeof window.allExpanded === 'undefined') {
         window.allExpanded = false;
     }
-    function toggleAllObjectsAttributes() {
-        window.allExpanded = !window.allExpanded;
+
+    function betaUpdateExpandAllUi() {
         if (window.allExpanded) {
-            $('.object-attr-row, .col-tags-row, .col-galaxies-row').show();
             $('#btn-toggle-all i').removeClass('fa-expand').addClass('fa-compress');
             $('#label-toggle-all').text('Collapse All');
         } else {
-            $('.object-attr-row, .col-tags-row, .col-galaxies-row').hide();
             $('#btn-toggle-all i').removeClass('fa-compress').addClass('fa-expand');
             $('#label-toggle-all').text('Expand All');
         }
     }
 
+    function toggleAllObjectsAttributes() {
+        window.allExpanded = !window.allExpanded;
+        $('.object-attr-row, .col-tags-row, .col-galaxies-row').toggle(window.allExpanded);
+        betaUpdateExpandAllUi();
+    }
+
     function showRelatedMenu(el, attributeId) {
         getPopup(attributeId, 'attributes', 'relatedAttributes', '', '#confirmation_box');
+    }
+
+    function betaScheduleSearch(callback) {
+        if (window._betaSearchTimer) {
+            clearTimeout(window._betaSearchTimer);
+        }
+        window._betaSearchTimer = setTimeout(callback, 400);
     }
 
     // Remove all previous beta event handlers before re-binding (prevents accumulation on AJAX reload)
@@ -1189,11 +1209,9 @@
         // Search filtering uses server-side search via viewEventAttributes
         $(document).on('keyup.betaAttr', '#beta-attr-search', function() {
             var val = $(this).val();
-            // Clear any pending search timer
-            if (window._betaSearchTimer) clearTimeout(window._betaSearchTimer);
 
             if (val.length > 0) {
-                window._betaSearchTimer = setTimeout(function() {
+                betaScheduleSearch(function() {
                     betaAbortActiveRequest();
                     var url = betaBuildAttributesUrl({
                         searchFor: val,
@@ -1215,11 +1233,11 @@
                             window.betaPagination.activeXhr = null;
                         }
                     });
-                }, 400);
+                });
             } else {
-                window._betaSearchTimer = setTimeout(function() {
+                betaScheduleSearch(function() {
                     window.betaPaginationLoadPage(1, window.betaPagination.pageSize);
-                }, 400);
+                });
             }
         });
 
@@ -1359,11 +1377,7 @@
         <?php
             endif;
         ?>
-        $('.distributionNetworkToggle').each(function() {
-            $(this).distributionNetwork({
-                distributionData: <?= json_encode($this->DistributionGraph->getGraphData($event['Event']['id']), JSON_UNESCAPED_UNICODE); ?>,
-            });
-        });
-        popoverStartup();
+        betaUpdateExpandAllUi();
+        betaInitAttributeWidgets();
     });
     </script>
