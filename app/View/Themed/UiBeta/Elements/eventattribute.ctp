@@ -81,6 +81,22 @@
     $countDirectRelatedAttributes = function ($item) {
         return !empty($item['RelatedAttribute']) ? count($item['RelatedAttribute']) : 0;
     };
+
+    $deleteSelectedUrl = $baseurl . '/attributes/deleteSelected/' . $event['Event']['id'];
+    if (empty($event['Event']['publish_timestamp'])) {
+        $deleteSelectedUrl .= '/1';
+    }
+?>
+
+<?php
+    echo $this->Form->create('Attribute', array('id' => 'delete_selected', 'url' => $deleteSelectedUrl));
+    echo $this->Form->input('ids_delete', array(
+        'type' => 'text',
+        'value' => '',
+        'style' => 'display:none;',
+        'label' => false,
+    ));
+    echo $this->Form->end();
 ?>
 
 <style>
@@ -425,7 +441,7 @@
     <table class="beta-attr-table" id="attributeList">
         <thead>
             <tr>
-                <th style="width: 40px;"><input type="checkbox" class="select-all"></th>
+                <th style="width: 40px;"><input type="checkbox" class="select-all select_all" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all attributes/proposals on current page');?>" onclick="toggleAllAttributeCheckboxes()"></th>
                 <th colspan="2"><?php echo __('Attribute Details'); ?></th>
                 <th class="col-related" style="width: 50px;"><?php echo __('Corr.'); ?></th>
                 <th class="col-comment" style="width: 20%;"><?php echo __('Comment'); ?></th>
@@ -467,7 +483,7 @@
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
                                 <div class="beta-row-actions">
-                            <input type="checkbox" class="select-row" value="<?php echo h($item['id']); ?>">
+                            <input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()">
                             <div class="beta-row-menu-trigger">
                                 <i class="fa fa-caret-down"></i>
                             </div>
@@ -699,7 +715,7 @@
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">
-                                    <input type="checkbox" class="select-row" value="<?php echo h($subAttr['id']); ?>">
+                                    <input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()">
                                     <div class="beta-row-menu-trigger">
                                         <i class="fa fa-caret-down"></i>
                                     </div>

@@ -103,6 +103,70 @@
         border-radius: 0 8px 8px 8px;
         box-shadow: 0 1px 3px rgba(60, 78, 102, 0.04);
     }
+    .beta-bulk-actions-bar {
+        display: none;
+        padding: 10px 14px;
+        border: 1px solid #d9e5f2;
+        border-radius: 8px 8px 0 0;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef5fc 100%);
+        position: fixed;
+        left: 24px;
+        right: 24px;
+        bottom: 0;
+        z-index: 1100;
+        box-shadow: 0 -4px 16px rgba(80, 108, 140, 0.14);
+    }
+    .beta-bulk-actions-bar.is-visible {
+        display: block;
+    }
+    body.beta-bulk-actions-visible {
+        padding-bottom: 84px;
+    }
+    .beta-bulk-actions-bar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .beta-bulk-actions-summary {
+        font-size: 13px;
+        font-weight: 600;
+        color: #36506b;
+    }
+    .beta-bulk-actions-buttons {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .beta-bulk-actions-buttons .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    @media (max-width: 767px) {
+        .beta-bulk-actions-bar {
+            left: 12px;
+            right: 12px;
+            bottom: 0;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        }
+        .beta-bulk-actions-bar-inner {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .beta-bulk-actions-buttons {
+            justify-content: stretch;
+        }
+        .beta-bulk-actions-buttons .btn {
+            justify-content: center;
+            flex: 1 1 auto;
+        }
+        body.beta-bulk-actions-visible {
+            padding-bottom: 132px;
+        }
+    }
     .beta-card {
         background: #fff;
         border: 1px solid #e0e0e0;
@@ -1358,9 +1422,27 @@
                  </div>
                  <div id="beta-filter-banner-slot"></div>
                  <div id="beta-attributes-container">
+                     <div id="beta-bulk-actions-bar" class="beta-bulk-actions-bar">
+                         <div class="beta-bulk-actions-bar-inner">
+                             <div class="beta-bulk-actions-summary">
+                                 <span id="beta-bulk-selected-count">0</span> <?php echo __('selected'); ?>
+                             </div>
+                             <div class="beta-bulk-actions-buttons">
+                                  <button type="button" class="btn btn-danger btn-sm" onclick="handleBetaBulkDeleteAction(<?php echo h($event['Event']['id']); ?>); return false;">
+                                      <i class="fa fa-trash"></i> <?php echo __('Delete'); ?>
+                                  </button>
+                                   <button type="button" class="btn btn-default btn-sm" onclick="openBetaBulkTagPicker(false); return false;" title="<?php echo __('Add global tag to selected attributes'); ?>" aria-label="<?php echo __('Add global tag to selected attributes'); ?>">
+                                       <i class="fas fa-globe-americas"></i> <?php echo __('Add Global Tag'); ?>
+                                   </button>
+                                   <button type="button" class="btn btn-default btn-sm" onclick="openBetaBulkTagPicker(true); return false;" title="<?php echo __('Add local tag to selected attributes'); ?>" aria-label="<?php echo __('Add local tag to selected attributes'); ?>">
+                                       <i class="fas fa-user"></i> <?php echo __('Add Local Tag'); ?>
+                                   </button>
+                             </div>
+                         </div>
+                     </div>
                      <?php echo $this->element('eventattribute', [
-                         'items' => $items,
-                         'betaTotalAttributes' => $betaTotalAttributes,
+                          'items' => $items,
+                          'betaTotalAttributes' => $betaTotalAttributes,
                          'paging' => $paging,
                          'betaCurrentPage' => $betaCurrentPage,
                          'betaPageSize' => $betaPageSize,
@@ -1823,6 +1905,7 @@
 
         initContextCountObservers();
         refreshContextCounts();
+        initBetaBulkActions();
     });
 
     function buildFilterMessage(text) {
@@ -1881,6 +1964,107 @@
         $('#beta-collections-count').text(count);
     }
 
+    function updateBetaBulkActionBar() {
+        var count = $('.select_attribute:checked').length;
+        $('#beta-bulk-selected-count').text(count);
+        $('#beta-bulk-actions-bar').toggleClass('is-visible', count > 0);
+        $('body').toggleClass('beta-bulk-actions-visible', count > 0);
+    }
+
+    function getBetaSelectedAttributeIds() {
+        var selected = [];
+        $('.select_attribute:checked').each(function() {
+            var id = $(this).data('id');
+            if (typeof id !== 'undefined' && id !== null && id !== '') {
+                selected.push(String(id));
+            }
+        });
+        return selected;
+    }
+
+    function clearBetaSelectedAttributes() {
+        $('.select_attribute, .select_all, input[class^="select_all_object_attributes_"]').prop('checked', false);
+        updateBetaBulkActionBar();
+    }
+
+    function removeBetaAttributeRows(attributeIds) {
+        if (!attributeIds || !attributeIds.length) {
+            return;
+        }
+        attributeIds.forEach(function(attributeId) {
+            var selector = '[data-primary-id="' + attributeId + '"]';
+            $(selector).remove();
+        });
+    }
+
+    function refreshBetaAttributeTags(attributeIds) {
+        if (!attributeIds || !attributeIds.length || typeof loadAttributeTags !== 'function') {
+            return;
+        }
+        attributeIds.forEach(function(attributeId) {
+            loadAttributeTags(attributeId);
+        });
+    }
+
+    function handleBetaBulkDeleteAction(eventId) {
+        var selectedIds = getBetaSelectedAttributeIds();
+        if (!selectedIds.length) {
+            return false;
+        }
+        if (typeof window._betaBulkDeleteWrapped === 'undefined') {
+            window._betaBulkDeleteWrapped = true;
+            var originalHandleGenericAjaxResponse = handleGenericAjaxResponse;
+            handleGenericAjaxResponse = function(data, skip_reload) {
+                var success = originalHandleGenericAjaxResponse.call(this, data, skip_reload);
+                if (success && window._betaPendingBulkDeleteIds && window._betaPendingBulkDeleteIds.length) {
+                    removeBetaAttributeRows(window._betaPendingBulkDeleteIds);
+                    clearBetaSelectedAttributes();
+                    window._betaPendingBulkDeleteIds = null;
+                }
+                return success;
+            };
+        }
+        window._betaPendingBulkDeleteIds = selectedIds;
+        return multiSelectAction(eventId, 'deleteAttributes');
+    }
+
+    function prepareBetaBulkTagRefresh() {
+        window._betaPendingBulkTagIds = getBetaSelectedAttributeIds();
+    }
+
+    function flushBetaBulkTagRefresh(selectedIds) {
+        var attributeIds = selectedIds;
+        if (typeof attributeIds === 'string') {
+            try {
+                attributeIds = JSON.parse(attributeIds);
+            } catch (e) {
+                attributeIds = [];
+            }
+        }
+        if ((!attributeIds || !attributeIds.length) && window._betaPendingBulkTagIds && window._betaPendingBulkTagIds.length) {
+            attributeIds = window._betaPendingBulkTagIds;
+        }
+        if (attributeIds && attributeIds.length) {
+            refreshBetaAttributeTags(attributeIds);
+            clearBetaSelectedAttributes();
+        }
+        window._betaPendingBulkTagIds = null;
+    }
+
+    window.onBulkAttributeTagsApplied = function(selectedIds) {
+        flushBetaBulkTagRefresh(selectedIds);
+    };
+
+    window.onAttributeTagsApplied = function(attributeId) {
+        updateBetaAttributeTags(attributeId);
+    };
+
+    function openBetaBulkTagPicker(isLocal) {
+        prepareBetaBulkTagRefresh();
+        var tagTarget = (isLocal ? 'local:1/' : '') + 'selected/attribute';
+        getPopup(tagTarget, 'tags', 'selectTaxonomy', '', '#popover_form');
+    }
+
     function refreshContextCounts() {
         updateTagCount();
         updateGalaxyCount();
@@ -1909,6 +2093,47 @@
         observeCountContainer('.eventTagContainer', updateTagCount);
         observeCountContainer('#galaxies_div', updateGalaxyCount);
         observeCountContainer('#event-collections-container', updateCollectionsCount);
+    }
+
+    function initBetaBulkActions() {
+        if (typeof window._betaBulkActionsWrapped === 'undefined') {
+            window._betaBulkActionsWrapped = true;
+
+            if (typeof attributeListAnyAttributeCheckBoxesChecked === 'function') {
+                var originalAttributeListAnyAttributeCheckBoxesChecked = attributeListAnyAttributeCheckBoxesChecked;
+                attributeListAnyAttributeCheckBoxesChecked = function() {
+                    var result = originalAttributeListAnyAttributeCheckBoxesChecked.apply(this, arguments);
+                    updateBetaBulkActionBar();
+                    return result;
+                };
+            }
+
+            if (typeof toggleAllAttributeCheckboxes === 'function') {
+                var originalToggleAllAttributeCheckboxes = toggleAllAttributeCheckboxes;
+                toggleAllAttributeCheckboxes = function() {
+                    var result = originalToggleAllAttributeCheckboxes.apply(this, arguments);
+                    updateBetaBulkActionBar();
+                    return result;
+                };
+            }
+
+            if (typeof toggleAllObjectAttributeCheckboxes === 'function') {
+                var originalToggleAllObjectAttributeCheckboxes = toggleAllObjectAttributeCheckboxes;
+                toggleAllObjectAttributeCheckboxes = function() {
+                    var result = originalToggleAllObjectAttributeCheckboxes.apply(this, arguments);
+                    updateBetaBulkActionBar();
+                    return result;
+                };
+            }
+        }
+
+        $(document)
+            .off('change.betaBulkActions')
+            .on('change.betaBulkActions', '.select_attribute, .select_all, input[class^="select_all_object_attributes_"]', function() {
+                setTimeout(updateBetaBulkActionBar, 0);
+            });
+
+        updateBetaBulkActionBar();
     }
 
     // Export card logic

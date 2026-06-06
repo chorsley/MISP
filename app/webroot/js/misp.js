@@ -774,11 +774,15 @@ function quickSubmitAttributeTagForm(selected_tag_ids, addData) {
             data: $formData.serialize(),
             success:function (data) {
                 if (attribute_id == 'selected') {
-                    updateIndex(0, 'event');
+                    if (typeof window.onBulkAttributeTagsApplied === 'function') {
+                        window.onBulkAttributeTagsApplied(getSelected());
+                    } else {
+                        updateIndex(0, 'event');
+                    }
                 } else {
                     loadAttributeTags(attribute_id);
-                    if ($('body').hasClass('beta-ui-enabled')) {
-                        updateBetaAttributeTags(attribute_id);
+                    if (typeof window.onAttributeTagsApplied === 'function') {
+                        updateAttributeTagsApplied(attribute_id);
                     }
                     loadGalaxies(attribute_id, 'attribute');
                 }
@@ -798,6 +802,12 @@ function quickSubmitAttributeTagForm(selected_tag_ids, addData) {
             url: url
         });
     });
+}
+
+function updateAttributeTagsApplied(attribute_id) {
+    if (typeof window.onAttributeTagsApplied === 'function') {
+        window.onAttributeTagsApplied(attribute_id);
+    }
 }
 
 function quickSubmitTagCollectionTagForm(selected_tag_ids, addData) {
