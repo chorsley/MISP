@@ -892,7 +892,7 @@
 
     // ===== Beta Pagination Logic (Server-Side via AJAX) =====
     // Use window-level object so it persists across AJAX reloads and isn't duplicated
-    window.betaPagination = {
+    window.paginationState = {
         currentPage: <?php echo $betaCurrentPage; ?>,
         pageSize: <?php echo $betaPageSize; ?>,
         totalPages: <?php echo $betaTotalPages; ?>,
@@ -904,7 +904,7 @@
         loading: false
     };
 
-    function betaGetAttributesContainer() {
+    function getAttributesContainer() {
         var $container = $('#beta-attributes-container');
         if (!$container.length) {
             $container = $('.beta-attributes-list').parent();
@@ -912,15 +912,15 @@
         return $container;
     }
 
-    function betaAbortActiveRequest() {
-        if (window.betaPagination.activeXhr) {
-            window.betaPagination.activeXhr.abort();
-            window.betaPagination.activeXhr = null;
+    function abortActiveRequest() {
+        if (window.paginationState.activeXhr) {
+            window.paginationState.activeXhr.abort();
+            window.paginationState.activeXhr = null;
         }
     }
 
-    function betaSetAttributesLoadingState(isLoading) {
-        var $container = betaGetAttributesContainer();
+    function setAttributesLoadingState(isLoading) {
+        var $container = getAttributesContainer();
         $container.css('opacity', isLoading ? '0.5' : '1');
         if (isLoading) {
             $('.beta-page-btn').prop('disabled', true);
@@ -928,19 +928,19 @@
         return $container;
     }
 
-    function betaBuildAttributesUrl(params) {
-        var url = window.betaPagination.baseUrl + '/events/viewEventAttributes/' + window.betaPagination.eventId;
+    function buildAttributesUrl(params) {
+        var url = window.paginationState.baseUrl + '/events/viewEventAttributes/' + window.paginationState.eventId;
         if (params.searchFor) {
             url += '/searchFor:' + encodeURIComponent(params.searchFor);
         }
         url += '/page:' + params.page + '/limit:' + params.limit + '/sort:timestamp/direction:desc/beta:1';
-        if (window.betaPagination.attributeType) {
-            url += '/attributeType:' + encodeURIComponent(window.betaPagination.attributeType);
+        if (window.paginationState.attributeType) {
+            url += '/attributeType:' + encodeURIComponent(window.paginationState.attributeType);
         }
         return url;
     }
 
-    function betaRenderAttributesResponse($container, data, shouldScroll) {
+    function renderAttributesResponse($container, data, shouldScroll) {
         $container.html(data);
         $container.css('opacity', '1');
         if (shouldScroll) {
@@ -949,10 +949,10 @@
                 $('html, body').animate({ scrollTop: offset.top - 60 }, 200);
             }
         }
-        betaInitAttributeWidgets();
+        initAttributeWidgets();
     }
 
-    function betaInitAttributeWidgets() {
+    function initAttributeWidgets() {
         $('.distributionNetworkToggle').each(function() {
             $(this).distributionNetwork({
                 distributionData: <?= json_encode($this->DistributionGraph->getGraphData($event['Event']['id']), JSON_UNESCAPED_UNICODE); ?>,
@@ -963,7 +963,7 @@
         }
     }
 
-    function betaRestoreMovedMenu(activeMenu) {
+    function restoreMovedMenu(activeMenu) {
         var $menu = activeMenu && activeMenu.length ? activeMenu : $('.beta-row-menu.active-moved');
         if (!$menu.length) {
             return false;
@@ -978,7 +978,7 @@
         return true;
     }
 
-    function betaParseToggleResponse(data) {
+    function parseToggleResponse(data) {
         if (typeof data !== 'string') {
             return data;
         }
@@ -989,7 +989,7 @@
         }
     }
 
-    function betaBuildToggleErrorMessage(defaultMessage, errors) {
+    function buildToggleErrorMessage(defaultMessage, errors) {
         var message = defaultMessage;
         if (!errors) {
             return message;
@@ -1005,7 +1005,7 @@
         return message;
     }
 
-    function betaUpdateCorrelationToggleState($icon, isDisabled) {
+    function updateCorrelationToggleState($icon, isDisabled) {
         $icon.data('disable-correlation', isDisabled ? 1 : 0);
         if (isDisabled) {
             $icon.css({ 'opacity': '0.2', 'color': '' });
@@ -1016,7 +1016,7 @@
         }
     }
 
-    function betaUpdateIdsToggleState($icon, isEnabled) {
+    function updateIdsToggleState($icon, isEnabled) {
         $icon.data('to-ids', isEnabled ? 1 : 0);
         if (isEnabled) {
             $icon.removeClass('text-muted');
@@ -1035,7 +1035,7 @@
         }
     }
 
-    function betaPostAttributeFieldToggle(id, field, value, onSuccess, defaultErrorMessage, onError) {
+    function postAttributeFieldToggle(id, field, value, onSuccess, defaultErrorMessage, onError) {
         var payload = {
             'Attribute': {}
         };
@@ -1045,7 +1045,7 @@
             type: 'POST',
             data: payload,
             success: function(data) {
-                data = betaParseToggleResponse(data);
+                data = parseToggleResponse(data);
                 if (!data) {
                     showMessage('fail', 'Invalid response from server.');
                     return;
@@ -1054,7 +1054,7 @@
                     onSuccess(data);
                     return;
                 }
-                showMessage('fail', betaBuildToggleErrorMessage(defaultErrorMessage, data.errors));
+                showMessage('fail', buildToggleErrorMessage(defaultErrorMessage, data.errors));
             },
             error: function(jqXHR, textStatus) {
                 if (typeof onError === 'function') {
@@ -1066,30 +1066,30 @@
         });
     }
 
-    window.betaPaginationLoadPage = function(page, limit) {
-        if (typeof page === 'undefined') page = window.betaPagination.currentPage;
-        if (typeof limit === 'undefined') limit = window.betaPagination.pageSize;
+    window.paginationLoadPage = function(page, limit) {
+        if (typeof page === 'undefined') page = window.paginationState.currentPage;
+        if (typeof limit === 'undefined') limit = window.paginationState.pageSize;
 
-        betaAbortActiveRequest();
+        abortActiveRequest();
 
         // Prevent duplicate requests while loading
-        if (window.betaPagination.loading) return;
-        window.betaPagination.loading = true;
+        if (window.paginationState.loading) return;
+        window.paginationState.loading = true;
 
         // When limit is 0 ("All"), pass page:0 to disable server-side pagination
         var effectivePage = (limit === 0) ? 0 : page;
 
-        var url = betaBuildAttributesUrl({
+        var url = buildAttributesUrl({
             page: effectivePage,
             limit: (limit === 0 ? 0 : limit)
         });
-        var $container = betaSetAttributesLoadingState(true);
+        var $container = setAttributesLoadingState(true);
 
-        window.betaPagination.activeXhr = $.ajax({
+        window.paginationState.activeXhr = $.ajax({
             url: url,
             type: 'GET',
             success: function(data) {
-                betaRenderAttributesResponse($container, data, true);
+                renderAttributesResponse($container, data, true);
             },
             error: function(jqXHR, textStatus) {
                 if (textStatus === 'abort') return; // Intentional abort, ignore
@@ -1100,37 +1100,37 @@
                 }
             },
             complete: function() {
-                window.betaPagination.activeXhr = null;
-                window.betaPagination.loading = false;
+                window.paginationState.activeXhr = null;
+                window.paginationState.loading = false;
             }
         });
     };
 
-    window.betaPaginationGo = function(target) {
-        var page = window.betaPagination.currentPage;
+    window.paginationGo = function(target) {
+        var page = window.paginationState.currentPage;
         if (target === 'prev') {
             page = Math.max(1, page - 1);
         } else if (target === 'next') {
-            page = Math.min(window.betaPagination.totalPages, page + 1);
+            page = Math.min(window.paginationState.totalPages, page + 1);
         } else if (target === 'last') {
-            page = window.betaPagination.totalPages;
+            page = window.paginationState.totalPages;
         } else if (target === 'first') {
             page = 1;
         } else {
             page = parseInt(target, 10) || 1;
         }
-        window.betaPaginationLoadPage(page, window.betaPagination.pageSize);
+        window.paginationLoadPage(page, window.paginationState.pageSize);
     };
 
-    window.betaPaginationChangeSize = function(newSize) {
+    window.paginationChangeSize = function(newSize) {
         var limit = parseInt(newSize, 10);
-        window.betaPaginationLoadPage(1, limit);
+        window.paginationLoadPage(1, limit);
     };
     // ===== End Beta Pagination Logic =====
 
     // Column state (preserve across AJAX reloads)
-    if (typeof window.betaColumns === 'undefined') {
-        window.betaColumns = {
+    if (typeof window.columnVisibility === 'undefined') {
+        window.columnVisibility = {
             date: true,
             sightings: true,
             distribution: true,
@@ -1141,9 +1141,9 @@
     }
 
     function toggleBetaColumn(col) {
-        window.betaColumns[col] = !window.betaColumns[col];
-        $('.col-' + col).toggle(window.betaColumns[col]);
-        $('.col-' + col + '-row').toggle(window.betaColumns[col]);
+        window.columnVisibility[col] = !window.columnVisibility[col];
+        $('.col-' + col).toggle(window.columnVisibility[col]);
+        $('.col-' + col + '-row').toggle(window.columnVisibility[col]);
         $('.col-check-' + col).toggleClass('fa-check fa-times');
     }
 
@@ -1151,7 +1151,7 @@
         window.allExpanded = false;
     }
 
-    function betaUpdateExpandAllUi() {
+    function updateExpandAllUi() {
         if (window.allExpanded) {
             $('#btn-toggle-all i').removeClass('fa-expand').addClass('fa-compress');
             $('#label-toggle-all').text('Collapse All');
@@ -1164,14 +1164,14 @@
     function toggleAllObjectsAttributes() {
         window.allExpanded = !window.allExpanded;
         $('.object-attr-row, .col-tags-row, .col-galaxies-row').toggle(window.allExpanded);
-        betaUpdateExpandAllUi();
+        updateExpandAllUi();
     }
 
     function showRelatedMenu(el, attributeId) {
         getPopup(attributeId, 'attributes', 'relatedAttributes', '', '#confirmation_box');
     }
 
-    function betaScheduleSearch(callback) {
+    function scheduleSearch(callback) {
         if (window._betaSearchTimer) {
             clearTimeout(window._betaSearchTimer);
         }
@@ -1183,9 +1183,9 @@
 
     $(function() {
         // Apply column state (may have been toggled on a previous page)
-        Object.keys(window.betaColumns).forEach(function(col) {
-            $('.col-' + col).toggle(window.betaColumns[col]);
-            if (window.betaColumns[col]) {
+        Object.keys(window.columnVisibility).forEach(function(col) {
+            $('.col-' + col).toggle(window.columnVisibility[col]);
+            if (window.columnVisibility[col]) {
                 $('.col-check-' + col).addClass('fa-check').removeClass('fa-times');
             } else {
                 $('.col-check-' + col).addClass('fa-times').removeClass('fa-check');
@@ -1198,12 +1198,12 @@
             e.stopPropagation();
             if ($(this).prop('disabled')) return;
             var action = $(this).data('page-action');
-            window.betaPaginationGo(action);
+            window.paginationGo(action);
         });
 
         // Page size change handler
         $(document).on('change.betaAttr', '#beta-page-size', function() {
-            window.betaPaginationChangeSize($(this).val());
+            window.paginationChangeSize($(this).val());
         });
 
         // Search filtering uses server-side search via viewEventAttributes
@@ -1211,32 +1211,32 @@
             var val = $(this).val();
 
             if (val.length > 0) {
-                betaScheduleSearch(function() {
-                    betaAbortActiveRequest();
-                    var url = betaBuildAttributesUrl({
+                scheduleSearch(function() {
+                    abortActiveRequest();
+                    var url = buildAttributesUrl({
                         searchFor: val,
                         page: 1,
-                        limit: window.betaPagination.pageSize
+                        limit: window.paginationState.pageSize
                     });
-                    var $container = betaSetAttributesLoadingState(true);
-                    window.betaPagination.activeXhr = $.ajax({
+                    var $container = setAttributesLoadingState(true);
+                    window.paginationState.activeXhr = $.ajax({
                         url: url,
                         type: 'GET',
                         success: function(data) {
-                            betaRenderAttributesResponse($container, data, false);
+                            renderAttributesResponse($container, data, false);
                         },
                         error: function(jqXHR, textStatus) {
                             if (textStatus === 'abort') return;
                             $container.css('opacity', '1');
                         },
                         complete: function() {
-                            window.betaPagination.activeXhr = null;
+                            window.paginationState.activeXhr = null;
                         }
                     });
                 });
             } else {
-                betaScheduleSearch(function() {
-                    window.betaPaginationLoadPage(1, window.betaPagination.pageSize);
+                scheduleSearch(function() {
+                    window.paginationLoadPage(1, window.paginationState.pageSize);
                 });
             }
         });
@@ -1256,12 +1256,12 @@
                 var id = $this.data('id');
                 var newStatus = $this.data('disable-correlation') === 1 ? 0 : 1;
 
-                betaPostAttributeFieldToggle(
+                postAttributeFieldToggle(
                     id,
                     'disable_correlation',
                     newStatus,
                     function() {
-                        betaUpdateCorrelationToggleState($this, newStatus === 1);
+                        updateCorrelationToggleState($this, newStatus === 1);
                         showMessage('success', 'Correlation flag updated.');
                     },
                     'Failed to update correlation flag.'
@@ -1281,7 +1281,7 @@
             var activeMenu = $('.beta-row-menu.active-moved');
             if (activeMenu.length) {
                 var oldTrigger = activeMenu.data('trigger');
-                betaRestoreMovedMenu(activeMenu);
+                restoreMovedMenu(activeMenu);
                 
                 if (oldTrigger && oldTrigger[0] === trigger[0]) return; // Toggle off
             }
@@ -1318,7 +1318,7 @@
             var activeMenu = $('.beta-row-menu.active-moved');
             if (activeMenu.length) {
                 if ($(e.target).closest('.beta-row-menu.active-moved').length) return;
-                betaRestoreMovedMenu(activeMenu);
+                restoreMovedMenu(activeMenu);
             }
         });
 
@@ -1333,7 +1333,7 @@
             if (!activeMenu.length) {
                 return;
             }
-            betaRestoreMovedMenu(activeMenu);
+            restoreMovedMenu(activeMenu);
         });
         
         // Select All checkboxes
@@ -1351,12 +1351,12 @@
                 var id = $this.data('id');
                 var newStatus = $this.data('to-ids') === 1 ? 0 : 1;
 
-                betaPostAttributeFieldToggle(
+                postAttributeFieldToggle(
                     id,
                     'to_ids',
                     newStatus,
                     function() {
-                        betaUpdateIdsToggleState($this, newStatus === 1);
+                        updateIdsToggleState($this, newStatus === 1);
                         showMessage('success', 'IDS flag updated.');
                         if (typeof eventUnpublish === 'function') {
                             eventUnpublish();
@@ -1377,7 +1377,7 @@
         <?php
             endif;
         ?>
-        betaUpdateExpandAllUi();
-        betaInitAttributeWidgets();
+        updateExpandAllUi();
+        initAttributeWidgets();
     });
     </script>

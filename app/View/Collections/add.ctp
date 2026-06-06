@@ -125,8 +125,8 @@ function submitCollectionCreateAndReturnToEvent() {
             if (isSuccess) {
                 showMessage('success', payload.message || response.message || 'Collection created and element added.');
                 closeModal();
-                if (typeof window.betaLoadEventCollections === 'function') {
-                    window.betaLoadEventCollections();
+                if (typeof window.loadEventCollections === 'function') {
+                    window.loadEventCollections();
                 }
                 return;
             }

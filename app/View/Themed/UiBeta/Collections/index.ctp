@@ -196,7 +196,7 @@ $isCollectionsFilterActive = function ($filterName) use ($currentFilter) {
 $(function() {
     var collectionsIndexUrl = <?= json_encode($collectionsIndexUrl) ?>;
 
-    function betaApplyCollectionsQuickFilter() {
+    function applyCollectionsQuickFilter() {
         var val = $('#collectionsQuickFilter').val().trim();
         window.location.href = val
             ? collectionsIndexUrl + '/quickFilter:' + encodeURIComponent(val)
@@ -209,13 +209,13 @@ $(function() {
 
     $('#collectionsFilterBtn').on('click', function(e) {
         e.preventDefault();
-        betaApplyCollectionsQuickFilter();
+        applyCollectionsQuickFilter();
     });
 
     $('#collectionsQuickFilter').on('keypress', function(e) {
         if (e.which === 13) {
             e.preventDefault();
-            betaApplyCollectionsQuickFilter();
+            applyCollectionsQuickFilter();
         }
     });
 

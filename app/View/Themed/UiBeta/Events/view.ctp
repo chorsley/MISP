@@ -745,14 +745,14 @@
                                             scrolling="auto"
                                             sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                                             loading="lazy"></iframe>
-                                            <a href="#" id="summary-report-expand-toggle" class="summary-report-expand-toggle" onclick="betaToggleReportPreviewSize(); return false;" data-expand-label="<?php echo h(__('Expand preview')); ?>" data-collapse-label="<?php echo h(__('Collapse preview')); ?>" aria-label="<?php echo h(__('Expand preview')); ?>" title="<?php echo h(__('Expand preview')); ?>">
+                                            <a href="#" id="summary-report-expand-toggle" class="summary-report-expand-toggle" onclick="toggleReportPreviewSize(); return false;" data-expand-label="<?php echo h(__('Expand preview')); ?>" data-collapse-label="<?php echo h(__('Collapse preview')); ?>" aria-label="<?php echo h(__('Expand preview')); ?>" title="<?php echo h(__('Expand preview')); ?>">
                                                 <i id="summary-report-expand-icon" class="fa fa-angle-double-down" aria-hidden="true"></i>
                                             </a>
                                         </div>
                                           <div style="margin-top: 10px;">
                                               <a href="#" onclick="viewFullReport(<?php echo h($firstEventReportId); ?>); return false;"><?php echo __('View full report'); ?></a>
                                               |
-                                              <a href="#summary-reports-section" onclick="betaToggleSummaryReports(true); document.getElementById('summary-reports-section').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;"><?php echo __('See all reports'); ?></a>
+                                              <a href="#summary-reports-section" onclick="toggleSummaryReports(true); document.getElementById('summary-reports-section').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;"><?php echo __('See all reports'); ?></a>
                                            </div>
                                     <?php else: ?>
                                         <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
@@ -835,7 +835,7 @@
                                               <?php endforeach; ?>
                                           </ul>
                                           <?php if ($analysisHiddenCount > 0): ?>
-                                              <a href="#" id="analysis-links-toggle" data-expanded="0" data-show-more-label="<?php echo h(__('Show all')); ?>" data-show-less-label="<?php echo h(__('Show less')); ?>" data-hidden-count="<?php echo h($analysisHiddenCount); ?>" onclick="betaToggleAnalysisLinks(); return false;" style="display: inline-block; margin-top: 8px;">
+                                              <a href="#" id="analysis-links-toggle" data-expanded="0" data-show-more-label="<?php echo h(__('Show all')); ?>" data-show-less-label="<?php echo h(__('Show less')); ?>" data-hidden-count="<?php echo h($analysisHiddenCount); ?>" onclick="toggleAnalysisLinks(); return false;" style="display: inline-block; margin-top: 8px;">
                                                   <?php echo __('Show all'); ?> (<?php echo h($analysisHiddenCount); ?> <?php echo __('more'); ?>)
                                               </a>
                                           <?php endif; ?>
@@ -855,7 +855,7 @@
                       </div>
                       <div class="span4">
                           <div class="beta-card summary-card" id="summary-reports-section">
-                              <div class="beta-card-header beta-expandable-header" onclick="betaToggleSummaryReports();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleSummaryReports();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle event reports'); ?>">
+                              <div class="beta-card-header beta-expandable-header" onclick="toggleSummaryReports();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSummaryReports();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle event reports'); ?>">
                                   <?php echo __('Event reports'); ?> <span class="beta-header-count">(<?php echo h($eventReportCount); ?>)</span>
                                   <i id="summary-reports-toggle-icon" class="fa fa-chevron-right pull-right"></i>
                               </div>
@@ -967,7 +967,7 @@
 
                                   <!-- Collections this event belongs to -->
                                   <hr>
-                                  <div class="beta-expandable-header beta-collections-header-row" onclick="betaToggleCollectionsSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleCollectionsSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle collections'); ?>">
+                                  <div class="beta-expandable-header beta-collections-header-row" onclick="toggleCollectionsSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCollectionsSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle collections'); ?>">
                                       <span class="beta-collections-header-left">
                                           <strong><?php echo __('Collections'); ?> <span class="beta-header-count">(<span id="beta-collections-count">0</span>)</span></strong>
                                           <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
@@ -1045,7 +1045,7 @@
                               $warninglistExpanded = $warninglistMatchCount > 0;
                           ?>
                           <div class="beta-card summary-card">
-                                <div class="beta-card-header beta-expandable-header" onclick="betaToggleWarninglistSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleWarninglistSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle warninglist matches'); ?>">
+                                <div class="beta-card-header beta-expandable-header" onclick="toggleWarninglistSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleWarninglistSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle warninglist matches'); ?>">
                                     <?php echo __('Warninglist Matches'); ?> <span class="beta-header-count">(<?php echo h($warninglistMatchCount); ?>)</span>
                                     <i id="beta-warninglist-toggle-icon" class="fa <?php echo $warninglistExpanded ? 'fa-chevron-down' : 'fa-chevron-right'; ?> pull-right"></i>
                                 </div>
@@ -1177,14 +1177,14 @@
                                ];
                            ?>
                             <div class="beta-card summary-card" id="beta-export-card">
-                                <div class="beta-card-header beta-expandable-header" onclick="betaToggleExportSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();betaToggleExportSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle export options'); ?>">
+                                <div class="beta-card-header beta-expandable-header" onclick="toggleExportSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleExportSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle export options'); ?>">
                                     <i class="fa fa-download" style="margin-right: 6px;"></i><?php echo __('Export'); ?>
                                     <i id="beta-export-toggle-icon" class="fa fa-chevron-right pull-right"></i>
                                 </div>
                                 <div class="beta-card-body" id="beta-export-content-wrap" style="display:none;">
                                     <div style="margin-bottom: 10px;">
                                         <label for="beta-export-format" style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 4px;"><?php echo __('Format'); ?></label>
-                                        <select id="beta-export-format" class="form-control input-sm" onchange="betaExportFormatChanged(this.value)" style="width: 100%;">
+                                        <select id="beta-export-format" class="form-control input-sm" onchange="exportFormatChanged(this.value)" style="width: 100%;">
                                            <?php foreach ($betaExportFormats as $fmtKey => $fmt): ?>
                                                <option value="<?php echo h($fmtKey); ?>"
                                                    data-url="<?php echo h($fmt['url']); ?>"
@@ -1205,7 +1205,7 @@
                                       href="#"
                                       class="btn btn-primary btn-sm"
                                       style="display: block; text-align: center;"
-                                      onclick="betaExportDownload(); return false;">
+                                      onclick="exportDownload(); return false;">
                                        <i class="fa fa-download"></i> <?php echo __('Download'); ?>
                                    </a>
                                </div>
@@ -1408,11 +1408,11 @@
     var compositionData = <?php echo json_encode($compositionData); ?>;
     var commentData = <?php echo json_encode($commentData); ?>;
 
-    function betaEscapeHtml(value) {
+    function escapeHtml(value) {
         return $('<div/>').text(value == null ? '' : String(value)).html();
     }
 
-    function betaRenderCompositionBar() {
+    function renderCompositionBar() {
         var compositionContainer = $('#composition-treemap');
         if (!compositionContainer.length) return;
 
@@ -1443,13 +1443,13 @@
             var pixelWidth = (percent / 100) * width;
             var segmentColor = color(d.label);
 
-            var segment = $('<div class="segment" title="' + betaEscapeHtml(d.label) + ' (' + d.value + ', ' + percent.toFixed(2) + '%)"></div>');
+            var segment = $('<div class="segment" title="' + escapeHtml(d.label) + ' (' + d.value + ', ' + percent.toFixed(2) + '%)"></div>');
             segment.css({
                 width: percent + '%',
                 background: segmentColor
             });
             segment.on('click', function() {
-                betaFilterAttributesByComposition(d.type, d.name);
+                filterAttributesByComposition(d.type, d.name);
             });
             barWrap.append(segment);
 
@@ -1502,11 +1502,11 @@
             labelGrid.append(labelList);
 
             smallItems.forEach(function(item) {
-                var chip = $('<div class="composition-label-chip" title="' + betaEscapeHtml(item.data.label) + '"></div>');
+                var chip = $('<div class="composition-label-chip" title="' + escapeHtml(item.data.label) + '"></div>');
                 chip.append('<span class="swatch" style="background:' + item.color + ';"></span>');
-                chip.append('<span><strong>' + betaEscapeHtml(item.data.name) + '</strong> (' + item.data.value + ')</span>');
+                chip.append('<span><strong>' + escapeHtml(item.data.name) + '</strong> (' + item.data.value + ')</span>');
                 chip.on('click', function() {
-                    betaFilterAttributesByComposition(item.data.type, item.data.name);
+                    filterAttributesByComposition(item.data.type, item.data.name);
                 });
                 labelList.append(chip);
             });
@@ -1515,31 +1515,31 @@
 
     $(function() {
         popoverStartup();
-        var betaInitialAttributeAnchor = null;
-        var betaInitialFocusUuid = null;
-        var betaFocusRetryCount = 0;
+        var initialAttributeAnchor = null;
+        var initialFocusUuid = null;
+        var focusRetryCount = 0;
         var focusMatch = window.location.pathname.match(/\/focus:([^\/]+)/);
         if (focusMatch && focusMatch[1]) {
-            betaInitialFocusUuid = decodeURIComponent(focusMatch[1]);
+            initialFocusUuid = decodeURIComponent(focusMatch[1]);
         }
 
-        function betaApplyFocusUuid() {
-            if (!betaInitialFocusUuid || typeof focusObjectByUuid !== 'function') {
+        function applyFocusUuid() {
+            if (!initialFocusUuid || typeof focusObjectByUuid !== 'function') {
                 return;
             }
-            if (focusObjectByUuid(betaInitialFocusUuid)) {
-                betaInitialFocusUuid = null;
-                betaFocusRetryCount = 0;
+            if (focusObjectByUuid(initialFocusUuid)) {
+                initialFocusUuid = null;
+                focusRetryCount = 0;
                 return;
             }
-            if (betaFocusRetryCount < 10) {
-                betaFocusRetryCount++;
-                setTimeout(betaApplyFocusUuid, 150);
+            if (focusRetryCount < 10) {
+                focusRetryCount++;
+                setTimeout(applyFocusUuid, 150);
             }
         }
 
-        function betaScrollToAttributeAnchor(attempt) {
-            var hash = betaInitialAttributeAnchor || window.location.hash || '';
+        function scrollToAttributeAnchor(attempt) {
+            var hash = initialAttributeAnchor || window.location.hash || '';
             if (hash.indexOf('#Attribute_') !== 0) {
                 return;
             }
@@ -1549,28 +1549,28 @@
                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 $('.beta-deeplink-highlight').removeClass('beta-deeplink-highlight');
                 $(target).addClass('beta-deeplink-highlight');
-                betaInitialAttributeAnchor = null;
+                initialAttributeAnchor = null;
             } else if ((attempt || 0) < 12) {
                 setTimeout(function() {
-                    betaScrollToAttributeAnchor((attempt || 0) + 1);
+                    scrollToAttributeAnchor((attempt || 0) + 1);
                 }, 150);
             }
         }
 
         $('a[data-toggle="tab"][href="#attributes"]').on('shown.bs.tab', function () {
-            betaRenderCompositionBar();
-            betaApplyFocusUuid();
-            betaScrollToAttributeAnchor();
+            renderCompositionBar();
+            applyFocusUuid();
+            scrollToAttributeAnchor();
         });
 
         $(window).on('resize', function() {
             if ($('#attributes').hasClass('active')) {
-                betaRenderCompositionBar();
+                renderCompositionBar();
             }
         });
 
         if ($('#attributes').hasClass('active')) {
-            betaRenderCompositionBar();
+            renderCompositionBar();
         }
 
         // Comments List
@@ -1585,7 +1585,7 @@
                     .attr("class", "comment-bullet-item")
                     .attr("title", d.label + " (" + d.value + ")")
                     .on("click", function() {
-                        betaFilterAttributesByComment(d.label);
+                        filterAttributesByComment(d.label);
                     });
 
                 row.append("span")
@@ -1610,7 +1610,7 @@
         } else if (rawHash.indexOf('#Attribute_') === 0) {
             initialTab = '#attributes';
             initialUrlHash = rawHash;
-            betaInitialAttributeAnchor = rawHash;
+            initialAttributeAnchor = rawHash;
         }
 
         window.ignoreTabPush = true;
@@ -1645,7 +1645,7 @@
             }
         };
 
-        window.betaSummaryPrimaryReportId = <?php echo !empty($firstEventReportId) ? (int)$firstEventReportId : 0; ?>;
+        window.summaryPrimaryReportId = <?php echo !empty($firstEventReportId) ? (int)$firstEventReportId : 0; ?>;
 
         // Load reports into summary tab
         $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1/beta:1", function(data) {
@@ -1678,23 +1678,23 @@
         // Initialize export card
         var initialExportKey = $('#beta-export-format').val();
         if (initialExportKey) {
-            betaExportFormatChanged(initialExportKey);
+            exportFormatChanged(initialExportKey);
         }
 
-        betaInitContextCountObservers();
-        betaRefreshContextCounts();
+        initContextCountObservers();
+        refreshContextCounts();
     });
 
-    function betaBuildFilterMessage(text) {
+    function buildFilterMessage(text) {
         var msg = '<div class="alert alert-warning filter-active-msg" style="margin-top: 10px;">';
-        msg += '<button type="button" class="close" onclick="betaClearAttributeFilter(); $(this).parent().remove();">×</button>';
+        msg += '<button type="button" class="close" onclick="clearAttributeFilter(); $(this).parent().remove();">×</button>';
         msg += text;
-        msg += ' <a href="#" onclick="betaClearAttributeFilter(); return false;">(Clear Filter)</a>';
+        msg += ' <a href="#" onclick="clearAttributeFilter(); return false;">(Clear Filter)</a>';
         msg += '</div>';
         return msg;
     }
 
-    function betaRenderFilterMessage(message, preferredSelector) {
+    function renderFilterMessage(message, preferredSelector) {
         var $target = $(preferredSelector);
         if ($target.length) {
             $target.html(message);
@@ -1703,7 +1703,7 @@
         }
     }
 
-    function betaSetSidebarSectionExpanded(contentSelector, iconSelector, expanded) {
+    function setSidebarSectionExpanded(contentSelector, iconSelector, expanded) {
         var $content = $(contentSelector);
         var $icon = $(iconSelector);
         if (!$content.length || !$icon.length) {
@@ -1713,45 +1713,45 @@
         $icon.toggleClass('fa-chevron-down', !!expanded).toggleClass('fa-chevron-right', !expanded);
     }
 
-    function betaToggleSidebarSection(contentSelector, iconSelector) {
+    function toggleSidebarSection(contentSelector, iconSelector) {
         var isExpanded = $(contentSelector).is(':visible');
-        betaSetSidebarSectionExpanded(contentSelector, iconSelector, !isExpanded);
+        setSidebarSectionExpanded(contentSelector, iconSelector, !isExpanded);
     }
 
-    function betaToggleWarninglistSection() {
-        betaToggleSidebarSection('#beta-warninglist-content-wrap', '#beta-warninglist-toggle-icon');
+    function toggleWarninglistSection() {
+        toggleSidebarSection('#beta-warninglist-content-wrap', '#beta-warninglist-toggle-icon');
     }
 
-    function betaToggleExportSection() {
-        betaToggleSidebarSection('#beta-export-content-wrap', '#beta-export-toggle-icon');
+    function toggleExportSection() {
+        toggleSidebarSection('#beta-export-content-wrap', '#beta-export-toggle-icon');
     }
 
-    function betaToggleCollectionsSection() {
-        betaToggleSidebarSection('#beta-collections-content-wrap', '#beta-collections-toggle-icon');
+    function toggleCollectionsSection() {
+        toggleSidebarSection('#beta-collections-content-wrap', '#beta-collections-toggle-icon');
     }
 
-    function betaUpdateTagCount() {
+    function updateTagCount() {
         var count = $('.eventTagContainer .tag-container').length;
         $('#beta-tags-count').text(count);
     }
 
-    function betaUpdateGalaxyCount() {
+    function updateGalaxyCount() {
         var count = $('#galaxies_div .beta-galaxy-cluster, #galaxies_div .galaxy').length;
         $('#beta-galaxies-count').text(count);
     }
 
-    function betaUpdateCollectionsCount() {
+    function updateCollectionsCount() {
         var count = $('#event-collections-container .beta-collection-chip').length;
         $('#beta-collections-count').text(count);
     }
 
-    function betaRefreshContextCounts() {
-        betaUpdateTagCount();
-        betaUpdateGalaxyCount();
-        betaUpdateCollectionsCount();
+    function refreshContextCounts() {
+        updateTagCount();
+        updateGalaxyCount();
+        updateCollectionsCount();
     }
 
-    function betaObserveCountContainer(selector, updateFn) {
+    function observeCountContainer(selector, updateFn) {
         if (typeof MutationObserver === 'undefined') {
             return;
         }
@@ -1765,14 +1765,14 @@
         observer.observe(target, { childList: true, subtree: true });
     }
 
-    function betaInitContextCountObservers() {
+    function initContextCountObservers() {
         if (window._betaContextCountObserversInit) {
             return;
         }
         window._betaContextCountObserversInit = true;
-        betaObserveCountContainer('.eventTagContainer', betaUpdateTagCount);
-        betaObserveCountContainer('#galaxies_div', betaUpdateGalaxyCount);
-        betaObserveCountContainer('#event-collections-container', betaUpdateCollectionsCount);
+        observeCountContainer('.eventTagContainer', updateTagCount);
+        observeCountContainer('#galaxies_div', updateGalaxyCount);
+        observeCountContainer('#event-collections-container', updateCollectionsCount);
     }
 
     // Export card logic
@@ -1789,7 +1789,7 @@
         echo json_encode($betaExportFormatsJs);
     ?>;
 
-    function betaExportFormatChanged(key) {
+    function exportFormatChanged(key) {
         var fmt = betaExportFormats[key];
         if (!fmt) return;
         var $row = $('#beta-export-checkbox-row');
@@ -1805,7 +1805,7 @@
         }
     }
 
-    function betaExportDownload() {
+    function exportDownload() {
         var key = $('#beta-export-format').val();
         var fmt = betaExportFormats[key];
         if (!fmt) return;
@@ -1816,14 +1816,14 @@
         window.location.href = url;
     }
 
-    function betaClearAttributeFilter() {
+    function clearAttributeFilter() {
         $('.filter-active-msg').remove();
-        if (typeof betaPagination !== 'undefined') {
-            betaPagination.searchActive = false;
-            betaPagination.attributeType = '';
+        if (typeof paginationState !== 'undefined') {
+            paginationState.searchActive = false;
+            paginationState.attributeType = '';
             $('.beta-pagination-container').show();
-            if (typeof window.betaPaginationLoadPage === 'function') {
-                window.betaPaginationLoadPage(1, window.betaPagination.pageSize);
+            if (typeof window.paginationLoadPage === 'function') {
+                window.paginationLoadPage(1, window.paginationState.pageSize);
             } else {
                 $('.beta-attr-row').show();
             }
@@ -1832,17 +1832,17 @@
         }
     }
 
-    function betaFilterAttributesByComposition(type, name) {
+    function filterAttributesByComposition(type, name) {
         // Switch to Attributes tab
         $('.nav-tabs a[href="#attributes"]').tab('show');
 
         $('.filter-active-msg').remove();
 
-        if (type === 'attribute' && typeof betaPagination !== 'undefined' && typeof window.betaPaginationLoadPage === 'function') {
-            betaPagination.searchActive = false;
-            betaPagination.attributeType = name;
+        if (type === 'attribute' && typeof paginationState !== 'undefined' && typeof window.paginationLoadPage === 'function') {
+            paginationState.searchActive = false;
+            paginationState.attributeType = name;
             $('.beta-pagination-container').show();
-            window.betaPaginationLoadPage(1, betaPagination.pageSize);
+            window.paginationLoadPage(1, paginationState.pageSize);
         } else {
             // Fallback for non-attribute data
             $('.beta-attr-row').show();
@@ -1855,19 +1855,19 @@
             }
         }
 
-        betaRenderFilterMessage(
-            betaBuildFilterMessage('Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>'),
+        renderFilterMessage(
+            buildFilterMessage('Filtering by <strong>' + (type === 'object' ? 'Object: ' : 'Attribute: ') + name + '</strong>'),
             '#beta-filter-banner-slot'
         );
     }
 
     // Auto-resize report preview iframe based on content height
     <?php if (!empty($firstEventReportId)): ?>
-    window.betaSummaryReportExpanded = false;
-    window.betaSummaryReportContentHeight = 0;
+    window.summaryReportExpanded = false;
+    window.summaryReportContentHeight = 0;
 
-    function betaGetReportPreviewMaxHeight() {
-        if (!window.betaSummaryReportExpanded) {
+    function getReportPreviewMaxHeight() {
+        if (!window.summaryReportExpanded) {
             return 300;
         }
         var iframe = document.getElementById('summary-report-iframe');
@@ -1879,51 +1879,51 @@
         return Math.max(window.innerHeight - rect.top - viewportBottomPadding, 300);
     }
 
-    function betaApplyReportPreviewHeight() {
+    function applyReportPreviewHeight() {
         var iframe = document.getElementById('summary-report-iframe');
         if (!iframe) {
             return;
         }
-        var maxHeight = betaGetReportPreviewMaxHeight();
-        var targetHeight = window.betaSummaryReportExpanded
+        var maxHeight = getReportPreviewMaxHeight();
+        var targetHeight = window.summaryReportExpanded
             ? maxHeight
-            : Math.min(window.betaSummaryReportContentHeight + 10, maxHeight);
+            : Math.min(window.summaryReportContentHeight + 10, maxHeight);
         iframe.style.height = Math.max(targetHeight, 120) + 'px';
-        iframe.scrolling = window.betaSummaryReportContentHeight > maxHeight ? 'auto' : 'no';
+        iframe.scrolling = window.summaryReportContentHeight > maxHeight ? 'auto' : 'no';
     }
 
-    function betaToggleReportPreviewSize() {
-        window.betaSummaryReportExpanded = !window.betaSummaryReportExpanded;
+    function toggleReportPreviewSize() {
+        window.summaryReportExpanded = !window.summaryReportExpanded;
         var expandToggle = document.getElementById('summary-report-expand-toggle');
         var expandIcon = document.getElementById('summary-report-expand-icon');
         if (expandToggle) {
             var expandLabel = expandToggle.getAttribute('data-expand-label') || 'Expand preview';
             var collapseLabel = expandToggle.getAttribute('data-collapse-label') || 'Collapse preview';
-            var label = window.betaSummaryReportExpanded ? collapseLabel : expandLabel;
+            var label = window.summaryReportExpanded ? collapseLabel : expandLabel;
             expandToggle.setAttribute('aria-label', label);
             expandToggle.setAttribute('title', label);
         }
         if (expandIcon) {
-            expandIcon.className = window.betaSummaryReportExpanded ? 'fa fa-angle-double-up' : 'fa fa-angle-double-down';
+            expandIcon.className = window.summaryReportExpanded ? 'fa fa-angle-double-up' : 'fa fa-angle-double-down';
         }
-        betaApplyReportPreviewHeight();
+        applyReportPreviewHeight();
     }
 
     window.addEventListener('message', function(event) {
         if (event.data && event.data.type === 'reportPreviewResize') {
-            window.betaSummaryReportContentHeight = parseInt(event.data.height, 10) || 0;
-            betaApplyReportPreviewHeight();
+            window.summaryReportContentHeight = parseInt(event.data.height, 10) || 0;
+            applyReportPreviewHeight();
         }
     });
 
     window.addEventListener('resize', function() {
-        if (window.betaSummaryReportExpanded) {
-            betaApplyReportPreviewHeight();
+        if (window.summaryReportExpanded) {
+            applyReportPreviewHeight();
         }
     });
     <?php endif; ?>
 
-    function betaToggleAnalysisLinks() {
+    function toggleAnalysisLinks() {
         var toggle = document.getElementById('analysis-links-toggle');
         if (!toggle) {
             return;
@@ -1940,13 +1940,13 @@
         toggle.setAttribute('data-expanded', expanded ? '0' : '1');
     }
 
-    function betaFilterAttributesByComment(comment) {
+    function filterAttributesByComment(comment) {
         // Switch to Attributes tab
         $('.nav-tabs a[href="#attributes"]').tab('show');
         
         // Disable pagination during filtering
-        if (typeof betaPagination !== 'undefined') {
-            betaPagination.searchActive = true;
+        if (typeof paginationState !== 'undefined') {
+            paginationState.searchActive = true;
             $('.beta-pagination-container').hide();
         }
 
@@ -1967,16 +1967,16 @@
         });
 
         if ($('.beta-toolbar').length) {
-            $('.beta-toolbar').after(betaBuildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'));
+            $('.beta-toolbar').after(buildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'));
         } else {
-            betaRenderFilterMessage(
-                betaBuildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'),
+            renderFilterMessage(
+                buildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'),
                 ''
             );
         }
     }
 
-    function betaToggleSummaryReports(forceOpen) {
+    function toggleSummaryReports(forceOpen) {
         var $wrap = $('#summary-reports-content-wrap');
         if (!$wrap.length) return;
 
@@ -2031,7 +2031,7 @@
             var eventDetails = {};
             var attributeMap = {};
 
-            function betaBuildCorrelationEventHeader(eid, details, count, percent, creatorOrg) {
+            function buildCorrelationEventHeader(eid, details, count, percent, creatorOrg) {
                 var html = '';
                 html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8fbfe;">';
                 html += '    <div style="display: flex; align-items: center; gap: 10px;">';
@@ -2051,7 +2051,7 @@
                 return html;
             }
 
-            function betaBuildCorrelationAttributeHref(eid, attr) {
+            function buildCorrelationAttributeHref(eid, attr) {
                 var focusUuid = '';
                 if (attr.Object && attr.Object.uuid) {
                     focusUuid = attr.Object.uuid;
@@ -2068,7 +2068,7 @@
                 return '';
             }
 
-            function betaBuildCorrelationTagHtml(tag) {
+            function buildCorrelationTagHtml(tag) {
                 var tagColor = tag.colour || '#0088cc';
                 var hex = tagColor.replace('#', '');
                 var r, g, b;
@@ -2093,7 +2093,7 @@
                 return html;
             }
 
-            function betaBuildCorrelationCommentHtml(comment) {
+            function buildCorrelationCommentHtml(comment) {
                 if (!comment) {
                     return '';
                 }
@@ -2104,7 +2104,7 @@
                 return comment;
             }
 
-            function betaBuildCorrelationAttributeRow(eid, entry) {
+            function buildCorrelationAttributeRow(eid, entry) {
                 var attr = entry.attribute;
                 if (!attr) {
                     return '        <tr class="beta-attr-row">'
@@ -2114,7 +2114,7 @@
                 }
 
                 var html = '';
-                var linkHref = betaBuildCorrelationAttributeHref(eid, attr);
+                var linkHref = buildCorrelationAttributeHref(eid, attr);
                 html += '        <tr class="beta-attr-row standalone-attr-row" data-attribute-id="' + entry.id + '">';
                 html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-link" style="color: #ccc;"></i></td>';
                 html += '          <td colspan="2">';
@@ -2140,14 +2140,14 @@
                 if (attr.AttributeTag && attr.AttributeTag.length > 0) {
                     html += '              <div class="beta-attr-tags-inline">';
                     attr.AttributeTag.forEach(function(at) {
-                        html += betaBuildCorrelationTagHtml(at.Tag);
+                        html += buildCorrelationTagHtml(at.Tag);
                     });
                     html += '              </div>';
                 }
                 html += '            </div>';
                 html += '          </td>';
                 html += '          <td class="col-related"></td>';
-                html += '          <td class="col-comment" style="width: 20%;">' + betaBuildCorrelationCommentHtml(attr.comment) + '</td>';
+                html += '          <td class="col-comment" style="width: 20%;">' + buildCorrelationCommentHtml(attr.comment) + '</td>';
                 html += '          <td style="text-align: center;">';
                 html += '            <i class="fa fa-shield-alt" style="font-size: 1.5em; ' + (attr.to_ids ? 'color: #ff8c00;' : 'opacity: 0.2;') + '" title="' + (attr.to_ids ? 'Recommended for blocking / alerting' : 'Not recommended for blocking / alerting') + '"></i>';
                 html += '          </td>';
@@ -2202,13 +2202,13 @@
                 var creatorOrg = details.orgName ? $('<div/>').text(details.orgName).html() : '';
                 
                 html += '<div class="beta-card correlation-event-card" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
-                html += betaBuildCorrelationEventHeader(eid, details, count, percent, creatorOrg);
+                html += buildCorrelationEventHeader(eid, details, count, percent, creatorOrg);
                 html += '  <div class="beta-card-body" style="padding: 0;">';
                 html += '    <table class="beta-attr-table" style="margin-top: 0;">';
                 html += '      <tbody>';
                 
                 attrs.forEach(function(a) {
-                    html += betaBuildCorrelationAttributeRow(eid, a);
+                    html += buildCorrelationAttributeRow(eid, a);
                 });
                 
                 html += '      </tbody>';
@@ -2368,11 +2368,11 @@
                 links: links.map(function(d) { return Object.assign({}, d); })
             });
 
-            function betaIsSankeyInteractiveNode(node) {
+            function isSankeyInteractiveNode(node) {
                 return node && (node.type === 'target' || node.type === 'attribute');
             }
 
-            function betaHandleSankeyNodeClick(node) {
+            function handleSankeyNodeClick(node) {
                 if (node.type === 'target' && node.id) {
                     window.location.href = '<?php echo $baseurl; ?>/events/view/' + node.id;
                 } else if (node.type === 'attribute' && node.id) {
@@ -2380,11 +2380,11 @@
                 }
             }
 
-            function betaSankeyLinkConnectedToAttribute(link, node) {
+            function sankeyLinkConnectedToAttribute(link, node) {
                 return link.source === node || link.target === node;
             }
 
-            function betaSankeyLinkConnectedToTarget(link, node) {
+            function sankeyLinkConnectedToTarget(link, node) {
                 var isDirectLink = (link.target === node);
                 if (isDirectLink) {
                     return true;
@@ -2398,7 +2398,7 @@
                 return isPathFromSource;
             }
 
-            function betaSankeyNodeConnectedToAttribute(candidateNode, activeNode) {
+            function sankeyNodeConnectedToAttribute(candidateNode, activeNode) {
                 if (candidateNode === activeNode) {
                     return true;
                 }
@@ -2411,7 +2411,7 @@
                 return connected;
             }
 
-            function betaSankeyNodeConnectedToTarget(candidateNode, activeNode) {
+            function sankeyNodeConnectedToTarget(candidateNode, activeNode) {
                 if (candidateNode === activeNode) {
                     return true;
                 }
@@ -2427,8 +2427,8 @@
                 return connected;
             }
 
-            function betaApplySankeyHoverState(activeNode, linkOpacity) {
-                if (!betaIsSankeyInteractiveNode(activeNode)) {
+            function applySankeyHoverState(activeNode, linkOpacity) {
+                if (!isSankeyInteractiveNode(activeNode)) {
                     return;
                 }
                 svg.selectAll('.sankey-link')
@@ -2436,8 +2436,8 @@
                     .duration(200)
                     .style('stroke-opacity', function(link) {
                         var connected = activeNode.type === 'attribute'
-                            ? betaSankeyLinkConnectedToAttribute(link, activeNode)
-                            : betaSankeyLinkConnectedToTarget(link, activeNode);
+                            ? sankeyLinkConnectedToAttribute(link, activeNode)
+                            : sankeyLinkConnectedToTarget(link, activeNode);
                         return connected ? linkOpacity : 0.1;
                     });
                 svg.selectAll('.sankey-label')
@@ -2445,14 +2445,14 @@
                     .duration(200)
                     .style('opacity', function(node) {
                         var connected = activeNode.type === 'attribute'
-                            ? betaSankeyNodeConnectedToAttribute(node, activeNode)
-                            : betaSankeyNodeConnectedToTarget(node, activeNode);
+                            ? sankeyNodeConnectedToAttribute(node, activeNode)
+                            : sankeyNodeConnectedToTarget(node, activeNode);
                         return connected ? 1 : 0.1;
                     });
             }
 
-            function betaResetSankeyHoverState(activeNode) {
-                if (!betaIsSankeyInteractiveNode(activeNode)) {
+            function resetSankeyHoverState(activeNode) {
+                if (!isSankeyInteractiveNode(activeNode)) {
                     return;
                 }
                 svg.selectAll('.sankey-link')
@@ -2479,10 +2479,10 @@
                 .attr("height", function(d) { return d.y1 - d.y0; })
                 .attr("width", function(d) { return d.x1 - d.x0; })
                 .attr("fill", function(d) { return typeof color === 'function' ? color(d.type) : color; })
-                .attr("cursor", function(d) { return betaIsSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
-                .on("click", betaHandleSankeyNodeClick)
-                .on("mouseover", function(d) { betaApplySankeyHoverState(d, 0.7); })
-                .on("mouseout", betaResetSankeyHoverState)
+                .attr("cursor", function(d) { return isSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
+                .on("click", handleSankeyNodeClick)
+                .on("mouseover", function(d) { applySankeyHoverState(d, 0.7); })
+                .on("mouseout", resetSankeyHoverState)
                 .append("title")
                 .text(function(d) { return d.fullTitle || d.name; });
 
@@ -2521,11 +2521,11 @@
                 .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
                 .attr("dy", "0.35em")
                 .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; })
-                .attr("cursor", function(d) { return betaIsSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
-                .style("font-weight", function(d) { return betaIsSankeyInteractiveNode(d) ? 'bold' : 'normal'; })
-                .on("click", betaHandleSankeyNodeClick)
-                .on("mouseover", function(d) { betaApplySankeyHoverState(d, 0.5); })
-                .on("mouseout", betaResetSankeyHoverState)
+                .attr("cursor", function(d) { return isSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
+                .style("font-weight", function(d) { return isSankeyInteractiveNode(d) ? 'bold' : 'normal'; })
+                .on("click", handleSankeyNodeClick)
+                .on("mouseover", function(d) { applySankeyHoverState(d, 0.5); })
+                .on("mouseout", resetSankeyHoverState)
                 .text(function(d) {
                     if (d.type === 'source') return d.name;
                     var maxLength = d.x0 < width / 2 ? 50 : 70;
@@ -2638,7 +2638,7 @@
     }
 
     function _applyCorrelationFilter(attributeId) {
-        function betaBuildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue) {
+        function buildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue) {
             if (metaBlockHtml) {
                 return '          <td colspan="2">' + metaBlockHtml + '</td>';
             }
@@ -2665,7 +2665,7 @@
             return html;
         }
 
-        function betaBuildThisEventCorrelationCard(currentEventDateSafe, currentEventOrg, currentEventId, currentEventInfo, metaBlockHtml, attrCategory, attrType, attrValue, attrComment, idsHtml, correlationHtml, sightingsHtml, distributionHtml, dateHtml) {
+        function buildThisEventCorrelationCard(currentEventDateSafe, currentEventOrg, currentEventId, currentEventInfo, metaBlockHtml, attrCategory, attrType, attrValue, attrComment, idsHtml, correlationHtml, sightingsHtml, distributionHtml, dateHtml) {
             var html = '';
             html += '<div id="correlations-this-event-card" class="beta-card" style="margin-bottom: 20px; border-left: 4px solid #5cb85c; background: #f0fff4;">';
             html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #e8f8ed;">';
@@ -2686,7 +2686,7 @@
             html += '      <tbody>';
             html += '        <tr class="beta-attr-row standalone-attr-row" style="background: #f0fff4;">';
             html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-star" style="color: #5cb85c;"></i></td>';
-            html += betaBuildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue);
+            html += buildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue);
             html += '          <td class="col-related"></td>';
             html += '          <td class="col-comment" style="width: 20%;">' + attrComment + '</td>';
             html += '          <td style="text-align: center;">' + idsHtml + '</td>';
@@ -2818,7 +2818,7 @@
                 }
             }
 
-            var thisEventHtml = betaBuildThisEventCorrelationCard(
+            var thisEventHtml = buildThisEventCorrelationCard(
                 currentEventDateSafe,
                 currentEventOrg,
                 currentEventId,
@@ -2865,7 +2865,7 @@
     // ── Collections widget ────────────────────────────────────────────────────
     // Load all collections that contain this event and render compact linked
     // chips in the Context card. Uses the dedicated read-only JSON endpoint.
-    function betaBuildEventCollectionChip(collection, baseurl) {
+    function buildEventCollectionChip(collection, baseurl) {
         var collectionType = collection && collection.type ? String(collection.type) : 'other';
         var collectionTypeClass = collectionType.replace(/[^a-z0-9_-]/gi, '');
         var collectionDescription = collection && collection.description ? String(collection.description).substring(0, 80) : '';
@@ -2885,7 +2885,7 @@
         return link;
     }
 
-    function betaRenderEventCollectionChips(container, collections, baseurl) {
+    function renderEventCollectionChips(container, collections, baseurl) {
         container.innerHTML = '';
         if (!Array.isArray(collections) || collections.length === 0) {
             return;
@@ -2894,12 +2894,12 @@
         var chips = document.createElement('div');
         chips.className = 'beta-event-collections-chips';
         collections.forEach(function(collection) {
-            chips.appendChild(betaBuildEventCollectionChip(collection, baseurl));
+            chips.appendChild(buildEventCollectionChip(collection, baseurl));
         });
         container.appendChild(chips);
     }
 
-    window.betaLoadEventCollections = function() {
+    window.loadEventCollections = function() {
         var eventUuid = <?php echo json_encode($event['Event']['uuid']); ?>;
         var baseurl   = <?php echo json_encode($baseurl); ?>;
         var container = document.getElementById('event-collections-container');
@@ -2916,7 +2916,7 @@
                 if (countNode) {
                     countNode.textContent = Array.isArray(data) ? String(data.length) : '0';
                 }
-                betaRenderEventCollectionChips(container, data, baseurl);
+                renderEventCollectionChips(container, data, baseurl);
             },
             error: function() {
                 container.innerHTML = '';
@@ -2926,6 +2926,6 @@
             }
         });
     };
-    window.betaLoadEventCollections();
+    window.loadEventCollections();
     // ─────────────────────────────────────────────────────────────────────────
 </script>

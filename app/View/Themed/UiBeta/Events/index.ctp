@@ -172,13 +172,13 @@
     var betaEventsIndexBaseurl = <?php echo json_encode($baseurl); ?>;
     var betaViewCollectionLabel = <?php echo json_encode(__('View collection')); ?>;
 
-    window.betaEventCollectionContext = null;
+    window.eventCollectionContext = null;
 
-    function betaGetEventCollectionsContainer(eventId) {
+    function getEventCollectionsContainer(eventId) {
         return document.getElementById('event-collections-container-' + eventId);
     }
 
-    function betaBuildCollectionChip(collection) {
+    function buildCollectionChip(collection) {
         var collectionType = (collection && collection.type) ? String(collection.type) : 'other';
         var collectionTypeClass = collectionType.replace(/[^a-z0-9_-]/gi, '');
         var collectionDescription = collection && collection.description ? String(collection.description).substring(0, 80) : '';
@@ -199,7 +199,7 @@
         return link;
     }
 
-    function betaRenderEventCollections(container, collections) {
+    function renderEventCollections(container, collections) {
         container.innerHTML = '';
         if (!Array.isArray(collections) || collections.length === 0) {
             return;
@@ -209,26 +209,26 @@
         chips.className = 'beta-event-collections-chips';
 
         collections.forEach(function(collection) {
-            chips.appendChild(betaBuildCollectionChip(collection));
+            chips.appendChild(buildCollectionChip(collection));
         });
         container.appendChild(chips);
     }
 
-    window.betaOpenAddToCollectionModal = function(eventUuid, eventId) {
-        window.betaEventCollectionContext = {
+    window.openAddToCollectionModal = function(eventUuid, eventId) {
+        window.eventCollectionContext = {
             eventUuid: eventUuid,
             eventId: parseInt(eventId, 10)
         };
         openGenericModal(betaEventsIndexBaseurl + '/collectionElements/addElementToCollection/Event/' + encodeURIComponent(eventUuid));
     };
 
-    window.betaLoadEventCollections = function() {
-        var context = window.betaEventCollectionContext;
+    window.loadEventCollections = function() {
+        var context = window.eventCollectionContext;
         if (!context || !context.eventUuid || !context.eventId) {
             return;
         }
 
-        var container = betaGetEventCollectionsContainer(context.eventId);
+        var container = getEventCollectionsContainer(context.eventId);
         if (!container) {
             return;
         }
@@ -238,7 +238,7 @@
             method: 'GET',
             dataType: 'json',
             success: function(data) {
-                betaRenderEventCollections(container, data);
+                renderEventCollections(container, data);
             }
         });
     };

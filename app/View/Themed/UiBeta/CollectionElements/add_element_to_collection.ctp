@@ -104,7 +104,7 @@ $(document)
     });
 <?php endif; ?>
 
-function betaNormalizeCollectionModalMessage(message, fallback) {
+function normalizeCollectionModalMessage(message, fallback) {
     if (typeof message === 'string') {
         return message;
     }
@@ -121,12 +121,12 @@ function betaNormalizeCollectionModalMessage(message, fallback) {
     return fallback;
 }
 
-function betaGetCollectionModalForm() {
+function getCollectionModalForm() {
     var $genericForm = $('#genericModal .genericForm');
     return $genericForm.length ? $genericForm : $('.genericForm').first();
 }
 
-function betaParseCollectionModalResponse(data) {
+function parseCollectionModalResponse(data) {
     if (typeof data !== 'string') {
         return data;
     }
@@ -138,7 +138,7 @@ function betaParseCollectionModalResponse(data) {
 }
 
 function submitAddElementToCollectionBeta() {
-    var $genericForm = betaGetCollectionModalForm();
+    var $genericForm = getCollectionModalForm();
 
     $.ajax({
         type: 'POST',
@@ -146,19 +146,19 @@ function submitAddElementToCollectionBeta() {
         data: $genericForm.serialize(),
         headers: { Accept: 'application/json' },
         success: function(data) {
-            var response = betaParseCollectionModalResponse(data);
+            var response = parseCollectionModalResponse(data);
 
             if (response && response.saved) {
-                showMessage('success', betaNormalizeCollectionModalMessage(response.success || response.message, 'Element added to the Collection.'));
+                showMessage('success', normalizeCollectionModalMessage(response.success || response.message, 'Element added to the Collection.'));
                 $('#genericModal').modal('hide').remove();
-                if (typeof window.betaLoadEventCollections === 'function') {
-                    window.betaLoadEventCollections();
+                if (typeof window.loadEventCollections === 'function') {
+                    window.loadEventCollections();
                 }
                 return;
             }
 
             if (response) {
-                showMessage('fail', betaNormalizeCollectionModalMessage(response.errors || response.error || response.message, 'Element could not be added to the Collection.'));
+                showMessage('fail', normalizeCollectionModalMessage(response.errors || response.error || response.message, 'Element could not be added to the Collection.'));
                 return;
             }
 
