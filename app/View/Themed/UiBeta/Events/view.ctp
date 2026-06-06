@@ -2638,6 +2638,70 @@
     }
 
     function _applyCorrelationFilter(attributeId) {
+        function betaBuildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue) {
+            if (metaBlockHtml) {
+                return '          <td colspan="2">' + metaBlockHtml + '</td>';
+            }
+
+            var html = '';
+            html += '          <td colspan="2">';
+            html += '            <div class="beta-attr-meta-block">';
+            if (attrCategory || attrType) {
+                html += '              <div class="beta-attr-type-path">';
+                if (attrCategory) {
+                    html += '                <span class="beta-category-label">' + attrCategory + '</span>';
+                    html += '                <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>';
+                }
+                if (attrType) {
+                    html += '                <span class="beta-type-insight">' + attrType + '</span>';
+                }
+                html += '              </div>';
+            }
+            html += '              <div class="beta-attr-value-container">';
+            html += '                <span class="attr-value" style="font-weight: 600;">' + attrValue + '</span>';
+            html += '              </div>';
+            html += '            </div>';
+            html += '          </td>';
+            return html;
+        }
+
+        function betaBuildThisEventCorrelationCard(currentEventDateSafe, currentEventOrg, currentEventId, currentEventInfo, metaBlockHtml, attrCategory, attrType, attrValue, attrComment, idsHtml, correlationHtml, sightingsHtml, distributionHtml, dateHtml) {
+            var html = '';
+            html += '<div id="correlations-this-event-card" class="beta-card" style="margin-bottom: 20px; border-left: 4px solid #5cb85c; background: #f0fff4;">';
+            html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #e8f8ed;">';
+            html += '    <div style="display: flex; align-items: center; gap: 10px;">';
+            if (currentEventDateSafe) {
+                html += '      <span class="label label-default" style="font-weight: normal;">' + currentEventDateSafe + '</span>';
+            }
+            if (currentEventOrg) {
+                html += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + currentEventOrg + '</span>';
+            }
+            html += '      <a href="<?php echo $baseurl; ?>/events/view/' + currentEventId + '" style="font-weight: 700; font-size: 1.1em;">#' + currentEventId + ' ' + currentEventInfo + '</a>';
+            html += '      <span class="label label-success" style="font-size: 12px; padding: 4px 8px;"><i class="fa fa-star"></i> <?php echo __('This Event'); ?></span>';
+            html += '    </div>';
+            html += '    <span style="font-size: 11px; color: #3d8b5e; font-style: italic;"><?php echo __('Source attribute'); ?></span>';
+            html += '  </div>';
+            html += '  <div class="beta-card-body" style="padding: 0;">';
+            html += '    <table class="beta-attr-table" style="margin-top: 0;">';
+            html += '      <tbody>';
+            html += '        <tr class="beta-attr-row standalone-attr-row" style="background: #f0fff4;">';
+            html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-star" style="color: #5cb85c;"></i></td>';
+            html += betaBuildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue);
+            html += '          <td class="col-related"></td>';
+            html += '          <td class="col-comment" style="width: 20%;">' + attrComment + '</td>';
+            html += '          <td style="text-align: center;">' + idsHtml + '</td>';
+            html += '          <td class="col-correlation" style="text-align: center;">' + correlationHtml + '</td>';
+            html += '          <td class="col-sightings" style="text-align: center;">' + sightingsHtml + '</td>';
+            html += '          <td class="col-distribution" style="text-align: center;">' + distributionHtml + '</td>';
+            html += '          <td class="col-date" style="width: 80px;">' + dateHtml + '</td>';
+            html += '        </tr>';
+            html += '      </tbody>';
+            html += '    </table>';
+            html += '  </div>';
+            html += '</div>';
+            return html;
+        }
+
         // Re-render the Sankey with or without filter
         if (_correlationData && _correlationEventDetails) {
             if (attributeId) {
@@ -2754,60 +2818,22 @@
                 }
             }
 
-            var thisEventHtml = '<div id="correlations-this-event-card" class="beta-card" style="margin-bottom: 20px; border-left: 4px solid #5cb85c; background: #f0fff4;">';
-            thisEventHtml += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #e8f8ed;">';
-            thisEventHtml += '    <div style="display: flex; align-items: center; gap: 10px;">';
-            if (currentEventDateSafe) {
-                thisEventHtml += '      <span class="label label-default" style="font-weight: normal;">' + currentEventDateSafe + '</span>';
-            }
-            if (currentEventOrg) {
-                thisEventHtml += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + currentEventOrg + '</span>';
-            }
-            thisEventHtml += '      <a href="<?php echo $baseurl; ?>/events/view/' + currentEventId + '" style="font-weight: 700; font-size: 1.1em;">#' + currentEventId + ' ' + currentEventInfo + '</a>';
-            thisEventHtml += '      <span class="label label-success" style="font-size: 12px; padding: 4px 8px;"><i class="fa fa-star"></i> <?php echo __('This Event'); ?></span>';
-            thisEventHtml += '    </div>';
-            thisEventHtml += '    <span style="font-size: 11px; color: #3d8b5e; font-style: italic;"><?php echo __('Source attribute'); ?></span>';
-            thisEventHtml += '  </div>';
-            thisEventHtml += '  <div class="beta-card-body" style="padding: 0;">';
-            thisEventHtml += '    <table class="beta-attr-table" style="margin-top: 0;">';
-            thisEventHtml += '      <tbody>';
-            thisEventHtml += '        <tr class="beta-attr-row standalone-attr-row" style="background: #f0fff4;">';
-            thisEventHtml += '          <td style="width: 40px; text-align: center;"><i class="fa fa-star" style="color: #5cb85c;"></i></td>';
-            if (metaBlockHtml) {
-                thisEventHtml += '          <td colspan="2">' + metaBlockHtml + '</td>';
-            } else {
-                // Fallback: build manually
-                thisEventHtml += '          <td colspan="2">';
-                thisEventHtml += '            <div class="beta-attr-meta-block">';
-                if (attrCategory || attrType) {
-                    thisEventHtml += '              <div class="beta-attr-type-path">';
-                    if (attrCategory) {
-                        thisEventHtml += '                <span class="beta-category-label">' + attrCategory + '</span>';
-                        thisEventHtml += '                <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>';
-                    }
-                    if (attrType) {
-                        thisEventHtml += '                <span class="beta-type-insight">' + attrType + '</span>';
-                    }
-                    thisEventHtml += '              </div>';
-                }
-                thisEventHtml += '              <div class="beta-attr-value-container">';
-                thisEventHtml += '                <span class="attr-value" style="font-weight: 600;">' + attrValue + '</span>';
-                thisEventHtml += '              </div>';
-                thisEventHtml += '            </div>';
-                thisEventHtml += '          </td>';
-            }
-            thisEventHtml += '          <td class="col-related"></td>';
-            thisEventHtml += '          <td class="col-comment" style="width: 20%;">' + attrComment + '</td>';
-            thisEventHtml += '          <td style="text-align: center;">' + idsHtml + '</td>';
-            thisEventHtml += '          <td class="col-correlation" style="text-align: center;">' + correlationHtml + '</td>';
-            thisEventHtml += '          <td class="col-sightings" style="text-align: center;">' + sightingsHtml + '</td>';
-            thisEventHtml += '          <td class="col-distribution" style="text-align: center;">' + distributionHtml + '</td>';
-            thisEventHtml += '          <td class="col-date" style="width: 80px;">' + dateHtml + '</td>';
-            thisEventHtml += '        </tr>';
-            thisEventHtml += '      </tbody>';
-            thisEventHtml += '    </table>';
-            thisEventHtml += '  </div>';
-            thisEventHtml += '</div>';
+            var thisEventHtml = betaBuildThisEventCorrelationCard(
+                currentEventDateSafe,
+                currentEventOrg,
+                currentEventId,
+                currentEventInfo,
+                metaBlockHtml,
+                attrCategory,
+                attrType,
+                attrValue,
+                attrComment,
+                idsHtml,
+                correlationHtml,
+                sightingsHtml,
+                distributionHtml,
+                dateHtml
+            );
 
             // Insert "This Event" card before the first correlation card
             var container = $('#correlations-table-container .beta-correlations-container');
