@@ -8,6 +8,39 @@
     $betaShowStart = ($betaTotalAttributes > 0) ? ($betaCurrentPage - 1) * $betaPageSize + 1 : 0;
     $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalAttributes);
     $items = $event['objects'];
+
+    $buildWarningPopoverContent = function ($warnings) {
+        $content = '';
+        foreach ($warnings as $warning) {
+            $content .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
+            if (isset($warning['comment'])) {
+                $content .= ' (' . h($warning['comment']) . ')';
+            }
+            $content .= '<br>';
+        }
+        return $content;
+    };
+
+    $groupGalaxyClustersByName = function ($galaxies) {
+        $clustersByGalaxy = [];
+        foreach ($galaxies as $galaxy) {
+            foreach ($galaxy['GalaxyCluster'] as $cluster) {
+                $clustersByGalaxy[$galaxy['name']][] = $cluster;
+            }
+        }
+        return $clustersByGalaxy;
+    };
+
+    $countRelatedEvents = function ($relatedAttributes) {
+        if (empty($relatedAttributes)) {
+            return 0;
+        }
+        $uniqueEventIds = [];
+        foreach ($relatedAttributes as $relatedAttribute) {
+            $uniqueEventIds[$relatedAttribute['id']] = true;
+        }
+        return count($uniqueEventIds);
+    };
 ?>
 
 <style>
@@ -494,14 +527,7 @@
                                     <?php endif; ?>
                                     <?php if (isset($item['warnings'])): ?>
                                         <?php
-                                            $temp = '';
-                                            foreach ($item['warnings'] as $warning) {
-                                                $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
-                                                if (isset($warning['comment'])) {
-                                                    $temp .= ' (' . h($warning['comment']) . ')';
-                                                }
-                                                $temp .= '<br>';
-                                            }
+                                            $temp = $buildWarningPopoverContent($item['warnings']);
                                         ?>
                                         <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
                                     <?php endif; ?>
@@ -525,18 +551,13 @@
                                 </div>
 
                                 <!-- Galaxies Inline -->
-                                <div class="beta-attr-tags-inline beta-attr-galaxies" id="attribute_<?php echo $item['id']; ?>_galaxy" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
-                                    <?php if (!empty($item['Galaxy'])): ?>
-                                        <?php
-                                            $clustersByGalaxy = [];
-                                            foreach ($item['Galaxy'] as $galaxy) {
-                                                foreach ($galaxy['GalaxyCluster'] as $cluster) {
-                                                    $clustersByGalaxy[$galaxy['name']][] = $cluster;
-                                                }
-                                            }
-                                            foreach ($clustersByGalaxy as $galaxyName => $clusters):
-                                                echo $this->element('Events/View/galaxy_compact_beta', [
-                                                    'galaxyName' => $galaxyName,
+                                    <div class="beta-attr-tags-inline beta-attr-galaxies" id="attribute_<?php echo $item['id']; ?>_galaxy" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
+                                        <?php if (!empty($item['Galaxy'])): ?>
+                                            <?php
+                                                $clustersByGalaxy = $groupGalaxyClustersByName($item['Galaxy']);
+                                                foreach ($clustersByGalaxy as $galaxyName => $clusters):
+                                                    echo $this->element('Events/View/galaxy_compact_beta', [
+                                                        'galaxyName' => $galaxyName,
                                                     'clusters' => $clusters,
                                                     'baseurl' => $baseurl,
                                                     'canModify' => $mayModify,
@@ -554,14 +575,7 @@
                         <!-- Related Events -->
                         <td class="col-related">
                             <?php
-                                $relatedCount = 0;
-                                if (!empty($item['RelatedAttribute'])) {
-                                    $uniqueEventIds = [];
-                                    foreach ($item['RelatedAttribute'] as $ra) {
-                                        $uniqueEventIds[$ra['id']] = true;
-                                    }
-                                    $relatedCount = count($uniqueEventIds);
-                                }
+                                $relatedCount = $countRelatedEvents($item['RelatedAttribute'] ?? []);
                             ?>
                             <?php if ($relatedCount > 0): ?>
                                 <span class="badge" title="<?php echo __('Show correlations'); ?>" style="cursor: pointer; background-color: #428bca;" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo $relatedCount; ?></span>
@@ -746,14 +760,7 @@
                                         <?php endif; ?>
                                         <?php if (isset($subAttr['warnings'])): ?>
                                             <?php
-                                                $temp = '';
-                                                foreach ($subAttr['warnings'] as $warning) {
-                                                    $temp .= '<span class="bold">' . h($warning['match']) . ':</span> <span class="red">' . h($warning['warninglist_name']) . '</span>';
-                                                    if (isset($warning['comment'])) {
-                                                        $temp .= ' (' . h($warning['comment']) . ')';
-                                                    }
-                                                    $temp .= '<br>';
-                                                }
+                                                $temp = $buildWarningPopoverContent($subAttr['warnings']);
                                             ?>
                                             <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
                                         <?php endif; ?>
@@ -780,12 +787,7 @@
                                     <div class="beta-attr-tags-inline beta-attr-galaxies" data-attribute-id="<?php echo h($subAttr['id']); ?>" style="margin-top: 4px;">
                                         <?php if (!empty($subAttr['Galaxy'])): ?>
                                             <?php
-                                                $subClustersByGalaxy = [];
-                                                foreach ($subAttr['Galaxy'] as $galaxy) {
-                                                    foreach ($galaxy['GalaxyCluster'] as $cluster) {
-                                                        $subClustersByGalaxy[$galaxy['name']][] = $cluster;
-                                                    }
-                                                }
+                                                $subClustersByGalaxy = $groupGalaxyClustersByName($subAttr['Galaxy']);
                                                 foreach ($subClustersByGalaxy as $galaxyName => $clusters):
                                                     echo $this->element('Events/View/galaxy_compact_beta', [
                                                         'galaxyName' => $galaxyName,
@@ -806,14 +808,7 @@
                             <!-- Related -->
                             <td class="col-related">
                                 <?php
-                                    $subRelatedCount = 0;
-                                    if (!empty($subAttr['RelatedAttribute'])) {
-                                        $subUniqueEventIds = [];
-                                        foreach ($subAttr['RelatedAttribute'] as $ra) {
-                                            $subUniqueEventIds[$ra['id']] = true;
-                                        }
-                                        $subRelatedCount = count($subUniqueEventIds);
-                                    }
+                                    $subRelatedCount = $countRelatedEvents($subAttr['RelatedAttribute'] ?? []);
                                 ?>
                                 <?php if ($subRelatedCount > 0): ?>
                                     <span class="badge" style="cursor: pointer; background-color: #428bca;" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><?php echo $subRelatedCount; ?></span>
