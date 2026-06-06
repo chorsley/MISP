@@ -62,19 +62,46 @@
     }
     .beta-tabs {
         margin-top: 20px;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid #d7dee7;
+        display: flex;
+        gap: 8px;
+        padding: 0 4px;
+    }
+    .beta-tabs > li {
+        margin-bottom: -1px;
     }
     .beta-tabs > li > a {
-        padding: 10px 20px;
+        padding: 11px 18px;
         font-weight: 600;
-        color: #666;
+        color: #5a6775;
+        border: 1px solid transparent;
+        border-radius: 8px 8px 0 0;
+        background: linear-gradient(180deg, #f5f7fa 0%, #edf1f5 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .beta-tabs > li > a:hover,
+    .beta-tabs > li > a:focus {
+        color: #334154;
+        background: linear-gradient(180deg, #f9fbfd 0%, #f1f5f9 100%);
+        border-color: #d7dee7;
+    }
+    .beta-tabs > li.active > a,
+    .beta-tabs > li.active > a:hover,
+    .beta-tabs > li.active > a:focus {
+        color: #234d7d;
+        background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+        border: 1px solid #d7dee7;
+        border-bottom-color: #fff;
+        box-shadow: 0 -1px 0 #62aaf6 inset, 0 2px 6px rgba(80, 108, 140, 0.08);
     }
     .beta-tab-content {
         background: #fff;
-        border: 1px solid #ddd;
+        border: 1px solid #d7dee7;
         border-top: none;
         padding: 20px;
-        border-radius: 0 0 4px 4px;
+        border-radius: 0 8px 8px 8px;
+        box-shadow: 0 1px 3px rgba(60, 78, 102, 0.04);
     }
     .beta-card {
         background: #fff;

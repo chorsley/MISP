@@ -52,6 +52,24 @@ $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalItems);
         border-top: 1px solid #eee;
         border-bottom: none;
     }
+    .beta-history-action-cell {
+        width: 130px;
+        min-width: 130px;
+        white-space: normal;
+    }
+    .beta-history-action-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+        font-size: 10px;
+        line-height: 1.2;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        white-space: normal;
+        word-break: break-word;
+        text-align: center;
+    }
 </style>
 
 <div class="beta-history-container">
@@ -82,7 +100,7 @@ $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalItems);
                 <th style="width: 130px;"><?php echo __('Time'); ?></th>
                 <th style="width: 120px;"><?php echo __('User'); ?></th>
                 <th style="width: 100px;"><?php echo __('Org'); ?></th>
-                <th style="width: 90px;"><?php echo __('Action'); ?></th>
+                <th style="width: 130px;"><?php echo __('Action'); ?></th>
                 <th style="width: 110px;"><?php echo __('Model'); ?></th>
                 <th style="width: 250px;"><?php echo __('Object'); ?></th>
                 <th><?php echo __('Changes'); ?></th>
@@ -113,7 +131,7 @@ $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalItems);
                             <?= !empty($item['Organisation']['name']) ? h($item['Organisation']['name']) : '' ?>
                         </span>
                     </td>
-                    <td>
+                    <td class="beta-history-action-cell">
                         <?php
                             $actionClass = 'label-default';
                             $action = $item['AuditLog']['action'];
@@ -123,7 +141,7 @@ $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalItems);
                             if (strpos($action, 'tag') !== false) $actionClass = 'label-warning';
                             if (strpos($action, 'publish') !== false) $actionClass = 'label-primary';
                         ?>
-                        <span class="label <?= $actionClass ?>" style="font-size: 10px; text-transform: uppercase; padding: 2px 6px;">
+                        <span class="label <?= $actionClass ?> beta-history-action-badge">
                             <?= h($item['AuditLog']['action_human']) ?>
                         </span>
                     </td>
