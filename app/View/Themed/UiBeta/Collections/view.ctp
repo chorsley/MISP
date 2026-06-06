@@ -715,6 +715,60 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
     });
 
     // ── 3. D3 intra-collection correlation graph ───────────────────────────
+    function buildCollectionCorrelationEdges(edgeSet) {
+        return Object.keys(edgeSet).map(function (key) {
+            var parts = key.split('|');
+            return { source: parts[0], target: parts[1], count: edgeSet[key] };
+        });
+    }
+
+    function updateCollectionCorrelationStatus(edgeCount, statusEl) {
+        var tabCountEl = document.getElementById('collectionCorrelationsTabCount');
+        if (tabCountEl) {
+            tabCountEl.textContent = edgeCount;
+        }
+        if (statusEl) {
+            statusEl.textContent = edgeCount > 0
+                ? edgeCount + ' <?= __('correlation(s) found between collection events') ?>'
+                : '<?= __('No direct correlations found between collection events') ?>';
+        }
+    }
+
+    function followCollectionGraphEvent(nodeData) {
+        if (nodeData.type !== 'attribute' && nodeData.id) {
+            window.location.href = baseurl + '/events/view/' + nodeData.id;
+        }
+    }
+
+    function bindCollectionGraphHighlight(nodeSelection, labelSelection, linkSelection, graph) {
+        function isConnected(a, b) {
+            return graph.links.some(function (link) {
+                return (link.source === a && link.target === b) || (link.source === b && link.target === a);
+            });
+        }
+
+        function highlight(nodeData) {
+            linkSelection.style('stroke-opacity', function (link) {
+                return (link.source === nodeData || link.target === nodeData) ? 0.6 : 0.08;
+            });
+            nodeSelection.style('opacity', function (node) {
+                return (node === nodeData || isConnected(node, nodeData)) ? 1 : 0.2;
+            });
+            labelSelection.style('opacity', function (node) {
+                return (node === nodeData || isConnected(node, nodeData)) ? 1 : 0.2;
+            });
+        }
+
+        function resetHighlight() {
+            linkSelection.style('stroke-opacity', 0.35);
+            nodeSelection.style('opacity', 1);
+            labelSelection.style('opacity', 1);
+        }
+
+        nodeSelection.on('mouseover', highlight).on('mouseout', resetHighlight);
+        labelSelection.on('mouseover', highlight).on('mouseout', resetHighlight);
+    }
+
     function buildCorrGraph(eventMap) {
         var container = document.getElementById('collectionCorrGraph');
         var statusEl  = document.getElementById('corrGraphStatus');
@@ -750,7 +804,6 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
                     relatedEvents.forEach(function (rel) {
                         var relUuid = rel.Event ? rel.Event.uuid : null;
                         if (!relUuid || !uuidsInCollection.has(relUuid)) return;
-                        // Only store edge once (canonical key = sorted pair)
                         var pair = [uuid, relUuid].sort().join('|');
                         edgeSet[pair] = (edgeSet[pair] || 0) + 1;
                     });
@@ -873,21 +926,10 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
     }
 
     function renderGraph(nodeData, edgeSet, container, statusEl) {
-        var edges = Object.keys(edgeSet).map(function (key) {
-            var parts = key.split('|');
-            return { source: parts[0], target: parts[1], count: edgeSet[key] };
-        });
+        var edges = buildCollectionCorrelationEdges(edgeSet);
 
         var edgeCount = edges.length;
-        var tabCountEl = document.getElementById('collectionCorrelationsTabCount');
-        if (tabCountEl) {
-            tabCountEl.textContent = edgeCount;
-        }
-        if (statusEl) {
-            statusEl.textContent = edgeCount > 0
-                ? edgeCount + ' <?= __('correlation(s) found between collection events') ?>'
-                : '<?= __('No direct correlations found between collection events') ?>';
-        }
+        updateCollectionCorrelationStatus(edgeCount, statusEl);
 
         // Clear loading spinner
         container.innerHTML = '';
@@ -1058,9 +1100,7 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
                 .attr('width', function (d) { return d.x1 - d.x0; })
                 .attr('fill', function (d) { return typeColor(d.type); })
                 .attr('cursor', function (d) { return (d.type === 'attribute') ? 'default' : 'pointer'; })
-                .on('click', function (d) {
-                    if (d.type !== 'attribute' && d.id) window.location.href = baseurl + '/events/view/' + d.id;
-                });
+                .on('click', followCollectionGraphEvent);
 
             node.append('title')
                 .text(function (d) { return d.fullTitle || d.name; });
@@ -1105,39 +1145,12 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
                 .attr('cursor', function (d) { return (d.type === 'attribute') ? 'default' : 'pointer'; })
                 .style('font-weight', function (d) { return (d.type === 'attribute') ? 'normal' : 'bold'; })
                 .text(function (d) { return d.name; })
-                .on('click', function (d) {
-                    if (d.type !== 'attribute' && d.id) window.location.href = baseurl + '/events/view/' + d.id;
-                });
+                .on('click', followCollectionGraphEvent);
 
             label.append('title')
                 .text(function (d) { return d.fullTitle || d.name; });
 
-            function isConnected(a, b) {
-                return graph.links.some(function (l) {
-                    return (l.source === a && l.target === b) || (l.source === b && l.target === a);
-                });
-            }
-
-            function highlight(d) {
-                link.style('stroke-opacity', function (l) {
-                    return (l.source === d || l.target === d) ? 0.6 : 0.08;
-                });
-                node.style('opacity', function (n) {
-                    return (n === d || isConnected(n, d)) ? 1 : 0.2;
-                });
-                label.style('opacity', function (n) {
-                    return (n === d || isConnected(n, d)) ? 1 : 0.2;
-                });
-            }
-
-            function resetHighlight() {
-                link.style('stroke-opacity', 0.35);
-                node.style('opacity', 1);
-                label.style('opacity', 1);
-            }
-
-            node.on('mouseover', highlight).on('mouseout', resetHighlight);
-            label.on('mouseover', highlight).on('mouseout', resetHighlight);
+            bindCollectionGraphHighlight(node, label, link, graph);
         }
 
     }
