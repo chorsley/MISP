@@ -32,10 +32,10 @@ class AppController extends Controller
      */
     public $defaultModel = '';
 
-    public $helpers = array('OrgImg', 'FontAwesome', 'UserName');
+    public $helpers = array('OrgImg', 'FontAwesome', 'UserName', 'Navbar');
 
-    private $__queryVersion = '182';
-    public $pyMispVersion = '2.5.32';
+    private $__queryVersion = '185';
+    public $pyMispVersion = '2.5.34.1';
     public $phpmin = '8.1';
     public $phprec = '8.2';
     public $phptoonew = '9.0';
@@ -273,30 +273,61 @@ class AppController extends Controller
             }
         }
 
+        $themeLabels = [];
+        $themesEnabled = (bool)Configure::read('MISP.enable_themes');
+        $currentTheme = 'Default';
+        $this->set('theme', $currentTheme);
         if (!$this->_isRest()) {
-            $themesEnabled = (bool)Configure::read('MISP.enable_themes');
-            $currentTheme = 'Default';
             if ($themesEnabled) {
                 if ($this->Auth->user()) {
-                    $currentTheme = $this->User->UserSetting->getUserTheme($this->Auth->user('id')) ?? 'Default';
+                    $currentTheme = $this->User->UserSetting->getUserTheme($this->Auth->user('id')) ?? null;
+
+                    if ($currentTheme) {
+                        $this->theme = $currentTheme;
+                        $this->viewClass = 'Theme';
+                    } else {
+                        $currentTheme = Configure::read('MISP.default_theme');
+                        if ($currentTheme) {
+                            $this->theme = $currentTheme;
+                            $this->viewClass = 'Theme';
+                        }
+                    }
+                } else {
+                    $currentTheme = Configure::read('MISP.default_theme');
+                    if ($currentTheme) {
+                        $this->theme = $currentTheme;
+                        $this->viewClass = 'Theme';
+                    }
                 }
-                if ($currentTheme === 'Default') {
-                    $currentTheme = Configure::read('MISP.default_theme') ?? 'Default';
+                $this->set('theme', $currentTheme);
+                $this->set('themes', MispTheme::getAvailableThemes($currentTheme, (bool)Configure::read('debug')));
+
+                $userSetting = ClassRegistry::init('UserSetting');
+                $themes = $userSetting::VALID_SETTINGS['ui_theme']['options'];
+                foreach ($themes as $t) {
+                    if ($t === 'Default') {
+                        continue;
+                    }
+                    $themeFile = APP . 'View' . DS . 'Themed' . DS . $t . DS . 'theme.php';
+                    if (file_exists($themeFile)) {
+                        $themeConfig = include $themeFile;
+                        if (!empty($themeConfig['label'])) {
+                            $themeLabels[$t] = $themeConfig['label'];
+                        }
+                    }
+                    if (!isset($themeLabels[$t])) {
+                        $themeLabels[$t] = $t . ' UI';
+
+                    }
                 }
-                if (!empty($this->request->params['named']['beta'])) {
-                    $currentTheme = 'UiBeta';
-                }
-                if ($currentTheme !== 'Default') {
-                    $this->theme = $currentTheme;
-                    $this->viewClass = 'Theme';
-                }
+            } else {
+                $this->set('themes', []);
             }
-            $this->set('theme', $currentTheme);
-            $this->set('themesEnabled', $themesEnabled);
-            $this->set('themes', MispTheme::getAvailableThemes($currentTheme, (bool)Configure::read('debug')));
         }
-        $this->set('themes', $themes);
         $this->set('themeLabels', $themeLabels);
+        $this->set('themesEnabled', $themesEnabled);
+
+
 
         $user = $this->Auth->user();
         if ($user) {
@@ -852,10 +883,10 @@ class AppController extends Controller
             'default-src' => "'self' data: 'unsafe-inline' 'unsafe-eval'",
             'style-src' => "'self' 'unsafe-inline'",
             'object-src' => "'none'",
-            'frame-ancestors' => "'self'",
+            'frame-ancestors' => "'none'",
             'worker-src' => "'none'",
-            'child-src' => "'self'",
-            'frame-src' => "'self'",
+            'child-src' => "'none'",
+            'frame-src' => "'none'",
             'base-uri' => "'self'",
             'img-src' => "'self' data:",
             'font-src' => "'self'",
@@ -866,6 +897,13 @@ class AppController extends Controller
         ];
         if (env('HTTPS')) {
             $default['upgrade-insecure-requests'] = null;
+        }
+        if (Configure::read('Plugin.Geolocation_enabled')) {
+            $geoUrl = Configure::read('Plugin.Geolocation_url');
+            if (empty($geoUrl)) {
+                $geoUrl = 'https://geo.circl.lu';
+            }
+            $default['img-src'] .= ' ' . $geoUrl;
         }
         $custom = Configure::read('Security.csp');
         if ($custom === false) {
@@ -1365,12 +1403,66 @@ class AppController extends Controller
         if ($this->Auth->startup($this)) {
             $user = $this->Auth->user();
             if ($user) {
+                // A user authenticated by an authentication plugin (e.g. LDAP) gets
+                // logged in here, during beforeFilter, before UsersController::login()
+                // runs. If the user has OTP enabled we must enforce the OTP challenge at
+                // this point too, otherwise the OTP step shown at /users/otp could be
+                // bypassed by simply browsing to another URL with the already
+                // authenticated session.
+                if ($this->__pluginLoginRequiresOtp($user)) {
+                    return;
+                }
                 $this->User->updateLoginTimes($user);
                 // User found in the db, add the user info to the session
                 $this->Session->renew();
                 $this->Session->write(AuthComponent::$sessionKey, $user);
             }
         }
+    }
+
+    /**
+     * Enforce the OTP challenge for a user that was authenticated by an
+     * authentication plugin (e.g. LDAP) during beforeFilter.
+     *
+     * @param array $user The user record returned by the authentication plugin
+     * @return bool True if the user still needs to pass an OTP challenge (the
+     *     caller must not establish the session); false otherwise.
+     */
+    private function __pluginLoginRequiresOtp(array $user)
+    {
+        if (!empty($user['disabled'])) {
+            return false;
+        }
+
+        $otpAction = null;
+        // TOTP / HOTP
+        if (
+            !Configure::read('Security.otp_disabled') &&
+            !empty($user['totp']) &&
+            class_exists('\OTPHP\TOTP')
+        ) {
+            $this->Session->write('otp_user', $user);
+            $otpAction = 'otp';
+        // E-mail OTP
+        } elseif (Configure::read('Security.email_otp_enabled')) {
+            $this->Session->write('email_otp_user', $user);
+            $otpAction = 'email_otp';
+        }
+
+        if ($otpAction === null) {
+            return false;
+        }
+
+        // Avoid a redirect loop for session/header based auth plugins that
+        // re-authenticate on every request: when we are already on an OTP
+        // action just refuse to establish the session and let that action
+        // handle the challenge.
+        $currentAction = isset($this->request->params['action']) ?
+            $this->request->params['action'] : null;
+        if (!in_array($currentAction, ['otp', 'email_otp'], true)) {
+            $this->redirect(['controller' => 'users', 'action' => $otpAction]);
+        }
+        return true;
     }
 
     protected function _legacyAPIRemap($options = array())

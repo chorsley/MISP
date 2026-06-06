@@ -23,7 +23,7 @@ class Cerebrate extends AppModel
 
     public function beforeSave($options = array())
     {
-        $cerebrate = &$this->data['Server'];
+        $cerebrate = &$this->data['Cerebrate'];
         // Encrypt authkey if plain key provided and encryption is enabled
         if (!empty($cerebrate['authkey']) && strlen($cerebrate['authkey']) === 40) {
             $cerebrate['authkey'] = EncryptedValue::encryptIfEnabled($cerebrate['authkey']);
@@ -428,7 +428,7 @@ class Cerebrate extends AppModel
                 ]);
                 return $savedSg;
             }
-            return __('The organisation could not be saved.');
+            return __('The sharing group could not be saved.');
         }
         return __('The retrieved data isn\'t a valid sharing group.');
     }

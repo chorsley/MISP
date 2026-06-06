@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 MISP (Malware Information Sharing Platform) is an open-source threat intelligence sharing platform built on CakePHP 2.x. It enables organizations to share, store, and correlate indicators of compromise (IOCs) and threat intelligence.
 
+Primary languages and projects: Rust (RustMISP, draugnet, warninglists), Python (PyMISP, MISP tooling), PHP/CakePHP (MISP core), JavaScript/HTML/CSS (MISP UI, Galaxy Editor). When asked to run tests, always confirm which project's tests to run before executing.
+
 ## Build and Development Commands
 
 ### PHP Dependencies
@@ -120,8 +122,8 @@ Example: `fix: [api] Correct attribute validation (#3120)`
 
 ## Git Workflow
 
-- **Main branch**: `2.5` (current stable), `2.4` (legacy stable until April 2025)
-- **Development**: `develop` (main dev), `2.4-develop` (legacy dev)
+- **Main branch**: `2.5` (current stable)
+- **Development**: `develop`
 - **Feature branches**: Branch from `2.5`, prefix with `fix-*` or `feature-*`
 
 ## Requirements
@@ -133,3 +135,22 @@ Example: `fix: [api] Correct attribute validation (#3120)`
 
 Required PHP extensions: json, mbstring, xml, dom, simplexml, pcre, curl
 Recommended: gd, redis, openssl, apcu, ssdeep, bcmath
+
+## MISP Development
+
+When working with CakePHP (MISP), always verify query result structures before assuming array shapes. CakePHP find() returns vary by type (first/all/list) and version.
+
+### Dashboard v2 — widget render kinds
+
+When adding a new widget render kind (any new value for `public $render` on a class under `app/Lib/Dashboard/`, or a new template under `app/View/Elements/dashboard/Widgets/`), you must also add a matching glyph to `app/webroot/js/dashboard/gallery/render-thumbs.mjs`. The Add Widget gallery uses these glyphs as fallback thumbnails for any widget that doesn't declare `$thumbnail`, so a new render kind without a glyph ships as a generic block in every gallery card that uses it. Steps:
+1. Add a `thumb<Name>()` builder following the existing pattern (single-color SVG, 80×45 viewBox, `currentColor` strokes/fills).
+2. Register it in the `REGISTRY` object at the bottom of the file under the exact `$render` string.
+3. The glyph should visually evoke the widget's output shape, not its data domain — a bar chart is bars regardless of whether it's counting events or orgs.
+
+## Debugging
+
+When fixing bugs, always verify the root cause by comparing git blame/diff of the specific change before proposing a fix. Do not conclude old and new code are equivalent without tracing actual execution paths.
+
+## CI/CD
+
+For CI/CD workflow debugging, always check: database connection strings (localhost vs 127.0.0.1), file permissions for web server user traversal, cache directory ownership, and ensure test output isn't polluted by warnings/deprecation notices.

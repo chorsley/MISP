@@ -234,6 +234,23 @@ class AnalystData extends AppModel
         return true;
     }
 
+    public function afterSave($created, $options = array())
+    {
+        $isTriggerCallable = $this->isTriggerCallable('analyst-data-after-save');
+        if ($isTriggerCallable) {
+            $data = $this->data[$this->alias];
+            $action = $created ? 'add' : 'edit';
+            $workflowErrors = [];
+            $logging = [
+                'model' => $this->alias,
+                'action' => $action,
+                'id' => $data['id'],
+            ];
+            $triggerData = [$this->alias => $data];
+            $this->executeTrigger('analyst-data-after-save', $triggerData, $workflowErrors, $logging);
+        }
+    }
+
     public function getEditableFields(): array
     {
         return array_merge(static::BASE_EDITABLE_FIELDS, static::EDITABLE_FIELDS);
@@ -477,12 +494,12 @@ class AnalystData extends AppModel
             $childNotesAndOpinions = [];
             $childNotes = $this->Note->find('all', $paramsNote);
             $childOpinions = $this->Opinion->find('all', $paramsOpinion);
-            $orgFields = ['id', 'uuid', 'name', 'type', 'description', 'sector', 'national', 'local'];
+            $orgFields = ['id', 'uuid', 'name', 'type', 'description', 'sector', 'nationality', 'local'];
             $orgTypes = ['Org', 'Orgc'];
             if (!empty($childNotes)) {
                 foreach ($childNotes as $childNote) {
                     foreach ($orgTypes as $orgType) {
-                        if (!empty($childOpinion['Note'][$orgType])) {
+                        if (!empty($childNote['Note'][$orgType])) {
                             $childNote['Note'][$orgType] = array_filter($childNote['Note'][$orgType], function ($key) use ($orgFields) {
                                 return in_array($key, $orgFields);
                             }, ARRAY_FILTER_USE_KEY);    

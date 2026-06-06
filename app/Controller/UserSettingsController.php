@@ -33,6 +33,7 @@ class UserSettingsController extends AppController
         parent::beforeFilter();
         $this->Security->unlockedActions[] = 'eventIndexColumnToggle';
         $this->Security->unlockedActions[] = 'setTheme';
+        $this->Security->unlockedActions[] = 'setHomePage';
         if ($this->action === 'setSetting') {
             $this->Security->unlockedFields = array('value', 'value_select');
         }
@@ -376,14 +377,22 @@ class UserSettingsController extends AppController
             if (empty($this->request->data['path'])) {
                 throw new InvalidArgumentException(__('No path POSTed.'));
             }
-            $setting = array(
-                'UserSetting' => array(
-                    'user_id' => $this->Auth->user('id'),
-                    'setting' => 'homepage',
-                    'value' => ['path' => $this->request->data['path']],
-                )
-            );
-            $result = $this->UserSetting->setSetting($this->Auth->user(), $setting);
+            if ($this->theme === "Overmind") {
+                $result = $this->UserSetting->setSettingInternal(
+                    $this->Auth->user('id'),
+                    'homepage',
+                    ['path' => $this->request->data['path']]
+                );
+            } else {
+                $setting = array(
+                    'UserSetting' => array(
+                        'user_id' => $this->Auth->user('id'),
+                        'setting' => 'homepage',
+                        'value' => ['path' => $this->request->data['path']],
+                    )
+                );
+                $result = $this->UserSetting->setSetting($this->Auth->user(), $setting);
+            }
             return $this->RestResponse->saveSuccessResponse('UserSettings', 'setHomePage', false, 'json', 'Homepage set to ' . $this->request->data['path']);
         } else {
             $this->layout = false;
@@ -425,6 +434,10 @@ class UserSettingsController extends AppController
      */
     public function setTheme($theme)
     {
+        if (!$this->request->is('post')) {
+            throw new MethodNotAllowedException(__('Expecting POST request.'));
+        }
+
         $userId = $this->Auth->user('id');
         $validThemes = array_flip($this->UserSetting::VALID_SETTINGS['ui_theme']['options']);
         if (!isset($validThemes[$theme])) {
@@ -437,21 +450,41 @@ class UserSettingsController extends AppController
 
         if ($result) {
             $message = __('%s theme set. The page will now reload.', $theme);
-            if ($this->_isRest()) {
-                return $this->RestResponse->saveSuccessResponse('UserSettings', 'setTheme', false, 'json', $message);
-            } else {
-                $this->Flash->success($message);
-                $this->redirect($this->referer());
-            }
+            return $this->RestResponse->saveSuccessResponse('UserSettings', 'setTheme', false, 'json', $message);
         } else {
             $message = __('Failed to set %s theme.', $theme);
-            if ($this->_isRest()) {
-                return $this->RestResponse->saveFailResponse('UserSettings', 'setTheme', false, $message, 'json');
-            } else {
-                $this->Flash->error($message);
-                $this->redirect($this->referer());
-            }
+            return $this->RestResponse->saveFailResponse('UserSettings', 'setTheme', false, $message, 'json');
         }
     }
 
+    /**
+     * Persist the event-template instantiation form's view-mode preference.
+     * Single-page (`all`) shows every section at once; `wizard` shows one
+     * section at a time with prev/next navigation. The setting is read by
+     * EventTemplatesController on next page load.
+     */
+    public function setEventTemplateUserFormMode($mode)
+    {
+        if (!$this->request->is('post')) {
+            throw new MethodNotAllowedException(__('Expecting POST request.'));
+        }
+        $valid = array_flip($this->UserSetting::VALID_SETTINGS['event_template_user_form_mode']['options']);
+        if (!isset($valid[$mode])) {
+            throw new BadRequestException(__('Invalid view mode.'));
+        }
+        $userId = $this->Auth->user('id');
+        $result = $this->UserSetting->setSettingInternal(
+            $userId, 'event_template_user_form_mode', $mode
+        );
+        if ($result) {
+            return $this->RestResponse->saveSuccessResponse(
+                'UserSettings', 'setEventTemplateUserFormMode', false, 'json',
+                __('Form view mode set to %s.', $mode)
+            );
+        }
+        return $this->RestResponse->saveFailResponse(
+            'UserSettings', 'setEventTemplateUserFormMode', false,
+            __('Failed to persist form view mode.'), 'json'
+        );
+    }
 }

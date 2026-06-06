@@ -119,11 +119,13 @@ class AttributesController extends AppController
             if ($this->request->is('post') && empty($filters['search_token'])) {
                 $search_token = $this->MispAttribute->setSearchParamsByToken($search_filters);
                 $this->set('search_token', $search_token);
-            } else {
-                if (!empty($filters['search_token'])) {
-                    $filters = $this->MispAttribute->getSearchParamsByToken($filters);
-                    $this->set('search_token', $filters['search_token']);
-                }
+            } elseif (!empty($filters['search_token'])) {
+                $filters = $this->MispAttribute->getSearchParamsByToken($filters);
+                $this->set('search_token', $filters['search_token']);
+            } elseif (!empty($filters)) {
+                $search_filters = array_merge($filters, $search_filters);
+                $search_token = $this->MispAttribute->setSearchParamsByToken($search_filters);
+                $this->set('search_token', $search_token);
             }
         }
         if (!$this->_isRest()) {
@@ -487,6 +489,27 @@ class AttributesController extends AppController
             $fails = array();
             $success = 0;
 
+            $malware = !empty($this->request->data['Attribute']['malware']);
+            $pool = $malware ? 'malicious' : 'non_malicious';
+            // Back-compat: when no template is posted (legacy REST callers), fall back to
+            // the pool default — the `file` object for malware samples, and the flat
+            // `attachment` attribute (null sentinel) for the non-malicious path.
+            if ($malware) {
+                $templateUuid = isset($this->request->data['Attribute']['object_template_malicious'])
+                    ? $this->request->data['Attribute']['object_template_malicious']
+                    : null;
+                if (empty($templateUuid)) {
+                    $templateUuid = MispAttribute::ATTACHMENT_OBJECT_TEMPLATES['malicious'][0]['uuid'];
+                }
+            } else {
+                $templateUuid = isset($this->request->data['Attribute']['object_template_non_malicious'])
+                    ? $this->request->data['Attribute']['object_template_non_malicious']
+                    : null;
+                if ($templateUuid === '') {
+                    $templateUuid = null;
+                }
+            }
+
             foreach ($this->request->data['Attribute']['values'] as $value) {
                 // Check if there were problems with the file upload
                 // only keep the last part of the filename, this should prevent directory attacks
@@ -503,67 +526,54 @@ class AttributesController extends AppController
                     continue;
                 }
 
-                if ($this->request->data['Attribute']['malware']) {
-                    if ($this->request->data['Attribute']['advanced']) {
-                        $result = $this->MispAttribute->advancedAddMalwareSample(
-                            $event['Event']['id'],
-                            $this->request->data['Attribute'],
-                            $filename,
-                            $tmpfile
-                        );
-                    } else {
-                        $result = $this->MispAttribute->simpleAddMalwareSample(
-                            $event['Event']['id'],
-                            $this->request->data['Attribute'],
-                            $filename,
-                            $tmpfile
-                        );
-                    }
-
-                    if ($result) {
-                        $success++;
-                    } else {
-                        $fails[] = $filename;
-                    }
-
-                    if (!empty($result)) {
-                        foreach ($result['Object'] as $object) {
-                            $object['distribution'] = $this->request->data['Attribute']['distribution'];
-                            if (!empty($this->request->data['sharing_group_id'])) {
-                                $object['sharing_group_id'] = $this->request->data['Attribute']['sharing_group_id'];
-                            }
-                            foreach ($object['Attribute'] as $ka => $attribute) {
-                                $object['Attribute'][$ka]['distribution'] = 5;
-                            }
-                            $this->MispAttribute->Object->captureObject(array('Object' => $object), $event['Event']['id'], $this->Auth->user());
-                        }
-                        if (!empty($result['ObjectReference'])) {
-                            foreach ($result['ObjectReference'] as $reference) {
-                                $this->MispAttribute->Object->ObjectReference->smartSave($reference, $event['Event']['id']);
-                            }
-                        }
-                    }
-                } else {
-                    $attribute = array(
-                        'Attribute' => array(
-                            'value' => $filename,
-                            'category' => $this->request->data['Attribute']['category'],
-                            'type' => 'attachment',
-                            'event_id' => $event['Event']['id'],
-                            'data_raw' => $tmpfile->read(),
-                            'comment' => $this->request->data['Attribute']['comment'],
-                            'to_ids' => 0,
-                            'distribution' => $this->request->data['Attribute']['distribution'],
-                            'sharing_group_id' => isset($this->request->data['Attribute']['sharing_group_id']) ? $this->request->data['Attribute']['sharing_group_id'] : 0,
-                        )
+                try {
+                    $result = $this->MispAttribute->buildAttachmentPayload(
+                        $pool,
+                        $templateUuid,
+                        $event['Event']['id'],
+                        $this->request->data['Attribute'],
+                        $filename,
+                        $tmpfile
                     );
+                } catch (InvalidArgumentException $e) {
+                    // Invalid or not-yet-implemented template — the same choice applies to every
+                    // file in the batch, so fail the whole request with a 400 rather than looping.
+                    throw new BadRequestException($e->getMessage());
+                }
+
+                $fileSucceeded = false;
+
+                foreach ($result['Attribute'] as $attribute) {
                     $this->MispAttribute->create();
-                    $r = $this->MispAttribute->save($attribute);
-                    if ($r == false) {
-                        $fails[] = $filename;
-                    } else {
-                        $success++;
+                    if ($this->MispAttribute->save(array('Attribute' => $attribute))) {
+                        $fileSucceeded = true;
                     }
+                }
+
+                if (!empty($result['Object'])) {
+                    foreach ($result['Object'] as $object) {
+                        $object['distribution'] = $this->request->data['Attribute']['distribution'];
+                        if (!empty($this->request->data['Attribute']['sharing_group_id'])) {
+                            $object['sharing_group_id'] = $this->request->data['Attribute']['sharing_group_id'];
+                        }
+                        foreach ($object['Attribute'] as $ka => $attribute) {
+                            $object['Attribute'][$ka]['distribution'] = 5;
+                        }
+                        $this->MispAttribute->Object->captureObject(array('Object' => $object), $event['Event']['id'], $this->Auth->user());
+                    }
+                    $fileSucceeded = true;
+                }
+
+                if (!empty($result['ObjectReference'])) {
+                    foreach ($result['ObjectReference'] as $reference) {
+                        $this->MispAttribute->Object->ObjectReference->smartSave($reference, $event['Event']['id']);
+                    }
+                }
+
+                if ($fileSucceeded) {
+                    $success++;
+                } else {
+                    $fails[] = $filename;
                 }
             }
             $message = __n('The attachment have been uploaded.', 'The attachments have been uploaded.', $success);
@@ -625,6 +635,7 @@ class AttributesController extends AppController
         $this->set('categoryDefinitions', $this->MispAttribute->categoryDefinitions);
         $this->set('isMalwareSampleCategory', $isMalwareSampleCategory);
         $this->set('advancedExtractionAvailable', $this->MispAttribute->isAdvancedExtractionAvailable());
+        $this->set('attachmentObjectTemplates', MispAttribute::ATTACHMENT_OBJECT_TEMPLATES);
         $this->__common();
         $this->set('title_for_layout', __('Add attachment'));
         $this->set('event', $event);
@@ -2688,7 +2699,7 @@ class AttributesController extends AppController
                             } else if(is_numeric($tag_id)){
                                 $tag_id_list[] = $tag_id;
                             } else {
-                                $tagId = $this->Attribute->AttributeTag->Tag->lookupTagIdForUser($this->Auth->user(), trim($tag_id));
+                                $tagId = $this->MispAttribute->AttributeTag->Tag->lookupTagIdForUser($this->Auth->user(), trim($tag_id));
                                 if (empty($tagId)) {
                                     return new CakeResponse(array('body'=> json_encode(array('saved' => false, 'errors' => 'Invalid Tag.')), 'status'=>200, 'type' => 'json'));
                                 }
@@ -3155,4 +3166,116 @@ class AttributesController extends AppController
         ]);
         return $this->RestResponse->successResponse(0, $result);
     }
+
+    public function getInstanceCache($lastId = null)
+    {
+
+        $conditions = ['Attribute.deleted' => 0];
+        if ($lastId) {
+            $conditions['Attribute.id >'] = (int)$lastId;
+        }
+        $conditions['AND'][] = $this->MispAttribute->buildConditions($this->Auth->user());
+
+        $this->MispAttribute->virtualFields['md5_value1'] = 'MD5(Attribute.value1)';
+        $this->MispAttribute->virtualFields['md5_value2'] = "MD5(NULLIF(Attribute.value2, ''))";
+
+        $rows = $this->MispAttribute->find('all', [
+            'conditions' => $conditions,
+            'recursive'  => -1,
+            'contain'    => ['Event', 'Object.distribution', 'Object.sharing_group_id'],
+            'fields'     => [
+                'Attribute.id',
+                'Attribute.md5_value1',
+                'Attribute.md5_value2',
+                'Event.uuid',
+            ],
+            'order'      => ['Attribute.id' => 'ASC'],
+            'limit'      => 100000,
+        ]);
+
+        unset($this->MispAttribute->virtualFields['md5_value1'], $this->MispAttribute->virtualFields['md5_value2']);
+
+        $fh = fopen('php://temp', 'w+');
+
+        $lastProcessedId = $lastId ? (int)$lastId : null;
+
+        foreach ($rows as $row) {
+            $lastProcessedId = (int)$row['Attribute']['id'];
+
+            fwrite($fh, $row['Attribute']['md5_value1'] . ',' . $row['Event']['uuid'] . "\n");
+            if ($row['Attribute']['md5_value2'] !== null) {
+                fwrite($fh, $row['Attribute']['md5_value2'] . ',' . $row['Event']['uuid'] . "\n");
+            }
+        }
+        $headers = [];
+        if ($lastProcessedId !== null) {
+            $headers['X-MISP-Last-ID'] = (string)$lastProcessedId;
+        }
+
+        rewind($fh);
+        $out = stream_get_contents($fh);
+        fclose($fh);
+        return $this->RestResponse->viewData($out, 'text', false, true, false, $headers);
+    }
+
+    /**
+     * Get attribute and details by attribute value
+     * Searches directly in the database using indexed value1 column for efficiency
+     * 
+     * @param string $base64Value Base64 encoded attribute value to search for
+     * @return CakeResponse
+     * @throws NotFoundException If no matching attribute is found
+     * @throws MethodNotAllowedException If not an API request
+     */
+    public function getAttributeByB64Value($base64Value)
+    {
+        if (!$this->_isRest()) {
+            throw new MethodNotAllowedException(__("This action is available only via API."));
+        }
+        
+        // Decode the base64 value
+        $decodedValue = base64_decode($base64Value, true);
+        if ($decodedValue === false) {
+            throw new NotFoundException(__("Invalid base64 encoding."));
+        }
+        
+        $user = $this->Auth->user();
+        
+        // Build efficient query conditions - search directly on indexed value1 column
+        // Also check value2 for composite attributes (e.g., ip|port)
+        $conditions = [
+            "AND" => [
+                $this->MispAttribute->buildConditions($user),
+                "Attribute.deleted" => 0,
+                "OR" => [
+                    "Attribute.value1" => $decodedValue,
+                    "Attribute.value2" => $decodedValue,
+                    // For composite values like "ip|port", also search on the virtual value field
+                    "CONCAT(Attribute.value1, '|', Attribute.value2)" => $decodedValue
+                ]
+            ]
+        ];
+        
+        // Fetch attributes with the search conditions
+        $attributes = $this->MispAttribute->fetchAttributes($user, [
+            "conditions" => $conditions,
+            "flatten" => true,
+            "limit" => 100 // Limit results for performance
+        ]);
+        
+        if (empty($attributes)) {
+            throw new NotFoundException(__("Attribute not found."));
+        }
+        
+        // Format response
+        $results = [];
+        foreach ($attributes as $attr) {
+            unset($attr["Attribute"]["value1"]);
+            unset($attr["Attribute"]["value2"]);
+            $results[] = $attr["Attribute"];
+        }
+        
+        return $this->RestResponse->viewData($results, $this->response->type());
+    }
 }
+

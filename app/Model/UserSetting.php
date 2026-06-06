@@ -102,7 +102,7 @@ class UserSetting extends AppModel
         ),
         'event_index_hide_columns' => [
             'placeholder' => ['clusters'],
-            'validation' => 'validate_event_index_hide_columns',
+            //'validation' => 'validate_json',
         ],
         'oidc' => [ // Data saved by OIDC plugin
             'internal' => true,
@@ -123,21 +123,38 @@ class UserSetting extends AppModel
             'validation' => 'validate_json',
         ],
         'ui_theme' => [
-            'placeholder' => 'Default, Overmind, UiBeta',
-            'options' => ['Default', 'Overmind', 'UiBeta'],
+            'placeholder' => 'Default, Overmind, UiBeta, EventTest',
+            'options' => ['Default', 'Overmind', 'UiBeta', 'EventTest'],
             'validation' => 'validate_theme',
+        ],
+        'event_template_user_form_mode' => [
+            'placeholder' => 'all',
+            'options' => ['all', 'wizard'],
+            'validation' => 'validate_event_template_user_form_mode',
+        ],
+        // Dashboard v2 light/dark appearance (DD-51). Stopgap per-user
+        // toggle until a global MISP dark theme ships: 'auto' (default —
+        // follow the browser's prefers-color-scheme), 'light', or 'dark'.
+        // The dashboard reads this server-side to seed data-theme before
+        // first paint; DashboardsController::updateTheme persists explicit
+        // light/dark choices. Stored as a bare scalar string (not JSON).
+        'dashboard_theme' => [
+            'placeholder' => 'auto',
+            'options' => ['auto', 'light', 'dark'],
+            'validation' => 'validate_dashboard_theme',
         ],
     );
 
     public static function validate_homepage($value, $user)
     {
-        $path = json_decode($value, true);
+        // If it's already an array, use it. Otherwise, decode the string.
+        $path = is_string($value) ? json_decode($value, true) : $value;
+        
         if (empty($path['path'])) {
             return false;
         }
         return str_starts_with($path['path'], '/');
     }
-
     public static function validate_theme($value, $user)
     {
         if (empty($value)) {
@@ -149,53 +166,21 @@ class UserSetting extends AppModel
         return true;
     }
 
-        public static function validate_event_index_hide_columns($value, $user)
-        {
-            // Valid column names that can be hidden in the event index
-            $validColumns = [
-                'owner_org',
-                'is_extension',
-                'clusters',
-                'tags',
-                'highlights',
-                'attribute_count',
-                'correlations',
-                'report_count',
-                'sightings',
-                'proposals',
-                'discussion',
-                'creator_user',
-                'timestamp',
-                'publish_timestamp'
-            ];
-
-            // Decode if it's a JSON string
-            if (is_string($value)) {
-                $decoded = json_decode($value, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $value = $decoded;
-                }
-            }
-
-            // Empty array is valid
-            if (empty($value)) {
-                return true;
-            }
-
-            // Must be an array
-            if (!is_array($value)) {
-                return false;
-            }
-
-            // All column names must be valid
-            foreach ($value as $column) {
-                if (!in_array($column, $validColumns, true)) {
-                    return false;
-                }
-            }
-
+    public static function validate_event_template_user_form_mode($value, $user)
+    {
+        if (empty($value)) {
             return true;
         }
+        return in_array($value, self::VALID_SETTINGS['event_template_user_form_mode']['options'], true);
+    }
+
+    public static function validate_dashboard_theme($value, $user)
+    {
+        if (empty($value)) {
+            return true;
+        }
+        return in_array($value, self::VALID_SETTINGS['dashboard_theme']['options'], true);
+    }
 
     public static function validate_json($value, $user)
     {
