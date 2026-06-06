@@ -742,7 +742,6 @@ if (!empty($me)) {
         )
     );
 
-
     $logo = '<span class="logoBlueStatic bold" id="smallLogo">MISP</span>';
     $today = date('md');
     if ($today >= 1222 && $today <= 1226) {

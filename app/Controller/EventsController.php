@@ -2,7 +2,6 @@
 App::uses('AppController', 'Controller');
 App::uses('Xml', 'Utility');
 
-
 /**
  * @property Event $Event
  * @property User $User
@@ -13,8 +12,6 @@ class EventsController extends AppController
         'RequestHandler',
         'IOCImport',
     );
-
-    public $helpers = array('DistributionGraph');
 
     public $paginate = array(
         'limit' => 60,
@@ -34,7 +31,7 @@ class EventsController extends AppController
         'sort', 'direction', 'focus', 'extended', 'is_extended', 'overrideLimit', 'filterColumnsOverwrite', 'attributeFilter', 'page',
         'searchFor', 'proposal', 'correlation', 'warning', 'deleted', 'includeRelatedTags', 'includeDecayScore', 'distribution',
         'taggedAttributes', 'galaxyAttachedAttributes', 'objectType', 'attributeType', 'feed', 'server', 'toIDS',
-        'sighting', 'includeSightingdb', 'warninglistId', 'correlationId', 'email', 'eventid', 'datefrom', 'dateuntil', 'beta'
+        'sighting', 'includeSightingdb', 'warninglistId', 'correlationId', 'email', 'eventid', 'datefrom', 'dateuntil'
     );
 
     // private
@@ -790,6 +787,7 @@ class EventsController extends AppController
         $this->set('analysisLevels', $this->Event->analysisLevels);
         $this->set('distributionLevels', $this->Event->distributionLevels);
         $this->set('shortDist', $this->Event->shortDist);
+        $this->set('distributionData', $this->__genDistributionGraph(-1));
         $this->set('urlparams', $urlparams);
         $this->set('passedArgsArray', $passedArgsArray);
         $this->set('passedArgs', json_encode($passedArgs));
@@ -1122,11 +1120,6 @@ class EventsController extends AppController
 
         if (in_array('report_count', $columns, true)) {
             $events = $this->Event->EventReport->attachReportCountsToEvents($user, $events);
-        } else {
-            $this->loadModel('UserSetting');
-            if ($this->UserSetting->isUiBetaEnabled($user['id'])) {
-                $events = $this->Event->EventReport->attachReportCountsToEvents($user, $events);
-            }
         }
 
         $events = $this->__attachCollectionsToEvents($events);
@@ -1444,6 +1437,7 @@ class EventsController extends AppController
         $event = $results[0];
 
         // Attach related attributes to proper attribute
+        // Reshape data for easier display in view templates
         if (!empty($event['RelatedAttribute'])) {
             foreach ($event['RelatedAttribute'] as $attribute_id => $relation) {
                 foreach ($event['Attribute'] as $k2 => $attribute) {
@@ -1833,30 +1827,6 @@ class EventsController extends AppController
             $instanceKey = null;
         }
         $this->set('instanceFingerprint', $instanceKey);
-        $this->loadModel('EventReport');
-        $reportCount = $this->EventReport->find('count', [
-            'conditions' => [
-                'EventReport.event_id' => $event['Event']['id'],
-                'EventReport.deleted' => 0
-            ]
-        ]);
-        $this->set('eventReportCount', $reportCount);
-
-        $reports = $this->EventReport->find('first', [
-            'conditions' => [
-                'EventReport.event_id' => $event['Event']['id'],
-                'EventReport.deleted' => 0
-            ],
-            'order' => ['EventReport.id' => 'ASC']
-        ]);
-        if ($reports) {
-            $this->set('firstEventReportId', $reports['EventReport']['id']);
-            $this->set('firstEventReportMarkdown', $reports['EventReport']['content']);
-        } else {
-            $this->set('firstEventReportId', null);
-            $this->set('firstEventReportMarkdown', '');
-        }
-
         $this->__eventViewCommon($user);
     }
 
@@ -2044,7 +2014,6 @@ class EventsController extends AppController
             $conditions['excludeLocalTags'] = $namedParams['excludeLocalTags'];
         }
         $conditions['includeFeedCorrelations'] = 1;
-        $conditions['includeGranularCorrelations'] = 1;
         if (!$this->_isRest()) {
             $conditions['includeGranularCorrelations'] = 1;
         } else if (!empty($namedParams['includeGranularCorrelations'])) {
@@ -2129,8 +2098,6 @@ class EventsController extends AppController
             $this->Flash->info(__('You are currently logged in as a site administrator and about to edit an event not belonging to your organisation. This goes against the sharing model of MISP. Use a normal user account for day to day work.'));
         }
         $this->__viewUI($user, $event, $continue, $fromEvent);
-
-
     }
 
     /**
@@ -5837,29 +5804,29 @@ class EventsController extends AppController
         return $this->RestResponse->viewData($json, 'json');
     }
 
-    public function getDistributionGraph($id, $type = 'event')
+    private function __genDistributionGraph($id, $type = 'event', $extended = 0, $user = null)
     {
         $validTools = array('event');
         if (!in_array($type, $validTools)) {
             throw new MethodNotAllowedException(__('Invalid type.'));
         }
 
-        App::uses('DistributionGraphTool', 'Tools');
-        $user = $this->Auth->user();
         $this->loadModel('Server');
         $servers = $this->Server->find('column', array(
             'fields' => array('Server.name'),
         ));
-        $extended = isset($this->params['named']['extended']) ? 1 : 0;
+
+        App::uses('DistributionGraphTool', 'Tools');
+        $user = $user ?: $this->Auth->user();
         $grapher = new DistributionGraphTool($this->Event, $servers, $user, $extended);
         $json = $grapher->get_distributions_graph($id);
 
         array_walk_recursive($json, function (&$item, $key) {
-            if (is_string($item) && !mb_detect_encoding($item, 'utf-8', true)) {
+            if (!mb_detect_encoding($item, 'utf-8', true)) {
                 $item = utf8_encode($item);
             }
         });
-        return $this->RestResponse->viewData($json, 'json');
+        return $json;
     }
 
     public function getEventTimeline($id, $type = 'event')
@@ -5891,7 +5858,13 @@ class EventsController extends AppController
         return $this->RestResponse->viewData($json, 'json');
     }
 
-
+    public function getDistributionGraph($id, $type = 'event')
+    {
+        $user = $this->_closeSession();
+        $extended = isset($this->params['named']['extended']) ? 1 : 0;
+        $json = $this->__genDistributionGraph($id, $type, $extended, $user);
+        return $this->RestResponse->viewData($json, 'json');
+    }
 
     public function getEventGraphReferences($id, $type = 'event')
     {
