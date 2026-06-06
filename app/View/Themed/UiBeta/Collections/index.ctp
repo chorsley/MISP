@@ -7,6 +7,17 @@
  *
  * @since 2.5.x (beta)
  */
+
+$currentFilter = $this->request->params['pass'][0] ?? null;
+$collectionsIndexUrl = $baseurl . '/collections/index';
+
+$buildCollectionsIndexUrl = function ($suffix = '') use ($collectionsIndexUrl) {
+    return $collectionsIndexUrl . ($suffix !== '' ? '/' . $suffix : '');
+};
+
+$isCollectionsFilterActive = function ($filterName) use ($currentFilter) {
+    return $currentFilter === $filterName;
+};
 ?>
 <div class="collections index beta-collections-index">
 
@@ -21,15 +32,15 @@
                         <i class="fa fa-plus"></i> <?= __('New Collection') ?>
                     </button>
                 <?php endif; ?>
-                <a href="<?= $baseurl ?>/collections/index/my_collections"
-                   class="btn btn-default beta-filter-button <?= (isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] === 'my_collections') ? 'active' : '' ?>">
+                <a href="<?= $buildCollectionsIndexUrl('my_collections') ?>"
+                   class="btn btn-default beta-filter-button <?= $isCollectionsFilterActive('my_collections') ? 'active' : '' ?>">
                     <?= __('My Collections') ?>
                 </a>
-                <a href="<?= $baseurl ?>/collections/index/org_collections"
-                   class="btn btn-default beta-filter-button <?= (isset($this->request->params['pass'][0]) && $this->request->params['pass'][0] === 'org_collections') ? 'active' : '' ?>">
+                <a href="<?= $buildCollectionsIndexUrl('org_collections') ?>"
+                   class="btn btn-default beta-filter-button <?= $isCollectionsFilterActive('org_collections') ? 'active' : '' ?>">
                     <?= __('Org Collections') ?>
                 </a>
-                <a href="<?= $baseurl ?>/collections/index"
+                <a href="<?= $collectionsIndexUrl ?>"
                    class="btn btn-default beta-filter-button">
                     <?= __('All Collections') ?>
                 </a>
@@ -66,7 +77,7 @@
     <?php if (!empty($activeQuickFilter)): ?>
         <div class="beta-active-filters">
             <span class="bold"><?= __('Filter') ?>:</span> <?= h($activeQuickFilter) ?>
-            <a href="<?= $baseurl ?>/collections/index" class="btn btn-xs btn-default" title="<?= __('Clear') ?>">
+            <a href="<?= $collectionsIndexUrl ?>" class="btn btn-xs btn-default" title="<?= __('Clear') ?>">
                 <i class="fa fa-times"></i> <?= __('Clear') ?>
             </a>
         </div>
@@ -183,31 +194,35 @@
 
 <script>
 $(function() {
+    var collectionsIndexUrl = <?= json_encode($collectionsIndexUrl) ?>;
+
+    function betaApplyCollectionsQuickFilter() {
+        var val = $('#collectionsQuickFilter').val().trim();
+        window.location.href = val
+            ? collectionsIndexUrl + '/quickFilter:' + encodeURIComponent(val)
+            : collectionsIndexUrl;
+    }
+
     <?php if (!empty($activeQuickFilter)): ?>
     $('#collectionsQuickFilter').val(<?= json_encode($activeQuickFilter) ?>);
     <?php endif; ?>
 
     $('#collectionsFilterBtn').on('click', function(e) {
         e.preventDefault();
-        var val = $('#collectionsQuickFilter').val().trim();
-        if (val) {
-            window.location.href = '<?= $baseurl ?>/collections/index/quickFilter:' + encodeURIComponent(val);
-        } else {
-            window.location.href = '<?= $baseurl ?>/collections/index';
-        }
+        betaApplyCollectionsQuickFilter();
     });
 
     $('#collectionsQuickFilter').on('keypress', function(e) {
         if (e.which === 13) {
             e.preventDefault();
-            $('#collectionsFilterBtn').trigger('click');
+            betaApplyCollectionsQuickFilter();
         }
     });
 
     $('#collectionsFilterClear').on('click', function(e) {
         e.preventDefault();
         $('#collectionsQuickFilter').val('');
-        window.location.href = '<?= $baseurl ?>/collections/index';
+        window.location.href = collectionsIndexUrl;
     });
 });
 </script>
