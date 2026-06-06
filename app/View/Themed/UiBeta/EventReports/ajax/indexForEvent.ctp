@@ -130,14 +130,14 @@
             );
             $.get($(this).attr('href'), function(data) {
                 container.html(data);
-                if (window.betaTimestamps && typeof window.betaTimestamps.update === 'function') {
-                    window.betaTimestamps.update();
+                if (window.eventTimestamps && typeof window.eventTimestamps.update === 'function') {
+                    window.eventTimestamps.update();
                 }
             });
         });
 
-        if (window.betaTimestamps && typeof window.betaTimestamps.update === 'function') {
-            window.betaTimestamps.update();
+        if (window.eventTimestamps && typeof window.eventTimestamps.update === 'function') {
+            window.eventTimestamps.update();
         }
     });
 
@@ -153,8 +153,8 @@
             },
             success: function(data) {
                 container.html(data);
-                if (window.betaTimestamps && typeof window.betaTimestamps.update === 'function') {
-                    window.betaTimestamps.update();
+                if (window.eventTimestamps && typeof window.eventTimestamps.update === 'function') {
+                    window.eventTimestamps.update();
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {

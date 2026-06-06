@@ -1,7 +1,7 @@
 <?php
     echo $this->element('genericElements/assetLoader', [
         'css' => ['main-beta', 'components-beta', 'query-builder.default', 'attack_matrix', 'analyst-data'],
-        'js' => ['doT', 'extendext', 'moment.min', 'query-builder', 'network-distribution-graph', 'd3', 'd3.custom', 'jquery-ui.min', 'beta-events-timestamps', 'd3-sankey.min'],
+        'js' => ['doT', 'extendext', 'moment.min', 'query-builder', 'network-distribution-graph', 'd3', 'd3.custom', 'jquery-ui.min', 'event-timestamps', 'd3-sankey.min'],
     ]);
 ?>
 
@@ -1650,8 +1650,8 @@
         // Load reports into summary tab
         $.get("<?php echo $baseurl; ?>/eventReports/index/event_id:<?php echo h($event['Event']['id']); ?>/index_for_event:1/beta:1", function(data) {
             $("#summary-reports-content").html(data);
-            if (window.betaTimestamps && typeof window.betaTimestamps.update === 'function') {
-                window.betaTimestamps.update();
+            if (window.eventTimestamps && typeof window.eventTimestamps.update === 'function') {
+                window.eventTimestamps.update();
             }
         });
 

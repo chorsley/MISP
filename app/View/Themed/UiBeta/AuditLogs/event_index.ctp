@@ -191,8 +191,8 @@ $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalItems);
 </div>
 
 <script>
-    if (window.betaTimestamps && typeof window.betaTimestamps.update === 'function') {
-        window.betaTimestamps.update();
+    if (window.eventTimestamps && typeof window.eventTimestamps.update === 'function') {
+        window.eventTimestamps.update();
     }
     
     // Intercept pagination clicks to use AJAX
