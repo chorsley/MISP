@@ -41,6 +41,46 @@
         }
         return count($uniqueEventIds);
     };
+
+    $renderWarningIcon = function ($warnings) use ($buildWarningPopoverContent) {
+        if (empty($warnings)) {
+            return '';
+        }
+        $content = $buildWarningPopoverContent($warnings);
+        return '<span aria-label="' . __('warning') . '" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="' . h($content) . '" data-trigger="hover">&nbsp;</span>';
+    };
+
+    $renderGalaxyElements = function ($galaxies, $targetId) use ($groupGalaxyClustersByName, $baseurl, $mayModify, $event) {
+        if (empty($galaxies)) {
+            return '';
+        }
+        $html = '';
+        $clustersByGalaxy = $groupGalaxyClustersByName($galaxies);
+        foreach ($clustersByGalaxy as $galaxyName => $clusters) {
+            $html .= $this->element('Events/View/galaxy_compact_beta', [
+                'galaxyName' => $galaxyName,
+                'clusters' => $clusters,
+                'baseurl' => $baseurl,
+                'canModify' => $mayModify,
+                'canModifyLocal' => $this->Acl->canModifyTag($event, true),
+                'target_type' => 'attribute',
+                'target_id' => $targetId,
+            ]);
+        }
+        return $html;
+    };
+
+    $renderCommentCellContent = function ($comment) {
+        if (mb_strlen($comment) > 50) {
+            return h(mb_substr($comment, 0, 50)) . '... '
+                . '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';
+        }
+        return h($comment);
+    };
+
+    $countDirectRelatedAttributes = function ($item) {
+        return !empty($item['RelatedAttribute']) ? count($item['RelatedAttribute']) : 0;
+    };
 ?>
 
 <style>
@@ -515,22 +555,14 @@
                                 
                                 <div class="beta-attr-value-container">
                                     <?php
-                                        $relatedCountForValue = 0;
-                                        if (isset($item['RelatedAttribute'])) {
-                                            $relatedCountForValue = count($item['RelatedAttribute']);
-                                        }
+                                        $relatedCountForValue = $countDirectRelatedAttributes($item);
                                     ?>
                                     <?php if ($relatedCountForValue > 0): ?>
                                         <span class="attr-value attr-value-correlatable" style="cursor: pointer; border-bottom: 1px dashed #428bca;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo h($item['value']); ?></span>
                                     <?php else: ?>
                                         <span class="attr-value"><?php echo h($item['value']); ?></span>
                                     <?php endif; ?>
-                                    <?php if (isset($item['warnings'])): ?>
-                                        <?php
-                                            $temp = $buildWarningPopoverContent($item['warnings']);
-                                        ?>
-                                        <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
-                                    <?php endif; ?>
+                                    <?= $renderWarningIcon($item['warnings'] ?? []) ?>
                                     <?php if ($mayModify): ?>
                                          <div class="beta-tagging-links"></div>
                                     <?php endif; ?>
@@ -551,23 +583,8 @@
                                 </div>
 
                                 <!-- Galaxies Inline -->
-                                    <div class="beta-attr-tags-inline beta-attr-galaxies" id="attribute_<?php echo $item['id']; ?>_galaxy" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
-                                        <?php if (!empty($item['Galaxy'])): ?>
-                                            <?php
-                                                $clustersByGalaxy = $groupGalaxyClustersByName($item['Galaxy']);
-                                                foreach ($clustersByGalaxy as $galaxyName => $clusters):
-                                                    echo $this->element('Events/View/galaxy_compact_beta', [
-                                                        'galaxyName' => $galaxyName,
-                                                    'clusters' => $clusters,
-                                                    'baseurl' => $baseurl,
-                                                    'canModify' => $mayModify,
-                                                    'canModifyLocal' => $this->Acl->canModifyTag($event, true),
-                                                    'target_type' => 'attribute',
-                                                    'target_id' => $item['id'],
-                                                ]);
-                                            endforeach;
-                                        ?>
-                                    <?php endif; ?>
+                                <div class="beta-attr-tags-inline beta-attr-galaxies" id="attribute_<?php echo $item['id']; ?>_galaxy" data-attribute-id="<?php echo h($item['id']); ?>" style="margin-top: 4px;">
+                                    <?= $renderGalaxyElements($item['Galaxy'] ?? [], $item['id']) ?>
                                 </div>
                             </div>
                         </td>
@@ -586,14 +603,7 @@
                     <!-- Comment -->
                     <?php $comment = $item['comment'] ?? ''; ?>
                     <td class="col-comment" data-comment-full="<?php echo h($comment); ?>" <?php if ($isObject) echo 'colspan="5"'; ?>>
-                        <?php 
-                            if (mb_strlen($comment) > 50) {
-                                echo h(mb_substr($comment, 0, 50)) . '... ';
-                                echo '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';
-                            } else {
-                                echo h($comment);
-                            }
-                        ?>
+                        <?= $renderCommentCellContent($comment) ?>
                     </td>
 
                     <?php if (!$isObject): ?>
@@ -748,22 +758,14 @@
 
                                     <div class="beta-attr-value-container">
                                         <?php
-                                            $subRelatedCountForValue = 0;
-                                            if (isset($subAttr['RelatedAttribute'])) {
-                                                $subRelatedCountForValue = count($subAttr['RelatedAttribute']);
-                                            }
+                                            $subRelatedCountForValue = $countDirectRelatedAttributes($subAttr);
                                         ?>
                                         <?php if ($subRelatedCountForValue > 0): ?>
                                             <span class="attr-value attr-value-correlatable" style="cursor: pointer; border-bottom: 1px dashed #428bca;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><?php echo h($subAttr['value']); ?></span>
                                         <?php else: ?>
                                             <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
                                         <?php endif; ?>
-                                        <?php if (isset($subAttr['warnings'])): ?>
-                                            <?php
-                                                $temp = $buildWarningPopoverContent($subAttr['warnings']);
-                                            ?>
-                                            <span aria-label="<?= __('warning') ?>" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="<?= h($temp) ?>" data-trigger="hover">&nbsp;</span>
-                                        <?php endif; ?>
+                                        <?= $renderWarningIcon($subAttr['warnings'] ?? []) ?>
                                         <?php if ($mayModify): ?>
                                              <div class="beta-tagging-links"></div>
                                         <?php endif; ?>
@@ -785,22 +787,7 @@
 
                                     <!-- Galaxies Inline -->
                                     <div class="beta-attr-tags-inline beta-attr-galaxies" data-attribute-id="<?php echo h($subAttr['id']); ?>" style="margin-top: 4px;">
-                                        <?php if (!empty($subAttr['Galaxy'])): ?>
-                                            <?php
-                                                $subClustersByGalaxy = $groupGalaxyClustersByName($subAttr['Galaxy']);
-                                                foreach ($subClustersByGalaxy as $galaxyName => $clusters):
-                                                    echo $this->element('Events/View/galaxy_compact_beta', [
-                                                        'galaxyName' => $galaxyName,
-                                                        'clusters' => $clusters,
-                                                        'baseurl' => $baseurl,
-                                                        'canModify' => $mayModify,
-                                                        'canModifyLocal' => $this->Acl->canModifyTag($event, true),
-                                                        'target_type' => 'attribute',
-                                                        'target_id' => $subAttr['id'],
-                                                    ]);
-                                                endforeach;
-                                            ?>
-                                        <?php endif; ?>
+                                        <?= $renderGalaxyElements($subAttr['Galaxy'] ?? [], $subAttr['id']) ?>
                                     </div>
                                 </div>
                             </td>
@@ -818,14 +805,7 @@
                             <!-- Comment -->
                             <?php $comment = $subAttr['comment'] ?? ''; ?>
                             <td class="col-comment" data-comment-full="<?php echo h($comment); ?>">
-                                <?php 
-                                    if (mb_strlen($comment) > 50) {
-                                        echo h(mb_substr($comment, 0, 50)) . '... ';
-                                        echo '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';
-                                    } else {
-                                        echo h($comment);
-                                    }
-                                ?>
+                                <?= $renderCommentCellContent($comment) ?>
                             </td>
 
                             <!-- IDS Toggle for Sub-Attribute -->
