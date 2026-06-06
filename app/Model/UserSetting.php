@@ -102,11 +102,7 @@ class UserSetting extends AppModel
         ),
         'event_index_hide_columns' => [
             'placeholder' => ['clusters'],
-<<<<<<< HEAD
             'validation' => 'validate_event_index_hide_columns',
-=======
-            //'validation' => 'validate_json',
->>>>>>> develop
         ],
         'oidc' => [ // Data saved by OIDC plugin
             'internal' => true,
@@ -170,7 +166,6 @@ class UserSetting extends AppModel
         return true;
     }
 
-<<<<<<< HEAD
         public static function validate_event_index_hide_columns($value, $user)
         {
             // Valid column names that can be hidden in the event index
@@ -218,8 +213,6 @@ class UserSetting extends AppModel
 
             return true;
         }
-=======
->>>>>>> develop
     public static function validate_event_template_user_form_mode($value, $user)
     {
         if (empty($value)) {
