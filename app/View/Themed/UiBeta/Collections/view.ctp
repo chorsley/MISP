@@ -92,6 +92,56 @@ $buildGalaxyCards = function ($event) use ($baseurl) {
     }
     return $galaxyCards;
 };
+
+$buildEventSearchBase = function ($element, $event, $orgName) {
+    $tagNames = '';
+    if (!empty($event['EventTag'])) {
+        $tagNames = implode(' ', array_map(function ($tag) {
+            return $tag['Tag']['name'] ?? '';
+        }, $event['EventTag']));
+    }
+    return strtolower(
+        $element['element_uuid'] . ' ' .
+        ($element['description'] ?? '') . ' ' .
+        ($orgName ?? '') . ' ' .
+        $tagNames
+    );
+};
+
+$buildSignalStats = function ($event) {
+    $signalStats = [];
+    if (!empty($event['Event']['correlation_count'])) {
+        $signalStats[] = sprintf('C:%d', (int)$event['Event']['correlation_count']);
+    }
+    if (!empty($event['Event']['sightings_count'])) {
+        $signalStats[] = sprintf('S:%d', (int)$event['Event']['sightings_count']);
+    }
+    if (!empty($event['Event']['report_count'])) {
+        $signalStats[] = sprintf('R:%d', (int)$event['Event']['report_count']);
+    }
+    return $signalStats;
+};
+
+$getNonGalaxyEventTags = function ($event) {
+    $contextTagPool = [];
+    if (empty($event['EventTag'])) {
+        return $contextTagPool;
+    }
+    foreach ($event['EventTag'] as $eventTag) {
+        if (empty($eventTag['Tag']['name']) || !empty($eventTag['Tag']['is_galaxy'])) {
+            continue;
+        }
+        $contextTagPool[] = $eventTag;
+    }
+    return $contextTagPool;
+};
+
+$partitionVisibleItems = function (array $items, $visibleLimit) {
+    return [
+        'visible' => array_slice($items, 0, $visibleLimit),
+        'hidden' => array_slice($items, $visibleLimit),
+    ];
+};
 ?>
 <?php echo $this->element('genericElements/assetLoader', ['js' => ['d3', 'd3.custom', 'd3-sankey.min']]); ?>
 
@@ -259,18 +309,16 @@ $buildGalaxyCards = function ($event) use ($baseurl) {
                                 <?php
                                     $ev = !empty($eventDetailsByUuid[$el['element_uuid']]) ? $eventDetailsByUuid[$el['element_uuid']] : null;
                                     $orgName = !empty($ev['Orgc']['name']) ? $ev['Orgc']['name'] : '';
-                                    $tagNames = '';
-                                    if (!empty($ev['EventTag'])) {
-                                        $tagNames = implode(' ', array_map(function ($t) {
-                                            return $t['Tag']['name'] ?? '';
-                                        }, $ev['EventTag']));
-                                    }
-                                    $searchBase = strtolower(
-                                        $el['element_uuid'] . ' ' .
-                                        ($el['description'] ?? '') . ' ' .
-                                        ($orgName ?? '') . ' ' .
-                                        $tagNames
-                                    );
+                                    $searchBase = $buildEventSearchBase($el, $ev ?: [], $orgName);
+                                    $signalStats = $buildSignalStats($ev ?: []);
+                                    $contextTagPool = $getNonGalaxyEventTags($ev ?: []);
+                                    $tagGroups = $partitionVisibleItems($contextTagPool, 4);
+                                    $visibleTags = $tagGroups['visible'];
+                                    $hiddenTags = $tagGroups['hidden'];
+                                    $galaxyGroups = $partitionVisibleItems($buildGalaxyCards($ev ?: []), 2);
+                                    $visibleGalaxies = $galaxyGroups['visible'];
+                                    $hiddenGalaxies = $galaxyGroups['hidden'];
+                                    $hiddenIdSuffix = 'event-' . (int)$el['id'];
                                 ?>
                                 <div class="beta-element-row"
                                      data-uuid="<?= h($el['element_uuid']) ?>"
@@ -310,40 +358,6 @@ $buildGalaxyCards = function ($event) use ($baseurl) {
                                                 </span>
                                             <?php endif; ?>
                                         </div>
-
-                                        <?php
-                                            $signalStats = [];
-                                            if (!empty($ev['Event']['correlation_count'])) {
-                                                $signalStats[] = sprintf('C:%d', (int)$ev['Event']['correlation_count']);
-                                            }
-                                            if (!empty($ev['Event']['sightings_count'])) {
-                                                $signalStats[] = sprintf('S:%d', (int)$ev['Event']['sightings_count']);
-                                            }
-                                            if (!empty($ev['Event']['report_count'])) {
-                                                $signalStats[] = sprintf('R:%d', (int)$ev['Event']['report_count']);
-                                            }
-
-                                            $contextTagPool = [];
-                                            if (!empty($ev['EventTag'])) {
-                                                foreach ($ev['EventTag'] as $eventTag) {
-                                                    if (empty($eventTag['Tag']['name']) || !empty($eventTag['Tag']['is_galaxy'])) {
-                                                        continue;
-                                                    }
-                                                    $contextTagPool[] = $eventTag;
-                                                }
-                                            }
-
-                                            $visibleTagLimit = 4;
-                                            $visibleTags = array_slice($contextTagPool, 0, $visibleTagLimit);
-                                            $hiddenTags = array_slice($contextTagPool, $visibleTagLimit);
-
-                                            $galaxyCards = $buildGalaxyCards($ev);
-                                            $visibleGalaxyLimit = 2;
-                                            $visibleGalaxies = array_slice($galaxyCards, 0, $visibleGalaxyLimit);
-                                            $hiddenGalaxies = array_slice($galaxyCards, $visibleGalaxyLimit);
-
-                                            $hiddenIdSuffix = 'event-' . (int)$el['id'];
-                                        ?>
 
                                         <div class="beta-element-context-row">
                                             <?php if (!empty($signalStats)): ?>
