@@ -2368,6 +2368,103 @@
                 links: links.map(function(d) { return Object.assign({}, d); })
             });
 
+            function betaIsSankeyInteractiveNode(node) {
+                return node && (node.type === 'target' || node.type === 'attribute');
+            }
+
+            function betaHandleSankeyNodeClick(node) {
+                if (node.type === 'target' && node.id) {
+                    window.location.href = '<?php echo $baseurl; ?>/events/view/' + node.id;
+                } else if (node.type === 'attribute' && node.id) {
+                    filterCorrelations(node.id);
+                }
+            }
+
+            function betaSankeyLinkConnectedToAttribute(link, node) {
+                return link.source === node || link.target === node;
+            }
+
+            function betaSankeyLinkConnectedToTarget(link, node) {
+                var isDirectLink = (link.target === node);
+                if (isDirectLink) {
+                    return true;
+                }
+                var isPathFromSource = false;
+                graph.links.forEach(function(candidateLink) {
+                    if (candidateLink.target === node && candidateLink.source === link.target && link.source.type === 'source') {
+                        isPathFromSource = true;
+                    }
+                });
+                return isPathFromSource;
+            }
+
+            function betaSankeyNodeConnectedToAttribute(candidateNode, activeNode) {
+                if (candidateNode === activeNode) {
+                    return true;
+                }
+                var connected = false;
+                graph.links.forEach(function(link) {
+                    if ((link.source === activeNode && link.target === candidateNode) || (link.target === activeNode && link.source === candidateNode)) {
+                        connected = true;
+                    }
+                });
+                return connected;
+            }
+
+            function betaSankeyNodeConnectedToTarget(candidateNode, activeNode) {
+                if (candidateNode === activeNode) {
+                    return true;
+                }
+                if (candidateNode.type === 'source') {
+                    return true;
+                }
+                var connected = false;
+                graph.links.forEach(function(link) {
+                    if (link.target === activeNode && link.source === candidateNode) {
+                        connected = true;
+                    }
+                });
+                return connected;
+            }
+
+            function betaApplySankeyHoverState(activeNode, linkOpacity) {
+                if (!betaIsSankeyInteractiveNode(activeNode)) {
+                    return;
+                }
+                svg.selectAll('.sankey-link')
+                    .transition()
+                    .duration(200)
+                    .style('stroke-opacity', function(link) {
+                        var connected = activeNode.type === 'attribute'
+                            ? betaSankeyLinkConnectedToAttribute(link, activeNode)
+                            : betaSankeyLinkConnectedToTarget(link, activeNode);
+                        return connected ? linkOpacity : 0.1;
+                    });
+                svg.selectAll('.sankey-label')
+                    .transition()
+                    .duration(200)
+                    .style('opacity', function(node) {
+                        var connected = activeNode.type === 'attribute'
+                            ? betaSankeyNodeConnectedToAttribute(node, activeNode)
+                            : betaSankeyNodeConnectedToTarget(node, activeNode);
+                        return connected ? 1 : 0.1;
+                    });
+            }
+
+            function betaResetSankeyHoverState(activeNode) {
+                if (!betaIsSankeyInteractiveNode(activeNode)) {
+                    return;
+                }
+                svg.selectAll('.sankey-link')
+                    .transition()
+                    .duration(200)
+                    .style('stroke-opacity', 0.5);
+                svg.selectAll('.sankey-label')
+                    .transition()
+                    .duration(200)
+                    .style('opacity', 1);
+            }
+
             // D3 v3 compatibility for scale and color
             var color = d3.scale ? d3.scale.category10() : (d3.scaleOrdinal ? d3.scaleOrdinal(d3.schemeCategory10) : function() { return '#428bca'; });
 
@@ -2382,82 +2479,10 @@
                 .attr("height", function(d) { return d.y1 - d.y0; })
                 .attr("width", function(d) { return d.x1 - d.x0; })
                 .attr("fill", function(d) { return typeof color === 'function' ? color(d.type) : color; })
-                .attr("cursor", function(d) { return (d.type === 'target' || d.type === 'attribute') ? 'pointer' : 'default'; })
-                .on("click", function(d) {
-                    if (d.type === 'target' && d.id) {
-                        window.location.href = '<?php echo $baseurl; ?>/events/view/' + d.id;
-                    } else if (d.type === 'attribute' && d.id) {
-                        filterCorrelations(d.id);
-                    }
-                })
-                .on("mouseover", function(d) {
-                    if (d.type === 'attribute' || d.type === 'target') {
-                        svg.selectAll(".sankey-link")
-                            .transition()
-                            .duration(200)
-                            .style("stroke-opacity", function(l) {
-                                if (d.type === 'attribute') {
-                                    // Highlight links connected to this attribute (both from source and to targets)
-                                    return (l.source === d || l.target === d) ? 0.7 : 0.1;
-                                } else if (d.type === 'target') {
-                                    // Highlight links leading to this target, AND the links from source to the attributes that lead to this target
-                                    var isDirectLink = (l.target === d);
-                                    var isPathFromSource = false;
-                                    if (!isDirectLink) {
-                                        // Check if l is a link from source to an attribute that connects to d
-                                        graph.links.forEach(function(l2) {
-                                            if (l2.target === d && l2.source === l.target && l.source.type === 'source') {
-                                                isPathFromSource = true;
-                                            }
-                                        });
-                                    }
-                                    return (isDirectLink || isPathFromSource) ? 0.7 : 0.1;
-                                }
-                                return 0.1;
-                            });
-                        svg.selectAll(".sankey-label")
-                            .transition()
-                            .duration(200)
-                            .style("opacity", function(n) {
-                                if (n === d) return 1;
-                                if (d.type === 'attribute') {
-                                    // Highlight source and targets connected to this attribute
-                                    var connected = false;
-                                    graph.links.forEach(function(l) {
-                                        if ((l.source === d && l.target === n) || (l.target === d && l.source === n)) connected = true;
-                                    });
-                                    return connected ? 1 : 0.1;
-                                } else if (d.type === 'target') {
-                                    // Highlight source and attributes connected to this target
-                                    var connected = false;
-                                    if (n.type === 'source') {
-                                        // Source is always connected to any target via some attribute
-                                        connected = true;
-                                    } else {
-                                        graph.links.forEach(function(l) {
-                                            if (l.target === d && l.source === n) {
-                                                connected = true;
-                                            }
-                                        });
-                                    }
-                                    return connected ? 1 : 0.1;
-                                }
-                                return 0.1;
-                            });
-                    }
-                })
-                .on("mouseout", function(d) {
-                    if (d.type === 'attribute' || d.type === 'target') {
-                        svg.selectAll(".sankey-link")
-                            .transition()
-                            .duration(200)
-                            .style("stroke-opacity", 0.5);
-                        svg.selectAll(".sankey-label")
-                            .transition()
-                            .duration(200)
-                            .style("opacity", 1);
-                    }
-                })
+                .attr("cursor", function(d) { return betaIsSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
+                .on("click", betaHandleSankeyNodeClick)
+                .on("mouseover", function(d) { betaApplySankeyHoverState(d, 0.7); })
+                .on("mouseout", betaResetSankeyHoverState)
                 .append("title")
                 .text(function(d) { return d.fullTitle || d.name; });
 
@@ -2496,70 +2521,11 @@
                 .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
                 .attr("dy", "0.35em")
                 .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; })
-                .attr("cursor", function(d) { return (d.type === 'target' || d.type === 'attribute') ? 'pointer' : 'default'; })
-                .style("font-weight", function(d) { return (d.type === 'target' || d.type === 'attribute') ? 'bold' : 'normal'; })
-                .on("click", function(d) {
-                    if (d.type === 'target' && d.id) {
-                        window.location.href = '<?php echo $baseurl; ?>/events/view/' + d.id;
-                    } else if (d.type === 'attribute' && d.id) {
-                        filterCorrelations(d.id);
-                    }
-                })
-                .on("mouseover", function(d) {
-                    if (d.type === 'attribute' || d.type === 'target') {
-                        svg.selectAll(".sankey-link")
-                            .transition()
-                            .duration(200)
-                            .style("stroke-opacity", function(l) {
-                                var isConnected = (l.source === d || l.target === d);
-                                if (!isConnected && d.type === 'target') {
-                                    // Check if this link is part of the path to the target
-                                    graph.links.forEach(function(l2) {
-                                        if (l2.target === d && l2.source === l.target && l.source.type === 'source') isConnected = true;
-                                    });
-                                }
-                                return isConnected ? 0.5 : 0.1;
-                            });
-                        svg.selectAll(".sankey-label")
-                            .transition()
-                            .duration(200)
-                            .style("opacity", function(n) {
-                                if (n === d) return 1;
-                                if (d.type === 'attribute') {
-                                    var connected = false;
-                                    graph.links.forEach(function(l) {
-                                        if ((l.source === d && l.target === n) || (l.target === d && l.source === n)) connected = true;
-                                    });
-                                    return connected ? 1 : 0.1;
-                                } else if (d.type === 'target') {
-                                    var connected = false;
-                                    graph.links.forEach(function(l) {
-                                        if (l.target === d && l.source === n) {
-                                            connected = true;
-                                        } else if (l.target === d) {
-                                            graph.links.forEach(function(l2) {
-                                                if (l2.target === l.source && l2.source === n) connected = true;
-                                            });
-                                        }
-                                    });
-                                    return connected ? 1 : 0.1;
-                                }
-                                return 0.1;
-                            });
-                    }
-                })
-                .on("mouseout", function(d) {
-                    if (d.type === 'attribute' || d.type === 'target') {
-                        svg.selectAll(".sankey-link")
-                            .transition()
-                            .duration(200)
-                            .style("stroke-opacity", 0.5);
-                        svg.selectAll(".sankey-label")
-                            .transition()
-                            .duration(200)
-                            .style("opacity", 1);
-                    }
-                })
+                .attr("cursor", function(d) { return betaIsSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
+                .style("font-weight", function(d) { return betaIsSankeyInteractiveNode(d) ? 'bold' : 'normal'; })
+                .on("click", betaHandleSankeyNodeClick)
+                .on("mouseover", function(d) { betaApplySankeyHoverState(d, 0.5); })
+                .on("mouseout", betaResetSankeyHoverState)
                 .text(function(d) {
                     if (d.type === 'source') return d.name;
                     var maxLength = d.x0 < width / 2 ? 50 : 70;
