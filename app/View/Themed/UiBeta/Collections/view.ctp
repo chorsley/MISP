@@ -552,6 +552,99 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
         });
     }
 
+    function buildEventMapFromResponse(resp) {
+        var eventMap = {};
+        var list = (resp && resp.response) ? resp.response : (Array.isArray(resp) ? resp : []);
+        list.forEach(function (row) {
+            var ev = row.Event || row;
+            if (ev && ev.uuid) {
+                eventMap[ev.uuid] = ev;
+            }
+        });
+        return eventMap;
+    }
+
+    function updateEventRowFromMap(row, ev) {
+        var idEl = row.querySelector('.event-id-text');
+        var titleEl = row.querySelector('.event-title-text');
+        var dateEl = row.querySelector('.event-date-text');
+        var links = row.querySelectorAll('.event-title-link, .event-view-btn');
+        var cur = row.getAttribute('data-search') || '';
+        var comment = row.querySelector('.beta-element-desc');
+        var commentText = comment ? comment.textContent : '';
+
+        if (idEl) {
+            idEl.textContent = ev.id;
+        }
+        row.setAttribute('data-event-id', ev.id);
+        row.id = 'event_' + ev.id;
+        row.setAttribute('data-sort-title', (ev.info || '').toLowerCase());
+        row.setAttribute('data-sort-date', ev.date || '');
+        row.setAttribute('data-sort-updated', ev.timestamp || 0);
+
+        if (titleEl) {
+            titleEl.textContent = ev.info;
+            titleEl.style.color = '';
+            titleEl.style.fontStyle = '';
+        }
+        if (dateEl) {
+            dateEl.textContent = ev.date ? ev.date : '<?= __('Unknown date') ?>';
+            dateEl.classList.remove('beta-loading');
+        }
+        links.forEach(function (link) {
+            link.href = baseurl + '/events/view/' + ev.id;
+        });
+        row.setAttribute('data-search', (cur + ' ' + ev.id + ' ' + ev.info + ' ' + (ev.date || '') + ' ' + commentText).toLowerCase());
+    }
+
+    function setCollectionEventLoadFailureState() {
+        document.querySelectorAll('.event-title-text').forEach(function (el) {
+            el.textContent = '<?= __('Failed to load') ?>';
+            el.style.color = '#d9534f';
+            el.style.fontStyle = 'normal';
+        });
+        document.querySelectorAll('.event-date-text').forEach(function (el) {
+            el.textContent = '<?= __('Failed to load') ?>';
+        });
+        var corrStatus = document.getElementById('corrGraphStatus');
+        if (corrStatus) {
+            corrStatus.textContent = '<?= __('Could not load event data') ?>';
+        }
+        var interconnectivityStatus = document.getElementById('interconnectivityStatus');
+        if (interconnectivityStatus) {
+            interconnectivityStatus.textContent = '<?= __('Could not load event data') ?>';
+        }
+    }
+
+    function applyCollectionQuickFilter(query) {
+        var rows = document.querySelectorAll('.beta-element-row');
+        var visible = 0;
+        rows.forEach(function (row) {
+            var match = !query || (row.getAttribute('data-search') || '').indexOf(query) !== -1;
+            row.style.display = match ? '' : 'none';
+            if (match) {
+                visible++;
+            }
+        });
+        return visible;
+    }
+
+    function toggleCollectionContextItems(toggle) {
+        var targetId = toggle.getAttribute('data-target-id');
+        if (!targetId) return;
+        var target = document.getElementById(targetId);
+        if (!target) return;
+
+        var isHidden = target.classList.contains('hidden');
+        if (isHidden) {
+            target.classList.remove('hidden');
+            toggle.textContent = toggle.getAttribute('data-collapse-label') || '<?= __('Show less') ?>';
+        } else {
+            target.classList.add('hidden');
+            toggle.textContent = toggle.getAttribute('data-expand-label') || '<?= __('Show more') ?>';
+        }
+    }
+
     // ── 1. Batch-resolve event titles & IDs ────────────────────────────────
     if (eventUuids.length > 0) {
         $.ajax({
@@ -566,48 +659,14 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
                 limit: 500
             }),
             success: function (resp) {
-                // Build uuid→event map from response
-                var eventMap = {};
-                var list = (resp && resp.response) ? resp.response : (Array.isArray(resp) ? resp : []);
-                list.forEach(function (row) {
-                    var ev = row.Event || row;
-                    if (ev && ev.uuid) eventMap[ev.uuid] = ev;
-                });
+                var eventMap = buildEventMapFromResponse(resp);
 
-                // Update each event row
                 var rows = Array.prototype.slice.call(document.querySelectorAll('.beta-element-row[data-uuid]'));
                 rows.forEach(function (row) {
                     var uuid = row.getAttribute('data-uuid');
-                    var ev   = eventMap[uuid];
+                    var ev = eventMap[uuid];
                     if (!ev) return;
-
-                    var idEl    = row.querySelector('.event-id-text');
-                    var titleEl = row.querySelector('.event-title-text');
-                    var dateEl  = row.querySelector('.event-date-text');
-                    var links   = row.querySelectorAll('.event-title-link, .event-view-btn');
-
-                    if (idEl)    idEl.textContent = ev.id;
-                    row.setAttribute('data-event-id', ev.id);
-                    row.id = 'event_' + ev.id;
-                    row.setAttribute('data-sort-title', (ev.info || '').toLowerCase());
-                    row.setAttribute('data-sort-date', ev.date || '');
-                    row.setAttribute('data-sort-updated', ev.timestamp || 0);
-                    if (titleEl) {
-                        titleEl.textContent = ev.info;
-                        titleEl.style.color      = '';
-                        titleEl.style.fontStyle  = '';
-                    }
-                    if (dateEl) {
-                        dateEl.textContent = ev.date ? ev.date : '<?= __('Unknown date') ?>';
-                        dateEl.classList.remove('beta-loading');
-                    }
-                    links.forEach(function (a) {
-                        a.href = baseurl + '/events/view/' + ev.id;
-                    });
-                    var cur = row.getAttribute('data-search') || '';
-                    var comment = row.querySelector('.beta-element-desc');
-                    var commentText = comment ? comment.textContent : '';
-                    row.setAttribute('data-search', (cur + ' ' + ev.id + ' ' + ev.info + ' ' + (ev.date || '') + ' ' + commentText).toLowerCase());
+                    updateEventRowFromMap(row, ev);
                 });
 
                 sortRowsInList(sortSelector ? sortSelector.value : 'event_date_desc');
@@ -624,18 +683,7 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
                 }
             },
             error: function () {
-                document.querySelectorAll('.event-title-text').forEach(function (el) {
-                    el.textContent = '<?= __('Failed to load') ?>';
-                    el.style.color = '#d9534f';
-                    el.style.fontStyle = 'normal';
-                });
-                document.querySelectorAll('.event-date-text').forEach(function (el) {
-                    el.textContent = '<?= __('Failed to load') ?>';
-                });
-                var s = document.getElementById('corrGraphStatus');
-                if (s) s.textContent = '<?= __('Could not load event data') ?>';
-                var interStatus = document.getElementById('interconnectivityStatus');
-                if (interStatus) interStatus.textContent = '<?= __('Could not load event data') ?>';
+                setCollectionEventLoadFailureState();
             }
         });
     }
@@ -646,13 +694,7 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
     if (filterInput) {
         filterInput.addEventListener('input', function () {
             var q = this.value.toLowerCase().trim();
-            var rows = document.querySelectorAll('.beta-element-row');
-            var visible = 0;
-            rows.forEach(function (row) {
-                var match = !q || (row.getAttribute('data-search') || '').indexOf(q) !== -1;
-                row.style.display = match ? '' : 'none';
-                if (match) visible++;
-            });
+            var visible = applyCollectionQuickFilter(q);
             if (filterCount) {
                 filterCount.textContent = q ? '(' + visible + ' <?= __('shown') ?>)' : '';
             }
@@ -669,19 +711,7 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
         var toggle = event.target.closest('.beta-context-toggle');
         if (!toggle) return;
         event.preventDefault();
-        var targetId = toggle.getAttribute('data-target-id');
-        if (!targetId) return;
-        var target = document.getElementById(targetId);
-        if (!target) return;
-
-        var isHidden = target.classList.contains('hidden');
-        if (isHidden) {
-            target.classList.remove('hidden');
-            toggle.textContent = toggle.getAttribute('data-collapse-label') || '<?= __('Show less') ?>';
-        } else {
-            target.classList.add('hidden');
-            toggle.textContent = toggle.getAttribute('data-expand-label') || '<?= __('Show more') ?>';
-        }
+        toggleCollectionContextItems(toggle);
     });
 
     // ── 3. D3 intra-collection correlation graph ───────────────────────────
