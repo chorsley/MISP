@@ -214,6 +214,37 @@
         container.appendChild(chips);
     }
 
+    function loadCollectionsForContainer(container) {
+        if (!container || container.getAttribute('data-collections-loaded') === '1') {
+            return;
+        }
+
+        var eventUuid = container.getAttribute('data-event-uuid');
+        if (!eventUuid) {
+            return;
+        }
+
+        container.setAttribute('data-collections-loaded', 'loading');
+        $.ajax({
+            url: betaEventsIndexBaseurl + '/collections/getForElement/Event/' + encodeURIComponent(eventUuid) + '.json',
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                renderEventCollections(container, data);
+                container.setAttribute('data-collections-loaded', '1');
+            },
+            error: function() {
+                container.removeAttribute('data-collections-loaded');
+            }
+        });
+    }
+
+    function loadVisibleEventCollections() {
+        $('[id^="event-collections-container-"]').each(function() {
+            loadCollectionsForContainer(this);
+        });
+    }
+
     window.openAddToCollectionModal = function(eventUuid, eventId) {
         window.eventCollectionContext = {
             eventUuid: eventUuid,
@@ -239,6 +270,7 @@
             dataType: 'json',
             success: function(data) {
                 renderEventCollections(container, data);
+                container.setAttribute('data-collections-loaded', '1');
             }
         });
     };
@@ -253,6 +285,7 @@
         $('#quickFilterButton').click(function() {
             runIndexQuickFilter();
         });
+        loadVisibleEventCollections();
     });
 </script>
 <?php
