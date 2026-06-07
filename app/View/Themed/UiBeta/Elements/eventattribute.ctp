@@ -9,6 +9,8 @@
     $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalAttributes);
     $items = $event['objects'];
 
+    $items = $this->Event->attachRelatedAttributesToItems($items, $event['RelatedAttribute'] ?? []);
+
     $buildWarningPopoverContent = function ($warnings) {
         $content = '';
         foreach ($warnings as $warning) {

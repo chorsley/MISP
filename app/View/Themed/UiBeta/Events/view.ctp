@@ -1025,14 +1025,6 @@
     // Prepare items
     $items = [];
     
-    // Workaround for missing RelatedAttribute in attributes
-    $relatedMap = [];
-    if (!empty($event['RelatedAttribute'])) {
-        foreach ($event['RelatedAttribute'] as $attrId => $relations) {
-            $relatedMap[$attrId] = $relations;
-        }
-    }
-
     if (!empty($event['objects'])) {
         $items = [];
         $objectAttributeIds = [];
@@ -1080,24 +1072,7 @@
         }
     }
 
-    // Attach RelatedAttribute if missing
-    if (!empty($relatedMap)) {
-        foreach ($items as &$item) {
-            if (isset($item['objectType']) && $item['objectType'] === 'attribute') {
-                if (isset($relatedMap[$item['id']])) {
-                    $item['RelatedAttribute'] = $relatedMap[$item['id']];
-                }
-            } elseif (isset($item['objectType']) && $item['objectType'] === 'object' && !empty($item['Attribute'])) {
-                foreach ($item['Attribute'] as &$subAttr) {
-                    if (isset($relatedMap[$subAttr['id']])) {
-                        $subAttr['RelatedAttribute'] = $relatedMap[$subAttr['id']];
-                    }
-                }
-                unset($subAttr);
-            }
-        }
-        unset($item);
-    }
+    $items = $this->Event->attachRelatedAttributesToItems($items, $event['RelatedAttribute'] ?? []);
 
     // Sort desc by timestamp
     usort($items, function($a, $b) {

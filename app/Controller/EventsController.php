@@ -1365,29 +1365,6 @@ class EventsController extends AppController
         }
         $event = $results[0];
 
-        // Attach related attributes to proper attribute
-        // Reshape data for easier display in view templates
-        if (!empty($event['RelatedAttribute'])) {
-            foreach ($event['RelatedAttribute'] as $attribute_id => $relation) {
-                foreach ($event['Attribute'] as $k2 => $attribute) {
-                    if ((int)$attribute['id'] == $attribute_id) {
-                        $event['Attribute'][$k2]['RelatedAttribute'] = $relation;
-                        continue 2;
-                    }
-                }
-                foreach ($event['Object'] as $k2 => $object) {
-                    if (isset($object['Attribute'])) {
-                        foreach ($object['Attribute'] as $k3 => $attribute) {
-                            if ((int)$attribute['id'] == $attribute_id) {
-                                $event['Object'][$k2]['Attribute'][$k3]['RelatedAttribute'] = $relation;
-                                continue 3;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         $emptyEvent = empty($event['Object']) && empty($event['Attribute']);
         $this->set('emptyEvent', $emptyEvent);
 
@@ -1543,29 +1520,6 @@ class EventsController extends AppController
         }
         foreach ($relatedEventCorrelationCount as $key => $relation) {
             $relatedEventCorrelationCount[$key] = count($relation);
-        }
-
-        // Attach related attributes to individual attributes so that correlation count badges
-        // are rendered on initial page load (same logic as in viewEventAttributes)
-        if (!empty($event['RelatedAttribute'])) {
-            foreach ($event['RelatedAttribute'] as $attribute_id => $relation) {
-                foreach ($event['Attribute'] as $k2 => $attribute) {
-                    if ((int)$attribute['id'] == $attribute_id) {
-                        $event['Attribute'][$k2]['RelatedAttribute'] = $relation;
-                        continue 2;
-                    }
-                }
-                foreach ($event['Object'] as $k2 => $object) {
-                    if (isset($object['Attribute'])) {
-                        foreach ($object['Attribute'] as $k3 => $attribute) {
-                            if ((int)$attribute['id'] == $attribute_id) {
-                                $event['Object'][$k2]['Attribute'][$k3]['RelatedAttribute'] = $relation;
-                                continue 3;
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         $this->Event->removeGalaxyClusterTags($event);
