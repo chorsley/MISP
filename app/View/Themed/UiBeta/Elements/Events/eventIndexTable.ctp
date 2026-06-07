@@ -68,14 +68,11 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
 
     $galaxyCards = [];
     foreach ($galaxies as $galaxyName => $clusters) {
-        $galaxyCards[] = [
-            'html' => $this->element('Events/View/galaxy_compact_beta', [
-                'galaxyName' => $galaxyName,
-                'clusters' => [reset($clusters)],
-                'baseurl' => $baseurl,
-            ]),
-            'hidden_count' => max(0, count($clusters) - 1),
-        ];
+        $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', [
+            'galaxyName' => $galaxyName,
+            'clusters' => $clusters,
+            'baseurl' => $baseurl,
+        ]);
     }
     return $galaxyCards;
 };
@@ -266,7 +263,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
-        <td class="col-clusters">
+        <td class="col-clusters" style="position: relative; overflow: visible; z-index: 20;">
             <?php
                 if (!empty($event['GalaxyCluster'])) {
                     $galaxies = array();
@@ -279,23 +276,16 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                     }
                     $galaxyCards = [];
                     foreach ($galaxies as $galaxyName => $clusters) {
-                        $galaxyCards[] = [
-                            'html' => $this->element('Events/View/galaxy_compact_beta', array(
-                                'galaxyName' => $galaxyName,
-                                'clusters' => [reset($clusters)],
-                                'baseurl' => $baseurl
-                            )),
-                            'hidden_count' => max(0, count($clusters) - 1),
-                        ];
+                        $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', array(
+                            'galaxyName' => $galaxyName,
+                            'clusters' => $clusters,
+                            'baseurl' => $baseurl
+                        ));
                     }
 
-                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    echo '<div class="beta-galaxies-container" style="position: relative; overflow: visible; z-index: 21;" title="' . __('Galaxy clusters attached to this event') . '">';
                     foreach ($galaxyCards as $galaxyCard) {
-                        echo $galaxyCard['html'];
-                        if (!empty($galaxyCard['hidden_count'])) {
-                            $count = (int)$galaxyCard['hidden_count'];
-                            echo '<span class="beta-context-more-count" title="' . h(__n('%s additional galaxy cluster', '%s additional galaxy clusters', $count, $count)) . '">(+'. $count .')</span>';
-                        }
+                        echo $galaxyCard;
                     }
                     echo '</div>';
                 }
@@ -349,13 +339,9 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
 
                 $galaxyCards = $buildGalaxyCardsFromTags($galaxyTags);
                 if (!empty($galaxyCards)) {
-                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    echo '<div class="beta-galaxies-container" style="position: relative; overflow: visible; z-index: 21;" title="' . __('Galaxy clusters attached to this event') . '">';
                     foreach ($galaxyCards as $galaxyCard) {
-                        echo $galaxyCard['html'];
-                        if (!empty($galaxyCard['hidden_count'])) {
-                            $count = (int)$galaxyCard['hidden_count'];
-                            echo '<span class="beta-context-more-count" title="' . h(__n('%s additional galaxy cluster', '%s additional galaxy clusters', $count, $count)) . '">(+'. $count .')</span>';
-                        }
+                        echo $galaxyCard;
                     }
                     echo '</div>';
                 }

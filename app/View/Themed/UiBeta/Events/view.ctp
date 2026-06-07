@@ -1300,6 +1300,9 @@
                                               <strong><?php echo __('Galaxies'); ?> <span class="beta-header-count">(<span id="beta-galaxies-count"><?php echo h($galaxyCount); ?></span>)</span></strong>
                                           </span>
                                           <span class="beta-context-section-actions">
+                                              <button type="button" class="btn btn-link btn-xs noPrint" id="beta-galaxies-expand-all-toggle" style="display:none; padding: 0 8px 0 0; vertical-align: middle;">
+                                                  <?php echo __('Expand all'); ?>
+                                              </button>
                                               <?php
                                                   if ($tagAccess) {
                                                       $link = "$baseurl/galaxies/selectGalaxyNamespace/$targetId/event/local:0";
@@ -2171,7 +2174,11 @@
     }
 
     function updateGalaxyCount() {
-        var count = $('#galaxies_div .beta-galaxy-cluster, #galaxies_div .galaxy').length;
+        var count = 0;
+        $('#galaxies_div .beta-galaxy-cluster').each(function() {
+            count += parseInt($(this).data('cluster-count'), 10) || 1;
+        });
+        count += $('#galaxies_div .galaxy').length;
         $('#beta-galaxies-count').text(count);
     }
 
