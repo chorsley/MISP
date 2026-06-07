@@ -1969,14 +1969,14 @@ class EventsController extends AppController
             foreach ($event['RelatedAttribute'] as $attribute_id => $relation) {
                 foreach ($event['Attribute'] as $k2 => $attribute) {
                     if ((int)$attribute['id'] == $attribute_id) {
-                        $event['Attribute'][$k2]['RelatedAttribute'] = $relation;
+                        $event['Attribute'][$k2]['RelatedAttribute'][] = $relation;
                         break 2;
                     }
                 }
                 foreach ($event['Object'] as $k2 => $object) {
                     foreach ($object['Attribute'] as $k3 => $attribute) {
                         if ((int)$attribute['id'] == $attribute_id) {
-                            $event['Object'][$k2]['Attribute'][$k3]['RelatedAttribute'] = $relation;
+                            $event['Object'][$k2]['Attribute'][$k3]['RelatedAttribute'][] = $relation;
                             break 3;
                         }
                     }
