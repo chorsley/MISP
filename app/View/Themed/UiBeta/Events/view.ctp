@@ -21,15 +21,33 @@
         color: #333;
     }
     .beta-event-subtitle {
-        font-size: 12px;
-        color: #888;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
         margin-bottom: 10px;
     }
     .beta-id-badge {
-        font-size: 0.6em;
-        color: #999;
-        font-weight: 400;
-        vertical-align: middle;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border: 1px solid #d9e2ec;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #fbfcfe 0%, #f2f5f8 100%);
+        font-size: 12px;
+        color: #566372;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+    .beta-id-badge-label {
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-size: 10px;
+        color: #8a97a5;
+    }
+    .beta-id-badge-value {
+        font-family: Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        color: #41505f;
     }
     .beta-event-meta-row {
         display: flex;
@@ -69,6 +87,15 @@
         font-size: 14px;
         font-weight: 600;
         color: #444;
+    }
+    .meta-subvalue {
+        font-size: 12px;
+        font-weight: 500;
+        color: #66717d;
+    }
+    .meta-subvalue strong {
+        color: #495563;
+        font-weight: 600;
     }
     .beta-tabs {
         margin-top: 20px;
@@ -275,6 +302,15 @@
         color: #7a4d1f;
         border-bottom-color: #eadbcd;
     }
+    .beta-card-accent-reports {
+        border-color: #eadff6;
+        border-left-color: #9b7ad6;
+        background: linear-gradient(180deg, #fefcff 0%, #f7f2fd 100%);
+    }
+    .beta-card-accent-reports .beta-card-header {
+        color: #5b3d91;
+        border-bottom-color: #e7def4;
+    }
     .beta-card-header {
         padding: 10px 15px;
         border-bottom: 1px solid #f0f0f0;
@@ -392,20 +428,25 @@
     }
     .beta-context-section-actions .addButton {
         margin-bottom: 0;
-        min-height: 34px;
-        padding: 6px 12px;
+        min-height: 28px;
+        padding: 4px 10px;
         line-height: 1.2;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        border-radius: 4px;
+    }
+    .beta-context-section-actions .addButton .fa,
+    .beta-context-section-actions .addButton .fas {
+        line-height: 1;
     }
     .beta-context-section-collections {
-        border-color: #d8e8fb;
-        border-left-color: #62aaf6;
-        background: linear-gradient(180deg, #fbfdff 0%, #f2f8ff 100%);
+        border-color: #efe1fb;
+        border-left-color: #9b7ad6;
+        background: linear-gradient(180deg, #fefcff 0%, #f7f2fd 100%);
     }
     .beta-context-section-collections .beta-context-section-title {
-        color: #234d7d;
+        color: #5b3d91;
     }
     .beta-context-section-tags {
         border-color: #ddecdc;
@@ -762,11 +803,6 @@
     .beta-deeplink-highlight td {
         background-color: #ffe9a3 !important;
     }
-    .beta-id-badge {
-        font-size: 0.8em;
-        color: #999;
-        font-weight: 400;
-    }
     .report-snippet {
         font-family: inherit;
         line-height: 1.4;
@@ -783,7 +819,14 @@
             <?php echo h($event['Event']['info']); ?>
         </h2>
         <div class="beta-event-subtitle">
-            ID: <?php echo h($event['Event']['id']); ?> / UUID: <?php echo h($event['Event']['uuid']); ?>
+            <span class="beta-id-badge">
+                <span class="beta-id-badge-label"><?php echo __('ID'); ?></span>
+                <span class="beta-id-badge-value"><?php echo h($event['Event']['id']); ?></span>
+            </span>
+            <span class="beta-id-badge">
+                <span class="beta-id-badge-label"><?php echo __('UUID'); ?></span>
+                <span class="beta-id-badge-value"><?php echo h($event['Event']['uuid']); ?></span>
+            </span>
         </div>
         <div class="beta-event-meta-row">
             <span class="meta-box date-box">
@@ -804,6 +847,16 @@
                     </a>
                 </span>
             </span>
+            <?php
+                $creatorUser = '';
+                if (!empty($event['User']['email'])) {
+                    $creatorUser = $event['User']['email'];
+                } elseif (!empty($event['User']['id'])) {
+                    $creatorUser = __('User #%s', $event['User']['id']);
+                } elseif (!empty($event['Event']['user_id'])) {
+                    $creatorUser = __('User #%s', $event['Event']['user_id']);
+                }
+            ?>
             <span class="meta-box org-box">
                 <span class="meta-label"><i class="fa fa-user-shield"></i><?php echo __('Owner Org'); ?></span>
                 <span class="meta-value">
@@ -816,6 +869,12 @@
                             endif;
                         ?>
                     </a>
+                </span>
+            </span>
+            <span class="meta-box user-box">
+                <span class="meta-label"><i class="fa fa-user"></i><?php echo __('Creator User'); ?></span>
+                <span class="meta-value<?php echo empty($creatorUser) ? ' muted' : ''; ?>" style="font-size: 13px;">
+                    <?php echo !empty($creatorUser) ? h($creatorUser) : __('Unknown'); ?>
                 </span>
             </span>
              <span class="meta-box dist-box" title="<?php echo h($distributionLevels[$event['Event']['distribution']]); ?>">
@@ -846,7 +905,6 @@
                     <?php echo $this->Time->time($event['Event']['timestamp']); ?>
                 </span>
             </span>
-            
             <?php if ($this->Acl->canAccess('events', 'publish')): ?>
                 <span class="meta-box publish-box" title="<?php echo __('Toggle publication status'); ?>">
                     <span class="meta-label"><i class="fa fa-bullhorn"></i><?php echo __('Published'); ?></span>
@@ -864,7 +922,7 @@
                 <span class="meta-box edit-box">
                     <span class="meta-label"><i class="fa fa-edit"></i><?php echo __('Action'); ?></span>
                     <span class="meta-value">
-                        <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit'); ?></a>
+                        <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit event header'); ?></a>
                     </span>
                 </span>
             <?php endif; ?>
@@ -1131,7 +1189,7 @@
 
                       </div>
                       <div class="span4">
-                          <div class="beta-card summary-card" id="summary-reports-section">
+                           <div class="beta-card summary-card beta-card-accent beta-card-accent-reports" id="summary-reports-section">
                               <div class="beta-card-header beta-expandable-header" onclick="toggleSummaryReports();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSummaryReports();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle event reports'); ?>">
                                   <?php echo __('Event reports'); ?> <span class="beta-header-count">(<span id="beta-event-reports-count"><?php echo h($eventReportCount); ?></span>)</span>
                                   <i id="summary-reports-toggle-icon" class="fa fa-chevron-right pull-right"></i>
@@ -1146,9 +1204,12 @@
                           </div>
 
                           <!-- Context -->
-                           <div class="beta-card summary-card">
-                              <div class="beta-card-header"><?php echo __('Context'); ?></div>
-                              <div class="beta-card-body">
+                            <div class="beta-card summary-card">
+                               <div class="beta-card-header beta-expandable-header" onclick="toggleContextSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleContextSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle context'); ?>">
+                                   <?php echo __('Context'); ?>
+                                   <i id="beta-context-toggle-icon" class="fa fa-chevron-down pull-right"></i>
+                               </div>
+                               <div class="beta-card-body" id="beta-context-content-wrap">
                                  <?php
                                      $eventTagCount = !empty($event['EventTag']) ? count($event['EventTag']) : 0;
                                      $eventTagAccess = $this->Acl->canAccess('tags', 'edit');
@@ -2098,6 +2159,10 @@
 
     function toggleExportSection() {
         toggleSidebarSection('#beta-export-content-wrap', '#beta-export-toggle-icon');
+    }
+
+    function toggleContextSection() {
+        toggleSidebarSection('#beta-context-content-wrap', '#beta-context-toggle-icon');
     }
 
     function updateTagCount() {
