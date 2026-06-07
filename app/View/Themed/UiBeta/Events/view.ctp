@@ -139,11 +139,62 @@
         gap: 8px;
         flex-wrap: wrap;
         justify-content: flex-end;
+        flex: 1 1 auto;
     }
     .beta-bulk-actions-buttons .btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
+    }
+    .beta-bulk-actions-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .beta-bulk-actions-group.beta-bulk-actions-group-danger {
+        margin-left: auto;
+    }
+    .beta-bulk-menu-wrap {
+        position: relative;
+    }
+    .beta-bulk-menu-trigger {
+        min-width: 104px;
+        justify-content: center;
+    }
+    .beta-bulk-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 1200;
+        min-width: 160px;
+        background: #fff;
+        border: 1px solid #d7dee7;
+        border-radius: 6px;
+        box-shadow: 0 8px 18px rgba(80, 108, 140, 0.18);
+        padding: 6px 0;
+    }
+    .beta-bulk-menu.is-open {
+        display: block;
+    }
+    .beta-bulk-menu button {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        background: transparent;
+        padding: 8px 14px;
+        font-size: 13px;
+        color: #36506b;
+        text-align: left;
+    }
+    .beta-bulk-menu button:hover,
+    .beta-bulk-menu button:focus {
+        background: #f5f8fc;
+        color: #1d3550;
+        outline: none;
     }
     @media (max-width: 767px) {
         .beta-bulk-actions-bar {
@@ -159,9 +210,26 @@
         .beta-bulk-actions-buttons {
             justify-content: stretch;
         }
+        .beta-bulk-actions-group {
+            width: 100%;
+        }
+        .beta-bulk-actions-group.beta-bulk-actions-group-danger {
+            margin-left: 0;
+        }
         .beta-bulk-actions-buttons .btn {
             justify-content: center;
             flex: 1 1 auto;
+        }
+        .beta-bulk-menu-wrap {
+            flex: 1 1 auto;
+        }
+        .beta-bulk-menu-trigger {
+            width: 100%;
+        }
+        .beta-bulk-menu {
+            left: 0;
+            right: 0;
+            min-width: 0;
         }
         body.beta-bulk-actions-visible {
             padding-bottom: 132px;
@@ -1424,35 +1492,73 @@
                  <div id="beta-attributes-container">
                      <div id="beta-bulk-actions-bar" class="beta-bulk-actions-bar">
                          <div class="beta-bulk-actions-bar-inner">
-                             <div class="beta-bulk-actions-summary">
-                                 <span id="beta-bulk-selected-count">0</span> <?php echo __('selected'); ?>
-                             </div>
-                             <div class="beta-bulk-actions-buttons">
-                                  <button type="button" class="btn btn-danger btn-sm" onclick="handleBetaBulkDeleteAction(<?php echo h($event['Event']['id']); ?>); return false;">
-                                      <i class="fa fa-trash"></i> <?php echo __('Delete'); ?>
-                                  </button>
-                                   <button type="button" class="btn btn-default btn-sm" onclick="openBetaBulkTagPicker(false); return false;" title="<?php echo __('Add global tag to selected attributes'); ?>" aria-label="<?php echo __('Add global tag to selected attributes'); ?>">
-                                       <i class="fas fa-globe-americas"></i> <?php echo __('Add Global Tag'); ?>
+                              <div class="beta-bulk-actions-summary">
+                                  <span id="beta-bulk-selected-count">0</span> <?php echo __('selected'); ?>
+                              </div>
+                               <div class="beta-bulk-actions-buttons">
+                                    <div class="beta-bulk-actions-group">
+                                    <button type="button" class="btn btn-default btn-sm" onclick="editSelectedAttributes(<?php echo h($event['Event']['id']); ?>); return false;" title="<?php echo __('Edit selected attributes'); ?>" aria-label="<?php echo __('Edit selected attributes'); ?>">
+                                        <i class="fa fa-edit"></i> <?php echo __('Bulk Edit'); ?>
+                                    </button>
+                                    <div class="beta-bulk-menu-wrap" data-beta-bulk-menu>
+                                        <button type="button" class="btn btn-default btn-sm beta-bulk-menu-trigger" data-beta-bulk-menu-trigger aria-expanded="false" aria-haspopup="true" title="<?php echo __('Add a tag to selected attributes'); ?>">
+                                            <i class="fa fa-tag"></i> <?php echo __('Tag'); ?> <i class="fa fa-caret-up"></i>
+                                        </button>
+                                        <div class="beta-bulk-menu" data-beta-bulk-menu-panel>
+                                            <button type="button" onclick="openBetaBulkTagPicker(false); return false;">
+                                                <i class="fa fa-globe"></i> <?php echo __('Global'); ?>
+                                            </button>
+                                            <button type="button" onclick="openBetaBulkTagPicker(true); return false;">
+                                                <i class="fa fa-user"></i> <?php echo __('Local'); ?>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="beta-bulk-menu-wrap" data-beta-bulk-menu>
+                                        <button type="button" class="btn btn-default btn-sm beta-bulk-menu-trigger" data-beta-bulk-menu-trigger aria-expanded="false" aria-haspopup="true" title="<?php echo __('Add a galaxy cluster to selected attributes'); ?>">
+                                            <i class="fa fa-bahai"></i> <?php echo __('Galaxies'); ?> <i class="fa fa-caret-up"></i>
+                                        </button>
+                                        <div class="beta-bulk-menu" data-beta-bulk-menu-panel>
+                                            <button type="button" onclick="openBetaBulkGalaxyPicker(false); return false;">
+                                                <i class="fa fa-globe"></i> <?php echo __('Global'); ?>
+                                            </button>
+                                            <button type="button" onclick="openBetaBulkGalaxyPicker(true); return false;">
+                                                <i class="fa fa-user"></i> <?php echo __('Local'); ?>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="openBetaGroupIntoObject(<?php echo h($event['Event']['id']); ?>, this); return false;" title="<?php echo __('Group selected attributes into an object'); ?>" aria-label="<?php echo __('Group selected attributes into an object'); ?>">
+                                        <i class="fa fa-object-group"></i> <?php echo __('Group Into Object'); ?>
+                                    </button>
+                                   <button type="button" class="btn btn-default btn-sm" onclick="openBetaBulkRelationships(<?php echo h($event['Event']['id']); ?>); return false;" title="<?php echo __('Create a new relationship for selected entities'); ?>" aria-label="<?php echo __('Create a new relationship for selected entities'); ?>">
+                                       <i class="fas fa-project-diagram"></i> <?php echo __('New Relationship'); ?>
                                    </button>
-                                   <button type="button" class="btn btn-default btn-sm" onclick="openBetaBulkTagPicker(true); return false;" title="<?php echo __('Add local tag to selected attributes'); ?>" aria-label="<?php echo __('Add local tag to selected attributes'); ?>">
-                                       <i class="fas fa-user"></i> <?php echo __('Add Local Tag'); ?>
-                                   </button>
-                             </div>
-                         </div>
+                                    <button type="button" class="btn btn-default btn-sm sightings_advanced_add" data-object-id="selected" data-object-context="attribute" title="<?php echo __('Show sightings for selected attributes'); ?>" aria-label="<?php echo __('Show sightings for selected attributes'); ?>">
+                                        <i class="fa fa-wrench"></i> <?php echo __('Sightings'); ?>
+                                    </button>
+                                    </div>
+                                    <div class="beta-bulk-actions-group beta-bulk-actions-group-danger">
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="handleBetaBulkDeleteAction(<?php echo h($event['Event']['id']); ?>); return false;">
+                                            <i class="fa fa-trash"></i> <?php echo __('Delete'); ?>
+                                        </button>
+                                    </div>
+                               </div>
+                          </div>
+                      </div>
+                     <div id="beta-attributes-list">
+                         <?php echo $this->element('eventattribute', [
+                              'items' => $items,
+                              'betaTotalAttributes' => $betaTotalAttributes,
+                             'paging' => $paging,
+                             'betaCurrentPage' => $betaCurrentPage,
+                             'betaPageSize' => $betaPageSize,
+                             'betaTotalItems' => $betaTotalItems,
+                             'betaTotalPages' => $betaTotalPages,
+                             'betaShowStart' => $betaShowStart,
+                             'betaShowEnd' => $betaShowEnd
+                         ]); ?>
                      </div>
-                     <?php echo $this->element('eventattribute', [
-                          'items' => $items,
-                          'betaTotalAttributes' => $betaTotalAttributes,
-                         'paging' => $paging,
-                         'betaCurrentPage' => $betaCurrentPage,
-                         'betaPageSize' => $betaPageSize,
-                         'betaTotalItems' => $betaTotalItems,
-                         'betaTotalPages' => $betaTotalPages,
-                         'betaShowStart' => $betaShowStart,
-                         'betaShowEnd' => $betaShowEnd
-                     ]); ?>
-                 </div>
-            </div>
+                  </div>
+             </div>
             
             <!-- Other Tabs Placeholders -->
              <div role="tabpanel" class="tab-pane" id="correlations">
@@ -1731,6 +1837,24 @@
 
     $(function() {
         popoverStartup();
+        $(document)
+            .off('click.betaBulkMenuTrigger')
+            .on('click.betaBulkMenuTrigger', '[data-beta-bulk-menu-trigger]', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleBetaBulkMenu(this);
+            })
+            .off('click.betaBulkMenuPanel')
+            .on('click.betaBulkMenuPanel', '[data-beta-bulk-menu-panel] button', function() {
+                closeBetaBulkMenus();
+            })
+            .off('click.betaBulkMenuOutside')
+            .on('click.betaBulkMenuOutside', function(e) {
+                if (!$(e.target).closest('[data-beta-bulk-menu]').length) {
+                    closeBetaBulkMenus();
+                }
+            });
+
         var initialAttributeAnchor = null;
         var initialFocusUuid = null;
         var focusRetryCount = 0;
@@ -1971,6 +2095,8 @@
         $('body').toggleClass('beta-bulk-actions-visible', count > 0);
     }
 
+    window.updateBetaBulkActionBar = updateBetaBulkActionBar;
+
     function getBetaSelectedAttributeIds() {
         var selected = [];
         $('.select_attribute:checked').each(function() {
@@ -1986,6 +2112,8 @@
         $('.select_attribute, .select_all, input[class^="select_all_object_attributes_"]').prop('checked', false);
         updateBetaBulkActionBar();
     }
+
+    window.clearBetaSelectedAttributes = clearBetaSelectedAttributes;
 
     function removeBetaAttributeRows(attributeIds) {
         if (!attributeIds || !attributeIds.length) {
@@ -2003,6 +2131,28 @@
         }
         attributeIds.forEach(function(attributeId) {
             loadAttributeTags(attributeId);
+        });
+    }
+
+    function refreshBetaAttributeGalaxies(attributeIds) {
+        if (!attributeIds || !attributeIds.length || typeof loadGalaxies !== 'function') {
+            return;
+        }
+        attributeIds.forEach(function(attributeId) {
+            $.ajax({
+                dataType: 'html',
+                cache: false,
+                success: function(data) {
+                    var $targets = $('#attribute_' + attributeId + '_galaxy, .beta-attr-galaxies[data-attribute-id="' + attributeId + '"]');
+                    if ($targets.length) {
+                        $targets.html(data);
+                        if (typeof popoverStartup === 'function') {
+                            popoverStartup();
+                        }
+                    }
+                },
+                url: baseurl + '/galaxies/showGalaxies/' + attributeId + '/attribute'
+            });
         });
     }
 
@@ -2059,10 +2209,45 @@
         updateBetaAttributeTags(attributeId);
     };
 
+    window.onBulkAttributeGalaxiesApplied = function(selectedIds, local, eventId) {
+        var attributeIds = selectedIds;
+        if (typeof attributeIds === 'string') {
+            try {
+                attributeIds = JSON.parse(attributeIds);
+            } catch (e) {
+                attributeIds = [];
+            }
+        }
+        if (attributeIds && attributeIds.length) {
+            refreshBetaAttributeGalaxies(attributeIds);
+            if (eventId && typeof loadGalaxies === 'function') {
+                loadGalaxies(eventId, 'event');
+            }
+            clearBetaSelectedAttributes();
+        }
+    };
+
     function openBetaBulkTagPicker(isLocal) {
         prepareBetaBulkTagRefresh();
         var tagTarget = (isLocal ? 'local:1/' : '') + 'selected/attribute';
         getPopup(tagTarget, 'tags', 'selectTaxonomy', '', '#popover_form');
+    }
+
+    function openBetaBulkGalaxyPicker(isLocal) {
+        var galaxyTarget = 'selected/attribute' + (isLocal ? '/local:1' : '/eventid:<?php echo h($event['Event']['id']); ?>');
+        if (isLocal) {
+            galaxyTarget += '/eventid:<?php echo h($event['Event']['id']); ?>';
+        }
+        getPopup(galaxyTarget, 'galaxies', 'selectGalaxyNamespace', '', '#popover_form');
+    }
+
+    function openBetaGroupIntoObject(eventId, clicked) {
+        var selectedAttributeIds = getSelected();
+        getPopup(eventId + '/' + selectedAttributeIds, 'objects', 'proposeObjectsFromAttributes', '', '#popover_form');
+    }
+
+    function openBetaBulkRelationships(eventId) {
+        bulkAddRelationshipToSelectedAttributes(null, eventId);
     }
 
     function refreshContextCounts() {
@@ -2134,6 +2319,26 @@
             });
 
         updateBetaBulkActionBar();
+    }
+
+    window.initBetaBulkActions = initBetaBulkActions;
+
+    function closeBetaBulkMenus() {
+        $('[data-beta-bulk-menu]').removeClass('is-open');
+        $('[data-beta-bulk-menu-panel]').removeClass('is-open');
+        $('[data-beta-bulk-menu-trigger]').attr('aria-expanded', 'false');
+    }
+
+    function toggleBetaBulkMenu(trigger) {
+        var $wrap = $(trigger).closest('[data-beta-bulk-menu]');
+        var $panel = $wrap.find('[data-beta-bulk-menu-panel]');
+        var shouldOpen = !$panel.hasClass('is-open');
+        closeBetaBulkMenus();
+        if (shouldOpen) {
+            $wrap.addClass('is-open');
+            $panel.addClass('is-open');
+            $wrap.find('[data-beta-bulk-menu-trigger]').attr('aria-expanded', 'true');
+        }
     }
 
     // Export card logic

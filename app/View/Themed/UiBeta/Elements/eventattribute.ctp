@@ -921,9 +921,9 @@
     };
 
     function getAttributesContainer() {
-        var $container = $('#beta-attributes-container');
+        var $container = $('#beta-attributes-list');
         if (!$container.length) {
-            $container = $('.beta-attributes-list').parent();
+            $container = $('#beta-attributes-container');
         }
         return $container;
     }
@@ -959,6 +959,19 @@
     function renderAttributesResponse($container, data, shouldScroll) {
         $container.html(data);
         $container.css('opacity', '1');
+        if (typeof window.initBetaBulkActions === 'function') {
+            window.initBetaBulkActions();
+        }
+        if (typeof window.clearBetaSelectedAttributes === 'function') {
+            window.clearBetaSelectedAttributes();
+        } else {
+            $('.select_attribute, .select_all, input[class^="select_all_object_attributes_"]').prop('checked', false);
+        }
+        if (typeof window.updateBetaBulkActionBar === 'function') {
+            window.updateBetaBulkActionBar();
+        } else if (typeof attributeListAnyAttributeCheckBoxesChecked === 'function') {
+            attributeListAnyAttributeCheckBoxesChecked();
+        }
         if (shouldScroll) {
             var offset = $container.offset();
             if (offset) {
@@ -1194,11 +1207,11 @@
         window._betaSearchTimer = setTimeout(callback, 400);
     }
 
-    // Remove all previous beta event handlers before re-binding (prevents accumulation on AJAX reload)
-    $(document).off('.betaAttr');
-
     $(function() {
-        // Apply column state (may have been toggled on a previous page)
+        if (typeof window.initBetaBulkActions === 'function') {
+            window.initBetaBulkActions();
+        }
+
         Object.keys(window.columnVisibility).forEach(function(col) {
             $('.col-' + col).toggle(window.columnVisibility[col]);
             if (window.columnVisibility[col]) {
@@ -1207,6 +1220,11 @@
                 $('.col-check-' + col).addClass('fa-times').removeClass('fa-check');
             }
         });
+
+        if (window._betaAttributeHandlersInitialized) {
+            return;
+        }
+        window._betaAttributeHandlersInitialized = true;
 
         // Pagination button click handlers (namespaced to allow clean removal)
         $(document).on('click.betaAttr', '.beta-page-btn', function(e) {

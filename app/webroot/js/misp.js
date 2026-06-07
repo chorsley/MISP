@@ -810,6 +810,14 @@ function updateAttributeTagsApplied(attribute_id) {
     }
 }
 
+function updateBulkGalaxiesApplied(selectedIds, local, eventId) {
+    if (typeof window.onBulkAttributeGalaxiesApplied === 'function') {
+        window.onBulkAttributeGalaxiesApplied(selectedIds, local, eventId);
+        return true;
+    }
+    return false;
+}
+
 function quickSubmitTagCollectionTagForm(selected_tag_ids, addData) {
     var tag_collection_id = addData.id;
     var localFlag = '';
@@ -4654,7 +4662,10 @@ function quickSubmitGalaxyForm(cluster_ids, additionalData) {
             },
             success:function (data) {
                 if (target_id === 'selected' || scope === 'tag_collection') {
-                    location.reload();
+                    if (!updateBulkGalaxiesApplied(getSelected(), local, additionalData['event_id'])) {
+                        location.reload();
+                    }
+                    handleGenericAjaxResponse(data);
                 } else {
                     loadGalaxies(target_id, scope);
                     if (mirrorOnEvent) {
