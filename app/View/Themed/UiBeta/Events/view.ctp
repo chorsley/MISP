@@ -500,21 +500,53 @@
         list-style-type: disc;
     }
     .comment-bullet-item {
-        margin: 0 0 6px 0;
-        cursor: pointer;
+        margin: 0 0 8px 0;
         color: #2f2f2f;
     }
-    .comment-bullet-item:hover {
+    .comment-bullet-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 100%;
+        padding: 2px 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+    .comment-bullet-action:hover .comment-bullet-label,
+    .comment-bullet-action:hover .comment-bullet-count,
+    .comment-bullet-action:focus .comment-bullet-label,
+    .comment-bullet-action:focus .comment-bullet-count {
         color: #0b6a9b;
+    }
+    .comment-bullet-action:focus {
+        outline: none;
+    }
+    .comment-bullet-action:focus-visible {
+        border-radius: 999px;
+        box-shadow: 0 0 0 2px rgba(11, 106, 155, 0.18);
     }
     .comment-bullet-label {
         font-size: 14px;
+        min-width: 0;
     }
     .comment-bullet-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        margin-left: 2px;
+        padding: 2px 8px;
+        border: 1px solid #c9d6e2;
+        border-radius: 999px;
+        background: #f4f8fb;
         font-size: 12px;
-        font-weight: 600;
-        color: #5f6b76;
-        margin-left: 4px;
+        font-weight: 700;
+        color: #34546f;
+        line-height: 1.2;
+        white-space: nowrap;
     }
     .composition-singlebar-wrap {
         width: 100%;
@@ -2022,20 +2054,27 @@
                 .attr("class", "comment-bullet-list");
 
             commentData.forEach(function(d) {
+                var actionText = 'Show ' + d.value + ' matching attribute' + (d.value === 1 ? '' : 's') + ' for this comment';
                 var row = list.append("li")
-                    .attr("class", "comment-bullet-item")
-                    .attr("title", d.label + " (" + d.value + ")")
+                    .attr("class", "comment-bullet-item");
+
+                var action = row.append("button")
+                    .attr("type", "button")
+                    .attr("class", "comment-bullet-action")
+                    .attr("title", actionText)
+                    .attr("aria-label", actionText)
                     .on("click", function() {
                         filterAttributesByComment(d.label);
                     });
 
-                row.append("span")
+                action.append("span")
                     .attr("class", "comment-bullet-label")
                     .text(d.label);
 
-                row.append("span")
+                action.append("span")
                     .attr("class", "comment-bullet-count")
-                    .text("[" + d.value + "]");
+                    .text(d.value);
+
             });
         } else {
              d3.select("#comments-graph").html('<div class="alert alert-info" style="margin: 20px;">No comment data available.</div>');
