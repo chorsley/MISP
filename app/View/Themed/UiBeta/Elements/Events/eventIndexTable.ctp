@@ -263,7 +263,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
-        <td class="col-clusters" style="position: relative; overflow: visible; z-index: 20;">
+        <td class="col-clusters">
             <?php
                 if (!empty($event['GalaxyCluster'])) {
                     $galaxies = array();
@@ -283,7 +283,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                         ));
                     }
 
-                    echo '<div class="beta-galaxies-container" style="position: relative; overflow: visible; z-index: 21;" title="' . __('Galaxy clusters attached to this event') . '">';
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
                     foreach ($galaxyCards as $galaxyCard) {
                         echo $galaxyCard;
                     }
@@ -339,7 +339,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
 
                 $galaxyCards = $buildGalaxyCardsFromTags($galaxyTags);
                 if (!empty($galaxyCards)) {
-                    echo '<div class="beta-galaxies-container" style="position: relative; overflow: visible; z-index: 21;" title="' . __('Galaxy clusters attached to this event') . '">';
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
                     foreach ($galaxyCards as $galaxyCard) {
                         echo $galaxyCard;
                     }

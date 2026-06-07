@@ -854,6 +854,17 @@ pre {
     white-space: nowrap;
 }
 
+.beta-events-table td.col-tags {
+    overflow: visible;
+    white-space: normal;
+}
+
+.beta-events-table td.col-tags > .beta-galaxies-container {
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+}
+
 /* Hide columns on smaller screens to prevent horizontal scrolling */
 
 /* Large Laptop / Desktop ( < 1400px ) */
@@ -1724,6 +1735,14 @@ body.beta-ui-enabled .beta-view-events #galaxies_div.beta-galaxies-container {
     gap: 4px;
 }
 
+.beta-events-table .beta-galaxy-wrapper {
+    position: relative;
+}
+
+.beta-events-table .beta-galaxy-wrapper.beta-galaxy-wrapper-active {
+    z-index: 132;
+}
+
 /* Tighten galaxy cluster badges inside the event index table only */
 .beta-events-table .beta-galaxies-container {
     gap: 2px;
@@ -1746,6 +1765,8 @@ body.beta-ui-enabled .beta-view-events #galaxies_div.beta-galaxies-container {
     line-height: 1.2;
     margin-right: 2px;
     margin-bottom: 2px;
+    position: relative;
+    overflow: visible;
 }
 
 .beta-events-table .beta-galaxy-cluster-label {
@@ -1815,7 +1836,8 @@ body.beta-ui-enabled .beta-view-events #galaxies_div.beta-galaxies-container {
 .beta-galaxy-actions-dropdown {
     display: none;
     position: absolute;
-    top: 100%;
+    bottom: calc(100% + 4px);
+    top: auto;
     right: 0;
     z-index: 1050;
     min-width: 160px;
@@ -1829,6 +1851,14 @@ body.beta-ui-enabled .beta-view-events #galaxies_div.beta-galaxies-container {
 
 .beta-galaxy-actions.open .beta-galaxy-actions-dropdown {
     display: block;
+}
+
+.beta-events-table .beta-galaxy-actions.open .beta-galaxy-actions-dropdown {
+    display: none;
+}
+
+.beta-galaxy-actions-portal {
+    display: none;
 }
 
 .beta-galaxy-action-item {

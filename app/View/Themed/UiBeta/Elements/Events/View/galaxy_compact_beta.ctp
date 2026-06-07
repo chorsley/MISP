@@ -43,7 +43,7 @@
         $chipId = 'beta-galaxy-chip-' . substr(md5($galaxyName . '|' . serialize(array_column($clusters, 'id'))), 0, 12);
     ?>
     <div class="beta-galaxy-wrapper">
-        <div class="beta-galaxy-cluster beta-galaxy-cluster-group" data-pattern="<?php echo $patternIndex; ?>" data-galaxy-chip-id="<?php echo h($chipId); ?>" data-cluster-count="<?php echo (int) count($clusters); ?>" style="background-color: <?php echo $bgColor; ?>; border-color: <?php echo $borderColor; ?>; overflow: visible; position: relative; z-index: 1; font-size: 13px; line-height: 1.25;">
+        <div class="beta-galaxy-cluster beta-galaxy-cluster-group" data-pattern="<?php echo $patternIndex; ?>" data-galaxy-chip-id="<?php echo h($chipId); ?>" data-cluster-count="<?php echo (int) count($clusters); ?>" style="background-color: <?php echo $bgColor; ?>; border-color: <?php echo $borderColor; ?>; position: relative; font-size: 13px; line-height: 1.25;">
             <div class="beta-galaxy-header" style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-star beta-galaxy-icon-star"></i>
                 <span class="beta-galaxy-cluster-label" style="color: <?php echo $labelColor; ?>; font-size: 16px; line-height: 1.1; font-weight: 700;"><?php echo h(strtoupper($galaxyName)); ?></span>
@@ -81,7 +81,7 @@
                         $showActions = $hasUtilityActions || $showEditActions;
                         $isCollapsed = $index >= $visibleCount;
                     ?>
-                    <span class="beta-galaxy-member<?php echo $isCollapsed ? ' beta-galaxy-member-collapsed' : ''; ?>"<?php echo $isCollapsed ? ' style="display:none;"' : ' style="position: relative; z-index: 1;"'; ?>>
+                    <span class="beta-galaxy-member<?php echo $isCollapsed ? ' beta-galaxy-member-collapsed' : ''; ?>"<?php echo $isCollapsed ? ' style="display:none;"' : ''; ?>>
                         <span class="beta-galaxy-member-scope" title="<?php echo $local ? __('Local') : __('Public'); ?>">
                             <i class="fas fa-<?php echo $local ? 'user' : 'globe-americas'; ?> beta-galaxy-icon-scope"></i>
                         </span>
@@ -102,9 +102,9 @@
                         <?php endif; ?>
 
                         <?php if ($showActions): ?>
-                            <span class="beta-galaxy-actions noPrint" style="position: relative; z-index: 2; overflow: visible; display: inline-flex; align-items: center;">
+                            <span class="beta-galaxy-actions noPrint" style="position: relative; display: inline-flex; align-items: center;">
                                 <span class="beta-galaxy-actions-toggle" title="<?php echo __('Actions'); ?>"><i class="fas fa-caret-down"></i></span>
-                                <span class="beta-galaxy-actions-dropdown" style="z-index: 9999;">
+                                <span class="beta-galaxy-actions-dropdown" style="z-index: 140;">
                                     <?php if ($id): ?>
                                         <a href="<?php echo $baseurl; ?>/galaxy_clusters/view/<?php echo h($id); ?>" class="beta-galaxy-action-item">
                                             <i class="fas fa-sitemap"></i> <?php echo __('View cluster'); ?>
@@ -131,6 +131,7 @@
                                 </span>
                             </span>
                         <?php endif; ?>
+
                     </span>
                 <?php endforeach; ?>
             </div>
@@ -142,12 +143,63 @@
     if (window._galaxyCompactBetaInit) return;
     window._galaxyCompactBetaInit = true;
 
+    function getGalaxyPortalMenu() {
+        var $menu = $('#beta-galaxy-actions-portal');
+        if (!$menu.length) {
+            $menu = $('<div id="beta-galaxy-actions-portal" class="beta-galaxy-actions-dropdown beta-galaxy-actions-portal noPrint"></div>').hide();
+            $('body').append($menu);
+        }
+        return $menu;
+    }
+
+    function positionGalaxyPortalMenu($toggle, $menu) {
+        var offset = $toggle.offset();
+        if (!offset) {
+            return;
+        }
+        $menu.css({display: 'block', visibility: 'hidden'});
+        var toggleWidth = $toggle.outerWidth() || 0;
+        var toggleHeight = $toggle.outerHeight() || 0;
+        var menuWidth = $menu.outerWidth() || 160;
+        var menuHeight = $menu.outerHeight() || 0;
+        var viewportWidth = $(window).width() || 0;
+        var scrollTop = $(window).scrollTop() || 0;
+        var viewportBottom = scrollTop + ($(window).height() || 0);
+        var left = offset.left + toggleWidth - menuWidth;
+        var top = offset.top + toggleHeight + 4;
+
+        if (left < 8) {
+            left = 8;
+        } else if (viewportWidth && left + menuWidth > viewportWidth - 8) {
+            left = Math.max(8, viewportWidth - menuWidth - 8);
+        }
+
+        if (top + menuHeight > viewportBottom - 8) {
+            top = offset.top - menuHeight - 4;
+        }
+        if (top < scrollTop + 8) {
+            top = scrollTop + 8;
+        }
+
+        $menu.css({
+            position: 'absolute',
+            top: top,
+            left: left,
+            right: 'auto',
+            bottom: 'auto',
+            zIndex: 10050,
+            visibility: 'visible'
+        });
+    }
+
     function closeGalaxyActionMenus() {
         $('.beta-galaxy-actions.open').removeClass('open');
+        $('.beta-galaxy-wrapper').removeClass('beta-galaxy-wrapper-active');
         $('.beta-galaxy-member').css('z-index', '');
         $('.beta-galaxy-cluster').css('z-index', '');
         $('.col-clusters').css('z-index', '');
-        $('.beta-events-table tr').css('z-index', '');
+        $('.beta-events-table tr').css({'z-index': '', 'position': ''});
+        getGalaxyPortalMenu().hide().empty().removeData('sourceActions');
     }
 
     function setGalaxyChipExpanded($chip, shouldExpand) {
@@ -209,14 +261,35 @@
         var $actions = $(this).closest('.beta-galaxy-actions');
         var $member = $(this).closest('.beta-galaxy-member');
         var $chip = $(this).closest('.beta-galaxy-cluster');
+        var $wrapper = $(this).closest('.beta-galaxy-wrapper');
+        var $dropdown = $actions.find('.beta-galaxy-actions-dropdown').first();
+        var $portalMenu = getGalaxyPortalMenu();
         var wasOpen = $actions.hasClass('open');
         closeGalaxyActionMenus();
         if (!wasOpen) {
             $actions.addClass('open');
-            $member.css('z-index', '10000');
-            $chip.css('z-index', '9999');
-            $chip.closest('.col-clusters').css('z-index', '10001');
-            $chip.closest('tr').css({position: 'relative', zIndex: '10000'});
+            $wrapper.addClass('beta-galaxy-wrapper-active');
+            $member.css('z-index', '120');
+            $chip.css('z-index', '110');
+            $chip.closest('.col-clusters').css({'position': 'relative', 'z-index': '130'});
+            $chip.closest('tr').css({'position': 'relative', 'z-index': '131'});
+            $portalMenu.html($dropdown.html()).data('sourceActions', $actions.get(0));
+            positionGalaxyPortalMenu($(this), $portalMenu);
+        }
+    });
+
+    $(window).on('resize scroll', function() {
+        var $portalMenu = $('#beta-galaxy-actions-portal');
+        if (!$portalMenu.length || !$portalMenu.is(':visible')) {
+            return;
+        }
+        var sourceActions = $portalMenu.data('sourceActions');
+        if (!sourceActions) {
+            return;
+        }
+        var $toggle = $(sourceActions).find('.beta-galaxy-actions-toggle').first();
+        if ($toggle.length) {
+            positionGalaxyPortalMenu($toggle, $portalMenu);
         }
     });
 

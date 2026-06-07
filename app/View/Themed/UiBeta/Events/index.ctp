@@ -10,7 +10,7 @@
  * @since 2.5.x (beta)
  */
 ?>
-<div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index">
+<div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index" style="padding-bottom: 96px;">
     <?php
         $searchScopes = [
             'searcheventinfo' => __('Event info'),
