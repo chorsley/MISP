@@ -136,7 +136,9 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                         <?php endif; ?>
                         <li class="divider"></li>
                         <li><a href="#" onclick="event.preventDefault();return copyEventIndexUuid(this, '<?= h($event['Event']['uuid']) ?>');" title="<?= __('Copy UUID') ?>"><i class="fa fa-copy"></i> <?= __('Copy UUID') ?></a></li>
-                        <li><a href="#" onclick="event.preventDefault();openAddToCollectionModal('<?= h($event['Event']['uuid']) ?>', <?= $eventId ?>)" title="<?= __('Add to Collection') ?>"><i class="fa fa-folder-plus"></i> <?= __('Add to Collection') ?></a></li>
+                        <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
+                            <li><a href="#" onclick="event.preventDefault();openAddToCollectionModal('<?= h($event['Event']['uuid']) ?>', <?= $eventId ?>)" title="<?= __('Add to Collection') ?>"><i class="fa fa-folder-plus"></i> <?= __('Add to Collection') ?></a></li>
+                        <?php endif; ?>
                         <?php if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)): ?>
                             <li class="divider"></li>
                             <li><a href="#" class="beta-publish-action" onclick="event.preventDefault();publishPopup(<?= $eventId ?>)" title="<?= __('Publish Event') ?>"><i class="fa fa-upload"></i> <?= __('Publish Event') ?></a></li>

@@ -50,7 +50,11 @@
         return '<span aria-label="' . __('warning') . '" role="img" tabindex="0" class="fa fa-exclamation-triangle" style="color: #f0ad4e;" data-placement="right" data-toggle="popover" data-content="' . h($content) . '" data-trigger="hover">&nbsp;</span>';
     };
 
-    $renderGalaxyElements = function ($galaxies, $targetId) use ($groupGalaxyClustersByName, $baseurl, $mayModify, $event) {
+    $canModifyGlobalTags = $this->Acl->canModifyTag($event);
+    $canModifyLocalTags = $this->Acl->canModifyTag($event, true);
+    $canDisableCorrelation = $this->Acl->canDisableCorrelation($event);
+
+    $renderGalaxyElements = function ($galaxies, $targetId) use ($groupGalaxyClustersByName, $baseurl, $canModifyGlobalTags, $canModifyLocalTags) {
         if (empty($galaxies)) {
             return '';
         }
@@ -61,8 +65,8 @@
                 'galaxyName' => $galaxyName,
                 'clusters' => $clusters,
                 'baseurl' => $baseurl,
-                'canModify' => $mayModify,
-                'canModifyLocal' => $this->Acl->canModifyTag($event, true),
+                'canModify' => $canModifyGlobalTags,
+                'canModifyLocal' => $canModifyLocalTags,
                 'target_type' => 'attribute',
                 'target_id' => $targetId,
             ]);
@@ -82,6 +86,9 @@
         return !empty($item['RelatedAttribute']) ? count($item['RelatedAttribute']) : 0;
     };
 
+    $showBulkAttributeControls = isset($showBulkAttributeControls) ? (bool)$showBulkAttributeControls : false;
+    $canAddSighting = $this->Acl->canAccess('sightings', 'add');
+    $canAdvancedSighting = $this->Acl->canAccess('sightings', 'advanced');
     $deleteSelectedUrl = $baseurl . '/attributes/deleteSelected/' . $event['Event']['id'];
     if (empty($event['Event']['publish_timestamp'])) {
         $deleteSelectedUrl .= '/1';
@@ -450,7 +457,7 @@
     <table class="beta-attr-table" id="attributeList">
         <thead>
             <tr>
-                <th style="width: 40px;"><input type="checkbox" class="select-all select_all" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all attributes/proposals on current page');?>" onclick="toggleAllAttributeCheckboxes()"></th>
+                <th style="width: 40px;"><?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-all select_all" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all attributes/proposals on current page');?>" onclick="toggleAllAttributeCheckboxes()"><?php endif; ?></th>
                 <th colspan="2"><?php echo __('Attribute Details'); ?></th>
                 <th class="col-related" style="width: 50px;"><?php echo __('Corr.'); ?></th>
                 <th class="col-comment" style="width: 20%;"><?php echo __('Comment'); ?></th>
@@ -475,6 +482,9 @@
                         $isSighted = true;
                     }
                     $distColor = '#999';
+                    $hasAttributeDownload = !$isObject && ($item['type'] == 'malware-sample' || $item['type'] == 'attachment');
+                    $hasTagActions = !$isObject && ($canModifyGlobalTags || $canModifyLocalTags);
+                    $hasRowActions = $mayModify || $canAddSighting || $canAdvancedSighting || $hasAttributeDownload || $hasTagActions;
                     if (isset($distributionLevels[$item['distribution']])) {
                         // Dist color mapping based on shortDist or similar
                         $distColors = [0 => '#555', 1 => '#428bca', 2 => '#f0ad4e', 3 => '#5cb85c', 4 => '#d9534f', 5 => '#333'];
@@ -493,36 +503,51 @@
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
                                 <div class="beta-row-actions beta-checkbox-actions-wrapper">
-                            <input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()">
+                            <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
+                            <?php if ($hasRowActions): ?>
                             <div class="beta-row-menu-trigger beta-dropdown-toggle">
                                 <i class="fa fa-chevron-down"></i>
                             </div>
                             <div class="beta-row-menu">
                                 <ul>
-                                <?php if ($mayModify): ?>
+                                <?php if ($mayModify || $hasTagActions || $canAddSighting || $canAdvancedSighting || $hasAttributeDownload): ?>
                                 <!-- Edit -->
+                                <?php if ($mayModify): ?>
                                 <li><a href="<?php echo $baseurl; ?>/<?php echo $isObject ? 'objects' : 'attributes'; ?>/edit/<?php echo h($item['id']); ?>"><i class="fa fa-edit"></i> Edit</a></li>
                                 
                                 <!-- Proposals -->
                                 <li><a href="#" onclick="event.preventDefault(); showMessage('fail', 'Proposal support not implemented in beta UI but coming soon');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
+                                <?php endif; ?>
 
                                 <!-- Tagging / Galaxies -->
-                                <?php if (!$isObject): ?>
+                                <?php if (!$isObject && $hasTagActions): ?>
                                     <li class="divider"></li>
+                                    <?php if ($canModifyGlobalTags || $canModifyLocalTags): ?>
                                     <li class="dropdown-submenu">
                                         <a href="#"><i class="fa fa-tag"></i> Add tag</a>
                                         <ul class="dropdown-menu">
+                                            <?php if ($canModifyLocalTags): ?>
                                             <li><a href="#" onclick="getPopup('local:1/<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                            <?php endif; ?>
+                                            <?php if ($canModifyGlobalTags): ?>
                                             <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                            <?php endif; ?>
                                         </ul>
                                     </li>
+                                    <?php endif; ?>
+                                    <?php if ($canModifyGlobalTags || $canModifyLocalTags): ?>
                                     <li class="dropdown-submenu">
                                         <a href="#"><i class="fa fa-bahai"></i> Add Galaxy</a>
                                         <ul class="dropdown-menu">
+                                            <?php if ($canModifyLocalTags): ?>
                                             <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                            <?php endif; ?>
+                                            <?php if ($canModifyGlobalTags): ?>
                                             <li><a href="#" onclick="getPopup('<?php echo h($item['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                            <?php endif; ?>
                                         </ul>
                                     </li>
+                                    <?php endif; ?>
                                 <?php endif; ?>
 
                                 <!-- Context Specific Actions -->
@@ -531,11 +556,16 @@
                                     <li><a href="<?php echo $baseurl; ?>/attributes/download/<?php echo h($item['id']); ?>"><i class="fa fa-download"></i> Download</a></li>
                                 <?php endif; ?>
                                 
+                                <?php if ($canAddSighting || $canAdvancedSighting): ?>
                                 <!-- Sightings Actions -->
                                 <li class="divider"></li>
+                                <?php if ($canAddSighting): ?>
                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($item['id']); ?>');"><i class="fa fa-eye"></i> Add Sighting</a></li>
-                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/setFalsePositive/<?php echo h($item['id']); ?>');"><i class="fa fa-eye-slash"></i> False Positive</a></li>
+                                <?php endif; ?>
+                                <?php if ($canAdvancedSighting): ?>
                                 <li><a href="#" class="sightings_advanced_add" data-object-id="<?php echo h($item['id']); ?>" data-object-context="<?php echo $isObject ? 'object' : 'attribute'; ?>"><i class="fa fa-wrench"></i> Advanced Sightings</a></li>
+                                <?php endif; ?>
+                                <?php endif; ?>
 
                                 <!-- Enrichment -->
                                 <?php if (!$isObject): ?>
@@ -546,13 +576,15 @@
                                 <!-- Utilities -->
                                 <li class="divider"></li>
                                 <li><a href="#" onclick="return betaCopyUuid('<?php echo h($item['uuid']); ?>');"><i class="fa fa-copy"></i> Copy UUID</a></li>
-
+                                <?php endif; ?>
+                                <?php if ($mayModify): ?>
                                 <!-- Delete -->
                                 <li class="divider"></li>
                                 <li><a href="#" class="text-danger" onclick="deleteObject('<?php echo $isObject ? 'objects' : 'attributes'; ?>', 'delete', '<?php echo h($item['id']); ?>')"><i class="fa fa-trash"></i> Delete</a></li>
                                 <?php endif; ?>
                                 </ul>
                             </div>
+                            <?php endif; ?>
                                 </div>
                                 <?php if ($isObject): ?>
                                     <span class="object-label">Object</span>
@@ -602,8 +634,8 @@
                                         <?php echo $this->element('ajaxTags', [
                                             'attributeId' => $item['id'],
                                             'tags' => $item['AttributeTag'] ?? [],
-                                            'tagAccess' => $mayModify,
-                                            'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                            'tagAccess' => $canModifyGlobalTags,
+                                            'localTagAccess' => $canModifyLocalTags,
                                             'scope' => 'attribute',
                                             'tagConflicts' => $item['tagConflicts'] ?? [],
                                             'static_tags_only' => true,
@@ -648,7 +680,7 @@
                         <!-- Correlation Toggle -->
                         <td class="col-correlation" style="text-align: center;">
                             <i class="fa fa-project-diagram beta-correlation-toggle" 
-                               style="cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($item['disable_correlation'] ? 'opacity: 0.2;' : 'color: #428bca;') ?>"
+                               style="cursor: <?= ($canDisableCorrelation ? 'pointer' : 'default') ?>; <?= ($item['disable_correlation'] ? 'opacity: 0.2;' : 'color: #428bca;') ?>"
                                data-id="<?= h($item['id']) ?>"
                                data-disable-correlation="<?= (int)$item['disable_correlation'] ?>"
                                title="<?= ($item['disable_correlation'] ? __('Correlation disabled') : __('Correlation enabled')) ?>"></i>
@@ -656,10 +688,12 @@
 
                         <!-- Sightings -->
                         <td class="col-sightings" style="text-align: center;">
-                            <?php if ($isSighted): ?>
+                            <?php if ($isSighted && $canAdvancedSighting): ?>
                                 <i class="fa fa-eye sightings_advanced_add" style="color: #d9534f; cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($item['id']); ?>" data-object-context="attribute"></i>
-                            <?php else: ?>
+                            <?php elseif ($canAddSighting): ?>
                                 <i class="fa fa-eye" style="color: #ccc; cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($item['id']); ?>');"></i>
+                            <?php else: ?>
+                                <i class="fa fa-eye" style="color: #ccc; opacity: 0.35; cursor: default;" title="<?php echo __('Sightings unavailable'); ?>"></i>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
@@ -714,6 +748,9 @@
                                 $isSightedSub = true;
                             }
                             $subDistColor = '#999';
+                            $hasSubAttributeDownload = $subAttr['type'] == 'malware-sample' || $subAttr['type'] == 'attachment';
+                            $hasSubTagActions = $canModifyGlobalTags || $canModifyLocalTags;
+                            $hasSubRowActions = $mayModify || $canAddSighting || $canAdvancedSighting || $hasSubAttributeDownload || $hasSubTagActions;
                             if (isset($distributionLevels[$subAttr['distribution']])) {
                                 $subDistColors = [0 => '#555', 1 => '#428bca', 2 => '#f0ad4e', 3 => '#5cb85c', 4 => '#d9534f', 5 => '#333'];
                                 $subDistColor = $subDistColors[$subAttr['distribution']] ?? '#999';
@@ -728,47 +765,70 @@
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions beta-checkbox-actions-wrapper">
-                                    <input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()">
+                                    <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
+                                    <?php if ($hasSubRowActions): ?>
                                     <div class="beta-row-menu-trigger beta-dropdown-toggle">
                                         <i class="fa fa-chevron-down"></i>
                                     </div>
                                     <div class="beta-row-menu">
                                         <ul>
-                                             <?php if ($mayModify): ?>
+                                             <?php if ($mayModify || $hasSubTagActions || $canAddSighting || $canAdvancedSighting || $hasSubAttributeDownload): ?>
+                                                <?php if ($mayModify): ?>
                                                 <li><a href="<?php echo $baseurl; ?>/attributes/edit/<?php echo h($subAttr['id']); ?>"><i class="fa fa-edit"></i> Edit</a></li>
                                                 <li><a href="#" onclick="event.preventDefault(); showMessage('fail', 'Proposal support not implemented in beta UI but coming soon');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
 
+                                                <?php endif; ?>
+                                                <?php if ($hasSubTagActions): ?>
                                                 <li class="divider"></li>
                                                 <li class="dropdown-submenu">
                                                     <a href="#"><i class="fa fa-tag"></i> Add tag</a>
                                                     <ul class="dropdown-menu">
+                                                        <?php if ($canModifyLocalTags): ?>
                                                         <li><a href="#" onclick="getPopup('local:1/<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                                        <?php endif; ?>
+                                                        <?php if ($canModifyGlobalTags): ?>
                                                         <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute', 'tags', 'selectTaxonomy'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                                        <?php endif; ?>
                                                     </ul>
                                                 </li>
                                                 <li class="dropdown-submenu">
                                                     <a href="#"><i class="fa fa-bahai"></i> Galaxies</a>
                                                     <ul class="dropdown-menu">
+                                                        <?php if ($canModifyLocalTags): ?>
                                                         <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:1', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-user"></i> Local</a></li>
+                                                        <?php endif; ?>
+                                                        <?php if ($canModifyGlobalTags): ?>
                                                         <li><a href="#" onclick="getPopup('<?php echo h($subAttr['id']); ?>/attribute/local:0', 'galaxies', 'selectGalaxyNamespace'); return false;"><i class="fa fa-globe"></i> Global</a></li>
+                                                        <?php endif; ?>
                                                     </ul>
                                                 </li>
+                                                <?php endif; ?>
 
+                                                <?php if ($hasSubAttributeDownload): ?>
                                                 <li class="divider"></li>
                                                 <li><a href="<?php echo $baseurl; ?>/attributes/download/<?php echo h($subAttr['id']); ?>"><i class="fa fa-download"></i> Download</a></li>
+                                                <?php endif; ?>
+                                                <?php if ($canAddSighting || $canAdvancedSighting): ?>
                                                 <li class="divider"></li>
+                                                <?php if ($canAddSighting): ?>
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-eye"></i> Add Sighting</a></li>
-                                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/setFalsePositive/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-eye-slash"></i> False Positive</a></li>
+                                                <?php endif; ?>
+                                                <?php if ($canAdvancedSighting): ?>
                                                 <li><a href="#" class="sightings_advanced_add" data-object-id="<?php echo h($subAttr['id']); ?>" data-object-context="attribute"><i class="fa fa-wrench"></i> Advanced Sightings</a></li>
+                                                <?php endif; ?>
+                                                <?php endif; ?>
                                                 <li class="divider"></li>
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl;?>/events/queryEnrichment/<?php echo h($subAttr['id']); ?>/0/Enrichment/Attribute');"><i class="fa fa-magic"></i> Enrich</a></li>
                                                 <li class="divider"></li>
                                                 <li><a href="#" onclick="return betaCopyUuid('<?php echo h($subAttr['uuid']); ?>');"><i class="fa fa-copy"></i> Copy UUID</a></li>
+                                                <?php if ($mayModify): ?>
                                                 <li class="divider"></li>
                                                 <li><a href="#" class="text-danger" onclick="deleteObject('attributes', 'delete', '<?php echo h($subAttr['id']); ?>')"><i class="fa fa-trash"></i> Delete</a></li>
+                                                <?php endif; ?>
                                              <?php endif; ?>
                                         </ul>
                                     </div>
+                                    <?php endif; ?>
                                  </div>
                             </td>
                             
@@ -807,8 +867,8 @@
                                             <?php echo $this->element('ajaxTags', [
                                                 'attributeId' => $subAttr['id'],
                                                 'tags' => $subAttr['AttributeTag'] ?? [],
-                                                'tagAccess' => $mayModify,
-                                                'localTagAccess' => $this->Acl->canModifyTag($event, true),
+                                                'tagAccess' => $canModifyGlobalTags,
+                                                'localTagAccess' => $canModifyLocalTags,
                                                 'scope' => 'attribute',
                                                 'tagConflicts' => $subAttr['tagConflicts'] ?? [],
                                                 'static_tags_only' => true,
@@ -859,10 +919,12 @@
 
                             <!-- Sightings -->
                             <td class="col-sightings" style="text-align: center;">
-                                <?php if ($isSightedSub): ?>
+                                <?php if ($isSightedSub && $canAdvancedSighting): ?>
                                     <i class="fa fa-eye sightings_advanced_add" style="color: #d9534f; cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($subAttr['id']); ?>" data-object-context="attribute"></i>
-                                <?php else: ?>
+                                <?php elseif ($canAddSighting): ?>
                                     <i class="fa fa-eye" style="color: #ccc; cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($subAttr['id']); ?>');"></i>
+                                <?php else: ?>
+                                    <i class="fa fa-eye" style="color: #ccc; opacity: 0.35; cursor: default;" title="<?php echo __('Sightings unavailable'); ?>"></i>
                                 <?php endif; ?>
                             </td>
                             <!-- Distribution -->
