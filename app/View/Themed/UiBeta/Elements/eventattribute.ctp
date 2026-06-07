@@ -366,9 +366,18 @@
         padding-top: 2px;
     }
     .beta-attr-comment-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         font-size: 11px;
         color: #777;
         font-style: italic;
+        overflow-wrap: anywhere;
+    }
+    .beta-attr-comment-inline .fa,
+    .beta-attr-comment-inline .fas {
+        font-style: normal;
+        opacity: 0.85;
     }
 </style>
 
@@ -567,6 +576,9 @@
                                     <span class="beta-category-label"><?php echo h($item['category']); ?></span>
                                     <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>
                                     <span class="beta-type-insight"><?php echo h($item['type']); ?></span>
+                                    <?php if (!empty($item['comment'])): ?>
+                                        <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($item['comment']); ?></span></span>
+                                    <?php endif; ?>
                                     <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
                                 </div>
                                 
@@ -768,7 +780,7 @@
                                         <span class="beta-object-relation-insight"><?php echo h($subAttr['object_relation']); ?></span>
                                         <span class="beta-type-insight"><?php echo h($subAttr['type']); ?></span>
                                         <?php if (!empty($subAttr['comment'])): ?>
-                                            <span class="beta-attr-comment-inline">:: <?php echo h($subAttr['comment']); ?></span>
+                                            <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($subAttr['comment']); ?></span></span>
                                         <?php endif; ?>
                                         <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
                                     </div>

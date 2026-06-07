@@ -294,22 +294,22 @@
         border-bottom-color: #dce8f5;
     }
     .beta-card-accent-comments {
-        border-color: #f2dfcd;
-        border-left-color: #d79554;
-        background: linear-gradient(180deg, #fffdfb 0%, #fbf5ef 100%);
+        border-color: #d7e9e6;
+        border-left-color: #4fa7a0;
+        background: linear-gradient(180deg, #fbfefd 0%, #eef8f6 100%);
     }
     .beta-card-accent-comments .beta-card-header {
-        color: #7a4d1f;
-        border-bottom-color: #eadbcd;
+        color: #2e6d68;
+        border-bottom-color: #d6e8e5;
     }
     .beta-card-accent-reports {
-        border-color: #eadff6;
-        border-left-color: #9b7ad6;
-        background: linear-gradient(180deg, #fefcff 0%, #f7f2fd 100%);
+        border-color: #d8e8fb;
+        border-left-color: #62aaf6;
+        background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
     }
     .beta-card-accent-reports .beta-card-header {
-        color: #5b3d91;
-        border-bottom-color: #e7def4;
+        color: #234d7d;
+        border-bottom-color: #dce8f5;
     }
     .beta-card-header {
         padding: 10px 15px;
@@ -441,12 +441,12 @@
         line-height: 1;
     }
     .beta-context-section-collections {
-        border-color: #efe1fb;
-        border-left-color: #9b7ad6;
-        background: linear-gradient(180deg, #fefcff 0%, #f7f2fd 100%);
+        border-color: #f2e2c8;
+        border-left-color: #d79a45;
+        background: linear-gradient(180deg, #fffdf8 0%, #fbf4e8 100%);
     }
     .beta-context-section-collections .beta-context-section-title {
-        color: #5b3d91;
+        color: #80511d;
     }
     .beta-context-section-tags {
         border-color: #ddecdc;
@@ -457,12 +457,12 @@
         color: #2d5b2c;
     }
     .beta-context-section-galaxies {
-        border-color: #e7def8;
-        border-left-color: #8d73d9;
-        background: linear-gradient(180deg, #fdfcff 0%, #f6f2fd 100%);
+        border-color: #dde3fb;
+        border-left-color: #5f7dd8;
+        background: linear-gradient(180deg, #fcfdff 0%, #f1f5ff 100%);
     }
     .beta-context-section-galaxies .beta-context-section-title {
-        color: #4e3b84;
+        color: #3554a6;
     }
     .beta-view-events .eventTagContainer .addButton,
     .beta-view-events .beta-context-section-actions .addButton {
