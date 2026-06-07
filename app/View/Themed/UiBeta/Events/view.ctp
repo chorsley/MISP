@@ -683,20 +683,33 @@
         background-color: #f5f5f5;
     }
     .beta-row-actions {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 0;
         position: relative;
+        height: 24px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background: #fff;
+        overflow: hidden;
+    }
+    .beta-row-actions input[type="checkbox"] {
+        margin: 0 4px;
     }
     .beta-row-menu-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 100%;
         cursor: pointer;
-        padding: 2px 6px;
+        padding: 0;
+        border-left: 1px solid #dee2e6;
         color: #777;
-        border-radius: 3px;
-        transition: background 0.2s;
+        transition: background 0.2s, color 0.2s;
     }
     .beta-row-menu-trigger:hover {
-        background: #eee;
+        background: #f8f9fa;
         color: #333;
     }
     .beta-row-menu {

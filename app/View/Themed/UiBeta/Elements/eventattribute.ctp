@@ -492,10 +492,10 @@
                     <td style="position: relative;" <?php if ($isObject) echo 'colspan="3"'; ?>>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <div class="beta-row-actions">
+                                <div class="beta-row-actions beta-checkbox-actions-wrapper">
                             <input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()">
-                            <div class="beta-row-menu-trigger">
-                                <i class="fa fa-caret-down"></i>
+                            <div class="beta-row-menu-trigger beta-dropdown-toggle">
+                                <i class="fa fa-chevron-down"></i>
                             </div>
                             <div class="beta-row-menu">
                                 <ul>
@@ -727,10 +727,10 @@
                         <tr class="beta-attr-row object-attr-row" id="Attribute_<?php echo h($subAttr['id']); ?>_tr" data-object-type="attribute" data-primary-id="<?php echo h($subAttr['id']); ?>" data-uuid="<?php echo h($subAttr['uuid']); ?>" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object-id="<?php echo h($item['id']); ?>" data-parent-object="<?php echo $dataName; ?>">
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
-                                 <div class="beta-row-actions">
+                                 <div class="beta-row-actions beta-checkbox-actions-wrapper">
                                     <input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()">
-                                    <div class="beta-row-menu-trigger">
-                                        <i class="fa fa-caret-down"></i>
+                                    <div class="beta-row-menu-trigger beta-dropdown-toggle">
+                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                     <div class="beta-row-menu">
                                         <ul>
