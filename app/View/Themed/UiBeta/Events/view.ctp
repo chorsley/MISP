@@ -7,7 +7,7 @@
 
 <style>
     .beta-view-events {
-        padding: 20px;
+        padding: 20px 20px 84px;
         background-color: #f9f9f9;
         min-height: 100vh;
     }
@@ -30,11 +30,11 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 5px 10px;
+        padding: 4px 10px;
         border: 1px solid #d9e2ec;
         border-radius: 999px;
         background: linear-gradient(180deg, #fbfcfe 0%, #f2f5f8 100%);
-        font-size: 12px;
+        font-size: 11px;
         color: #566372;
         font-weight: 600;
         line-height: 1.2;
@@ -793,6 +793,28 @@
         color: #428bca;
         text-decoration: underline;
     }
+    .beta-id-badge.beta-action-badge {
+        padding: 0;
+        overflow: hidden;
+    }
+    .beta-id-badge-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 14px;
+        color: #4b5f77;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .beta-id-badge-action:hover,
+    .beta-id-badge-action:focus {
+        color: #2b4f81;
+        text-decoration: none;
+        background: rgba(66, 139, 202, 0.05);
+    }
     .beta-tags-container {
         display: flex;
         flex-wrap: wrap;
@@ -855,6 +877,14 @@
     .report-name-cell:hover {
         text-decoration: underline;
     }
+    .beta-warninglist-table thead th {
+        position: static;
+        top: auto;
+        z-index: auto;
+    }
+    .beta-warninglist-table thead th::after {
+        display: none;
+    }
 </style>
 
 <div class="events view beta-view-events">
@@ -872,6 +902,14 @@
                 <span class="beta-id-badge-label"><?php echo __('UUID'); ?></span>
                 <span class="beta-id-badge-value"><?php echo h($event['Event']['uuid']); ?></span>
             </span>
+            <?php if ($this->Acl->canModifyEvent($event)): ?>
+                <span class="beta-id-badge beta-action-badge">
+                    <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="beta-id-badge-action">
+                        <i class="fa fa-edit"></i>
+                        <span><?php echo __('Edit event header'); ?></span>
+                    </a>
+                </span>
+            <?php endif; ?>
         </div>
         <div class="beta-event-meta-row">
             <span class="meta-box date-box">
@@ -962,15 +1000,6 @@
                     <?php endif; ?>
                 </span>
             </span>
-
-            <?php if ($this->Acl->canModifyEvent($event)): ?>
-                <span class="meta-box edit-box">
-                    <span class="meta-label"><i class="fa fa-edit"></i><?php echo __('Action'); ?></span>
-                    <span class="meta-value">
-                        <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit event header'); ?></a>
-                    </span>
-                </span>
-            <?php endif; ?>
         </div>
         
         <?php if (!empty($warnings)): ?>
@@ -1466,7 +1495,7 @@
                                 </div>
                                 <div class="beta-card-body" id="beta-warninglist-content-wrap" style="display: <?php echo $warninglistExpanded ? 'block' : 'none'; ?>;">
                                     <?php if (!empty($warninglistMatches)): ?>
-                                        <table class="table table-condensed table-hover" style="font-size: 12px; margin-bottom: 0;">
+                                        <table class="table table-condensed table-hover beta-warninglist-table" style="font-size: 12px; margin-bottom: 0;">
                                             <thead>
                                                <tr>
                                                    <th><?php echo __('Warninglist'); ?></th>
