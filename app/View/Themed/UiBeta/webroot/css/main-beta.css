@@ -438,15 +438,36 @@ pre {
     color: #ffc107;
 }
 
-/* Beta popup spacing */
-#popover_form.ajax_popover_form {
-    padding: 1.25rem;
+/* Beta popup sizing for legacy ajax dialogs rendered inside UiBeta */
+.beta-ui-enabled #popover_form.ajax_popover_form {
+    width: min(760px, calc(100vw - 32px));
+    left: 50%;
+    transform: translateX(-50%);
     box-sizing: border-box;
 }
 
-#popover_form.ajax_popover_form h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
+.beta-ui-enabled #popover_form.ajax_popover_form legend,
+.beta-ui-enabled #popover_form.ajax_popover_form .legend {
+    width: calc(100% - 10px);
+    box-sizing: border-box;
+}
+
+.beta-ui-enabled #popover_form.ajax_popover_form .input-xxlarge,
+.beta-ui-enabled #popover_form.ajax_popover_form textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.beta-ui-enabled #popover_form.ajax_popover_form textarea {
+    min-height: 220px;
+}
+
+.beta-ui-enabled #popover_form.ajax_popover_form .add_attribute_fields,
+.beta-ui-enabled #popover_form.ajax_popover_form .ajax_fieldset,
+.beta-ui-enabled #popover_form.ajax_popover_form .overlay_spacing {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
 }
 
 /* Example: Beta shadow utilities */
