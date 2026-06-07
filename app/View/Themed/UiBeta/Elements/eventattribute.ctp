@@ -459,6 +459,7 @@
                     $dataType = $isObject ? 'object' : 'attribute';
                     $dataName = $isObject ? $item['name'] : $item['type'];
                     $rowClass = $isObject ? 'object-header-row' : 'standalone-attr-row';
+                    $objectAttributes = ($isObject && !empty($item['Attribute']) && is_array($item['Attribute'])) ? $item['Attribute'] : [];
                     
                     $isSighted = isset($sightingsData['data'][$item['id']]);
                     if (!$isObject && !$isSighted && isset($item['Sighting']) && !empty($item['Sighting'])) {
@@ -552,7 +553,7 @@
                             </div>
                             <?php if ($isObject): ?>
                                 <div class="object-header-meta">
-                                    <div style="font-size: 10px; color: #999;"><?php echo count($item['Attribute']); ?> attributes</div>
+                                    <div style="font-size: 10px; color: #999;"><?php echo count($objectAttributes); ?> attributes</div>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -686,12 +687,12 @@
                 <!-- No more sub-rows for Standalone Tags/Galaxies -->
                 
                 <!-- Expanded Object Attributes -->
-                <?php if ($isObject && !empty($item['Attribute'])): ?>
+                <?php if ($isObject && !empty($objectAttributes)): ?>
                     <?php 
-                        $totalAttrs = count($item['Attribute']);
+                        $totalAttrs = count($objectAttributes);
                         $attrIndex = 0;
                     ?>
-                    <?php foreach ($item['Attribute'] as $subAttr): ?>
+                    <?php foreach ($objectAttributes as $subAttr): ?>
                         <?php 
                             $attrIndex++;
                             $isLast = ($attrIndex === $totalAttrs);

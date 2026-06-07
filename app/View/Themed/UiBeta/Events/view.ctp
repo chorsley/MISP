@@ -1941,7 +1941,8 @@
         }
 
         // Initialize history state on load
-        var rawHash = window.location.hash || '';
+        var historyTab = (history.state && history.state.tab) ? history.state.tab : '';
+        var rawHash = window.location.hash || historyTab || '';
         var initialTab = '#summary';
         var initialUrlHash = '#summary';
         if (rawHash === '#summary' || rawHash === '#attributes' || rawHash === '#correlations' || rawHash === '#history') {
@@ -2030,6 +2031,7 @@
         initContextCountObservers();
         refreshContextCounts();
         initBetaBulkActions();
+        initBetaSingleDeleteRefresh();
     });
 
     function buildFilterMessage(text) {
@@ -2108,6 +2110,27 @@
         return selected;
     }
 
+    function getBetaSelectedEntities() {
+        var selected = {
+            attributes: [],
+            objects: []
+        };
+        $('.select_attribute:checked').each(function() {
+            var id = $(this).data('id');
+            if (typeof id === 'undefined' || id === null || id === '') {
+                return;
+            }
+            var $row = $(this).closest('tr');
+            var objectType = $row.data('object-type');
+            if (objectType === 'object') {
+                selected.objects.push(String(id));
+            } else {
+                selected.attributes.push(String(id));
+            }
+        });
+        return selected;
+    }
+
     function clearBetaSelectedAttributes() {
         $('.select_attribute, .select_all, input[class^="select_all_object_attributes_"]').prop('checked', false);
         updateBetaBulkActionBar();
@@ -2156,9 +2179,56 @@
         });
     }
 
+    function reloadBetaAttributesList() {
+        if (typeof window.paginationLoadPage === 'function' && window.paginationState) {
+            window.paginationLoadPage(window.paginationState.currentPage, window.paginationState.pageSize);
+            return true;
+        }
+        return false;
+    }
+
+    function initBetaSingleDeleteRefresh() {
+        if (window._betaSingleDeleteRefreshWrapped || typeof submitDeletion !== 'function') {
+            return;
+        }
+        window._betaSingleDeleteRefreshWrapped = true;
+        var originalSubmitDeletion = submitDeletion;
+        submitDeletion = function(context_id, action, type, id) {
+            if (action !== 'delete' || (type !== 'attributes' && type !== 'objects')) {
+                return originalSubmitDeletion.apply(this, arguments);
+            }
+
+            var formData = $('#PromptForm').serialize();
+            xhr({
+                data: formData,
+                success: function(data) {
+                    var success = handleGenericAjaxResponse(data);
+                    if (success) {
+                        reloadBetaAttributesList();
+                    }
+                },
+                complete: function() {
+                    $('.loading').hide();
+                    $('#confirmation_box').fadeOut();
+                    $('#gray_out').fadeOut();
+                },
+                type: 'post',
+                url: '/' + type + '/' + action + '/' + id,
+            });
+        };
+    }
+
     function handleBetaBulkDeleteAction(eventId) {
-        var selectedIds = getBetaSelectedAttributeIds();
-        if (!selectedIds.length) {
+        var selected = getBetaSelectedEntities();
+        if (!selected.attributes.length && !selected.objects.length) {
+            return false;
+        }
+        if (!selected.attributes.length && selected.objects.length) {
+            showMessage('fail', 'Bulk delete for objects is not supported yet in the beta event view. Use the object dropdown to delete them one by one for now.');
+            return false;
+        }
+        if (selected.objects.length) {
+            showMessage('fail', 'Bulk delete of mixed attribute and object selections is not supported in the beta event view. Use the object dropdown to delete objects one by one for now.');
             return false;
         }
         if (typeof window._betaBulkDeleteWrapped === 'undefined') {
@@ -2174,7 +2244,7 @@
                 return success;
             };
         }
-        window._betaPendingBulkDeleteIds = selectedIds;
+        window._betaPendingBulkDeleteIds = selected.attributes;
         return multiSelectAction(eventId, 'deleteAttributes');
     }
 
