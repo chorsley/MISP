@@ -3807,14 +3807,17 @@
         container.innerHTML = ''; // Clear "Loading…" placeholder immediately
 
         $.ajax({
-            url: baseurl + '/collections/getForElement/Event/' + eventUuid + '.json',
-            method: 'GET',
+            url: baseurl + '/collections/getCollectionsForElements/Event.json',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ uuids: [eventUuid] }),
             dataType: 'json',
             success: function(data) {
+                var collections = data && typeof data === 'object' && Array.isArray(data[eventUuid]) ? data[eventUuid] : [];
                 if (countNode) {
-                    countNode.textContent = Array.isArray(data) ? String(data.length) : '0';
+                    countNode.textContent = String(collections.length);
                 }
-                renderEventCollectionChips(container, data, baseurl);
+                renderEventCollectionChips(container, collections, baseurl);
             },
             error: function() {
                 container.innerHTML = '';

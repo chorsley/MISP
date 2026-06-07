@@ -214,35 +214,67 @@
         container.appendChild(chips);
     }
 
-    function loadCollectionsForContainer(container) {
-        if (!container || container.getAttribute('data-collections-loaded') === '1') {
+    function applyCollectionsToContainer(container, data) {
+        if (!container) {
             return;
         }
 
         var eventUuid = container.getAttribute('data-event-uuid');
-        if (!eventUuid) {
+        var collections = data && typeof data === 'object' && eventUuid && Array.isArray(data[eventUuid]) ? data[eventUuid] : [];
+        renderEventCollections(container, collections);
+        container.setAttribute('data-collections-loaded', '1');
+    }
+
+    function loadCollectionsForContainers(containers) {
+        var uuids = [];
+
+        containers.forEach(function(container) {
+            if (!container || container.getAttribute('data-collections-loaded') === '1') {
+                return;
+            }
+
+            var eventUuid = container.getAttribute('data-event-uuid');
+            if (!eventUuid) {
+                return;
+            }
+
+            container.setAttribute('data-collections-loaded', 'loading');
+            if (uuids.indexOf(eventUuid) === -1) {
+                uuids.push(eventUuid);
+            }
+        });
+
+        if (uuids.length === 0) {
             return;
         }
 
-        container.setAttribute('data-collections-loaded', 'loading');
         $.ajax({
-            url: betaEventsIndexBaseurl + '/collections/getForElement/Event/' + encodeURIComponent(eventUuid) + '.json',
-            method: 'GET',
+            url: betaEventsIndexBaseurl + '/collections/getCollectionsForElements/Event.json',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ uuids: uuids }),
             dataType: 'json',
             success: function(data) {
-                renderEventCollections(container, data);
-                container.setAttribute('data-collections-loaded', '1');
+                containers.forEach(function(container) {
+                    applyCollectionsToContainer(container, data);
+                });
             },
             error: function() {
-                container.removeAttribute('data-collections-loaded');
+                containers.forEach(function(container) {
+                    if (container) {
+                        container.removeAttribute('data-collections-loaded');
+                    }
+                });
             }
         });
     }
 
     function loadVisibleEventCollections() {
+        var containers = [];
         $('[id^="event-collections-container-"]').each(function() {
-            loadCollectionsForContainer(this);
+            containers.push(this);
         });
+        loadCollectionsForContainers(containers);
     }
 
     window.openAddToCollectionModal = function(eventUuid, eventId) {
@@ -264,15 +296,7 @@
             return;
         }
 
-        $.ajax({
-            url: betaEventsIndexBaseurl + '/collections/getForElement/Event/' + encodeURIComponent(context.eventUuid) + '.json',
-            method: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                renderEventCollections(container, data);
-                container.setAttribute('data-collections-loaded', '1');
-            }
-        });
+        loadCollectionsForContainers([container]);
     };
 
     $(function() {

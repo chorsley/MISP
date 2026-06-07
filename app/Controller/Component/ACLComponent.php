@@ -132,7 +132,8 @@ class ACLComponent extends Component
             'deleteSelection' => ['AND'=> ['perm_modify', 'theming_enabled']],
             'edit' => ['perm_modify'],
             // Read-only JSON endpoint used by beta Event view to list collection memberships.
-            'getForElement' => ['*'],
+            'getCollectionsForElement' => ['*'],
+            'getCollectionsForElements' => ['*'],
             'index' => ['*'],
             'view' => ['*']
         ],
