@@ -477,7 +477,7 @@
                     data-object-type="<?php echo $dataType; ?>"
                     data-primary-id="<?php echo h($item['id']); ?>"
                     <?php if (!empty($item['uuid'])): ?>data-uuid="<?php echo h($item['uuid']); ?>"<?php endif; ?>
-                    <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
+                    <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>" data-object-id="<?php echo h($item['id']); ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
                     <td style="position: relative;" <?php if ($isObject) echo 'colspan="3"'; ?>>
@@ -712,7 +712,7 @@
                             $hasGalaxies = !empty($subAttr['Galaxy']);
                             $attributeIsLast = $isLast && !$hasTags && !$hasGalaxies;
                         ?>
-                        <tr class="beta-attr-row object-attr-row" id="Attribute_<?php echo h($subAttr['id']); ?>_tr" data-object-type="attribute" data-primary-id="<?php echo h($subAttr['id']); ?>" data-uuid="<?php echo h($subAttr['uuid']); ?>" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object="<?php echo $dataName; ?>">
+                        <tr class="beta-attr-row object-attr-row" id="Attribute_<?php echo h($subAttr['id']); ?>_tr" data-object-type="attribute" data-primary-id="<?php echo h($subAttr['id']); ?>" data-uuid="<?php echo h($subAttr['uuid']); ?>" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object-id="<?php echo h($item['id']); ?>" data-parent-object="<?php echo $dataName; ?>">
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-row-actions">
@@ -1277,9 +1277,12 @@
         });
 
         // Individual Object Toggle
-        $(document).on('click.betaAttr', '.object-header-row', function() {
-            var name = $(this).data('object-name');
-            $('.object-attr-row[data-parent-object="' + name + '"]').toggle();
+        $(document).on('click.betaAttr', '.object-header-row', function(e) {
+            if ($(e.target).closest('.beta-row-actions, .beta-row-menu, .beta-row-menu-trigger, a, button, input, label').length) {
+                return;
+            }
+            var objectId = $(this).data('object-id');
+            $('.object-attr-row[data-parent-object-id="' + objectId + '"]').toggle();
         });
 
         // Correlation Toggle handling
