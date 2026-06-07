@@ -504,7 +504,7 @@
                                 <li><a href="<?php echo $baseurl; ?>/<?php echo $isObject ? 'objects' : 'attributes'; ?>/edit/<?php echo h($item['id']); ?>"><i class="fa fa-edit"></i> Edit</a></li>
                                 
                                 <!-- Proposals -->
-                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/shadow_attributes/add/<?php echo h($item['id']); ?>');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
+                                <li><a href="#" onclick="event.preventDefault(); showMessage('fail', 'Proposal support not implemented in beta UI but coming soon');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
 
                                 <!-- Tagging / Galaxies -->
                                 <?php if (!$isObject): ?>
@@ -736,7 +736,7 @@
                                         <ul>
                                              <?php if ($mayModify): ?>
                                                 <li><a href="<?php echo $baseurl; ?>/attributes/edit/<?php echo h($subAttr['id']); ?>"><i class="fa fa-edit"></i> Edit</a></li>
-                                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/shadow_attributes/add/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
+                                                <li><a href="#" onclick="event.preventDefault(); showMessage('fail', 'Proposal support not implemented in beta UI but coming soon');"><i class="fa fa-comment-dots"></i> Propose Edit</a></li>
 
                                                 <li class="divider"></li>
                                                 <li class="dropdown-submenu">
@@ -760,6 +760,8 @@
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-eye"></i> Add Sighting</a></li>
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/setFalsePositive/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-eye-slash"></i> False Positive</a></li>
                                                 <li><a href="#" class="sightings_advanced_add" data-object-id="<?php echo h($subAttr['id']); ?>" data-object-context="attribute"><i class="fa fa-wrench"></i> Advanced Sightings</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href="#" onclick="simplePopup('<?php echo $baseurl;?>/events/queryEnrichment/<?php echo h($subAttr['id']); ?>/0/Enrichment/Attribute');"><i class="fa fa-magic"></i> Enrich</a></li>
                                                 <li class="divider"></li>
                                                 <li><a href="#" onclick="return betaCopyUuid('<?php echo h($subAttr['uuid']); ?>');"><i class="fa fa-copy"></i> Copy UUID</a></li>
                                                 <li class="divider"></li>
