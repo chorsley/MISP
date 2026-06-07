@@ -38,7 +38,7 @@
         $canModifyLocal = $canModifyLocal ?? false;
         $target_type = $target_type ?? null;
         $target_id = $target_id ?? null;
-        $visibleCount = 2;
+        $visibleCount = 1;
         $hiddenCount = max(0, count($clusters) - $visibleCount);
         $chipId = 'beta-galaxy-chip-' . substr(md5($galaxyName . '|' . serialize(array_column($clusters, 'id'))), 0, 12);
     ?>

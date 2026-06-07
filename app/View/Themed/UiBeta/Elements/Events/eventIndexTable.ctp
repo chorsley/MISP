@@ -135,6 +135,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                             <li><a href="#" class="beta-delete-action" onclick="event.preventDefault();deleteEventPopup(<?= $eventId ?>)" title="<?= __('Delete') ?>"><i class="fa fa-trash"></i> <?= __('Delete') ?></a></li>
                         <?php endif; ?>
                         <li class="divider"></li>
+                        <li><a href="#" onclick="event.preventDefault();return copyEventIndexUuid(this, '<?= h($event['Event']['uuid']) ?>');" title="<?= __('Copy UUID') ?>"><i class="fa fa-copy"></i> <?= __('Copy UUID') ?></a></li>
                         <li><a href="#" onclick="event.preventDefault();openAddToCollectionModal('<?= h($event['Event']['uuid']) ?>', <?= $eventId ?>)" title="<?= __('Add to Collection') ?>"><i class="fa fa-folder-plus"></i> <?= __('Add to Collection') ?></a></li>
                         <?php if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)): ?>
                             <li class="divider"></li>
@@ -472,6 +473,41 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
 </table>
 <script>
     var lastSelected = false;
+
+    function copyEventIndexUuid(linkElement, uuid) {
+        var textArea = document.createElement('textarea');
+        textArea.value = uuid;
+        textArea.setAttribute('readonly', 'readonly');
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, textArea.value.length);
+
+        var copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (err) {
+            copied = false;
+        }
+
+        document.body.removeChild(textArea);
+
+        if (!copied && navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            navigator.clipboard.writeText(uuid).then(function() {
+                showMessage('success', 'UUID copied');
+            }).catch(function() {
+                showMessage('fail', 'Could not copy UUID');
+            });
+            return false;
+        }
+
+        showMessage(copied ? 'success' : 'fail', copied ? 'UUID copied' : 'Could not copy UUID');
+        return false;
+    }
+
     $(function() {
         // Prevent checkbox clicks from toggling the dropdown menu
         $('.beta-checkbox-actions-wrapper input.select').on('click', function(e) {

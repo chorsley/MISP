@@ -545,7 +545,7 @@
 
                                 <!-- Utilities -->
                                 <li class="divider"></li>
-                                <li><a href="#" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"><i class="fa fa-copy"></i> Copy UUID</a></li>
+                                <li><a href="#" onclick="return betaCopyUuid('<?php echo h($item['uuid']); ?>');"><i class="fa fa-copy"></i> Copy UUID</a></li>
 
                                 <!-- Delete -->
                                 <li class="divider"></li>
@@ -579,7 +579,7 @@
                                     <?php if (!empty($item['comment'])): ?>
                                         <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($item['comment']); ?></span></span>
                                     <?php endif; ?>
-                                    <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="copyToClipboard('<?php echo h($item['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
+                                    <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="return betaCopyUuid('<?php echo h($item['uuid']); ?>');"></i>
                                 </div>
                                 
                                 <div class="beta-attr-value-container">
@@ -761,7 +761,7 @@
                                                 <li><a href="#" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/setFalsePositive/<?php echo h($subAttr['id']); ?>');"><i class="fa fa-eye-slash"></i> False Positive</a></li>
                                                 <li><a href="#" class="sightings_advanced_add" data-object-id="<?php echo h($subAttr['id']); ?>" data-object-context="attribute"><i class="fa fa-wrench"></i> Advanced Sightings</a></li>
                                                 <li class="divider"></li>
-                                                <li><a href="#" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"><i class="fa fa-copy"></i> Copy UUID</a></li>
+                                                <li><a href="#" onclick="return betaCopyUuid('<?php echo h($subAttr['uuid']); ?>');"><i class="fa fa-copy"></i> Copy UUID</a></li>
                                                 <li class="divider"></li>
                                                 <li><a href="#" class="text-danger" onclick="deleteObject('attributes', 'delete', '<?php echo h($subAttr['id']); ?>')"><i class="fa fa-trash"></i> Delete</a></li>
                                              <?php endif; ?>
@@ -782,7 +782,7 @@
                                         <?php if (!empty($subAttr['comment'])): ?>
                                             <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($subAttr['comment']); ?></span></span>
                                         <?php endif; ?>
-                                        <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="copyToClipboard('<?php echo h($subAttr['uuid']); ?>'); showMessage('success', 'UUID copied');"></i>
+                                        <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="return betaCopyUuid('<?php echo h($subAttr['uuid']); ?>');"></i>
                                     </div>
 
                                     <div class="beta-attr-value-container">
@@ -955,6 +955,46 @@
             $('.beta-page-btn').prop('disabled', true);
         }
         return $container;
+    }
+
+    function betaCopyUuid(uuid) {
+        var textArea = document.createElement('textarea');
+        var copied = false;
+
+        textArea.value = uuid;
+        textArea.setAttribute('readonly', 'readonly');
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, textArea.value.length);
+
+        try {
+            copied = document.execCommand('copy');
+        } catch (err) {
+            copied = false;
+        }
+
+        document.body.removeChild(textArea);
+
+        if (copied) {
+            showMessage('success', 'UUID copied');
+            return false;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            navigator.clipboard.writeText(uuid).then(function() {
+                showMessage('success', 'UUID copied');
+            }).catch(function() {
+                showMessage('fail', 'Could not copy UUID');
+            });
+            return false;
+        }
+
+        showMessage('fail', 'Could not copy UUID');
+        return false;
     }
 
     function buildAttributesUrl(params) {
