@@ -2032,6 +2032,7 @@
         refreshContextCounts();
         initBetaBulkActions();
         initBetaSingleDeleteRefresh();
+        initBetaMassEditRefresh();
     });
 
     function buildFilterMessage(text) {
@@ -2214,6 +2215,54 @@
                 },
                 type: 'post',
                 url: '/' + type + '/' + action + '/' + id,
+            });
+        };
+    }
+
+    function initBetaMassEditRefresh() {
+        if (window._betaMassEditRefreshWrapped || typeof submitPopoverForm !== 'function') {
+            return;
+        }
+        window._betaMassEditRefreshWrapped = true;
+        var originalSubmitPopoverForm = submitPopoverForm;
+        submitPopoverForm = function(context_id, referer, update_context_id, modal, popover_dismiss_id_to_close) {
+            if (referer !== 'massEdit') {
+                return originalSubmitPopoverForm.apply(this, arguments);
+            }
+
+            var $form = $('#popover_form form').first();
+            if (!$form.length) {
+                return originalSubmitPopoverForm.apply(this, arguments);
+            }
+
+            xhr({
+                data: $form.serialize(),
+                type: 'post',
+                url: $form.attr('action'),
+                success: function(data) {
+                    var response = data;
+                    if (typeof response === 'string') {
+                        try {
+                            response = JSON.parse(response);
+                        } catch (e) {
+                            response = null;
+                        }
+                    }
+                    if (response && response.saved) {
+                        if (response.success && typeof showMessage === 'function') {
+                            showMessage('success', response.success);
+                        }
+                        $('#popover_form').fadeOut();
+                        $('#gray_out').fadeOut();
+                        clearBetaSelectedAttributes();
+                        reloadBetaAttributesList();
+                    } else if (typeof handleGenericAjaxResponse === 'function') {
+                        handleGenericAjaxResponse(data);
+                    }
+                },
+                complete: function() {
+                    $('.loading').hide();
+                }
             });
         };
     }
