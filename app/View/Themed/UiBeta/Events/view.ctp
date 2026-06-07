@@ -50,6 +50,16 @@
         box-sizing: border-box;
     }
     .meta-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .meta-label .fa {
+        width: 12px;
+        text-align: center;
+        color: #7a8a9a;
+    }
+    .meta-label {
         font-size: 10px;
         text-transform: uppercase;
         color: #999;
@@ -777,11 +787,11 @@
         </div>
         <div class="beta-event-meta-row">
             <span class="meta-box date-box">
-                <span class="meta-label"><?php echo __('Event Date'); ?></span>
+                <span class="meta-label"><i class="fa fa-calendar"></i><?php echo __('Event Date'); ?></span>
                 <span class="meta-value"><?php echo h($event['Event']['date']); ?></span>
             </span>
             <span class="meta-box org-box">
-                <span class="meta-label"><?php echo __('Creator Org'); ?></span>
+                <span class="meta-label"><i class="fa fa-building"></i><?php echo __('Creator Org'); ?></span>
                 <span class="meta-value">
                      <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Orgc']['id'] ?>" class="beta-org-link" title="<?= h($event['Orgc']['name']) ?>">
                         <span class="beta-org-name"><?= h($event['Orgc']['name']) ?></span>
@@ -794,8 +804,22 @@
                     </a>
                 </span>
             </span>
+            <span class="meta-box org-box">
+                <span class="meta-label"><i class="fa fa-user-shield"></i><?php echo __('Owner Org'); ?></span>
+                <span class="meta-value">
+                    <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Org']['id'] ?>" class="beta-org-link" title="<?= h($event['Org']['name']) ?>">
+                        <span class="beta-org-name"><?= h($event['Org']['name']) ?></span>
+                        <?php
+                            $ownerOrgLogo = $this->OrgImg->getOrgLogo($event['Org'], 24, false);
+                            if (strpos($ownerOrgLogo, '<img') !== false):
+                                echo $ownerOrgLogo;
+                            endif;
+                        ?>
+                    </a>
+                </span>
+            </span>
              <span class="meta-box dist-box" title="<?php echo h($distributionLevels[$event['Event']['distribution']]); ?>">
-                <span class="meta-label"><?php echo __('Distribution'); ?></span>
+                <span class="meta-label"><i class="fa fa-share-alt"></i><?php echo __('Distribution'); ?></span>
                 <span class="meta-value" style="display: flex; align-items: center; gap: 5px;">
                     <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
                          title="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($distributionLevels[$event['Event']['distribution']]) ?>"
@@ -813,7 +837,7 @@
                 </span>
             </span>
             <span class="meta-box mod-box">
-                <span class="meta-label"><?php echo __('Last Mod'); ?></span>
+                <span class="meta-label"><i class="fa fa-clock"></i><?php echo __('Last Mod'); ?></span>
                 <span class="meta-value beta-relative-timestamp"
                     data-timestamp="<?= h($event['Event']['timestamp']) ?>"
                     data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>"
@@ -825,7 +849,7 @@
             
             <?php if ($this->Acl->canAccess('events', 'publish')): ?>
                 <span class="meta-box publish-box" title="<?php echo __('Toggle publication status'); ?>">
-                    <span class="meta-label"><?php echo __('Published'); ?></span>
+                    <span class="meta-label"><i class="fa fa-bullhorn"></i><?php echo __('Published'); ?></span>
                     <span class="meta-value">
                         <span id="publishedLabel" class="published-label <?php echo !empty($event['Event']['published']) ? 'state-published' : 'state-unpublished'; ?>"><?php echo !empty($event['Event']['published']) ? __('Published') : __('Unpublished'); ?></span>
                         <label class="switch">
@@ -838,7 +862,7 @@
 
             <?php if ($this->Acl->canAccess('events', 'edit')): ?>
                 <span class="meta-box edit-box">
-                    <span class="meta-label"><?php echo __('Action'); ?></span>
+                    <span class="meta-label"><i class="fa fa-edit"></i><?php echo __('Action'); ?></span>
                     <span class="meta-value">
                         <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="btn btn-default btn-sm"><i class="fa fa-edit"></i> <?php echo __('Edit'); ?></a>
                     </span>
@@ -2574,7 +2598,15 @@
             ? maxHeight
             : Math.min(window.summaryReportContentHeight + 10, maxHeight);
         iframe.style.height = Math.max(targetHeight, 120) + 'px';
-        iframe.scrolling = window.summaryReportContentHeight > maxHeight ? 'auto' : 'no';
+    }
+
+    function refreshReportPreviewHeight() {
+        window.setTimeout(function() {
+            applyReportPreviewHeight();
+        }, 0);
+        window.setTimeout(function() {
+            applyReportPreviewHeight();
+        }, 120);
     }
 
     function toggleReportPreviewSize() {
@@ -2602,9 +2634,7 @@
     });
 
     window.addEventListener('resize', function() {
-        if (window.summaryReportExpanded) {
-            applyReportPreviewHeight();
-        }
+        refreshReportPreviewHeight();
     });
     <?php endif; ?>
 
@@ -3232,6 +3262,20 @@
         $('a[data-toggle="tab"][href="#correlations"]').on('shown.bs.tab', function (e) {
             loadCorrelations();
         });
+
+        <?php if (!empty($firstEventReportId)): ?>
+        $('#summary-report-iframe').on('load', function() {
+            refreshReportPreviewHeight();
+        });
+
+        $('a[data-toggle="tab"][href="#summary"]').on('shown.bs.tab', function () {
+            refreshReportPreviewHeight();
+        });
+
+        if (window.location.hash === '#summary' || !window.location.hash || window.location.hash === '#attributes') {
+            refreshReportPreviewHeight();
+        }
+        <?php endif; ?>
 
         // Check if we are already on the correlations tab on page load
         if (window.location.hash === '#correlations') {

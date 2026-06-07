@@ -12,11 +12,20 @@
 
 <style>
     /* Remove default page margins/padding for clean iframe embedding */
+    html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
     body {
         margin: 0;
         padding: 10px;
+        min-height: 100%;
         background: #fff;
         overflow-x: hidden;
+        overflow-y: auto;
     }
     /* Hide elements not needed in rendered view */
     #markdown-viewer-toolbar,
@@ -105,29 +114,39 @@
 <script>
     // After the markdown editor initializes in viewer mode, notify parent for iframe resize
     $(document).ready(function() {
-        // Small delay to ensure rendering is complete
-        setTimeout(function() {
+        function notifyParentOfResize() {
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({
                     type: 'reportPreviewResize',
-                    height: document.body.scrollHeight
+                    height: Math.max(
+                        document.body.scrollHeight,
+                        document.body.offsetHeight,
+                        document.documentElement.scrollHeight,
+                        document.documentElement.offsetHeight
+                    )
                 }, '*');
             }
-        }, 500);
+        }
+
+        function scheduleResizeNotifications() {
+            [0, 150, 400, 900].forEach(function(delay) {
+                setTimeout(notifyParentOfResize, delay);
+            });
+        }
+
+        // Small delay to ensure rendering is complete
+        setTimeout(scheduleResizeNotifications, 500);
 
         // Also notify after MISP elements are loaded (they load asynchronously)
         var resizeObserver = new MutationObserver(function() {
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    type: 'reportPreviewResize',
-                    height: document.body.scrollHeight
-                }, '*');
-            }
+            scheduleResizeNotifications();
         });
         resizeObserver.observe(document.getElementById('viewer'), {
             childList: true,
             subtree: true,
             attributes: true
         });
+
+        window.addEventListener('load', scheduleResizeNotifications);
     });
 </script>
