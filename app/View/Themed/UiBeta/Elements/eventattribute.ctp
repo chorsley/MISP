@@ -147,10 +147,10 @@
         border: 1px solid transparent;
     }
     .object-header-row {
-        background-color: #f7fbfe;
+        background-color: #f4f9fd;
     }
     .object-attr-row, .object-attr-row + .beta-sub-row {
-        background-color: #fbfdff;
+        background-color: #f9fcff;
     }
     .object-header-row td {
         padding-top: 8px;
@@ -159,13 +159,12 @@
         border-bottom: 1px solid #e6eff6;
     }
     .object-header-row td:first-child {
-        border-left: 4px solid #31708f;
+        border-left: 1px solid #d7e6f1;
         border-top-left-radius: 4px;
-        border-bottom-left-radius: 4px;
+        box-shadow: inset 6px 0 0 #31708f;
     }
     .object-header-row td:last-child {
         border-top-right-radius: 4px;
-        border-bottom-right-radius: 4px;
         border-right: 1px solid #e6eff6;
     }
     .object-title {
@@ -185,11 +184,64 @@
         letter-spacing: 0.5px;
     }
     .object-header-meta {
-        text-align: right;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: 14px;
+        padding-left: 14px;
+        border-left: 1px solid #d8e7f2;
+        text-align: left;
     }
     .object-desc {
         font-size: 11px;
         color: #91a0af;
+    }
+    .object-summary-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+    .object-summary-text {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 10px;
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+    .object-count-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6f8398;
+        white-space: nowrap;
+    }
+    .object-attr-row td:first-child,
+    .object-attr-row + .beta-sub-row td:first-child {
+        border-left: 1px solid #e8f0f6;
+        box-shadow: inset 6px 0 0 rgba(49, 112, 143, 0.75);
+    }
+    .object-attr-row td,
+    .object-attr-row + .beta-sub-row td {
+        border-top: 1px solid #e8f0f6;
+        border-bottom: 1px solid #e8f0f6;
+    }
+    .object-attr-row td:first-child,
+    .object-attr-row + .beta-sub-row td:first-child {
+        border-left: 1px solid #d7e6f1;
+    }
+    .object-attr-row td:last-child,
+    .object-attr-row + .beta-sub-row td:last-child {
+        border-right: 1px solid #d7e6f1;
+    }
+    .object-attr-row:last-of-type td:first-child,
+    .object-attr-row:last-of-type td:last-child {
+        border-bottom-color: #d7e6f1;
+    }
+    .object-attr-row:last-of-type td:first-child {
+        border-bottom-left-radius: 4px;
+    }
+    .object-attr-row:last-of-type td:last-child {
+        border-bottom-right-radius: 4px;
     }
     .object-attr-row td:first-child {
         /* border-left handled inline for positioning */
@@ -402,31 +454,16 @@
         border-left: 4px solid transparent !important;
     }
     .tree-cell::before {
-        /* Vertical line */
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: -3px;
-        width: 2px;
-        background-color: #999;
+        content: none;
     }
     .tree-cell::after {
-        /* Horizontal line - only for rows with a checkbox */
-        content: '';
-        position: absolute;
-        top: 15px; /* Aligned with checkbox center in top-aligned layout */
-        left: -3px;
-        width: 13px;
-        height: 2px;
-        background-color: #999;
+        content: none;
     }
     .tree-cell.no-tick::after {
         display: none;
     }
     .tree-cell.last-item::before {
-        bottom: auto;
-        height: 16px; /* Ends at the horizontal line */
+        content: none;
     }
 
     .standalone-attr-row {
@@ -748,8 +785,8 @@
                     
                     <!-- Checkbox & Actions Dropdown -->
                     <td style="position: relative;" <?php if ($isObject) echo 'colspan="3"'; ?>>
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="display: flex; align-items: center; min-width: 0; gap: 8px;">
                                 <div class="beta-left-cell-stack">
                                     <div class="beta-row-actions beta-checkbox-actions-wrapper">
                             <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
@@ -835,19 +872,18 @@
                             </div>
                             <?php endif; ?>
                                     </div>
-                                </div>
+                                    </div>
                                 </div>
                                 <?php if ($isObject): ?>
-                                    <span class="object-label">Object</span>
-                                    <span class="object-title"><?php echo h($item['name']); ?></span>
-                                    <span class="object-desc" style="margin-left: 10px;"><?php echo h($item['description']); ?></span>
+                                    <div class="object-summary-inline">
+                                        <span class="object-label">Object</span>
+                                        <div class="object-summary-text">
+                                            <span class="object-title"><?php echo h($item['name']); ?></span>
+                                            <span class="object-desc"><?php echo h($item['description']); ?></span>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
-                            <?php if ($isObject): ?>
-                                <div class="object-header-meta">
-                                    <div style="font-size: 10px; color: #999;"><?php echo count($objectAttributes); ?> attributes</div>
-                                </div>
-                            <?php endif; ?>
                         </div>
                     </td>
                     
