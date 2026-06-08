@@ -712,9 +712,30 @@
     .composition-singlebar-wrap {
         width: 100%;
     }
+    .beta-composition-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 12px;
+        padding: 10px 14px;
+        border: 1px solid #dfe7ef;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .beta-composition-label {
+        flex: 0 0 auto;
+        font-size: 13px;
+        font-weight: 700;
+        color: #445567;
+        white-space: nowrap;
+    }
+    .beta-composition-row .composition-singlebar-wrap {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
     .composition-singlebar {
         width: 100%;
-        height: 30px;
+        height: 24px;
         border-radius: 6px;
         overflow: hidden;
         border: 1px solid #d7dfe8;
@@ -955,6 +976,11 @@
         text-decoration: underline;
     }
     @media (max-width: 767px) {
+        .beta-composition-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
         .beta-event-header-row {
             align-items: stretch;
         }
@@ -1801,11 +1827,9 @@
 
             <!-- Attributes Tab -->
             <div role="tabpanel" class="tab-pane" id="attributes">
-                 <div class="beta-card" style="margin-bottom: 15px;">
-                     <div class="beta-card-header"><?php echo __('Composition'); ?></div>
-                     <div class="beta-card-body">
-                         <div id="composition-treemap" class="composition-singlebar-wrap"></div>
-                     </div>
+                 <div class="beta-composition-row">
+                     <div class="beta-composition-label"><?php echo __('Composition'); ?></div>
+                     <div id="composition-treemap" class="composition-singlebar-wrap"></div>
                  </div>
                  <div id="beta-filter-banner-slot"></div>
                  <div id="beta-attributes-container">

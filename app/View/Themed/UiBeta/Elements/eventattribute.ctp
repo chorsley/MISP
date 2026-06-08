@@ -244,43 +244,154 @@
     .beta-pagination-container {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
+        flex-wrap: wrap;
         padding: 10px 0;
         margin-bottom: 10px;
         border-bottom: 1px solid #eee;
+        gap: 12px;
+    }
+    .beta-pagination-group {
+        display: inline-flex;
+        align-items: stretch;
+        flex-wrap: wrap;
+        border: 1px solid #d8e1eb;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #ffffff 0%, #f5f8fb 100%);
+        overflow: hidden;
     }
     .beta-pagination-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        min-width: 0;
         font-size: 13px;
-        color: #666;
+        color: #5f6c79;
     }
-    .beta-pagination-info .beta-page-badge {
-        display: inline-block;
-        background: #428bca;
-        color: #fff;
-        padding: 2px 10px;
-        border-radius: 3px;
-        font-weight: 600;
+    .beta-pagination-info .beta-page-item-info {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 12px;
+        color: #6d7883;
         font-size: 12px;
+        white-space: nowrap;
     }
     .beta-pagination-controls {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
+        padding: 0 10px;
+        border-left: 1px solid #d8e1eb;
     }
     .beta-pagination-controls .btn {
         min-width: 36px;
     }
     .beta-pagination-controls .beta-page-size-select {
         width: auto;
-        display: inline-block;
-        padding: 4px 8px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 8px;
         font-size: 12px;
-        height: auto;
+        height: 32px;
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+    .beta-page-num-display {
+        font-size: 12px;
+        color: #5f6c79;
+        min-width: 48px;
+        text-align: center;
+        font-weight: 600;
     }
     .beta-pagination-bottom {
         margin-top: 10px;
         padding-top: 10px;
         border-top: 1px solid #eee;
+    }
+    .beta-attr-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+    .beta-attr-toolbar-main,
+    .beta-attr-toolbar-actions,
+    .beta-attr-toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+    .beta-attr-toolbar-main {
+        gap: 0;
+        flex: 1 1 auto;
+    }
+    .beta-attr-toolbar-actions {
+        padding-left: 14px;
+        margin-left: 14px;
+        border-left: 1px solid #e1e7ee;
+    }
+    .beta-attr-toolbar-right {
+        justify-content: flex-end;
+        padding-left: 14px;
+        margin-left: auto;
+        border-left: 1px solid #e1e7ee;
+        flex: 0 0 auto;
+    }
+    .beta-attr-toolbar .beta-pagination-container {
+        padding: 0;
+        margin: 0;
+        border-bottom: 0;
+    }
+    .beta-attr-search-wrap {
+        flex: 0 0 auto;
+    }
+    .beta-attr-search-wrap #beta-attr-search {
+        width: 250px;
+        margin-bottom: 0;
+    }
+    @media (max-width: 767px) {
+        .beta-pagination-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .beta-pagination-group,
+        .beta-pagination-controls {
+            width: 100%;
+        }
+        .beta-pagination-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .beta-pagination-controls {
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 8px 10px;
+            border-left: 0;
+            border-top: 1px solid #d8e1eb;
+        }
+        .beta-attr-toolbar,
+        .beta-attr-toolbar-main,
+        .beta-attr-toolbar-actions,
+        .beta-attr-toolbar-right {
+            align-items: stretch;
+        }
+        .beta-attr-toolbar-actions,
+        .beta-attr-toolbar-right {
+            justify-content: flex-start;
+            flex-basis: 100%;
+            padding-left: 0;
+            margin-left: 0;
+            border-left: 0;
+        }
+        .beta-attr-search-wrap,
+        .beta-attr-search-wrap #beta-attr-search {
+            width: 100%;
+        }
     }
     
     /* Tree Structure */
@@ -392,8 +503,29 @@
 
 <div class="beta-attributes-list">
     <!-- Toolbar -->
-    <div class="beta-toolbar clearfix" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: flex-start;">
-        <div class="pull-left" style="display: flex; gap: 10px; align-items: center;">
+    <div class="beta-attr-toolbar">
+        <div class="beta-attr-toolbar-main">
+            <div class="beta-pagination-container" id="beta-pagination-top">
+                <div class="beta-pagination-group">
+                    <div class="beta-pagination-info">
+                        <span class="beta-page-item-info" id="beta-page-item-info-top"><?php echo __('Showing %s-%s of %s items', $betaShowStart, $betaShowEnd, $betaTotalAttributes); ?></span>
+                    </div>
+                    <div class="beta-pagination-controls">
+                        <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" id="beta-page-first" title="<?php echo __('First page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-double-left"></i></button>
+                        <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" id="beta-page-prev" title="<?php echo __('Previous page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-left"></i></button>
+                        <span class="beta-page-num-display" id="beta-page-num-display-top"><?php echo __('%s / %s', $betaCurrentPage, $betaTotalPages); ?></span>
+                        <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" id="beta-page-next" title="<?php echo __('Next page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-right"></i></button>
+                        <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" id="beta-page-last" title="<?php echo __('Last page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-double-right"></i></button>
+                        <select class="form-control beta-page-size-select" id="beta-page-size" title="<?php echo __('Items per page'); ?>">
+                            <option value="20" <?php echo $betaPageSize == 20 ? 'selected' : ''; ?>>20</option>
+                            <option value="50" <?php echo $betaPageSize == 50 ? 'selected' : ''; ?>>50</option>
+                            <option value="100" <?php echo $betaPageSize == 100 ? 'selected' : ''; ?>>100</option>
+                            <option value="200" <?php echo $betaPageSize == 200 ? 'selected' : ''; ?>>200</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="beta-attr-toolbar-actions">
             <?php if ($mayModify): ?>
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -417,8 +549,23 @@
                         </li>
                     </ul>
                 </div>
-                <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'events', 'importChoice'); return false;" class="btn btn-default btn-sm"><i class="fa fa-bars"></i> <?php echo __('Populate from...'); ?></a>
-                <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'events', 'freeTextImport'); return false;" class="btn btn-default btn-sm"><i class="fa fa-align-left"></i> <?php echo __('Freetext Import'); ?></a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-download"></i> <?php echo __('Import'); ?> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'events', 'importChoice'); return false;">
+                                <i class="fa fa-bars"></i> <?php echo __('Populate from...'); ?>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'events', 'freeTextImport'); return false;">
+                                <i class="fa fa-align-left"></i> <?php echo __('Freetext Import'); ?>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
                 <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'attributes', 'attributeReplace'); return false;" class="btn btn-default btn-sm"><i class="fa fa-random"></i> <?php echo __('Replace Attributes'); ?></a>
             <?php endif; ?>
             
@@ -448,30 +595,12 @@
                     <?php endforeach; ?>
                 </ul>
             </div>
+            </div>
         </div>
-        <div class="pull-right">
-             <input type="text" id="beta-attr-search" placeholder="Enter value to search..." class="form-control input-sm" style="display:inline-block; width: 250px;">
-        </div>
-    </div>
-
-    <!-- Beta Pagination Controls (Top) -->
-    <div class="beta-pagination-container" id="beta-pagination-top">
-        <div class="beta-pagination-info">
-            <span class="beta-page-badge" id="beta-page-badge-top"><?php echo __('Page %s of %s', $betaCurrentPage, $betaTotalPages); ?></span>
-            <span id="beta-page-item-info-top">(<?php echo __('Showing %s-%s of %s items', $betaShowStart, $betaShowEnd, $betaTotalAttributes); ?>)</span>
-        </div>
-        <div class="beta-pagination-controls">
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" id="beta-page-first" title="<?php echo __('First page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-double-left"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" id="beta-page-prev" title="<?php echo __('Previous page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-left"></i></button>
-            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-top"><?php echo __('%s / %s', $betaCurrentPage, $betaTotalPages); ?></span>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" id="beta-page-next" title="<?php echo __('Next page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-right"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" id="beta-page-last" title="<?php echo __('Last page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-double-right"></i></button>
-            <select class="form-control beta-page-size-select" id="beta-page-size" title="<?php echo __('Items per page'); ?>">
-                <option value="20" <?php echo $betaPageSize == 20 ? 'selected' : ''; ?>>20</option>
-                <option value="50" <?php echo $betaPageSize == 50 ? 'selected' : ''; ?>>50</option>
-                <option value="100" <?php echo $betaPageSize == 100 ? 'selected' : ''; ?>>100</option>
-                <option value="200" <?php echo $betaPageSize == 200 ? 'selected' : ''; ?>>200</option>
-            </select>
+        <div class="beta-attr-toolbar-right">
+            <div class="beta-attr-search-wrap">
+                <input type="text" id="beta-attr-search" placeholder="Enter value to search..." class="form-control input-sm">
+            </div>
         </div>
     </div>
 
@@ -988,16 +1117,17 @@
 
     <!-- Beta Pagination Controls (Bottom) -->
     <div class="beta-pagination-container beta-pagination-bottom" id="beta-pagination-bottom">
-        <div class="beta-pagination-info">
-            <span class="beta-page-badge" id="beta-page-badge-bottom"><?php echo __('Page %s of %s', $betaCurrentPage, $betaTotalPages); ?></span>
-            <span id="beta-page-item-info-bottom">(<?php echo __('Showing %s-%s of %s items', $betaShowStart, $betaShowEnd, $betaTotalAttributes); ?>)</span>
-        </div>
-        <div class="beta-pagination-controls">
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" title="<?php echo __('First page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-double-left"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" title="<?php echo __('Previous page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-left"></i></button>
-            <span style="font-size: 12px; color: #666; min-width: 60px; text-align: center;" id="beta-page-num-display-bottom"><?php echo __('%s / %s', $betaCurrentPage, $betaTotalPages); ?></span>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" title="<?php echo __('Next page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-right"></i></button>
-            <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" title="<?php echo __('Last page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-double-right"></i></button>
+        <div class="beta-pagination-group">
+            <div class="beta-pagination-info">
+                <span class="beta-page-item-info" id="beta-page-item-info-bottom"><?php echo __('Showing %s-%s of %s items', $betaShowStart, $betaShowEnd, $betaTotalAttributes); ?></span>
+            </div>
+            <div class="beta-pagination-controls">
+                <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="first" title="<?php echo __('First page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-double-left"></i></button>
+                <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="prev" title="<?php echo __('Previous page'); ?>" <?php if ($betaCurrentPage <= 1) echo 'disabled'; ?>><i class="fa fa-angle-left"></i></button>
+                <span class="beta-page-num-display" id="beta-page-num-display-bottom"><?php echo __('%s / %s', $betaCurrentPage, $betaTotalPages); ?></span>
+                <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="next" title="<?php echo __('Next page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-right"></i></button>
+                <button type="button" class="btn btn-default btn-sm beta-page-btn" data-page-action="last" title="<?php echo __('Last page'); ?>" <?php if ($betaCurrentPage >= $betaTotalPages) echo 'disabled'; ?>><i class="fa fa-angle-double-right"></i></button>
+            </div>
         </div>
     </div>
 </div>
