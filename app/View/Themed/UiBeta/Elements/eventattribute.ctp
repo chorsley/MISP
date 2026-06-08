@@ -153,27 +153,32 @@
         margin-bottom: 2px;
         border: 1px solid transparent;
     }
+    .standalone-attr-row td {
+        background: #fff;
+    }
     .object-header-row {
-        background-color: #f4f9fd;
+        background-color: #eef6fc;
     }
     .object-attr-row, .object-attr-row + .beta-sub-row {
-        background-color: #f9fcff;
+        background-color: #f7fbfe;
     }
     .object-header-row td {
-        padding-top: 8px;
-        padding-bottom: 8px;
-        border-top: 1px solid #d7e6f1;
-        border-bottom: 1px solid #d7e6f1;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        border-top: 8px solid #fff;
+        border-bottom: 1px solid #d4e3ef;
+        background: linear-gradient(180deg, #f2f8fd 0%, #eaf4fb 100%);
     }
     .object-header-row td:first-child {
         border-left: 1px solid #d7e6f1;
         border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-        box-shadow: inset 6px 0 0 #31708f;
+        box-shadow: inset 8px 0 0 #31708f;
+        padding-left: 0;
     }
     .object-header-row td:last-child {
         border-top-right-radius: 4px;
         border-right: 1px solid #d7e6f1;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
     }
     .object-title {
         font-weight: bold;
@@ -219,9 +224,16 @@
         flex-wrap: wrap;
     }
     .object-count-label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: #dcecf7;
+        border: 1px solid #c6deee;
         font-size: 11px;
-        font-weight: 600;
-        color: #6f8398;
+        font-weight: 700;
+        color: #4f6f8b;
         white-space: nowrap;
     }
     .object-summary-inline .object-label {
@@ -315,12 +327,14 @@
     .object-attr-row td:first-child,
     .object-attr-row + .beta-sub-row td:first-child {
         border-left: 1px solid #d7e6f1;
-        box-shadow: inset 6px 0 0 rgba(49, 112, 143, 0.75);
+        box-shadow: inset 8px 0 0 rgba(49, 112, 143, 0.18);
+        padding-left: 0;
     }
     .object-attr-row td,
     .object-attr-row + .beta-sub-row td {
-        border-top: 1px solid #e8f0f6;
-        border-bottom: 1px solid #e8f0f6;
+        border-top: 1px solid #e2edf5;
+        border-bottom: 1px solid #e2edf5;
+        background: #f7fbfe;
     }
     .object-attr-row td:last-child,
     .object-attr-row + .beta-sub-row td:last-child {
@@ -338,6 +352,16 @@
     }
     .object-attr-row td:first-child {
         /* border-left handled inline for positioning */
+    }
+    .object-attr-row .beta-left-cell-stack {
+        margin-left: 8px;
+    }
+    .object-header-row .beta-left-cell-stack {
+        margin-left: 8px;
+    }
+    .object-attr-row .beta-attr-meta-block {
+        position: relative;
+        padding-left: 8px;
     }
     .beta-sub-row {
         /* background-color inherited from preceding row logic where possible, otherwise white */
@@ -534,8 +558,8 @@
     /* Tree Structure */
     .tree-cell {
         position: relative;
-        padding-left: 10px !important;
-        border-left: 4px solid transparent !important;
+        padding-left: 0 !important;
+        border-left: 0 !important;
     }
     .tree-cell::before {
         content: none;
@@ -931,6 +955,7 @@
                     $dataName = $isObject ? $item['name'] : $item['type'];
                     $rowClass = $isObject ? 'object-header-row' : 'standalone-attr-row';
                     $objectAttributes = ($isObject && !empty($item['Attribute']) && is_array($item['Attribute'])) ? $item['Attribute'] : [];
+                    $objectAttributeCount = $isObject ? count($objectAttributes) : 0;
                     
                     $isSighted = isset($sightingsData['data'][$item['id']]);
                     if (!$isObject && !$isSighted && isset($item['Sighting']) && !empty($item['Sighting'])) {
@@ -1049,6 +1074,7 @@
                                         <span class="object-label">Object</span>
                                         <div class="object-summary-text">
                                             <span class="object-title" title="<?php echo h($item['description']); ?>"><?php echo h($item['name']); ?></span>
+                                            <span class="object-count-label"><?php echo h($objectAttributeCount); ?> <?php echo $objectAttributeCount === 1 ? __('attribute') : __('attributes'); ?></span>
                                         </div>
                                     </div>
                                 <?php endif; ?>
