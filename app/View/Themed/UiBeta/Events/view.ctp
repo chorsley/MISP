@@ -2056,32 +2056,22 @@
                  </div>
              </div>
             
-            <!-- Other Tabs Placeholders -->
-             <div role="tabpanel" class="tab-pane" id="correlations">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0;"><?php echo __('Correlations'); ?></h3>
-                    <div id="correlation-filter-controls" style="display: none;">
-                        <span id="correlation-filter-msg" class="label label-info" style="font-size: 12px;"></span>
-                        <button id="correlation-reset-btn" class="btn btn-default btn-xs" onclick="resetCorrelationFilter()"><i class="fa fa-times"></i> <?php echo __('Clear Filter'); ?></button>
-                    </div>
-                </div>
+             <!-- Other Tabs Placeholders -->
+              <div role="tabpanel" class="tab-pane" id="correlations">
                 <div id="correlations-loader" style="text-align: center; padding: 40px;">
                     <i class="fa fa-spinner fa-spin fa-3x" style="color: #428bca; margin-bottom: 15px;"></i>
                     <p style="color: #666; font-size: 1.1em;"><?php echo __('Analyzing correlations...'); ?></p>
                 </div>
                 <div id="correlations-content" style="display: none;">
-                    <div id="correlations-sankey-container" style="margin-bottom: 30px; background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 15px; display: none;">
-                        <h4 style="margin-top: 0; margin-bottom: 15px; font-size: 14px; font-weight: 600; color: #555; display: flex; justify-content: space-between; align-items: center;">
-                            <span><?php echo __('Correlation Flow'); ?></span>
-                            <span style="display: flex; align-items: center; gap: 10px;">
-                                <span id="sankey-filter-badge" style="display: none; background: #d9534f; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; white-space: nowrap;">
-                                    <i class="fa fa-filter"></i> <span id="sankey-filter-label"></span>
-                                    <a href="#" onclick="resetCorrelationFilter(); return false;" style="color: #fff; margin-left: 6px; text-decoration: none;" title="<?php echo __('Remove filter'); ?>"><i class="fa fa-times-circle"></i></a>
-                                </span>
-                                <span id="sankey-limit-msg" style="font-weight: normal; font-size: 12px; color: #888;"></span>
+                    <div id="correlations-sankey-stage" style="display: none; margin: 0 auto 30px; max-width: 1400px; text-align: center;">
+                        <div id="correlations-sankey-toolbar" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; min-height: 24px;">
+                            <span id="sankey-filter-badge" style="display: none; background: #d9534f; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; white-space: nowrap;">
+                                <i class="fa fa-filter"></i> <span id="sankey-filter-label"></span>
+                                <a href="#" onclick="resetCorrelationFilter(); return false;" style="color: #fff; margin-left: 6px; text-decoration: none;" title="<?php echo __('Remove filter'); ?>"><i class="fa fa-times-circle"></i></a>
                             </span>
-                        </h4>
-                        <div id="correlations-sankey" style="width: 100%; height: 400px;"></div>
+                            <span id="sankey-limit-msg" style="font-size: 12px; color: #7d8894;"></span>
+                        </div>
+                        <div id="correlations-sankey" style="width: 100%; height: 400px; margin: 0 auto;"></div>
                     </div>
                     <div id="correlations-table-filter-banner" style="display: none; margin-bottom: 15px; padding: 10px 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; align-items: center; justify-content: space-between;">
                         <span><i class="fa fa-filter" style="color: #856404;"></i> <strong><?php echo __('Filtered view'); ?></strong> &mdash; <span id="correlations-table-filter-msg"></span></span>
@@ -3492,19 +3482,10 @@
 
                 relations.forEach(function(rel) {
                     var count = eventLinkCounts[rel.id] || 1;
-                    var targetEventName = 'Event #' + rel.id;
-                    if (count > 1) {
-                        targetEventName = '(' + count + ') ' + targetEventName;
-                    }
-                    var fullTitle = targetEventName;
-                    if (rel.info) {
-                        fullTitle += ': ' + rel.info;
-                        if (rel.info.length > 40) {
-                            targetEventName += ': ' + rel.info.substring(0, 40) + '...';
-                        } else {
-                            targetEventName += ': ' + rel.info;
-                        }
-                    }
+                    var rawTargetName = rel.info || ('#' + rel.id);
+                    var shortTargetName = rawTargetName.length > 56 ? rawTargetName.substring(0, 53) + '...' : rawTargetName;
+                    var targetEventName = count > 1 ? '(' + count + ') ' + shortTargetName : shortTargetName;
+                    var fullTitle = count > 1 ? '(' + count + ') ' + rawTargetName : rawTargetName;
                     var targetIdx = addNode(targetEventName, 'target', rel.id, fullTitle);
                     
                     links.push({
@@ -3531,9 +3512,9 @@
             }
 
             if (links.length === 0) return;
-            $('#correlations-sankey-container').show();
+            $('#correlations-sankey-stage').show();
 
-            var margin = {top: 10, right: 350, bottom: 10, left: 10},
+            var margin = {top: 10, right: 420, bottom: 10, left: 120},
                 width = $('#correlations-sankey').width() - margin.left - margin.right;
             
             // Dynamic height: base height + extra per attribute node
@@ -3708,10 +3689,20 @@
                 .enter()
                 .append("text")
                 .attr("class", "sankey-label")
-                .attr("x", function(d) { return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6; })
+                .attr("x", function(d) {
+                    if (d.type === 'target') {
+                        return width + 16;
+                    }
+                    return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6;
+                })
                 .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
                 .attr("dy", "0.35em")
-                .attr("text-anchor", function(d) { return d.x0 < width / 2 ? "start" : "end"; })
+                .attr("text-anchor", function(d) {
+                    if (d.type === 'target') {
+                        return 'start';
+                    }
+                    return d.x0 < width / 2 ? 'start' : 'end';
+                })
                 .attr("cursor", function(d) { return isSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
                 .style("font-weight", function(d) { return isSankeyInteractiveNode(d) ? 'bold' : 'normal'; })
                 .on("click", handleSankeyNodeClick)
@@ -3719,7 +3710,7 @@
                 .on("mouseout", resetSankeyHoverState)
                 .text(function(d) {
                     if (d.type === 'source') return d.name;
-                    var maxLength = d.x0 < width / 2 ? 50 : 70;
+                    var maxLength = d.type === 'target' ? 60 : (d.x0 < width / 2 ? 50 : 70);
                     return d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
                 });
         }

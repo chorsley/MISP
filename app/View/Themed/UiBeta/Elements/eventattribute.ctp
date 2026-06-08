@@ -299,17 +299,13 @@
     }
     .object-attr-row td:first-child,
     .object-attr-row + .beta-sub-row td:first-child {
-        border-left: 1px solid #e8f0f6;
+        border-left: 1px solid #d7e6f1;
         box-shadow: inset 6px 0 0 rgba(49, 112, 143, 0.75);
     }
     .object-attr-row td,
     .object-attr-row + .beta-sub-row td {
         border-top: 1px solid #e8f0f6;
         border-bottom: 1px solid #e8f0f6;
-    }
-    .object-attr-row td:first-child,
-    .object-attr-row + .beta-sub-row td:first-child {
-        border-left: 1px solid #d7e6f1;
     }
     .object-attr-row td:last-child,
     .object-attr-row + .beta-sub-row td:last-child {
