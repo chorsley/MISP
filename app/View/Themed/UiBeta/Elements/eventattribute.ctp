@@ -900,7 +900,7 @@
                 <a href="#" onclick="getPopup('<?php echo h($event['Event']['id']); ?>', 'attributes', 'attributeReplace'); return false;" class="btn btn-default btn-sm"><i class="fa fa-random"></i> <?php echo __('Replace Attributes'); ?></a>
             <?php endif; ?>
             
-            <button id="btn-toggle-all" class="btn btn-default btn-sm" onclick="toggleAllObjectsAttributes()"><i class="fa fa-expand"></i> <span id="label-toggle-all"><?php echo __('Expand All'); ?></span></button>
+            <button id="btn-toggle-all" class="btn btn-default btn-sm" onclick="toggleAllObjectsAttributes()"><i class="fa fa-compress"></i> <span id="label-toggle-all"><?php echo __('Collapse objects'); ?></span></button>
             
             <div class="btn-group">
                 <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
@@ -1807,16 +1807,16 @@
     }
 
     if (typeof window.allExpanded === 'undefined') {
-        window.allExpanded = false;
+        window.allExpanded = true;
     }
 
     function updateExpandAllUi() {
         if (window.allExpanded) {
             $('#btn-toggle-all i').removeClass('fa-expand').addClass('fa-compress');
-            $('#label-toggle-all').text('Collapse All');
+            $('#label-toggle-all').text('Collapse objects');
         } else {
             $('#btn-toggle-all i').removeClass('fa-compress').addClass('fa-expand');
-            $('#label-toggle-all').text('Expand All');
+            $('#label-toggle-all').text('Expand objects');
         }
     }
 
