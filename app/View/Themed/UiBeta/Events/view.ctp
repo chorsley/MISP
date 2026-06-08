@@ -4200,7 +4200,7 @@
                 if (hasAttr) {
                     card.show();
                     // Hide non-matching rows, show matching rows
-                    card.find('.standalone-attr-row').each(function() {
+                    card.find('.beta-correlation-row').each(function() {
                         var row = $(this);
                         var rowAttrId = row.data('attribute-id');
                         row.toggle(rowAttrId == attributeId);
@@ -4301,7 +4301,7 @@
         } else {
             // Restore all cards and all rows
             cards.show();
-            cards.find('.standalone-attr-row').show();
+            cards.find('.beta-correlation-row').show();
             $('#correlations-table-filter-banner').hide();
             $('#correlation-filter-controls').hide();
         }
