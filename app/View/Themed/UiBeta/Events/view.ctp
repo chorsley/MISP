@@ -752,6 +752,260 @@
         border: 0;
         background: transparent;
     }
+    .beta-correlations-container {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+    .correlation-event-card {
+        margin-bottom: 0 !important;
+        border: 1px solid #dfe7ef;
+        border-left-width: 4px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(31, 45, 61, 0.04);
+    }
+    .correlation-event-card .beta-card-header {
+        padding: 12px 18px;
+        border-bottom: 1px solid #e7edf3;
+        background: linear-gradient(180deg, #f9fbfd 0%, #f3f7fb 100%) !important;
+    }
+    .correlation-event-card .beta-card-body {
+        padding: 0;
+    }
+    .beta-correlation-org {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border: 1px solid #dce6f0;
+        border-radius: 999px;
+        background: #f6f9fc;
+        color: #46627c;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .beta-correlation-event-link {
+        color: #167cc5;
+        font-weight: 700;
+        font-size: 16px;
+        text-decoration: none;
+    }
+    .beta-correlation-event-link:hover,
+    .beta-correlation-event-link:focus {
+        color: #0c68a9;
+        text-decoration: none;
+    }
+    .beta-correlation-row {
+        background: #fff;
+    }
+    .beta-correlation-row td {
+        padding-top: 14px;
+        padding-bottom: 14px;
+        border-top: 1px solid #edf2f6;
+        vertical-align: top;
+    }
+    .beta-correlation-row:first-child td {
+        border-top: 0;
+    }
+    .beta-correlation-anchor-cell {
+        width: 44px;
+        text-align: center;
+        color: #c2cbd4;
+    }
+    .beta-correlation-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .beta-correlation-chevrons {
+        display: inline-flex;
+        align-items: stretch;
+        flex-wrap: wrap;
+        overflow: hidden;
+        border-radius: 999px;
+    }
+    .beta-correlation-chevron {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 13px 0 16px;
+        border: 1px solid transparent;
+        border-radius: 0;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+    }
+    .beta-correlation-chevron::after {
+        content: '';
+        position: absolute;
+        top: -1px;
+        right: -14px;
+        width: 28px;
+        height: 28px;
+        background: inherit;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(45deg) scale(0.71);
+        transform-origin: center;
+        z-index: 1;
+    }
+    .beta-correlation-chevron::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: -14px;
+        width: 28px;
+        height: 28px;
+        background: #f3f6f9;
+        border-top: 1px solid #d9e1e8;
+        border-right: 1px solid #d9e1e8;
+        transform: rotate(45deg) scale(0.71);
+        transform-origin: center;
+        z-index: 0;
+    }
+    .beta-correlation-chevron > span {
+        position: relative;
+        z-index: 2;
+    }
+    .beta-correlation-chevron:first-child {
+        padding-left: 13px;
+        border-top-left-radius: 999px;
+        border-bottom-left-radius: 999px;
+    }
+    .beta-correlation-chevron:first-child::before {
+        display: none;
+    }
+    .beta-correlation-chevron:last-child {
+        padding-right: 13px;
+        border-top-right-radius: 999px;
+        border-bottom-right-radius: 999px;
+    }
+    .beta-correlation-chevron:last-child::after {
+        display: none;
+    }
+    .beta-correlation-chevron.beta-correlation-category {
+        background: #f3f6f9;
+        border-color: #d9e1e8;
+        color: #8b99a6;
+    }
+    .beta-correlation-chevron.beta-correlation-relation {
+        background: #edf4fb;
+        border-color: #d1e1f0;
+        color: #5c7fa2;
+    }
+    .beta-correlation-chevron.beta-correlation-type {
+        background: #f4f7fb;
+        border-color: #d6e0ea;
+        color: #566575;
+    }
+    .beta-correlation-comment-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: #8693a0;
+        font-style: italic;
+        overflow-wrap: anywhere;
+    }
+    .beta-correlation-value-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+    .beta-correlation-value-link {
+        color: #263443;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 13px;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+    }
+    .beta-correlation-value-link:hover,
+    .beta-correlation-value-link:focus {
+        color: #167cc5;
+        text-decoration: none;
+    }
+    .beta-correlation-branch-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        color: #5b8bb5;
+        font-size: 11px;
+        text-decoration: none;
+    }
+    .beta-correlation-branch-link:hover,
+    .beta-correlation-branch-link:focus {
+        color: #346f9d;
+        text-decoration: none;
+    }
+    .beta-correlation-inline-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 4px;
+        opacity: 0.5;
+        transition: opacity 0.18s ease;
+    }
+    .beta-correlation-row:hover .beta-correlation-inline-tags {
+        opacity: 1;
+    }
+    .beta-correlation-inline-tags .tag-container {
+        filter: none;
+    }
+    .beta-correlation-inline-tags .tag,
+    .beta-correlation-inline-tags .tagFirstHalf,
+    .beta-correlation-inline-tags .tagSecondHalf,
+    .beta-correlation-inline-tags .tagComplete,
+    .beta-correlation-inline-tags .tag-container .label,
+    .beta-correlation-inline-tags .tag-list-container,
+    .beta-correlation-inline-tags .tag-list-container a,
+    .beta-correlation-inline-tags .tag-list-container span {
+        font-family: inherit;
+        font-size: 12px;
+        letter-spacing: 0;
+    }
+    .beta-correlation-inline-tags .tagFirstHalf,
+    .beta-correlation-inline-tags .tagSecondHalf,
+    .beta-correlation-inline-tags .tagComplete,
+    .beta-correlation-inline-tags .tag {
+        box-shadow: none;
+        border: 1px solid rgba(74, 138, 214, 0.35);
+    }
+    .beta-correlation-inline-tags .tagFirstHalf,
+    .beta-correlation-inline-tags .tag {
+        background: #f8fbff;
+        color: #33475b;
+    }
+    .beta-correlation-inline-tags .tagSecondHalf,
+    .beta-correlation-inline-tags .tagComplete {
+        background: #eef6ff;
+        color: #31475d;
+    }
+    .beta-correlation-status-icon {
+        color: #a8b4c0;
+    }
+    .beta-correlation-status-icon.is-ids-active {
+        color: #b06f2f;
+        opacity: 0.95;
+    }
+    .beta-correlation-status-icon.is-correlation-active {
+        color: #6f8398;
+        opacity: 0.95;
+    }
+    .beta-correlation-distribution-cell,
+    .beta-correlation-date-cell {
+        text-align: center;
+    }
+    .beta-correlation-date-text {
+        font-size: 11px;
+        color: #7e8b98;
+        white-space: nowrap;
+    }
     .comment-bullet-list {
         margin: 0;
         padding-left: 18px;
@@ -2071,7 +2325,12 @@
                             </span>
                             <span id="sankey-limit-msg" style="font-size: 12px; color: #7d8894;"></span>
                         </div>
-                        <div id="correlations-sankey" style="width: 100%; height: 400px; margin: 0 auto;"></div>
+                        <div style="display: flex; align-items: flex-start; justify-content: center; gap: 8px; width: 100%;">
+                            <div id="correlations-sankey-source-label" style="width: 86px; padding-top: 190px; text-align: right; font-size: 12px; font-weight: 600; color: #6b7785; white-space: nowrap;">
+                                <?php echo __('This event'); ?>
+                            </div>
+                            <div id="correlations-sankey" style="flex: 1 1 auto; max-width: 100%; height: 400px; margin: 0 auto;"></div>
+                        </div>
                     </div>
                     <div id="correlations-table-filter-banner" style="display: none; margin-bottom: 15px; padding: 10px 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; align-items: center; justify-content: space-between;">
                         <span><i class="fa fa-filter" style="color: #856404;"></i> <strong><?php echo __('Filtered view'); ?></strong> &mdash; <span id="correlations-table-filter-msg"></span></span>
@@ -3214,13 +3473,13 @@
 
             function buildCorrelationEventHeader(eid, details, count, percent, creatorOrg) {
                 var html = '';
-                html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8fbfe;">';
+                html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">';
                 html += '    <div style="display: flex; align-items: center; gap: 10px;">';
                 html += '      <span class="label label-default" style="font-weight: normal;">' + details.date + '</span>';
                 if (creatorOrg) {
                     html += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + creatorOrg + '</span>';
                 }
-                html += '      <a href="<?php echo $baseurl; ?>/events/view/' + eid + '" style="font-weight: 700; font-size: 1.1em;">#' + eid + ' ' + details.info + '</a>';
+                html += '      <a class="beta-correlation-event-link" href="<?php echo $baseurl; ?>/events/view/' + eid + '">#' + eid + ' ' + details.info + '</a>';
                 html += '    </div>';
                 html += '    <div style="text-align: right;">';
                 html += '      <span style="font-size: 12px; font-weight: 600; color: #666;">' + count + ' ' + (count === 1 ? 'match' : 'matches') + '</span>';
@@ -3296,30 +3555,35 @@
 
                 var html = '';
                 var linkHref = buildCorrelationAttributeHref(eid, attr);
-                html += '        <tr class="beta-attr-row standalone-attr-row" data-attribute-id="' + entry.id + '">';
-                html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-link" style="color: #ccc;"></i></td>';
+                html += '        <tr class="beta-correlation-row" data-attribute-id="' + entry.id + '">';
+                html += '          <td class="beta-correlation-anchor-cell"><i class="fa fa-link"></i></td>';
                 html += '          <td colspan="2">';
-                html += '            <div class="beta-attr-meta-block">';
+                html += '            <div class="beta-correlation-meta">';
                 html += '              <div class="beta-attr-type-path">';
+                html += '                <span class="beta-correlation-chevrons">';
+                html += '                  <span class="beta-correlation-chevron beta-correlation-category"><span>' + attr.category + '</span></span>';
                 if (attr.Object && attr.Object.name) {
-                    html += '                <i class="fa fa-cube" style="font-size: 10px; color: #31708f; margin-left: 5px;"></i>';
-                    html += '                <span class="beta-object-relation-insight">' + attr.Object.name + '</span>';
+                    html += '                  <span class="beta-correlation-chevron beta-correlation-relation"><span>' + attr.Object.name + '</span></span>';
                     if (attr.object_relation) {
-                        html += '                <span style="font-size: 11px; color: #6b8aa8; font-weight: 700; line-height: 1;">&#9656;</span>';
-                        html += '                <span class="beta-object-relation-insight" style="opacity: 0.85;">' + attr.object_relation + '</span>';
+                        html += '                  <span class="beta-correlation-chevron beta-correlation-relation"><span>' + attr.object_relation + '</span></span>';
                     }
                 }
-                html += '                <span class="beta-type-insight">' + attr.type + '</span>';
+                html += '                  <span class="beta-correlation-chevron beta-correlation-type"><span>' + attr.type + '</span></span>';
+                html += '                </span>';
+                if (attr.comment) {
+                    html += '                <span class="beta-correlation-comment-inline"><i class="fa fa-comment"></i><span>' + attr.comment + '</span></span>';
+                }
                 html += '              </div>';
-                html += '              <div class="beta-attr-value-container">';
+                html += '              <div class="beta-correlation-value-row">';
                 if (attr.uuid || attr.id) {
-                    html += '                <a class="attr-value attr-value-correlatable" href="' + linkHref + '" title="<?php echo h(__('Open attribute in related event')); ?>" style="cursor: pointer; border-bottom: 1px dashed #428bca; text-decoration: none; color: inherit;">' + attr.value + '</a>';
+                    html += '                <a class="beta-correlation-value-link" href="' + linkHref + '" title="<?php echo h(__('Open attribute in related event')); ?>">' + attr.value + '</a>';
+                    html += '                <a class="beta-correlation-branch-link" href="' + linkHref + '" title="<?php echo h(__('Open attribute in related event')); ?>"><i class="fa fa-code-branch"></i></a>';
                 } else {
-                    html += '                <span class="attr-value">' + attr.value + '</span>';
+                    html += '                <span class="beta-correlation-value-link">' + attr.value + '</span>';
                 }
                 html += '              </div>';
                 if (attr.AttributeTag && attr.AttributeTag.length > 0) {
-                    html += '              <div class="beta-attr-tags-inline">';
+                    html += '              <div class="beta-correlation-inline-tags">';
                     attr.AttributeTag.forEach(function(at) {
                         html += buildCorrelationTagHtml(at.Tag);
                     });
@@ -3328,18 +3592,17 @@
                 html += '            </div>';
                 html += '          </td>';
                 html += '          <td class="col-related"></td>';
-                html += '          <td class="col-comment" style="width: 20%;">' + buildCorrelationCommentHtml(attr.comment) + '</td>';
                 html += '          <td style="text-align: center;">';
-                html += '            <i class="fa fa-shield-alt" style="font-size: 1.5em; ' + (attr.to_ids ? 'color: #ff8c00;' : 'opacity: 0.2;') + '" title="' + (attr.to_ids ? 'Recommended for blocking / alerting' : 'Not recommended for blocking / alerting') + '"></i>';
+                html += '            <i class="fa fa-shield-alt beta-correlation-status-icon ' + (attr.to_ids ? 'is-ids-active' : '') + '" style="font-size: 1.5em; ' + (attr.to_ids ? '' : 'opacity: 0.22;') + '" title="' + (attr.to_ids ? 'Recommended for blocking / alerting' : 'Not recommended for blocking / alerting') + '"></i>';
                 html += '          </td>';
                 html += '          <td class="col-correlation" style="text-align: center;">';
-                html += '            <i class="fa fa-project-diagram" style="' + (attr.disable_correlation ? 'opacity: 0.2;' : 'color: #428bca;') + '" title="' + (attr.disable_correlation ? 'Correlation disabled' : 'Correlation enabled') + '"></i>';
+                html += '            <i class="fa fa-project-diagram beta-correlation-status-icon ' + (attr.disable_correlation ? '' : 'is-correlation-active') + '" style="' + (attr.disable_correlation ? 'opacity: 0.22;' : '') + '" title="' + (attr.disable_correlation ? 'Correlation disabled' : 'Correlation enabled') + '"></i>';
                 html += '          </td>';
-                html += '          <td class="col-sightings" style="text-align: center;"><i class="fa fa-eye" style="color: #ccc;"></i></td>';
-                html += '          <td class="col-distribution" style="text-align: center;">';
+                html += '          <td class="col-sightings" style="text-align: center;"><i class="fa fa-eye beta-correlation-status-icon" style="opacity: 0.24;"></i></td>';
+                html += '          <td class="col-distribution beta-correlation-distribution-cell">';
                 html += '            <div class="dist-widget dist-' + parseInt(attr.distribution, 10) + '" title="' + (attr.SharingGroup ? attr.SharingGroup.name : '') + '"></div>';
                 html += '          </td>';
-                html += '          <td class="col-date" style="width: 80px;">' + moment.unix(attr.timestamp).format('YYYY-MM-DD') + '</td>';
+                html += '          <td class="col-date beta-correlation-date-cell" style="width: 90px;"><span class="beta-correlation-date-text">' + moment.unix(attr.timestamp).format('YYYY-MM-DD') + '</span></td>';
                 html += '        </tr>';
                 return html;
             }
@@ -3411,15 +3674,10 @@
             var nodeMap = {};
             var currentEventId = '<?php echo h($event['Event']['id']); ?>';
             var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
-            var currentEventName = 'Event #' + currentEventId;
-            var currentEventFullTitle = currentEventName;
+            var currentEventName = '<?php echo addslashes(__('This event')); ?>';
+            var currentEventFullTitle = 'Event #' + currentEventId;
             if (currentEventInfo) {
                 currentEventFullTitle += ': ' + currentEventInfo;
-                if (currentEventInfo.length > 40) {
-                    currentEventName += ': ' + currentEventInfo.substring(0, 40) + '...';
-                } else {
-                    currentEventName += ': ' + currentEventInfo;
-                }
             }
             
             function addNode(name, type, id, fullTitle) {
@@ -3514,7 +3772,7 @@
             if (links.length === 0) return;
             $('#correlations-sankey-stage').show();
 
-            var margin = {top: 10, right: 420, bottom: 10, left: 120},
+            var margin = {top: 10, right: 420, bottom: 10, left: 24},
                 width = $('#correlations-sankey').width() - margin.left - margin.right;
             
             // Dynamic height: base height + extra per attribute node
@@ -3709,7 +3967,7 @@
                 .on("mouseover", function(d) { applySankeyHoverState(d, 0.5); })
                 .on("mouseout", resetSankeyHoverState)
                 .text(function(d) {
-                    if (d.type === 'source') return d.name;
+                    if (d.type === 'source') return '';
                     var maxLength = d.type === 'target' ? 60 : (d.x0 < width / 2 ? 50 : 70);
                     return d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
                 });
@@ -3841,30 +4099,31 @@
 
             var html = '';
             html += '          <td colspan="2">';
-            html += '            <div class="beta-attr-meta-block">';
+            html += '            <div class="beta-correlation-meta">';
             if (attrCategory || attrType) {
                 html += '              <div class="beta-attr-type-path">';
+                html += '                <span class="beta-correlation-chevrons">';
                 if (attrCategory) {
-                    html += '                <span class="beta-category-label">' + attrCategory + '</span>';
-                    html += '                <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>';
+                    html += '                  <span class="beta-correlation-chevron beta-correlation-category"><span>' + attrCategory + '</span></span>';
                 }
                 if (attrType) {
-                    html += '                <span class="beta-type-insight">' + attrType + '</span>';
+                    html += '                  <span class="beta-correlation-chevron beta-correlation-type"><span>' + attrType + '</span></span>';
                 }
+                html += '                </span>';
                 html += '              </div>';
             }
-            html += '              <div class="beta-attr-value-container">';
-            html += '                <span class="attr-value" style="font-weight: 600;">' + attrValue + '</span>';
+            html += '              <div class="beta-correlation-value-row">';
+            html += '                <span class="beta-correlation-value-link">' + attrValue + '</span>';
             html += '              </div>';
             html += '            </div>';
             html += '          </td>';
             return html;
         }
 
-        function buildThisEventCorrelationCard(currentEventDateSafe, currentEventOrg, currentEventId, currentEventInfo, metaBlockHtml, attrCategory, attrType, attrValue, attrComment, idsHtml, correlationHtml, sightingsHtml, distributionHtml, dateHtml) {
+        function buildThisEventCorrelationCard(currentEventDateSafe, currentEventOrg, currentEventId, currentEventInfo, metaBlockHtml, attrCategory, attrType, attrValue, idsHtml, correlationHtml, sightingsHtml, distributionHtml, dateHtml) {
             var html = '';
-            html += '<div id="correlations-this-event-card" class="beta-card" style="margin-bottom: 20px; border-left: 4px solid #5cb85c; background: #f0fff4;">';
-            html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; background: #e8f8ed;">';
+            html += '<div id="correlations-this-event-card" class="beta-card correlation-event-card" style="border-left-color: #5cb85c;">';
+            html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">';
             html += '    <div style="display: flex; align-items: center; gap: 10px;">';
             if (currentEventDateSafe) {
                 html += '      <span class="label label-default" style="font-weight: normal;">' + currentEventDateSafe + '</span>';
@@ -3872,7 +4131,7 @@
             if (currentEventOrg) {
                 html += '      <span class="beta-correlation-org"><i class="fa fa-building"></i>' + currentEventOrg + '</span>';
             }
-            html += '      <a href="<?php echo $baseurl; ?>/events/view/' + currentEventId + '" style="font-weight: 700; font-size: 1.1em;">#' + currentEventId + ' ' + currentEventInfo + '</a>';
+            html += '      <a class="beta-correlation-event-link" href="<?php echo $baseurl; ?>/events/view/' + currentEventId + '">#' + currentEventId + ' ' + currentEventInfo + '</a>';
             html += '      <span class="label label-success" style="font-size: 12px; padding: 4px 8px;"><i class="fa fa-star"></i> <?php echo __('This Event'); ?></span>';
             html += '    </div>';
             html += '    <span style="font-size: 11px; color: #3d8b5e; font-style: italic;"><?php echo __('Source attribute'); ?></span>';
@@ -3880,16 +4139,15 @@
             html += '  <div class="beta-card-body" style="padding: 0;">';
             html += '    <table class="beta-attr-table" style="margin-top: 0;">';
             html += '      <tbody>';
-            html += '        <tr class="beta-attr-row standalone-attr-row" style="background: #f0fff4;">';
-            html += '          <td style="width: 40px; text-align: center;"><i class="fa fa-star" style="color: #5cb85c;"></i></td>';
+            html += '        <tr class="beta-correlation-row">';
+            html += '          <td class="beta-correlation-anchor-cell"><i class="fa fa-star" style="color: #5cb85c;"></i></td>';
             html += buildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue);
             html += '          <td class="col-related"></td>';
-            html += '          <td class="col-comment" style="width: 20%;">' + attrComment + '</td>';
             html += '          <td style="text-align: center;">' + idsHtml + '</td>';
             html += '          <td class="col-correlation" style="text-align: center;">' + correlationHtml + '</td>';
             html += '          <td class="col-sightings" style="text-align: center;">' + sightingsHtml + '</td>';
-            html += '          <td class="col-distribution" style="text-align: center;">' + distributionHtml + '</td>';
-            html += '          <td class="col-date" style="width: 80px;">' + dateHtml + '</td>';
+            html += '          <td class="col-distribution beta-correlation-distribution-cell">' + distributionHtml + '</td>';
+            html += '          <td class="col-date beta-correlation-date-cell" style="width: 90px;">' + dateHtml + '</td>';
             html += '        </tr>';
             html += '      </tbody>';
             html += '    </table>';
@@ -3965,7 +4223,6 @@
 
             // Clone cells from the DOM row for a complete display
             var metaBlockHtml = '';
-            var attrComment = '';
             var idsHtml = '';
             var correlationHtml = '';
             var sightingsHtml = '';
@@ -3979,10 +4236,9 @@
                 metaBlock.find('.beta-row-menu').remove();
                 // Make the attr-value non-clickable
                 metaBlock.find('.attr-value-correlatable').removeClass('attr-value-correlatable').removeAttr('onclick').css({'cursor': 'default', 'border-bottom': 'none'});
+                metaBlock.find('.beta-correlation-inline-indicator, .beta-correlation-branch-link').remove();
                 metaBlockHtml = metaBlock.prop('outerHTML');
 
-                // Clone other cells
-                attrComment = domRow.find('.col-comment').first().html() || '';
                 // IDS toggle cell (the shield icon)
                 var idsCell = domRow.find('td:has(.beta-ids-toggle)').first();
                 if (idsCell.length) {
@@ -4023,7 +4279,6 @@
                 attrCategory,
                 attrType,
                 attrValue,
-                attrComment,
                 idsHtml,
                 correlationHtml,
                 sightingsHtml,
