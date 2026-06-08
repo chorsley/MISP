@@ -199,8 +199,9 @@
     .object-summary-inline {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 0;
         min-width: 0;
+        flex-wrap: wrap;
     }
     .object-summary-text {
         display: inline-flex;
@@ -214,6 +215,94 @@
         font-weight: 600;
         color: #6f8398;
         white-space: nowrap;
+    }
+    .object-summary-inline .object-label {
+        margin-right: 0;
+    }
+    .object-summary-inline .object-label,
+    .object-summary-inline .object-title,
+    .object-summary-inline .object-desc {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 14px 0 18px;
+        margin-right: 0;
+        border: 1px solid transparent;
+        border-radius: 0;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1;
+        position: relative;
+        white-space: nowrap;
+    }
+    .object-summary-inline .object-label::after,
+    .object-summary-inline .object-title::after {
+        content: '';
+        position: absolute;
+        top: -1px;
+        right: -14px;
+        width: 28px;
+        height: 28px;
+        background: inherit;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(45deg) scale(0.71);
+        transform-origin: center;
+        z-index: 1;
+        opacity: 1;
+    }
+    .object-summary-inline .object-title::before,
+    .object-summary-inline .object-desc::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: -14px;
+        width: 28px;
+        height: 28px;
+        background: #f3f6f9;
+        border-top: 1px solid #d9e1e8;
+        border-right: 1px solid #d9e1e8;
+        transform: rotate(45deg) scale(0.71);
+        transform-origin: center;
+        z-index: 0;
+        opacity: 1;
+    }
+    .object-summary-inline .object-label {
+        background: #eef4fa;
+        border-color: #d5e2ef;
+        color: #5b7894;
+        border-top-left-radius: 999px;
+        border-bottom-left-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding-left: 14px;
+        font-weight: 700;
+    }
+    .object-summary-inline .object-title {
+        background: #f4f7fb;
+        border-color: #d8e0e9;
+        color: #4d6175;
+        font-size: 11px;
+        font-weight: 600;
+        border-top-right-radius: 999px;
+        border-bottom-right-radius: 999px;
+        padding-right: 14px;
+    }
+    .object-summary-inline .object-desc {
+        background: #f7f9fc;
+        border-color: #dce3eb;
+        color: #7f90a0;
+        padding-right: 14px;
+        font-weight: 500;
+    }
+    .object-summary-inline .object-label::before {
+        display: none;
+    }
+    .object-summary-inline .object-title::after {
+        display: none;
+    }
+    .object-summary-inline .object-desc::after {
+        display: none;
     }
     .object-attr-row td:first-child,
     .object-attr-row + .beta-sub-row td:first-child {
@@ -481,30 +570,118 @@
         color: #9aa7b3;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        flex-wrap: wrap;
         margin-bottom: 2px;
     }
+    .beta-chevrons {
+        display: inline-flex;
+        align-items: stretch;
+        flex-wrap: wrap;
+        min-width: 0;
+        overflow: hidden;
+        border-radius: 999px;
+    }
+    .beta-chevron-segment {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 14px 0 18px;
+        margin-right: 0;
+        border: 1px solid transparent;
+        border-radius: 0;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+        margin-left: 0;
+    }
+    .beta-chevron-segment::after {
+        content: '';
+        position: absolute;
+        top: -1px;
+        right: -14px;
+        width: 28px;
+        height: 28px;
+        background: inherit;
+        border-top: 1px solid currentColor;
+        border-right: 1px solid currentColor;
+        transform: rotate(45deg) scale(0.71);
+        transform-origin: center;
+        z-index: 1;
+        opacity: 1;
+    }
+    .beta-chevron-segment::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: -14px;
+        width: 28px;
+        height: 28px;
+        background: #f3f6f9;
+        border-top: 1px solid #d9e1e8;
+        border-right: 1px solid #d9e1e8;
+        transform: rotate(45deg) scale(0.71);
+        transform-origin: center;
+        z-index: 0;
+        opacity: 1;
+    }
+    .beta-chevron-segment > span {
+        position: relative;
+        z-index: 2;
+    }
+    .beta-chevron-segment:first-child {
+        padding-left: 14px;
+        margin-left: 0;
+        border-top-left-radius: 999px;
+        border-bottom-left-radius: 999px;
+    }
+    .beta-chevron-segment:first-child::before {
+        display: none;
+    }
+    .beta-chevron-segment:last-child {
+        padding-right: 14px;
+    }
+    .beta-chevron-segment:last-child::after {
+        display: none;
+    }
+    .beta-chevron-segment.beta-chevron-category {
+        background: #f3f6f9;
+        border-color: #d9e1e8;
+        color: #8b99a6;
+    }
+    .beta-chevron-segment.beta-chevron-relation {
+        background: #edf4fb;
+        border-color: #d1e1f0;
+        color: #5c7fa2;
+    }
+    .beta-chevron-segment.beta-chevron-type {
+        background: #f4f7fb;
+        border-color: #d6e0ea;
+        color: #566575;
+    }
     .beta-category-label {
-        font-size: 10px;
-        color: #acb6c0;
+        font-size: inherit;
+        color: inherit;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.04em;
     }
     .beta-type-insight {
-        background: #f6f8fa;
-        padding: 1px 6px;
-        border-radius: 10px;
-        font-weight: 600;
-        color: #5d6b78;
-        border: 1px solid #e8edf1;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        font-weight: inherit;
+        color: inherit;
+        border: 0;
     }
     .beta-object-relation-insight {
-        background: #f2f8fd;
-        padding: 1px 6px;
-        border-radius: 10px;
-        font-weight: 600;
-        color: #567ea9;
-        border: 1px solid #e1edf7;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        font-weight: inherit;
+        color: inherit;
+        border: 0;
     }
     .beta-attr-tags-inline {
         display: flex;
@@ -878,8 +1055,7 @@
                                     <div class="object-summary-inline">
                                         <span class="object-label">Object</span>
                                         <div class="object-summary-text">
-                                            <span class="object-title"><?php echo h($item['name']); ?></span>
-                                            <span class="object-desc"><?php echo h($item['description']); ?></span>
+                                            <span class="object-title" title="<?php echo h($item['description']); ?>"><?php echo h($item['name']); ?></span>
                                         </div>
                                     </div>
                                 <?php endif; ?>
@@ -892,9 +1068,10 @@
                         <td colspan="2">
                             <div class="beta-attr-meta-block">
                                 <div class="beta-attr-type-path">
-                                    <span class="beta-category-label"><?php echo h($item['category']); ?></span>
-                                    <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>
-                                    <span class="beta-type-insight"><?php echo h($item['type']); ?></span>
+                                    <span class="beta-chevrons">
+                                        <span class="beta-chevron-segment beta-chevron-category"><span class="beta-category-label"><?php echo h($item['category']); ?></span></span>
+                                        <span class="beta-chevron-segment beta-chevron-type"><span class="beta-type-insight"><?php echo h($item['type']); ?></span></span>
+                                    </span>
                                     <?php if (!empty($item['comment'])): ?>
                                         <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($item['comment']); ?></span></span>
                                     <?php endif; ?>
@@ -1128,10 +1305,11 @@
                             <td colspan="2">
                                 <div class="beta-attr-meta-block">
                                     <div class="beta-attr-type-path">
-                                        <span class="beta-category-label"><?php echo h($subAttr['category']); ?></span>
-                                        <i class="fa fa-chevron-right" style="font-size: 8px; color: #ccc;"></i>
-                                        <span class="beta-object-relation-insight"><?php echo h($subAttr['object_relation']); ?></span>
-                                        <span class="beta-type-insight"><?php echo h($subAttr['type']); ?></span>
+                                        <span class="beta-chevrons">
+                                            <span class="beta-chevron-segment beta-chevron-category"><span class="beta-category-label"><?php echo h($subAttr['category']); ?></span></span>
+                                            <span class="beta-chevron-segment beta-chevron-relation"><span class="beta-object-relation-insight"><?php echo h($subAttr['object_relation']); ?></span></span>
+                                            <span class="beta-chevron-segment beta-chevron-type"><span class="beta-type-insight"><?php echo h($subAttr['type']); ?></span></span>
+                                        </span>
                                         <?php if (!empty($subAttr['comment'])): ?>
                                             <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($subAttr['comment']); ?></span></span>
                                         <?php endif; ?>
