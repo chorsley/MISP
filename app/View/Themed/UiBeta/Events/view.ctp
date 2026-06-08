@@ -1887,13 +1887,6 @@
             return $b['value'] - $a['value'];
         });
 
-        if (isset($betaCompositionData) && is_array($betaCompositionData)) {
-            $compositionData = $betaCompositionData;
-            usort($compositionData, function($a, $b) {
-                return $b['value'] - $a['value'];
-            });
-        }
-
         $commentData = [];
         foreach ($commentCounts as $comment => $count) {
             $commentData[] = [

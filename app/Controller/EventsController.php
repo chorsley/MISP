@@ -1634,7 +1634,6 @@ class EventsController extends AppController
         $this->loadModel('Sighting');
         $sightingsData = $this->Sighting->eventsStatistic([$event], $user);
         $this->set('sightingsData', $sightingsData);
-        $this->set('betaCompositionData', $this->__buildAttributeCompositionData($event));
         $params = $this->Event->rearrangeEventForView($event, $filters, false, $sightingsData);
         if (!empty($filters['includeSightingdb']) && Configure::read('Plugin.Sightings_sighting_db_enable')) {
             $this->loadModel('Sightingdb');
@@ -1741,65 +1740,6 @@ class EventsController extends AppController
             'markdown' => $firstEventReport['EventReport']['content'] ?? null,
             'count' => count($eventReports),
         ];
-    }
-
-    private function __buildAttributeCompositionData(array $event)
-    {
-        $attrTypes = [];
-        $seen = [];
-
-        $register = function (array $attribute) use (&$attrTypes, &$seen) {
-            if (empty($attribute['type'])) {
-                return;
-            }
-            $key = null;
-            if (!empty($attribute['id'])) {
-                $key = 'id:' . $attribute['id'];
-            } elseif (!empty($attribute['uuid'])) {
-                $key = 'uuid:' . $attribute['uuid'];
-            }
-            if ($key !== null) {
-                if (isset($seen[$key])) {
-                    return;
-                }
-                $seen[$key] = true;
-            }
-            if (!isset($attrTypes[$attribute['type']])) {
-                $attrTypes[$attribute['type']] = 0;
-            }
-            $attrTypes[$attribute['type']]++;
-        };
-
-        if (!empty($event['Attribute'])) {
-            foreach ($event['Attribute'] as $attribute) {
-                if (is_array($attribute)) {
-                    $register($attribute);
-                }
-            }
-        }
-        if (!empty($event['Object'])) {
-            foreach ($event['Object'] as $object) {
-                if (!empty($object['Attribute'])) {
-                    foreach ($object['Attribute'] as $attribute) {
-                        if (is_array($attribute)) {
-                            $register($attribute);
-                        }
-                    }
-                }
-            }
-        }
-
-        arsort($attrTypes);
-        $compositionData = [];
-        foreach ($attrTypes as $type => $count) {
-            $compositionData[] = [
-                'label' => "Attribute: $type",
-                'name' => $type,
-                'value' => $count,
-                'type' => 'attribute',
-            ];
-        }
-        return $compositionData;
     }
 
     private function __eventViewCommon(array $user)
