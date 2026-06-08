@@ -1705,7 +1705,7 @@ class EventsController extends AppController
         $this->set('menuData', array('menuList' => 'event', 'menuItem' => 'viewEvent'));
         $this->set('mayModify', $this->__canModifyEvent($event, $user));
         $this->set('mayPublish', $this->__canPublishEvent($event, $user));
-        $this->set('eventReportSummary', $this->__buildEventReportSummary($event, $user));
+        $this->set('eventReportSummary', $this->Event->EventReport->getSummaryForEvent($user, $event['Event']['id']));
         try {
             $instanceKey = $event['Event']['protected'] ? $this->Event->CryptographicKey->ingestInstanceKey() : null;
         } catch (Exception $e) {
@@ -1713,35 +1713,6 @@ class EventsController extends AppController
         }
         $this->set('instanceFingerprint', $instanceKey);
         $this->__eventViewCommon($user);
-    }
-
-    private function __buildEventReportSummary(array $event, array $user)
-    {
-        $eventReports = $this->Event->EventReport->fetchReports($user, [
-            'conditions' => [
-                'EventReport.event_id' => $event['Event']['id'],
-                'EventReport.deleted' => 0,
-            ],
-        ]);
-
-        $firstEventReport = null;
-        foreach ($eventReports as $report) {
-            $content = $report['EventReport']['content'] ?? '';
-            if (!empty(trim($content))) {
-                $firstEventReport = $report;
-                break;
-            }
-        }
-
-        if ($firstEventReport === null && !empty($eventReports)) {
-            $firstEventReport = $eventReports[0];
-        }
-
-        return [
-            'id' => $firstEventReport['EventReport']['id'] ?? null,
-            'markdown' => $firstEventReport['EventReport']['content'] ?? null,
-            'count' => count($eventReports),
-        ];
     }
 
     private function __eventViewCommon(array $user)
