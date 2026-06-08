@@ -143,6 +143,15 @@
         min-width: 0;
         padding: 2px 10px 2px 0;
     }
+    .beta-meta-group.beta-meta-group-when {
+        flex: 0.9 1 240px;
+    }
+    .beta-meta-group.beta-meta-group-who {
+        flex: 1.35 1 380px;
+    }
+    .beta-meta-group.beta-meta-group-scope {
+        flex: 0.75 1 220px;
+    }
     .beta-meta-group + .beta-meta-group {
         border-left: 1px solid #e2eaf2;
         padding-left: 14px;
@@ -177,6 +186,7 @@
         display: inline-flex;
         flex-wrap: wrap;
         align-items: center;
+        align-self: center;
         gap: 4px;
         min-width: 0;
         color: #5d6b79;
@@ -208,6 +218,8 @@
         font-size: 14px;
         font-weight: 600;
         min-width: 0;
+        display: inline-flex;
+        align-items: center;
     }
     .beta-meta-item-value a {
         font-weight: 600;
@@ -216,6 +228,21 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+    }
+    .beta-meta-org-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+    .beta-meta-org-link img {
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        object-fit: contain;
+        background: #fff;
+        border: 1px solid #dde5ee;
     }
     .beta-meta-item-value.beta-relative-timestamp {
         display: inline-flex;
@@ -1152,13 +1179,33 @@
                     <div class="beta-meta-item">
                         <span class="beta-meta-item-label"><?php echo __('Creator'); ?></span>
                         <span class="beta-meta-item-value">
-                            <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Orgc']['id'] ?>" title="<?= h($event['Orgc']['name']) ?>"><?= h($event['Orgc']['name']) ?></a>
+                            <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Orgc']['id'] ?>" class="beta-meta-org-link" title="<?= h($event['Orgc']['name']) ?>">
+                                <img
+                                    src="<?= $baseurl ?>/organisations/getOrgLogo/<?= h($event['Orgc']['id']) ?>.json"
+                                    title="<?= h($event['Orgc']['name']) ?>"
+                                    alt="<?= h($event['Orgc']['name']) ?>"
+                                    width="20"
+                                    height="20"
+                                    onerror="this.onerror=null; this.remove();"
+                                >
+                                <span><?= h($event['Orgc']['name']) ?></span>
+                            </a>
                         </span>
                     </div>
                     <div class="beta-meta-item">
                         <span class="beta-meta-item-label"><?php echo __('Owner'); ?></span>
                         <span class="beta-meta-item-value">
-                            <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Org']['id'] ?>" title="<?= h($event['Org']['name']) ?>"><?= h($event['Org']['name']) ?></a>
+                            <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Org']['id'] ?>" class="beta-meta-org-link" title="<?= h($event['Org']['name']) ?>">
+                                <img
+                                    src="<?= $baseurl ?>/organisations/getOrgLogo/<?= h($event['Org']['id']) ?>.json"
+                                    title="<?= h($event['Org']['name']) ?>"
+                                    alt="<?= h($event['Org']['name']) ?>"
+                                    width="20"
+                                    height="20"
+                                    onerror="this.onerror=null; this.remove();"
+                                >
+                                <span><?= h($event['Org']['name']) ?></span>
+                            </a>
                         </span>
                     </div>
                     <div class="beta-meta-item">
