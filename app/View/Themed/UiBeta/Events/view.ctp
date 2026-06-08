@@ -12,7 +12,7 @@
         min-height: 100vh;
     }
     .beta-header-container {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
     }
     .beta-event-header-row {
         display: flex;
@@ -25,17 +25,20 @@
         flex: 1 1 420px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        padding: 14px 16px;
+        gap: 10px;
+        padding: 12px 16px;
         border: 1px solid #d9e7f5;
-        border-radius: 10px;
+        border-radius: 10px 10px 0 0;
+        border-bottom-color: #e3edf7;
         background: linear-gradient(180deg, #fafdff 0%, #eef5fc 100%);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
     .beta-event-title {
         font-weight: 600;
         margin-top: 0;
-        margin-bottom: 6px;
+        margin-bottom: 2px;
+        font-size: 0.95em;
+        line-height: 1.2;
         color: #2b3a49;
     }
     .beta-event-subtitle {
@@ -43,19 +46,19 @@
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 10px;
         margin-bottom: 0;
     }
     .beta-event-subtitle-chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         min-width: 0;
     }
     .beta-event-header-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         align-items: stretch;
         justify-content: flex-end;
         margin-top: 0;
@@ -63,15 +66,15 @@
     .beta-event-header-control {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        height: 40px;
-        padding: 0 14px;
+        gap: 7px;
+        height: 36px;
+        padding: 0 12px;
         border: 1px solid #d2dfec;
         border-radius: 999px;
         box-sizing: border-box;
         background: linear-gradient(180deg, #ffffff 0%, #f2f6fa 100%);
         color: #4b5f77;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
         white-space: nowrap;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -92,14 +95,14 @@
         border-color: #bdd2e8;
     }
     .beta-event-header-control.is-publish {
-        padding-right: 10px;
+        padding-right: 8px;
     }
     .beta-id-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        height: 40px;
-        padding: 0 14px;
+        height: 36px;
+        padding: 0 12px;
         border: 1px solid #d9e2ec;
         border-radius: 999px;
         box-sizing: border-box;
@@ -122,50 +125,129 @@
     .beta-event-meta-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 15px;
+        gap: 12px;
         align-items: center;
-        margin-top: 15px;
+        margin-top: 0;
+        padding: 8px 14px;
+        border: 1px solid #d9e7f5;
+        border-top: 0;
+        border-radius: 0 0 10px 10px;
+        background: linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
     }
-    .meta-box {
-        background: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 4px;
-        padding: 5px 12px;
+    .beta-meta-group {
         display: flex;
-        flex-direction: column;
-        justify-content: center;
-        min-height: 58px;
-        box-sizing: border-box;
+        align-items: center;
+        gap: 10px;
+        flex: 1 1 280px;
+        min-width: 0;
+        padding: 2px 10px 2px 0;
     }
-    .meta-label {
+    .beta-meta-group + .beta-meta-group {
+        border-left: 1px solid #e2eaf2;
+        padding-left: 14px;
+    }
+    .beta-meta-group.beta-meta-group-scope {
+        justify-content: flex-end;
+    }
+    .beta-meta-group.beta-meta-group-scope .beta-meta-items {
+        justify-content: flex-end;
+    }
+    .beta-meta-group-title {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 0;
+        flex: 0 0 auto;
+        color: #7f8c99;
+    }
+    .beta-meta-group-title .fa {
+        width: 12px;
+        text-align: center;
+        color: #7a8a9a;
+        font-size: 11px;
+    }
+    .beta-meta-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 0;
+        align-items: center;
+        min-width: 0;
+    }
+    .beta-meta-item {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        color: #5d6b79;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+    }
+    .beta-meta-item + .beta-meta-item {
+        margin-left: 12px;
+        padding-left: 14px;
+    }
+    .beta-meta-item + .beta-meta-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 1px;
+        height: 14px;
+        background: #d7e0ea;
+        transform: translateY(-50%);
+    }
+    .beta-meta-item-label {
+        color: #8c98a5;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .beta-meta-item-value {
+        color: #384553;
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 0;
+    }
+    .beta-meta-item-value a {
+        font-weight: 600;
+    }
+    .beta-meta-item-value.beta-meta-item-value-inline {
         display: inline-flex;
         align-items: center;
         gap: 6px;
     }
-    .meta-label .fa {
-        width: 12px;
-        text-align: center;
-        color: #7a8a9a;
+    .beta-meta-item-value.beta-relative-timestamp {
+        display: inline-flex;
+        align-items: center;
     }
-    .meta-label {
-        font-size: 10px;
-        text-transform: uppercase;
-        color: #999;
-        font-weight: 600;
+    @media (max-width: 1024px) {
+        .beta-meta-group {
+            flex-basis: 100%;
+        }
+        .beta-meta-group + .beta-meta-group {
+            border-left: 0;
+            padding-left: 0;
+        }
+        .beta-meta-group.beta-meta-group-scope,
+        .beta-meta-group.beta-meta-group-scope .beta-meta-items {
+            justify-content: flex-start;
+        }
     }
-    .meta-value {
-        font-size: 14px;
-        font-weight: 600;
-        color: #444;
-    }
-    .meta-subvalue {
-        font-size: 12px;
-        font-weight: 500;
-        color: #66717d;
-    }
-    .meta-subvalue strong {
-        color: #495563;
-        font-weight: 600;
+    @media (max-width: 767px) {
+        .beta-event-meta-row {
+            padding: 10px 12px;
+        }
+        .beta-meta-group {
+            flex-basis: 100%;
+            align-items: flex-start;
+            gap: 8px;
+            padding-right: 0;
+        }
+        .beta-meta-item + .beta-meta-item {
+            margin-left: 10px;
+            padding-left: 10px;
+        }
     }
     .beta-tabs {
         margin-top: 20px;
@@ -879,12 +961,16 @@
         .beta-event-metadata-panel {
             flex-basis: 100%;
             width: 100%;
+            border-radius: 10px 10px 0 0;
         }
         .beta-event-header-actions {
             justify-content: flex-start;
         }
         .beta-event-subtitle {
             justify-content: flex-start;
+        }
+        .beta-event-meta-row {
+            border-radius: 0 0 10px 10px;
         }
     }
     .beta-tags-container {
@@ -1005,24 +1091,6 @@
             </div>
         </div>
         <div class="beta-event-meta-row">
-            <span class="meta-box date-box">
-                <span class="meta-label"><i class="fa fa-calendar"></i><?php echo __('Event Date'); ?></span>
-                <span class="meta-value"><?php echo h($event['Event']['date']); ?></span>
-            </span>
-            <span class="meta-box org-box">
-                <span class="meta-label"><i class="fa fa-building"></i><?php echo __('Creator Org'); ?></span>
-                <span class="meta-value">
-                     <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Orgc']['id'] ?>" class="beta-org-link" title="<?= h($event['Orgc']['name']) ?>">
-                        <span class="beta-org-name"><?= h($event['Orgc']['name']) ?></span>
-                        <?php
-                            $orgLogo = $this->OrgImg->getOrgLogo($event['Orgc'], 24, false);
-                            if (strpos($orgLogo, '<img') !== false): // Check if the output contains an image tag
-                                echo $orgLogo;
-                            endif;
-                        ?>
-                    </a>
-                </span>
-            </span>
             <?php
                 $creatorUser = '';
                 if (!empty($event['User']['email'])) {
@@ -1033,54 +1101,71 @@
                     $creatorUser = __('User #%s', $event['Event']['user_id']);
                 }
             ?>
-            <span class="meta-box org-box">
-                <span class="meta-label"><i class="fa fa-user-shield"></i><?php echo __('Owner Org'); ?></span>
-                <span class="meta-value">
-                    <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Org']['id'] ?>" class="beta-org-link" title="<?= h($event['Org']['name']) ?>">
-                        <span class="beta-org-name"><?= h($event['Org']['name']) ?></span>
-                        <?php
-                            $ownerOrgLogo = $this->OrgImg->getOrgLogo($event['Org'], 24, false);
-                            if (strpos($ownerOrgLogo, '<img') !== false):
-                                echo $ownerOrgLogo;
-                            endif;
-                        ?>
-                    </a>
-                </span>
-            </span>
-            <span class="meta-box user-box">
-                <span class="meta-label"><i class="fa fa-user"></i><?php echo __('Creator User'); ?></span>
-                <span class="meta-value<?php echo empty($creatorUser) ? ' muted' : ''; ?>" style="font-size: 13px;">
-                    <?php echo !empty($creatorUser) ? h($creatorUser) : __('Unknown'); ?>
-                </span>
-            </span>
-             <span class="meta-box dist-box" title="<?php echo h($distributionLevels[$event['Event']['distribution']]); ?>">
-                <span class="meta-label"><i class="fa fa-share-alt"></i><?php echo __('Distribution'); ?></span>
-                <span class="meta-value" style="display: flex; align-items: center; gap: 5px;">
-                    <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
-                         title="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($distributionLevels[$event['Event']['distribution']]) ?>"
-                         data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
-                         data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
-                         data-scope-id="<?= h($event['Event']['id']) ?>">
+            <div class="beta-meta-group">
+                <div class="beta-meta-group-title" title="<?php echo __('When'); ?>"><i class="fa fa-calendar"></i></div>
+                <div class="beta-meta-items">
+                    <div class="beta-meta-item">
+                        <span class="beta-meta-item-label"><?php echo __('Date'); ?></span>
+                        <span class="beta-meta-item-value"><?php echo h($event['Event']['date']); ?></span>
                     </div>
-                    <?php 
-                        if ($event['Event']['distribution'] == 4):
-                            echo $this->Html->link($event['SharingGroup']['name'], array('controller' => 'sharing_groups', 'action' => 'view', $event['SharingGroup']['id']));
-                        else:
-                            echo h($shortDist[$event['Event']['distribution']]);
-                        endif;
-                    ?>
-                </span>
-            </span>
-            <span class="meta-box mod-box">
-                <span class="meta-label"><i class="fa fa-clock"></i><?php echo __('Last Mod'); ?></span>
-                <span class="meta-value beta-relative-timestamp"
-                    data-timestamp="<?= h($event['Event']['timestamp']) ?>"
-                    data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>"
-                    title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)"
-                    style="cursor: pointer;">
-                    <?php echo $this->Time->time($event['Event']['timestamp']); ?>
-                </span>
-            </span>
+                    <div class="beta-meta-item">
+                        <span class="beta-meta-item-label"><?php echo __('Updated'); ?></span>
+                        <span class="beta-meta-item-value beta-relative-timestamp"
+                            data-timestamp="<?= h($event['Event']['timestamp']) ?>"
+                            data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>"
+                            title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)"
+                            style="cursor: pointer;">
+                            <?php echo $this->Time->time($event['Event']['timestamp']); ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="beta-meta-group">
+                <div class="beta-meta-group-title" title="<?php echo __('Who'); ?>"><i class="fa fa-users"></i></div>
+                <div class="beta-meta-items">
+                    <div class="beta-meta-item">
+                        <span class="beta-meta-item-label"><?php echo __('Creator'); ?></span>
+                        <span class="beta-meta-item-value">
+                            <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Orgc']['id'] ?>" title="<?= h($event['Orgc']['name']) ?>"><?= h($event['Orgc']['name']) ?></a>
+                        </span>
+                    </div>
+                    <div class="beta-meta-item">
+                        <span class="beta-meta-item-label"><?php echo __('Owner'); ?></span>
+                        <span class="beta-meta-item-value">
+                            <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Org']['id'] ?>" title="<?= h($event['Org']['name']) ?>"><?= h($event['Org']['name']) ?></a>
+                        </span>
+                    </div>
+                    <div class="beta-meta-item">
+                        <span class="beta-meta-item-label"><?php echo __('User'); ?></span>
+                        <span class="beta-meta-item-value<?php echo empty($creatorUser) ? ' muted' : ''; ?>">
+                            <?php echo !empty($creatorUser) ? h($creatorUser) : __('Unknown'); ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="beta-meta-group beta-meta-group-scope">
+                <div class="beta-meta-group-title" title="<?php echo __('Scope'); ?>"><i class="fa fa-share-alt"></i></div>
+                <div class="beta-meta-items">
+                    <div class="beta-meta-item" title="<?php echo h($distributionLevels[$event['Event']['distribution']]); ?>">
+                        <span class="beta-meta-item-label"><?php echo __('Distribution'); ?></span>
+                        <span class="beta-meta-item-value beta-meta-item-value-inline">
+                            <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
+                                 title="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($distributionLevels[$event['Event']['distribution']]) ?>"
+                                 data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
+                                 data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
+                                 data-scope-id="<?= h($event['Event']['id']) ?>">
+                            </div>
+                            <?php 
+                                if ($event['Event']['distribution'] == 4):
+                                    echo $this->Html->link($event['SharingGroup']['name'], array('controller' => 'sharing_groups', 'action' => 'view', $event['SharingGroup']['id']));
+                                else:
+                                    echo h($shortDist[$event['Event']['distribution']]);
+                                endif;
+                            ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <?php if (!empty($warnings)): ?>
