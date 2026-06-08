@@ -76,14 +76,6 @@
         return $html;
     };
 
-    $renderCommentCellContent = function ($comment) {
-        if (mb_strlen($comment) > 50) {
-            return h(mb_substr($comment, 0, 50)) . '... '
-                . '<i class="fa fa-comment-dots" style="cursor: pointer;" onclick="event.stopPropagation();" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' . nl2br(h($comment)) . '"></i>';
-        }
-        return h($comment);
-    };
-
     $countDirectRelatedAttributes = function ($item) {
         return !empty($item['RelatedAttribute']) ? count($item['RelatedAttribute']) : 0;
     };
@@ -155,17 +147,18 @@
     .object-header-row td {
         padding-top: 8px;
         padding-bottom: 8px;
-        border-top: 1px solid #e6eff6;
-        border-bottom: 1px solid #e6eff6;
+        border-top: 1px solid #d7e6f1;
+        border-bottom: 1px solid #d7e6f1;
     }
     .object-header-row td:first-child {
         border-left: 1px solid #d7e6f1;
         border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
         box-shadow: inset 6px 0 0 #31708f;
     }
     .object-header-row td:last-child {
         border-top-right-radius: 4px;
-        border-right: 1px solid #e6eff6;
+        border-right: 1px solid #d7e6f1;
     }
     .object-title {
         font-weight: bold;
@@ -229,7 +222,7 @@
         margin-right: 0;
         border: 1px solid transparent;
         border-radius: 0;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
         line-height: 1;
         position: relative;
@@ -282,7 +275,7 @@
         background: #f4f7fb;
         border-color: #d8e0e9;
         color: #4d6175;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
         border-top-right-radius: 999px;
         border-bottom-right-radius: 999px;
@@ -368,15 +361,6 @@
     }
     .beta-tagging-links {
         display: none;
-    }
-    .col-comment {
-        font-style: italic;
-        color: #728190;
-        font-size: 12px;
-        max-width: 250px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
     .beta-columns-menu {
         min-width: 180px;
@@ -591,7 +575,7 @@
         margin-right: 0;
         border: 1px solid transparent;
         border-radius: 0;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
         line-height: 1;
         white-space: nowrap;
@@ -723,7 +707,7 @@
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        font-size: 11px;
+        font-size: 12px;
         color: #8693a0;
         font-style: italic;
         overflow-wrap: anywhere;
@@ -895,7 +879,6 @@
                             'distribution' => __('Distribution'),
                             'correlation' => __('Correlation'),
                             'related' => __('Corr.'),
-                            'comment' => __('Comment'),
                         ];
                         foreach ($cols as $id => $label):
                     ?>
@@ -922,7 +905,6 @@
                 <th style="width: 40px;"><?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-all select_all" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all attributes/proposals on current page');?>" onclick="toggleAllAttributeCheckboxes()"><?php endif; ?></th>
                 <th colspan="2"><?php echo __('Attribute Details'); ?></th>
                 <th class="col-related" style="width: 50px;"><?php echo __('Corr.'); ?></th>
-                <th class="col-comment" style="width: 20%;"><?php echo __('Comment'); ?></th>
                 <th style="width: 30px;" title="<?php echo __('Recommend for blocking / alerting?'); ?>">IDS</th>
                 <th class="col-correlation" style="width: 30px;" title="<?php echo __('Correlation'); ?>"><i class="fa fa-project-diagram"></i></th>
                 <th class="col-sightings" style="width: 30px;" title="<?php echo __('Sightings'); ?>"><i class="fa fa-eye"></i></th>
@@ -961,7 +943,7 @@
                     <?php if ($isObject): ?>data-object-name="<?php echo $dataName; ?>" data-object-id="<?php echo h($item['id']); ?>"<?php else: ?>data-attribute-type="<?php echo $dataName; ?>"<?php endif; ?>>
                     
                     <!-- Checkbox & Actions Dropdown -->
-                    <td style="position: relative;" <?php if ($isObject) echo 'colspan="3"'; ?>>
+                    <td style="position: relative;" <?php if ($isObject) echo 'colspan="7"'; ?>>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="display: flex; align-items: center; min-width: 0; gap: 8px;">
                                 <div class="beta-left-cell-stack">
@@ -1062,7 +1044,6 @@
                             </div>
                         </div>
                     </td>
-                    
                     <?php if (!$isObject): ?>
                         <!-- Metadata (Category > Type + Tags) -->
                         <td colspan="2">
@@ -1125,12 +1106,6 @@
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
-
-                    <!-- Comment -->
-                    <?php $comment = $item['comment'] ?? ''; ?>
-                    <td class="col-comment" data-comment-full="<?php echo h($comment); ?>" <?php if ($isObject) echo 'colspan="5"'; ?>>
-                        <?= $renderCommentCellContent($comment) ?>
-                    </td>
 
                     <?php if (!$isObject): ?>
                         <!-- IDS Toggle -->
@@ -1361,12 +1336,6 @@
                                 <?php if ($subRelatedCount > 0): ?>
                                     <span class="beta-related-count-badge" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><i class="fa fa-code-branch"></i><span><?php echo $subRelatedCount; ?></span></span>
                                 <?php endif; ?>
-                            </td>
-
-                            <!-- Comment -->
-                            <?php $comment = $subAttr['comment'] ?? ''; ?>
-                            <td class="col-comment" data-comment-full="<?php echo h($comment); ?>">
-                                <?= $renderCommentCellContent($comment) ?>
                             </td>
 
                             <!-- IDS Toggle for Sub-Attribute -->
@@ -1753,7 +1722,6 @@
             distribution: true,
             correlation: true,
             related: true,
-            comment: true,
         };
     }
 
