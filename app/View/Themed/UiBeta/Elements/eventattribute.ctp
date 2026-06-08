@@ -1,13 +1,13 @@
 <?php
     // Pagination logic calculated here to keep EventsController minimal
-    $paging = $this->params->params['paging']['Event'] ?? [];
-    $betaTotalAttributes = $paging['count'] ?? count($event['objects']);
+    $paging = $this->params->params['paging']['Event'] ?? $this->params->params['paging']['MispAttribute'] ?? [];
+    $items = isset($attributes) && is_array($attributes) ? $attributes : ($event['objects'] ?? []);
+    $betaTotalAttributes = $paging['count'] ?? count($items);
     $betaPageSize = ($paging['limit'] ?? 0) != 0 ? $paging['limit'] : ($betaTotalAttributes ?: 50);
     $betaCurrentPage = $paging['page'] ?? 1;
     $betaTotalPages = $paging['pageCount'] ?? 1;
     $betaShowStart = ($betaTotalAttributes > 0) ? ($betaCurrentPage - 1) * $betaPageSize + 1 : 0;
     $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalAttributes);
-    $items = $event['objects'];
 
     $items = $this->Event->attachRelatedAttributesToItems($items, $event['RelatedAttribute'] ?? []);
 
@@ -80,7 +80,17 @@
         return !empty($item['RelatedAttribute']) ? count($item['RelatedAttribute']) : 0;
     };
 
-    $showBulkAttributeControls = isset($showBulkAttributeControls) ? (bool)$showBulkAttributeControls : false;
+    $showBulkAttributeControls = isset($showBulkAttributeControls) ? (bool)$showBulkAttributeControls : (
+        ($mayModify && $this->Acl->canAccess('attributes', 'editSelected'))
+        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event))
+        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event, true))
+        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event))
+        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event, true))
+        || ($mayModify && $this->Acl->canAccess('objects', 'proposeObjectsFromAttributes'))
+        || ($mayModify && $this->Acl->canAccess('objectReferences', 'bulkAdd'))
+        || $this->Acl->canAccess('sightings', 'advanced')
+        || ($mayModify && $this->Acl->canAccess('attributes', 'deleteSelected'))
+    );
     $canAddSighting = $this->Acl->canAccess('sightings', 'add');
     $canAdvancedSighting = $this->Acl->canAccess('sightings', 'advanced');
     $deleteSelectedUrl = $baseurl . '/attributes/deleteSelected/' . $event['Event']['id'];
@@ -1498,15 +1508,52 @@
     }
 
     function buildAttributesUrl(params) {
-        var url = window.paginationState.baseUrl + '/events/viewEventAttributes/' + window.paginationState.eventId;
+        var rawUrl = currentUri || (window.paginationState.baseUrl + '/events/viewEventAttributes/' + window.paginationState.eventId);
+        if (/^https?:\/\//i.test(rawUrl)) {
+            try {
+                rawUrl = new URL(rawUrl).pathname + (new URL(rawUrl).search || '');
+            } catch (e) {
+                rawUrl = rawUrl.replace(/^https?:\/\/[^/]+/i, '');
+            }
+        }
+        var parts = rawUrl.split('?');
+        var path = parts[0] || '';
+        var query = parts.length > 1 ? '?' + parts.slice(1).join('?') : '';
+
+        var segments = path.split('/');
+        var preservedSegments = [];
+        for (var i = 0; i < segments.length; i++) {
+            var segment = segments[i];
+            if (!segment) {
+                continue;
+            }
+            if (
+                segment.indexOf('page:') === 0 ||
+                segment.indexOf('limit:') === 0 ||
+                segment.indexOf('sort:') === 0 ||
+                segment.indexOf('direction:') === 0 ||
+                segment.indexOf('searchFor:') === 0 ||
+                segment.indexOf('attributeType:') === 0 ||
+                segment.indexOf('beta:') === 0
+            ) {
+                continue;
+            }
+            preservedSegments.push(segment);
+        }
+
         if (params.searchFor) {
-            url += '/searchFor:' + encodeURIComponent(params.searchFor);
+            preservedSegments.push('searchFor:' + encodeURIComponent(params.searchFor));
         }
-        url += '/page:' + params.page + '/limit:' + params.limit + '/sort:timestamp/direction:desc/beta:1';
         if (window.paginationState.attributeType) {
-            url += '/attributeType:' + encodeURIComponent(window.paginationState.attributeType);
+            preservedSegments.push('attributeType:' + encodeURIComponent(window.paginationState.attributeType));
         }
-        return url;
+        preservedSegments.push('page:' + params.page);
+        preservedSegments.push('limit:' + params.limit);
+        preservedSegments.push('sort:timestamp');
+        preservedSegments.push('direction:desc');
+        preservedSegments.push('beta:1');
+
+        return (path.charAt(0) === '/' ? '/' : '') + preservedSegments.join('/') + query;
     }
 
     function renderAttributesResponse($container, data, shouldScroll) {

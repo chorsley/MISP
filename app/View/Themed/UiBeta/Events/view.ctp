@@ -1694,15 +1694,17 @@
     $canBulkAddRelationships = $this->Acl->canModifyEvent($event) && $this->Acl->canAccess('objectReferences', 'bulkAdd');
     $canBulkSightings = $this->Acl->canAccess('sightings', 'advanced');
     $canBulkDeleteAttributes = $this->Acl->canModifyEvent($event) && $this->Acl->canAccess('attributes', 'deleteSelected');
-    $showBulkAttributeControls = $canBulkEditAttributes
-        || $canBulkTagAttributesGlobal
-        || $canBulkTagAttributesLocal
-        || $canBulkGalaxyAttributesGlobal
-        || $canBulkGalaxyAttributesLocal
-        || $canBulkGroupIntoObject
-        || $canBulkAddRelationships
-        || $canBulkSightings
-        || $canBulkDeleteAttributes;
+    $showBulkAttributeControls = isset($showBulkAttributeControls) ? (bool)$showBulkAttributeControls : (
+        ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('attributes', 'editSelected'))
+        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event))
+        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event, true))
+        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event))
+        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event, true))
+        || ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('objects', 'proposeObjectsFromAttributes'))
+        || ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('objectReferences', 'bulkAdd'))
+        || $this->Acl->canAccess('sightings', 'advanced')
+        || ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('attributes', 'deleteSelected'))
+    );
     ?>
     <div class="beta-tabs-container">
         <ul class="nav nav-tabs beta-tabs" role="tablist">
