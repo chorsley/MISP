@@ -813,17 +813,34 @@
         display: flex;
         align-items: center;
         gap: 14px;
-        margin-bottom: 12px;
-        padding: 10px 14px;
-        border: 1px solid #dfe7ef;
-        border-radius: 8px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        margin-bottom: 0;
+        padding: 10px 14px 12px;
+        border: 0;
+        border-bottom: 1px solid rgba(123, 145, 175, 0.16);
+        border-radius: 0;
+        background: transparent;
+    }
+    .beta-attributes-top-panel {
+        margin-bottom: 18px;
+        border: 1px solid #d7e2ef;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #f7f9fd 0%, #eef4fb 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .beta-attributes-top-panel .beta-attributes-list {
+        padding: 0 14px 14px;
+    }
+    .beta-attributes-top-panel .beta-attr-toolbar {
+        padding-top: 12px;
+    }
+    .beta-attributes-top-panel .beta-attr-table {
+        border-top: 1px solid #dce6f1;
     }
     .beta-composition-label {
         flex: 0 0 auto;
         font-size: 13px;
         font-weight: 700;
-        color: #445567;
+        color: #526579;
         white-space: nowrap;
     }
     .beta-composition-row .composition-singlebar-wrap {
@@ -1077,6 +1094,9 @@
             flex-direction: column;
             align-items: stretch;
             gap: 8px;
+        }
+        .beta-attributes-top-panel .beta-attributes-list {
+            padding: 0 12px 12px;
         }
         .beta-event-header-row {
             align-items: stretch;
@@ -1933,15 +1953,16 @@
 
             <!-- Attributes Tab -->
             <div role="tabpanel" class="tab-pane" id="attributes">
-                 <div class="beta-composition-row">
-                     <div class="beta-composition-label"><?php echo __('Composition'); ?></div>
-                     <div id="composition-treemap" class="composition-singlebar-wrap"></div>
-                 </div>
-                 <div id="beta-filter-banner-slot"></div>
-                 <div id="beta-attributes-container">
-                     <?php if ($showBulkAttributeControls): ?>
-                     <div id="beta-bulk-actions-bar" class="beta-bulk-actions-bar">
-                          <div class="beta-bulk-actions-bar-inner">
+                 <div class="beta-attributes-top-panel">
+                     <div class="beta-composition-row">
+                         <div class="beta-composition-label"><?php echo __('Composition'); ?></div>
+                         <div id="composition-treemap" class="composition-singlebar-wrap"></div>
+                     </div>
+                     <div id="beta-filter-banner-slot"></div>
+                     <div id="beta-attributes-container">
+                      <?php if ($showBulkAttributeControls): ?>
+                      <div id="beta-bulk-actions-bar" class="beta-bulk-actions-bar">
+                           <div class="beta-bulk-actions-bar-inner">
                                <div class="beta-bulk-actions-summary">
                                    <span id="beta-bulk-selected-count">0</span> <?php echo __('selected'); ?>
                                </div>
@@ -2029,9 +2050,10 @@
                              'betaShowStart' => $betaShowStart,
                              'betaShowEnd' => $betaShowEnd,
                              'showBulkAttributeControls' => $showBulkAttributeControls
-                          ]); ?>
+                           ]); ?>
+                      </div>
                      </div>
-                  </div>
+                 </div>
              </div>
             
             <!-- Other Tabs Placeholders -->

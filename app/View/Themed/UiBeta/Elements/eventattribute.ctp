@@ -133,8 +133,9 @@
     }
     .attr-value {
         font-family: 'Consolas', 'Monaco', monospace;
-        color: #333;
+        color: #263443;
         word-break: break-all;
+        font-size: 13px;
     }
     .attr-tag {
         display: inline-block;
@@ -146,16 +147,16 @@
         border: 1px solid transparent;
     }
     .object-header-row {
-        background-color: #ebf5fb;
+        background-color: #f7fbfe;
     }
     .object-attr-row, .object-attr-row + .beta-sub-row {
-        background-color: #f8fbfe; /* Even more subtle pale blue for object members */
+        background-color: #fbfdff;
     }
     .object-header-row td {
         padding-top: 8px;
         padding-bottom: 8px;
-        border-top: 1px solid #d1e9f5;
-        border-bottom: 1px solid #d1e9f5;
+        border-top: 1px solid #e6eff6;
+        border-bottom: 1px solid #e6eff6;
     }
     .object-header-row td:first-child {
         border-left: 4px solid #31708f;
@@ -165,7 +166,7 @@
     .object-header-row td:last-child {
         border-top-right-radius: 4px;
         border-bottom-right-radius: 4px;
-        border-right: 1px solid #d1e9f5;
+        border-right: 1px solid #e6eff6;
     }
     .object-title {
         font-weight: bold;
@@ -188,7 +189,7 @@
     }
     .object-desc {
         font-size: 11px;
-        color: #999;
+        color: #91a0af;
     }
     .object-attr-row td:first-child {
         /* border-left handled inline for positioning */
@@ -199,7 +200,7 @@
     }
     .beta-sub-row td {
         padding: 4px 10px 8px 10px;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid #edf2f6;
         vertical-align: top;
         border-left: 4px solid transparent; /* Keep aligned */
     }
@@ -229,7 +230,7 @@
     }
     .col-comment {
         font-style: italic;
-        color: #555;
+        color: #728190;
         font-size: 12px;
         max-width: 250px;
         overflow: hidden;
@@ -246,18 +247,18 @@
         align-items: center;
         justify-content: flex-start;
         flex-wrap: wrap;
-        padding: 10px 0;
-        margin-bottom: 10px;
-        border-bottom: 1px solid #eee;
+        padding: 8px 0;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #eef2f6;
         gap: 12px;
     }
     .beta-pagination-group {
         display: inline-flex;
         align-items: stretch;
         flex-wrap: wrap;
-        border: 1px solid #d8e1eb;
+        border: 1px solid #e6edf3;
         border-radius: 6px;
-        background: linear-gradient(180deg, #ffffff 0%, #f5f8fb 100%);
+        background: linear-gradient(180deg, #ffffff 0%, #fafcfe 100%);
         overflow: hidden;
     }
     .beta-pagination-info {
@@ -265,15 +266,15 @@
         align-items: center;
         gap: 0;
         min-width: 0;
-        font-size: 13px;
-        color: #5f6c79;
+        font-size: 12px;
+        color: #6f7c88;
     }
     .beta-pagination-info .beta-page-item-info {
         display: inline-flex;
         align-items: center;
         min-height: 32px;
         padding: 0 12px;
-        color: #6d7883;
+        color: #7b8793;
         font-size: 12px;
         white-space: nowrap;
     }
@@ -282,7 +283,7 @@
         align-items: center;
         gap: 4px;
         padding: 0 10px;
-        border-left: 1px solid #d8e1eb;
+        border-left: 1px solid #e6edf3;
     }
     .beta-pagination-controls .btn {
         min-width: 36px;
@@ -299,7 +300,7 @@
     }
     .beta-page-num-display {
         font-size: 12px;
-        color: #5f6c79;
+        color: #768391;
         min-width: 48px;
         text-align: center;
         font-weight: 600;
@@ -307,7 +308,7 @@
     .beta-pagination-bottom {
         margin-top: 10px;
         padding-top: 10px;
-        border-top: 1px solid #eee;
+        border-top: 1px solid #eef2f6;
     }
     .beta-attr-toolbar {
         display: flex;
@@ -315,7 +316,7 @@
         justify-content: space-between;
         gap: 12px;
         flex-wrap: wrap;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     .beta-attr-toolbar-main,
     .beta-attr-toolbar-actions,
@@ -333,13 +334,13 @@
     .beta-attr-toolbar-actions {
         padding-left: 14px;
         margin-left: 14px;
-        border-left: 1px solid #e1e7ee;
+        border-left: 1px solid #edf2f6;
     }
     .beta-attr-toolbar-right {
         justify-content: flex-end;
         padding-left: 14px;
         margin-left: auto;
-        border-left: 1px solid #e1e7ee;
+        border-left: 1px solid #edf2f6;
         flex: 0 0 auto;
     }
     .beta-attr-toolbar .beta-pagination-container {
@@ -440,7 +441,7 @@
     }
     .beta-attr-type-path {
         font-size: 11px;
-        color: #888;
+        color: #9aa7b3;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -448,37 +449,38 @@
     }
     .beta-category-label {
         font-size: 10px;
-        color: #aaa;
+        color: #acb6c0;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
     .beta-type-insight {
-        background: #f0f0f0;
+        background: #f6f8fa;
         padding: 1px 6px;
         border-radius: 10px;
         font-weight: 600;
-        color: #444;
-        border: 1px solid #e0e0e0;
+        color: #5d6b78;
+        border: 1px solid #e8edf1;
     }
     .beta-object-relation-insight {
-        background: #e8f4fd;
+        background: #f2f8fd;
         padding: 1px 6px;
         border-radius: 10px;
         font-weight: 600;
-        color: #2f5a93;
-        border: 1px solid #d1e9f5;
+        color: #567ea9;
+        border: 1px solid #e1edf7;
     }
     .beta-attr-tags-inline {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 2px;
-        /* opacity: 0.4; Removed as per user request */
-        /* transition: opacity 0.2s; */
+        opacity: 0.5;
+        transition: opacity 0.18s ease;
     }
-    /*.beta-attr-row:hover .beta-attr-tags-inline {
+    .beta-attr-row:hover .beta-attr-tags-inline,
+    .beta-sub-row:hover .beta-attr-tags-inline {
         opacity: 1;
-    }*/
+    }
     .beta-attr-value-container {
         display: flex;
         align-items: flex-start;
@@ -490,7 +492,7 @@
         align-items: center;
         gap: 4px;
         font-size: 11px;
-        color: #777;
+        color: #8693a0;
         font-style: italic;
         overflow-wrap: anywhere;
     }
@@ -498,6 +500,80 @@
     .beta-attr-comment-inline .fas {
         font-style: normal;
         opacity: 0.85;
+    }
+    .beta-attr-table {
+        width: 100%;
+        background: #fff;
+    }
+    .beta-attr-table thead th {
+        background: #f9fbfd;
+        color: #758290;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        border-bottom: 1px solid #e6edf3;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .beta-attr-table tbody td {
+        border-top-color: #f1f5f8;
+    }
+    .beta-attr-table .btn.btn-default.btn-sm,
+    .beta-attr-table .btn-group > .btn.btn-default.btn-sm,
+    .beta-attr-toolbar .btn.btn-default.btn-sm,
+    .beta-attr-toolbar .btn-group > .btn.btn-default.btn-sm {
+        background: #fafcfe;
+        border-color: #e4ebf2;
+        color: #556473;
+        box-shadow: none;
+    }
+    .beta-attr-toolbar .btn.btn-default.btn-sm:hover,
+    .beta-attr-toolbar .btn-group > .btn.btn-default.btn-sm:hover {
+        background: #f3f7fb;
+        border-color: #d8e2ec;
+        color: #415262;
+    }
+    .beta-attr-toolbar .btn.btn-primary.btn-sm {
+        box-shadow: none;
+    }
+    .beta-related-count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 7px;
+        border: 1px solid #dbe6f2;
+        border-radius: 999px;
+        background: #f7fbff;
+        color: #5f7c98;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .beta-attr-status-icon {
+        color: #a8b4c0;
+        transition: color 0.15s ease, opacity 0.15s ease;
+    }
+    .beta-attr-status-icon.is-active {
+        color: #6f8398;
+        opacity: 0.95;
+    }
+    .beta-attr-status-icon.is-alert {
+        color: #d9534f;
+    }
+    .beta-attr-status-icon.is-ids-active {
+        color: #b06f2f;
+        opacity: 0.95;
+    }
+    .beta-attr-status-icon.is-sighting-active {
+        color: #d9534f;
+        opacity: 0.95;
+    }
+    .beta-attr-date-cell {
+        font-size: 11px;
+        color: #7e8b98;
     }
 </style>
 
@@ -806,7 +882,7 @@
                                 $relatedCount = $countRelatedEvents($item['RelatedAttribute'] ?? []);
                             ?>
                             <?php if ($relatedCount > 0): ?>
-                                <span class="badge" title="<?php echo __('Show correlations'); ?>" style="cursor: pointer; background-color: #428bca;" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo $relatedCount; ?></span>
+                                <span class="beta-related-count-badge" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo $relatedCount; ?></span>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
@@ -820,8 +896,8 @@
                     <?php if (!$isObject): ?>
                         <!-- IDS Toggle -->
                         <td style="text-align: center;">
-                            <i class="fa fa-shield-alt beta-ids-toggle" 
-                               style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($item['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
+                            <i class="fa fa-shield-alt beta-ids-toggle beta-attr-status-icon <?= $item['to_ids'] ? 'is-ids-active' : '' ?>"
+                               style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($item['to_ids'] ? '' : 'opacity: 0.22;') ?>"
                                 data-id="<?= h($item['id']) ?>"
                                 data-to-ids="<?= (int)$item['to_ids'] ?>"
                                 title="<?= ($item['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
@@ -829,21 +905,21 @@
 
                         <!-- Correlation Toggle -->
                         <td class="col-correlation" style="text-align: center;">
-                            <i class="fa fa-project-diagram beta-correlation-toggle" 
-                               style="cursor: <?= ($canDisableCorrelation ? 'pointer' : 'default') ?>; <?= ($item['disable_correlation'] ? 'opacity: 0.2;' : 'color: #428bca;') ?>"
-                               data-id="<?= h($item['id']) ?>"
-                               data-disable-correlation="<?= (int)$item['disable_correlation'] ?>"
-                               title="<?= ($item['disable_correlation'] ? __('Correlation disabled') : __('Correlation enabled')) ?>"></i>
+                            <i class="fa fa-project-diagram beta-correlation-toggle beta-attr-status-icon <?= $item['disable_correlation'] ? '' : 'is-active' ?>"
+                               style="cursor: <?= ($canDisableCorrelation ? 'pointer' : 'default') ?>; <?= ($item['disable_correlation'] ? 'opacity: 0.22;' : '') ?>"
+                                data-id="<?= h($item['id']) ?>"
+                                data-disable-correlation="<?= (int)$item['disable_correlation'] ?>"
+                                title="<?= ($item['disable_correlation'] ? __('Correlation disabled') : __('Correlation enabled')) ?>"></i>
                         </td>
 
                         <!-- Sightings -->
                         <td class="col-sightings" style="text-align: center;">
                             <?php if ($isSighted && $canAdvancedSighting): ?>
-                                <i class="fa fa-eye sightings_advanced_add" style="color: #d9534f; cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($item['id']); ?>" data-object-context="attribute"></i>
+                                <i class="fa fa-eye sightings_advanced_add beta-attr-status-icon is-alert is-sighting-active" style="cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($item['id']); ?>" data-object-context="attribute"></i>
                             <?php elseif ($canAddSighting): ?>
-                                <i class="fa fa-eye" style="color: #ccc; cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($item['id']); ?>');"></i>
+                                <i class="fa fa-eye beta-attr-status-icon" style="cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($item['id']); ?>');"></i>
                             <?php else: ?>
-                                <i class="fa fa-eye" style="color: #ccc; opacity: 0.35; cursor: default;" title="<?php echo __('Sightings unavailable'); ?>"></i>
+                                <i class="fa fa-eye beta-attr-status-icon" style="opacity: 0.24; cursor: default;" title="<?php echo __('Sightings unavailable'); ?>"></i>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
@@ -867,7 +943,7 @@
                             }
                             $isNew = isset($event['Event']['publish_timestamp']) && $item['timestamp'] > $event['Event']['publish_timestamp'];
                         ?>
-                        <div style="font-size: 11px; color:#555;">
+                        <div class="beta-attr-date-cell">
                             <?php if ($showDate): ?>
                                 <?php echo date('Y-m-d', $item['timestamp']); ?>
                             <?php else: ?>
@@ -1051,8 +1127,8 @@
 
                             <!-- IDS Toggle for Sub-Attribute -->
                             <td style="text-align: center;">
-                                <i class="fa fa-shield-alt beta-ids-toggle" 
-                                   style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['to_ids'] ? 'color: #ff8c00;' : 'opacity: 0.2;') ?>" 
+                                <i class="fa fa-shield-alt beta-ids-toggle beta-attr-status-icon <?= $subAttr['to_ids'] ? 'is-ids-active' : '' ?>"
+                                   style="font-size: 1.5em; cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['to_ids'] ? '' : 'opacity: 0.22;') ?>"
                                    data-id="<?= h($subAttr['id']) ?>"
                                    data-to-ids="<?= (int)$subAttr['to_ids'] ?>"
                                    title="<?= ($subAttr['to_ids'] ? __('Recommended for blocking / alerting') : __('Not recommended for blocking / alerting')) ?>"></i>
@@ -1060,8 +1136,8 @@
 
                             <!-- Correlation -->
                             <td class="col-correlation" style="text-align: center;">
-                                <i class="fa fa-project-diagram beta-correlation-toggle" 
-                                   style="cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['disable_correlation'] ? 'opacity: 0.2;' : 'color: #428bca;') ?>"
+                                <i class="fa fa-project-diagram beta-correlation-toggle beta-attr-status-icon <?= $subAttr['disable_correlation'] ? '' : 'is-active' ?>"
+                                   style="cursor: <?= ($mayModify ? 'pointer' : 'default') ?>; <?= ($subAttr['disable_correlation'] ? 'opacity: 0.22;' : '') ?>"
                                    data-id="<?= h($subAttr['id']) ?>"
                                    data-disable-correlation="<?= (int)$subAttr['disable_correlation'] ?>"
                                    title="<?= ($subAttr['disable_correlation'] ? __('Correlation disabled') : __('Correlation enabled')) ?>"></i>
@@ -1070,11 +1146,11 @@
                             <!-- Sightings -->
                             <td class="col-sightings" style="text-align: center;">
                                 <?php if ($isSightedSub && $canAdvancedSighting): ?>
-                                    <i class="fa fa-eye sightings_advanced_add" style="color: #d9534f; cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($subAttr['id']); ?>" data-object-context="attribute"></i>
+                                    <i class="fa fa-eye sightings_advanced_add beta-attr-status-icon is-alert is-sighting-active" style="cursor: pointer;" title="<?php echo __('Sighted'); ?>" data-object-id="<?php echo h($subAttr['id']); ?>" data-object-context="attribute"></i>
                                 <?php elseif ($canAddSighting): ?>
-                                    <i class="fa fa-eye" style="color: #ccc; cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($subAttr['id']); ?>');"></i>
+                                    <i class="fa fa-eye beta-attr-status-icon" style="cursor: pointer;" title="<?php echo __('Add Sighting'); ?>" onclick="simplePopup('<?php echo $baseurl; ?>/sightings/add/<?php echo h($subAttr['id']); ?>');"></i>
                                 <?php else: ?>
-                                    <i class="fa fa-eye" style="color: #ccc; opacity: 0.35; cursor: default;" title="<?php echo __('Sightings unavailable'); ?>"></i>
+                                    <i class="fa fa-eye beta-attr-status-icon" style="opacity: 0.24; cursor: default;" title="<?php echo __('Sightings unavailable'); ?>"></i>
                                 <?php endif; ?>
                             </td>
                             <!-- Distribution -->
