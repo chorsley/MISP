@@ -1685,26 +1685,21 @@
     $eventReportCount = isset($eventReportSummary['count'])
         ? (int)$eventReportSummary['count']
         : (isset($event['Event']['report_count']) ? (int)$event['Event']['report_count'] : 0);
-    $canBulkEditAttributes = $this->Acl->canModifyEvent($event) && $this->Acl->canAccess('attributes', 'editSelected');
-    $canBulkTagAttributesGlobal = $this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event);
-    $canBulkTagAttributesLocal = $this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event, true);
-    $canBulkGalaxyAttributesGlobal = $this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event);
-    $canBulkGalaxyAttributesLocal = $this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event, true);
-    $canBulkGroupIntoObject = $this->Acl->canModifyEvent($event) && $this->Acl->canAccess('objects', 'proposeObjectsFromAttributes');
-    $canBulkAddRelationships = $this->Acl->canModifyEvent($event) && $this->Acl->canAccess('objectReferences', 'bulkAdd');
-    $canBulkSightings = $this->Acl->canAccess('sightings', 'advanced');
-    $canBulkDeleteAttributes = $this->Acl->canModifyEvent($event) && $this->Acl->canAccess('attributes', 'deleteSelected');
-    $showBulkAttributeControls = isset($showBulkAttributeControls) ? (bool)$showBulkAttributeControls : (
-        ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('attributes', 'editSelected'))
-        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event))
-        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event, true))
-        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event))
-        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event, true))
-        || ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('objects', 'proposeObjectsFromAttributes'))
-        || ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('objectReferences', 'bulkAdd'))
-        || $this->Acl->canAccess('sightings', 'advanced')
-        || ($this->Acl->canModifyEvent($event) && $this->Acl->canAccess('attributes', 'deleteSelected'))
-    );
+    $canModifyEvent = $this->Acl->canModifyEvent($event);
+    $bulkAttributePermissions = [
+        'edit' => $canModifyEvent && $this->Acl->canAccess('attributes', 'editSelected'),
+        'tagGlobal' => $this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event),
+        'tagLocal' => $this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event, true),
+        'galaxyGlobal' => $this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event),
+        'galaxyLocal' => $this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event, true),
+        'groupIntoObject' => $canModifyEvent && $this->Acl->canAccess('objects', 'proposeObjectsFromAttributes'),
+        'addRelationships' => $canModifyEvent && $this->Acl->canAccess('objectReferences', 'bulkAdd'),
+        'sightings' => $this->Acl->canAccess('sightings', 'advanced'),
+        'delete' => $canModifyEvent && $this->Acl->canAccess('attributes', 'deleteSelected'),
+    ];
+    $hasBulkAttributePermissions = isset($hasBulkAttributePermissions)
+        ? (bool)$hasBulkAttributePermissions
+        : in_array(true, $bulkAttributePermissions, true);
     ?>
     <div class="beta-tabs-container">
         <ul class="nav nav-tabs beta-tabs" role="tablist">
@@ -2216,7 +2211,7 @@
                      </div>
                      <div id="beta-filter-banner-slot"></div>
                      <div id="beta-attributes-container">
-                      <?php if ($showBulkAttributeControls): ?>
+                      <?php if ($hasBulkAttributePermissions): ?>
                       <div id="beta-bulk-actions-bar" class="beta-bulk-actions-bar">
                            <div class="beta-bulk-actions-bar-inner">
                                <div class="beta-bulk-actions-summary">
@@ -2224,23 +2219,23 @@
                                </div>
                                 <div class="beta-bulk-actions-buttons">
                                      <div class="beta-bulk-actions-group">
-                                    <?php if ($canBulkEditAttributes): ?>
+                                    <?php if ($bulkAttributePermissions['edit']): ?>
                                      <button type="button" class="btn btn-default btn-sm" onclick="editSelectedAttributes(<?php echo h($event['Event']['id']); ?>); return false;" title="<?php echo __('Edit selected attributes'); ?>" aria-label="<?php echo __('Edit selected attributes'); ?>">
                                          <i class="fa fa-edit"></i> <?php echo __('Bulk Edit'); ?>
                                      </button>
                                     <?php endif; ?>
-                                    <?php if ($canBulkTagAttributesGlobal || $canBulkTagAttributesLocal): ?>
+                                    <?php if ($bulkAttributePermissions['tagGlobal'] || $bulkAttributePermissions['tagLocal']): ?>
                                      <div class="beta-bulk-menu-wrap" data-beta-bulk-menu>
                                          <button type="button" class="btn btn-default btn-sm beta-bulk-menu-trigger" data-beta-bulk-menu-trigger aria-expanded="false" aria-haspopup="true" title="<?php echo __('Add a tag to selected attributes'); ?>">
                                              <i class="fa fa-tag"></i> <?php echo __('Tag'); ?> <i class="fa fa-caret-up"></i>
                                          </button>
                                          <div class="beta-bulk-menu" data-beta-bulk-menu-panel>
-                                            <?php if ($canBulkTagAttributesGlobal): ?>
+                                            <?php if ($bulkAttributePermissions['tagGlobal']): ?>
                                              <button type="button" onclick="openBetaBulkTagPicker(false); return false;">
                                                  <i class="fa fa-globe"></i> <?php echo __('Global'); ?>
                                              </button>
                                             <?php endif; ?>
-                                            <?php if ($canBulkTagAttributesLocal): ?>
+                                            <?php if ($bulkAttributePermissions['tagLocal']): ?>
                                              <button type="button" onclick="openBetaBulkTagPicker(true); return false;">
                                                  <i class="fa fa-user"></i> <?php echo __('Local'); ?>
                                              </button>
@@ -2248,18 +2243,18 @@
                                          </div>
                                      </div>
                                     <?php endif; ?>
-                                    <?php if ($canBulkGalaxyAttributesGlobal || $canBulkGalaxyAttributesLocal): ?>
+                                    <?php if ($bulkAttributePermissions['galaxyGlobal'] || $bulkAttributePermissions['galaxyLocal']): ?>
                                      <div class="beta-bulk-menu-wrap" data-beta-bulk-menu>
                                          <button type="button" class="btn btn-default btn-sm beta-bulk-menu-trigger" data-beta-bulk-menu-trigger aria-expanded="false" aria-haspopup="true" title="<?php echo __('Add a galaxy cluster to selected attributes'); ?>">
                                              <i class="fa fa-bahai"></i> <?php echo __('Galaxies'); ?> <i class="fa fa-caret-up"></i>
                                          </button>
                                          <div class="beta-bulk-menu" data-beta-bulk-menu-panel>
-                                            <?php if ($canBulkGalaxyAttributesGlobal): ?>
+                                            <?php if ($bulkAttributePermissions['galaxyGlobal']): ?>
                                              <button type="button" onclick="openBetaBulkGalaxyPicker(false); return false;">
                                                  <i class="fa fa-globe"></i> <?php echo __('Global'); ?>
                                              </button>
                                             <?php endif; ?>
-                                            <?php if ($canBulkGalaxyAttributesLocal): ?>
+                                            <?php if ($bulkAttributePermissions['galaxyLocal']): ?>
                                              <button type="button" onclick="openBetaBulkGalaxyPicker(true); return false;">
                                                  <i class="fa fa-user"></i> <?php echo __('Local'); ?>
                                              </button>
@@ -2267,23 +2262,23 @@
                                          </div>
                                      </div>
                                     <?php endif; ?>
-                                    <?php if ($canBulkGroupIntoObject): ?>
+                                    <?php if ($bulkAttributePermissions['groupIntoObject']): ?>
                                      <button type="button" class="btn btn-default btn-sm" onclick="openBetaGroupIntoObject(<?php echo h($event['Event']['id']); ?>, this); return false;" title="<?php echo __('Group selected attributes into an object'); ?>" aria-label="<?php echo __('Group selected attributes into an object'); ?>">
                                          <i class="fa fa-object-group"></i> <?php echo __('Group Into Object'); ?>
                                      </button>
                                     <?php endif; ?>
-                                    <?php if ($canBulkAddRelationships): ?>
+                                    <?php if ($bulkAttributePermissions['addRelationships']): ?>
                                     <button type="button" class="btn btn-default btn-sm" onclick="openBetaBulkRelationships(<?php echo h($event['Event']['id']); ?>); return false;" title="<?php echo __('Create a new relationship for selected entities'); ?>" aria-label="<?php echo __('Create a new relationship for selected entities'); ?>">
                                         <i class="fas fa-project-diagram"></i> <?php echo __('New Relationship'); ?>
                                     </button>
                                     <?php endif; ?>
-                                    <?php if ($canBulkSightings): ?>
+                                    <?php if ($bulkAttributePermissions['sightings']): ?>
                                      <button type="button" class="btn btn-default btn-sm sightings_advanced_add" data-object-id="selected" data-object-context="attribute" title="<?php echo __('Show sightings for selected attributes'); ?>" aria-label="<?php echo __('Show sightings for selected attributes'); ?>">
                                          <i class="fa fa-wrench"></i> <?php echo __('Sightings'); ?>
                                      </button>
                                     <?php endif; ?>
                                      </div>
-                                    <?php if ($canBulkDeleteAttributes): ?>
+                                    <?php if ($bulkAttributePermissions['delete']): ?>
                                      <div class="beta-bulk-actions-group beta-bulk-actions-group-danger">
                                          <button type="button" class="btn btn-danger btn-sm" onclick="handleBetaBulkDeleteAction(<?php echo h($event['Event']['id']); ?>); return false;">
                                              <i class="fa fa-trash"></i> <?php echo __('Delete'); ?>
@@ -2305,8 +2300,9 @@
                              'betaTotalPages' => $betaTotalPages,
                              'betaShowStart' => $betaShowStart,
                              'betaShowEnd' => $betaShowEnd,
-                             'showBulkAttributeControls' => $showBulkAttributeControls
-                           ]); ?>
+                              'hasBulkAttributePermissions' => $hasBulkAttributePermissions,
+                              'bulkAttributePermissions' => $bulkAttributePermissions
+                            ]); ?>
                       </div>
                      </div>
                  </div>

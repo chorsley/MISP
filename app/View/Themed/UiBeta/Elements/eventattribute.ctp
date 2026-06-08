@@ -80,17 +80,22 @@
         return !empty($item['RelatedAttribute']) ? count($item['RelatedAttribute']) : 0;
     };
 
-    $showBulkAttributeControls = isset($showBulkAttributeControls) ? (bool)$showBulkAttributeControls : (
-        ($mayModify && $this->Acl->canAccess('attributes', 'editSelected'))
-        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event))
-        || ($this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event, true))
-        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event))
-        || ($this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event, true))
-        || ($mayModify && $this->Acl->canAccess('objects', 'proposeObjectsFromAttributes'))
-        || ($mayModify && $this->Acl->canAccess('objectReferences', 'bulkAdd'))
-        || $this->Acl->canAccess('sightings', 'advanced')
-        || ($mayModify && $this->Acl->canAccess('attributes', 'deleteSelected'))
-    );
+    if (!isset($bulkAttributePermissions) || !is_array($bulkAttributePermissions)) {
+        $bulkAttributePermissions = [
+            'edit' => $mayModify && $this->Acl->canAccess('attributes', 'editSelected'),
+            'tagGlobal' => $this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event),
+            'tagLocal' => $this->Acl->canAccess('attributes', 'addTag') && $this->Acl->canModifyTag($event, true),
+            'galaxyGlobal' => $this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event),
+            'galaxyLocal' => $this->Acl->canAccess('galaxies', 'selectGalaxyNamespace') && $this->Acl->canModifyTag($event, true),
+            'groupIntoObject' => $mayModify && $this->Acl->canAccess('objects', 'proposeObjectsFromAttributes'),
+            'addRelationships' => $mayModify && $this->Acl->canAccess('objectReferences', 'bulkAdd'),
+            'sightings' => $this->Acl->canAccess('sightings', 'advanced'),
+            'delete' => $mayModify && $this->Acl->canAccess('attributes', 'deleteSelected'),
+        ];
+    }
+    $hasBulkAttributePermissions = isset($hasBulkAttributePermissions)
+        ? (bool)$hasBulkAttributePermissions
+        : in_array(true, $bulkAttributePermissions, true);
     $canAddSighting = $this->Acl->canAccess('sightings', 'add');
     $canAdvancedSighting = $this->Acl->canAccess('sightings', 'advanced');
     $deleteSelectedUrl = $baseurl . '/attributes/deleteSelected/' . $event['Event']['id'];
@@ -908,7 +913,7 @@
     <table class="beta-attr-table" id="attributeList">
         <thead>
             <tr>
-                <th style="width: 40px;"><?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-all select_all" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all attributes/proposals on current page');?>" onclick="toggleAllAttributeCheckboxes()"><?php endif; ?></th>
+                <th style="width: 40px;"><?php if ($hasBulkAttributePermissions): ?><input type="checkbox" class="select-all select_all" title="<?php echo __('Select all');?>" role="button" tabindex="0" aria-label="<?php echo __('Select all attributes/proposals on current page');?>" onclick="toggleAllAttributeCheckboxes()"><?php endif; ?></th>
                 <th colspan="2"><?php echo __('Attribute Details'); ?></th>
                 <th class="col-related" style="width: 50px;"><?php echo __('Corr.'); ?></th>
                 <th style="width: 30px;" title="<?php echo __('Recommend for blocking / alerting?'); ?>">IDS</th>
@@ -954,7 +959,7 @@
                             <div style="display: flex; align-items: center; min-width: 0; gap: 8px;">
                                 <div class="beta-left-cell-stack">
                                     <div class="beta-row-actions beta-checkbox-actions-wrapper">
-                            <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
+                            <?php if ($hasBulkAttributePermissions): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
                             <?php if ($hasRowActions): ?>
                             <div class="beta-row-menu-trigger beta-dropdown-toggle">
                                 <i class="fa fa-chevron-down"></i>
@@ -1212,7 +1217,7 @@
                                  <!-- Checkbox & Actions for Sub-Attribute -->
                                  <div class="beta-left-cell-stack">
                                      <div class="beta-row-actions beta-checkbox-actions-wrapper">
-                                        <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
+                                        <?php if ($hasBulkAttributePermissions): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
                                         <?php if ($hasSubRowActions): ?>
                                         <div class="beta-row-menu-trigger beta-dropdown-toggle">
                                             <i class="fa fa-chevron-down"></i>
