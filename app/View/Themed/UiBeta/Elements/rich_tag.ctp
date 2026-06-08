@@ -56,7 +56,14 @@ if (strpos($aText, ':') !== false) {
     if (strpos($restPart, '=') !== false) {
         $restParts = explode('=', $restPart, 2);
         $predicatePart = $restParts[0];
-        $valuePart = trim($restParts[1], '"');
+        $valuePart = trim($restParts[1]);
+        if (strlen($valuePart) >= 2) {
+            $firstChar = $valuePart[0];
+            $lastChar = substr($valuePart, -1);
+            if (($firstChar === '"' || $firstChar === "'") && $lastChar === $firstChar) {
+                $valuePart = substr($valuePart, 1, -1);
+            }
+        }
     }
     $displayPredicate = str_replace(['_', '-'], ' ', $predicatePart);
     $displayValue = $valuePart !== null ? str_replace(['_', '-'], ' ', $valuePart) : null;
@@ -64,7 +71,7 @@ if (strpos($aText, ':') !== false) {
         '<span class="tag-machine"><span class="tag-segment tag-segment-taxonomy">%s</span><span class="tag-segment tag-segment-predicate">%s</span>%s</span>',
         h($taxonomyPart),
         h($displayPredicate),
-        $displayValue !== null ? '<span class="tag-segment tag-segment-value"><span class="tag-quoted-value">' . h($displayValue) . '</span></span>' : ''
+        $displayValue !== null ? '<span class="tag-segment tag-segment-value">' . h($displayValue) . '</span>' : ''
     );
 } else {
     $aTextDisplay = sprintf(

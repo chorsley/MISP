@@ -668,6 +668,38 @@
         filter: brightness(1.08);
         box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset;
     }
+    .beta-view-events .eventTagContainer .tag,
+    .beta-view-events .eventTagContainer .tagFirstHalf,
+    .beta-view-events .eventTagContainer .tagSecondHalf,
+    .beta-view-events .eventTagContainer .tagComplete,
+    .beta-view-events .eventTagContainer .tag-container .label,
+    .beta-view-events .eventTagContainer .tag-list-container,
+    .beta-view-events .eventTagContainer .tag-list-container a,
+    .beta-view-events .eventTagContainer .tag-list-container span {
+        font-family: inherit;
+        font-size: 12px;
+        letter-spacing: 0;
+    }
+    .beta-view-events .eventTagContainer .tag-container {
+        filter: none;
+    }
+    .beta-view-events .eventTagContainer .tagFirstHalf,
+    .beta-view-events .eventTagContainer .tagSecondHalf,
+    .beta-view-events .eventTagContainer .tagComplete,
+    .beta-view-events .eventTagContainer .tag {
+        box-shadow: none;
+        border: 1px solid rgba(74, 138, 214, 0.35);
+    }
+    .beta-view-events .eventTagContainer .tagFirstHalf,
+    .beta-view-events .eventTagContainer .tag {
+        background: #f8fbff;
+        color: #33475b;
+    }
+    .beta-view-events .eventTagContainer .tagSecondHalf,
+    .beta-view-events .eventTagContainer .tagComplete {
+        background: #eef6ff;
+        color: #31475d;
+    }
     .beta-view-events #galaxies_div {
         position: static;
         padding: 0;
