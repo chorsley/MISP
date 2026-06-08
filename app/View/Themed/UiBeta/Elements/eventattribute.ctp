@@ -487,6 +487,24 @@
         gap: 8px;
         padding-top: 2px;
     }
+    .beta-correlation-inline-indicator {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 16px;
+        color: #5b8bb5;
+        opacity: 0.9;
+        margin-top: 1px;
+        font-size: 11px;
+        cursor: pointer;
+    }
+    .beta-left-cell-stack {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 26px;
+    }
     .beta-attr-comment-inline {
         display: inline-flex;
         align-items: center;
@@ -541,6 +559,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
         min-width: 22px;
         height: 22px;
         padding: 0 7px;
@@ -551,6 +570,9 @@
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
+    }
+    .beta-related-count-badge .fa {
+        font-size: 10px;
     }
     .beta-attr-status-icon {
         color: #a8b4c0;
@@ -728,7 +750,8 @@
                     <td style="position: relative;" <?php if ($isObject) echo 'colspan="3"'; ?>>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex; align-items: center;">
-                                <div class="beta-row-actions beta-checkbox-actions-wrapper">
+                                <div class="beta-left-cell-stack">
+                                    <div class="beta-row-actions beta-checkbox-actions-wrapper">
                             <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($item['id']); ?>" data-id="<?php echo h($item['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
                             <?php if ($hasRowActions): ?>
                             <div class="beta-row-menu-trigger beta-dropdown-toggle">
@@ -811,6 +834,8 @@
                                 </ul>
                             </div>
                             <?php endif; ?>
+                                    </div>
+                                </div>
                                 </div>
                                 <?php if ($isObject): ?>
                                     <span class="object-label">Object</span>
@@ -840,12 +865,13 @@
                                     <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="return betaCopyUuid('<?php echo h($item['uuid']); ?>');"></i>
                                 </div>
                                 
+                                <?php
+                                    $relatedCountForValue = $countDirectRelatedAttributes($item);
+                                ?>
                                 <div class="beta-attr-value-container">
-                                    <?php
-                                        $relatedCountForValue = $countDirectRelatedAttributes($item);
-                                    ?>
                                     <?php if ($relatedCountForValue > 0): ?>
-                                        <span class="attr-value attr-value-correlatable" style="cursor: pointer; border-bottom: 1px dashed #428bca;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo h($item['value']); ?></span>
+                                        <span class="attr-value attr-value-correlatable" style="cursor: pointer;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo h($item['value']); ?></span>
+                                        <span class="beta-correlation-inline-indicator" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><i class="fa fa-code-branch"></i></span>
                                     <?php else: ?>
                                         <span class="attr-value"><?php echo h($item['value']); ?></span>
                                     <?php endif; ?>
@@ -882,7 +908,7 @@
                                 $relatedCount = $countRelatedEvents($item['RelatedAttribute'] ?? []);
                             ?>
                             <?php if ($relatedCount > 0): ?>
-                                <span class="beta-related-count-badge" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><?php echo $relatedCount; ?></span>
+                                <span class="beta-related-count-badge" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><i class="fa fa-code-branch"></i><span><?php echo $relatedCount; ?></span></span>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
@@ -990,13 +1016,14 @@
                         <tr class="beta-attr-row object-attr-row" id="Attribute_<?php echo h($subAttr['id']); ?>_tr" data-object-type="attribute" data-primary-id="<?php echo h($subAttr['id']); ?>" data-uuid="<?php echo h($subAttr['uuid']); ?>" data-attribute-type="<?php echo h($subAttr['type']); ?>" data-parent-object-id="<?php echo h($item['id']); ?>" data-parent-object="<?php echo $dataName; ?>">
                             <td class="tree-cell <?php echo $attributeIsLast ? 'last-item' : ''; ?>">
                                  <!-- Checkbox & Actions for Sub-Attribute -->
-                                 <div class="beta-row-actions beta-checkbox-actions-wrapper">
-                                    <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
-                                    <?php if ($hasSubRowActions): ?>
-                                    <div class="beta-row-menu-trigger beta-dropdown-toggle">
-                                        <i class="fa fa-chevron-down"></i>
-                                    </div>
-                                    <div class="beta-row-menu">
+                                 <div class="beta-left-cell-stack">
+                                     <div class="beta-row-actions beta-checkbox-actions-wrapper">
+                                        <?php if ($showBulkAttributeControls): ?><input type="checkbox" class="select-row select_attribute" value="<?php echo h($subAttr['id']); ?>" data-id="<?php echo h($subAttr['id']); ?>" aria-label="<?php echo __('Select attribute');?>" onchange="attributeListAnyAttributeCheckBoxesChecked()"><?php endif; ?>
+                                        <?php if ($hasSubRowActions): ?>
+                                        <div class="beta-row-menu-trigger beta-dropdown-toggle">
+                                            <i class="fa fa-chevron-down"></i>
+                                        </div>
+                                        <div class="beta-row-menu">
                                         <ul>
                                              <?php if ($mayModify || $hasSubTagActions || $canAddSighting || $canAdvancedSighting || $hasSubAttributeDownload): ?>
                                                 <?php if ($mayModify): ?>
@@ -1053,8 +1080,10 @@
                                                 <?php endif; ?>
                                              <?php endif; ?>
                                         </ul>
-                                    </div>
-                                    <?php endif; ?>
+                                        </div>
+                                        <?php endif; ?>
+                                     </div>
+                                 </div>
                                  </div>
                             </td>
                             
@@ -1073,12 +1102,13 @@
                                         <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="return betaCopyUuid('<?php echo h($subAttr['uuid']); ?>');"></i>
                                     </div>
 
-                                    <div class="beta-attr-value-container">
                                         <?php
                                             $subRelatedCountForValue = $countDirectRelatedAttributes($subAttr);
                                         ?>
+                                    <div class="beta-attr-value-container">
                                         <?php if ($subRelatedCountForValue > 0): ?>
-                                            <span class="attr-value attr-value-correlatable" style="cursor: pointer; border-bottom: 1px dashed #428bca;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><?php echo h($subAttr['value']); ?></span>
+                                            <span class="attr-value attr-value-correlatable" style="cursor: pointer;" title="<?php echo __('Click to filter correlations by this attribute'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><?php echo h($subAttr['value']); ?></span>
+                                            <span class="beta-correlation-inline-indicator" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><i class="fa fa-code-branch"></i></span>
                                         <?php else: ?>
                                             <span class="attr-value"><?php echo h($subAttr['value']); ?></span>
                                         <?php endif; ?>
@@ -1115,7 +1145,7 @@
                                     $subRelatedCount = $countRelatedEvents($subAttr['RelatedAttribute'] ?? []);
                                 ?>
                                 <?php if ($subRelatedCount > 0): ?>
-                                    <span class="badge" style="cursor: pointer; background-color: #428bca;" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><?php echo $subRelatedCount; ?></span>
+                                    <span class="beta-related-count-badge" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><i class="fa fa-code-branch"></i><span><?php echo $subRelatedCount; ?></span></span>
                                 <?php endif; ?>
                             </td>
 
