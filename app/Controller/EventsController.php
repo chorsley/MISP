@@ -8,6 +8,8 @@ App::uses('Xml', 'Utility');
  */
 class EventsController extends AppController
 {
+    public $helpers = array('Event');
+
     public $components = array(
         'RequestHandler',
         'IOCImport',

@@ -32,7 +32,7 @@ class AppController extends Controller
      */
     public $defaultModel = '';
 
-    public $helpers = array('OrgImg', 'FontAwesome', 'UserName', 'Navbar', 'Event');
+    public $helpers = array('OrgImg', 'FontAwesome', 'UserName', 'Navbar');
 
     private $__queryVersion = '185';
     public $pyMispVersion = '2.5.34.1';
