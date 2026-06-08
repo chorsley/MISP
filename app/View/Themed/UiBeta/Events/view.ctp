@@ -14,30 +14,100 @@
     .beta-header-container {
         margin-bottom: 20px;
     }
+    .beta-event-header-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .beta-event-metadata-panel {
+        flex: 1 1 420px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid #d9e7f5;
+        border-radius: 10px;
+        background: linear-gradient(180deg, #fafdff 0%, #eef5fc 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
     .beta-event-title {
         font-weight: 600;
         margin-top: 0;
-        margin-bottom: 2px;
-        color: #333;
+        margin-bottom: 6px;
+        color: #2b3a49;
     }
     .beta-event-subtitle {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 0;
+    }
+    .beta-event-subtitle-chips {
+        display: flex;
+        flex-wrap: wrap;
         gap: 8px;
-        margin-bottom: 10px;
+        min-width: 0;
+    }
+    .beta-event-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: stretch;
+        justify-content: flex-end;
+        margin-top: 0;
+    }
+    .beta-event-header-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        padding: 0 14px;
+        border: 1px solid #d2dfec;
+        border-radius: 999px;
+        box-sizing: border-box;
+        background: linear-gradient(180deg, #ffffff 0%, #f2f6fa 100%);
+        color: #4b5f77;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .beta-event-header-control .fa {
+        color: #6d8297;
+    }
+    .beta-event-header-control-link {
+        text-decoration: none;
+    }
+    .beta-event-header-control-link:hover,
+    .beta-event-header-control-link:focus,
+    .beta-event-header-control.is-interactive:hover,
+    .beta-event-header-control.is-interactive:focus-within {
+        color: #2b4f81;
+        text-decoration: none;
+        background: linear-gradient(180deg, #ffffff 0%, #eaf2fb 100%);
+        border-color: #bdd2e8;
+    }
+    .beta-event-header-control.is-publish {
+        padding-right: 10px;
     }
     .beta-id-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 10px;
+        height: 40px;
+        padding: 0 14px;
         border: 1px solid #d9e2ec;
         border-radius: 999px;
+        box-sizing: border-box;
         background: linear-gradient(180deg, #fbfcfe 0%, #f2f5f8 100%);
         font-size: 11px;
         color: #566372;
         font-weight: 600;
-        line-height: 1.2;
+        line-height: 1;
     }
     .beta-id-badge-label {
         text-transform: uppercase;
@@ -99,33 +169,41 @@
     }
     .beta-tabs {
         margin-top: 20px;
-        border-bottom: 1px solid #d7dee7;
+        margin-bottom: 0;
         display: flex;
-        gap: 8px;
-        padding: 0 4px;
+        gap: 0;
+        padding: 0;
+        background: transparent;
+        box-shadow: none;
     }
     .beta-tabs > li {
         margin-bottom: -1px;
+    }
+    .beta-tabs > li + li {
+        margin-left: -1px;
     }
     .beta-tabs > li > a {
         padding: 11px 18px;
         font-weight: 600;
         color: #5a6775;
-        border: 1px solid transparent;
+        border: 1px solid #cfd9e4;
         border-radius: 8px 8px 0 0;
-        background: linear-gradient(180deg, #f5f7fa 0%, #edf1f5 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        background: linear-gradient(180deg, #ffffff 0%, #edf2f7 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 rgba(215, 222, 231, 0.8);
         transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .beta-tabs > li > a:hover,
     .beta-tabs > li > a:focus {
         color: #334154;
         background: linear-gradient(180deg, #f9fbfd 0%, #f1f5f9 100%);
-        border-color: #d7dee7;
+        border-color: #bfcddb;
     }
     .beta-tabs > li.active > a,
     .beta-tabs > li.active > a:hover,
     .beta-tabs > li.active > a:focus {
+        position: relative;
+        z-index: 2;
+        margin-left: 0;
         color: #234d7d;
         background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
         border: 1px solid #d7dee7;
@@ -136,7 +214,8 @@
         background: #fff;
         border: 1px solid #d7dee7;
         border-top: none;
-        padding: 20px;
+        margin-top: -2px;
+        padding: 14px 20px 20px;
         border-radius: 0 8px 8px 8px;
         box-shadow: 0 1px 3px rgba(60, 78, 102, 0.04);
     }
@@ -793,27 +872,20 @@
         color: #428bca;
         text-decoration: underline;
     }
-    .beta-id-badge.beta-action-badge {
-        padding: 0;
-        overflow: hidden;
-    }
-    .beta-id-badge-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 34px;
-        padding: 0 14px;
-        color: #4b5f77;
-        font-size: 13px;
-        font-weight: 700;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-    .beta-id-badge-action:hover,
-    .beta-id-badge-action:focus {
-        color: #2b4f81;
-        text-decoration: none;
-        background: rgba(66, 139, 202, 0.05);
+    @media (max-width: 767px) {
+        .beta-event-header-row {
+            align-items: stretch;
+        }
+        .beta-event-metadata-panel {
+            flex-basis: 100%;
+            width: 100%;
+        }
+        .beta-event-header-actions {
+            justify-content: flex-start;
+        }
+        .beta-event-subtitle {
+            justify-content: flex-start;
+        }
     }
     .beta-tags-container {
         display: flex;
@@ -890,26 +962,47 @@
 <div class="events view beta-view-events">
     <!-- Header -->
     <div class="beta-header-container">
-        <h2 class="beta-event-title">
-            <?php echo h($event['Event']['info']); ?>
-        </h2>
-        <div class="beta-event-subtitle">
-            <span class="beta-id-badge">
-                <span class="beta-id-badge-label"><?php echo __('ID'); ?></span>
-                <span class="beta-id-badge-value"><?php echo h($event['Event']['id']); ?></span>
-            </span>
-            <span class="beta-id-badge">
-                <span class="beta-id-badge-label"><?php echo __('UUID'); ?></span>
-                <span class="beta-id-badge-value"><?php echo h($event['Event']['uuid']); ?></span>
-            </span>
-            <?php if ($this->Acl->canModifyEvent($event)): ?>
-                <span class="beta-id-badge beta-action-badge">
-                    <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="beta-id-badge-action">
-                        <i class="fa fa-edit"></i>
-                        <span><?php echo __('Edit event header'); ?></span>
-                    </a>
-                </span>
-            <?php endif; ?>
+        <div class="beta-event-header-row">
+            <div class="beta-event-metadata-panel">
+                <h2 class="beta-event-title">
+                    <?php echo h($event['Event']['info']); ?>
+                </h2>
+                <div class="beta-event-subtitle">
+                    <div class="beta-event-subtitle-chips">
+                        <span class="beta-id-badge">
+                            <span class="beta-id-badge-label"><?php echo __('ID'); ?></span>
+                            <span class="beta-id-badge-value"><?php echo h($event['Event']['id']); ?></span>
+                        </span>
+                        <span class="beta-id-badge">
+                            <span class="beta-id-badge-label"><?php echo __('UUID'); ?></span>
+                            <span class="beta-id-badge-value"><?php echo h($event['Event']['uuid']); ?></span>
+                        </span>
+                    </div>
+                    <div class="beta-event-header-actions">
+                        <?php if ($this->Acl->canPublishEvent($event)): ?>
+                            <label class="beta-event-header-control is-publish is-interactive" title="<?php echo __('Toggle publication status'); ?>">
+                                <i class="fa fa-bullhorn"></i>
+                                <span id="publishedLabel" class="published-label <?php echo !empty($event['Event']['published']) ? 'state-published' : 'state-unpublished'; ?>"><?php echo !empty($event['Event']['published']) ? __('Published') : __('Unpublished'); ?></span>
+                                <span class="switch">
+                                    <input type="checkbox" id="publishedToggle" data-id="<?php echo h($event['Event']['id']); ?>" <?php echo $event['Event']['published'] ? 'checked' : ''; ?>>
+                                    <span class="slider round"></span>
+                                </span>
+                            </label>
+                        <?php else: ?>
+                            <span class="beta-event-header-control is-publish" title="<?php echo __('Publication status'); ?>">
+                                <i class="fa fa-bullhorn"></i>
+                                <span id="publishedLabel" class="published-label <?php echo !empty($event['Event']['published']) ? 'state-published' : 'state-unpublished'; ?>"><?php echo !empty($event['Event']['published']) ? __('Published') : __('Unpublished'); ?></span>
+                            </span>
+                        <?php endif; ?>
+                        <?php if ($this->Acl->canModifyEvent($event)): ?>
+                            <a href="<?php echo $baseurl; ?>/events/edit/<?php echo h($event['Event']['id']); ?>" class="beta-event-header-control beta-event-header-control-link" title="<?php echo __('Edit event header'); ?>">
+                                <i class="fa fa-edit"></i>
+                                <span><?php echo __('Edit event header'); ?></span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="beta-event-meta-row">
             <span class="meta-box date-box">
@@ -986,18 +1079,6 @@
                     title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)"
                     style="cursor: pointer;">
                     <?php echo $this->Time->time($event['Event']['timestamp']); ?>
-                </span>
-            </span>
-            <span class="meta-box publish-box" title="<?php echo $this->Acl->canPublishEvent($event) ? __('Toggle publication status') : __('Publication status'); ?>">
-                <span class="meta-label"><i class="fa fa-bullhorn"></i><?php echo __('Published'); ?></span>
-                <span class="meta-value">
-                    <span id="publishedLabel" class="published-label <?php echo !empty($event['Event']['published']) ? 'state-published' : 'state-unpublished'; ?>"><?php echo !empty($event['Event']['published']) ? __('Published') : __('Unpublished'); ?></span>
-                    <?php if ($this->Acl->canPublishEvent($event)): ?>
-                    <label class="switch">
-                        <input type="checkbox" id="publishedToggle" data-id="<?php echo h($event['Event']['id']); ?>" <?php echo $event['Event']['published'] ? 'checked' : ''; ?>>
-                        <span class="slider round"></span>
-                    </label>
-                    <?php endif; ?>
                 </span>
             </span>
         </div>
