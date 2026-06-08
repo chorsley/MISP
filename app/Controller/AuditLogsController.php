@@ -192,6 +192,8 @@ class AuditLogsController extends AppController
         }
         $this->paginate['conditions'][] = $this->__searchConditions($params);
 
+        // eventIndex needs real pagination metadata for this bounded per-event result set.
+        // AuditLog uses LightPaginator globally to avoid expensive counts on large listings.
         $this->AuditLog->Behaviors->unload('LightPaginator');
         $list = $this->paginate();
 
