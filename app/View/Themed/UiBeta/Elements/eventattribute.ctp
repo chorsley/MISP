@@ -544,10 +544,10 @@
         min-width: 22px;
         height: 22px;
         padding: 0 7px;
-        border: 1px solid #dbe6f2;
+        border: 1px solid #b7d5f0;
         border-radius: 999px;
-        background: #f7fbff;
-        color: #5f7c98;
+        background: #eaf5ff;
+        color: #3f78a8;
         font-size: 11px;
         font-weight: 600;
         cursor: pointer;
