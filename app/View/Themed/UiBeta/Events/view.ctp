@@ -2193,7 +2193,7 @@
         function loadHistory() {
             if ($('#history-content-container .beta-history-container').length > 0) return;
             var eventId = '<?php echo h($event['Event']['id']); ?>';
-            $.get("<?php echo $baseurl; ?>/audit_logs/eventIndex/" + eventId, function(data) {
+            $.get("<?php echo $baseurl; ?>/audit_logs/eventIndex/" + eventId + "/limit:20", function(data) {
                 $("#history-content-container").html(data);
             }).fail(function() {
                 $("#history-content-container").html('<div class="alert alert-danger"><?php echo __('Failed to load history.'); ?></div>');
