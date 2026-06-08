@@ -580,11 +580,10 @@
     }
     .beta-context-section {
         margin-bottom: 14px;
-        padding: 12px 14px;
-        border: 1px solid #e7edf3;
-        border-radius: 6px;
-        background: linear-gradient(180deg, #fcfdff 0%, #f8fafc 100%);
-        border-left-width: 4px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
     }
     .beta-context-section:last-child {
         margin-bottom: 0;
@@ -593,20 +592,31 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e6ebf1;
+        gap: 12px;
+        margin-bottom: 0;
+        padding: 10px 15px;
+        border: 1px solid #e4ebf2;
+        border-left-width: 5px;
+        border-radius: 8px 8px 0 0;
+        background: linear-gradient(180deg, #fdfefe 0%, #f3f7fb 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
     .beta-context-section-title {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
+        line-height: 1.42857143;
         color: #2f3a45;
     }
     .beta-context-section-body {
         min-width: 0;
+        padding: 14px 14px 12px;
+        border: 1px solid #e4ebf2;
+        border-top: 0;
+        border-radius: 0 0 8px 8px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.96) 100%);
     }
     .beta-context-section-actions {
         display: inline-flex;
@@ -629,28 +639,46 @@
         line-height: 1;
     }
     .beta-context-section-collections {
-        border-color: #f2e2c8;
-        border-left-color: #d79a45;
-        background: linear-gradient(180deg, #fffdf8 0%, #fbf4e8 100%);
+        --beta-context-accent: #d79a45;
+        --beta-context-border: #f2dfc0;
+        --beta-context-ribbon-bg-1: #fffdf8;
+        --beta-context-ribbon-bg-2: #fbf3e6;
+        --beta-context-body-bg-1: rgba(255, 253, 248, 0.96);
+        --beta-context-body-bg-2: rgba(251, 244, 232, 0.92);
     }
     .beta-context-section-collections .beta-context-section-title {
         color: #80511d;
     }
     .beta-context-section-tags {
-        border-color: #ddecdc;
-        border-left-color: #73b86a;
-        background: linear-gradient(180deg, #fcfefb 0%, #f3faf1 100%);
+        --beta-context-accent: #73b86a;
+        --beta-context-border: #d8ead6;
+        --beta-context-ribbon-bg-1: #fcfefb;
+        --beta-context-ribbon-bg-2: #f1f9ef;
+        --beta-context-body-bg-1: rgba(252, 254, 251, 0.96);
+        --beta-context-body-bg-2: rgba(243, 250, 241, 0.92);
     }
     .beta-context-section-tags .beta-context-section-title {
         color: #2d5b2c;
     }
     .beta-context-section-galaxies {
-        border-color: #dde3fb;
-        border-left-color: #5f7dd8;
-        background: linear-gradient(180deg, #fcfdff 0%, #f1f5ff 100%);
+        --beta-context-accent: #5f7dd8;
+        --beta-context-border: #d9e2fb;
+        --beta-context-ribbon-bg-1: #fcfdff;
+        --beta-context-ribbon-bg-2: #eef3ff;
+        --beta-context-body-bg-1: rgba(252, 253, 255, 0.96);
+        --beta-context-body-bg-2: rgba(241, 245, 255, 0.92);
     }
     .beta-context-section-galaxies .beta-context-section-title {
         color: #3554a6;
+    }
+    .beta-context-section .beta-context-section-header {
+        border-color: var(--beta-context-border);
+        border-left-color: var(--beta-context-accent);
+        background: linear-gradient(180deg, var(--beta-context-ribbon-bg-1) 0%, var(--beta-context-ribbon-bg-2) 100%);
+    }
+    .beta-context-section .beta-context-section-body {
+        border-color: var(--beta-context-border);
+        background: linear-gradient(180deg, var(--beta-context-body-bg-1) 0%, var(--beta-context-body-bg-2) 100%);
     }
     .beta-view-events .eventTagContainer .addButton,
     .beta-view-events .beta-context-section-actions .addButton {
@@ -707,6 +735,16 @@
         border: 0;
         border-radius: 0;
         width: auto;
+    }
+    .beta-context-section-collections #event-collections-container,
+    .beta-context-section-tags .eventTagContainer,
+    .beta-context-section-galaxies #galaxies_div {
+        display: block;
+        width: 100%;
+    }
+    .beta-context-section-tags .eventTagContainer .tag-list-container {
+        display: block;
+        margin-right: 0;
     }
     .beta-view-events #galaxies_div > .title-section {
         position: static;
@@ -1541,35 +1579,26 @@
                               </div>
                           </div>
 
-                          <!-- Context -->
-                            <div class="beta-card summary-card">
-                               <div class="beta-card-header beta-expandable-header" onclick="toggleContextSection();" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleContextSection();}" role="button" tabindex="0" aria-label="<?php echo __('Toggle context'); ?>">
-                                   <?php echo __('Context'); ?>
-                                   <i id="beta-context-toggle-icon" class="fa fa-chevron-down pull-right"></i>
-                               </div>
-                               <div class="beta-card-body" id="beta-context-content-wrap">
-                                 <?php
-                                      $eventTagCount = !empty($event['EventTag']) ? count($event['EventTag']) : 0;
-                                      $canAddGlobalTag = $this->Acl->canModifyTag($event);
-                                      $canAddLocalTag = $this->Acl->canModifyTag($event, true);
-                                  ?>
-                                   <?php
-                                       $tagAccess = $canAddGlobalTag;
-                                       $localTagAccess = $canAddLocalTag;
-                                       $targetId = $event['Event']['id'];
-                                       $galaxyCount = 0;
-                                       if (!empty($event['Galaxy'])) {
-                                           foreach ($event['Galaxy'] as $galaxyGroup) {
-                                               if (!empty($galaxyGroup['GalaxyCluster'])) {
-                                                   $galaxyCount += count($galaxyGroup['GalaxyCluster']);
-                                               }
-                                           }
+                          <?php
+                               $eventTagCount = !empty($event['EventTag']) ? count($event['EventTag']) : 0;
+                               $canAddGlobalTag = $this->Acl->canModifyTag($event);
+                               $canAddLocalTag = $this->Acl->canModifyTag($event, true);
+                               $tagAccess = $canAddGlobalTag;
+                               $localTagAccess = $canAddLocalTag;
+                               $targetId = $event['Event']['id'];
+                               $galaxyCount = 0;
+                               if (!empty($event['Galaxy'])) {
+                                   foreach ($event['Galaxy'] as $galaxyGroup) {
+                                       if (!empty($galaxyGroup['GalaxyCluster'])) {
+                                           $galaxyCount += count($galaxyGroup['GalaxyCluster']);
                                        }
-                                  ?>
-                                  <div class="beta-context-section beta-context-section-collections">
-                                      <div class="beta-context-section-header beta-collections-header-row">
-                                          <span class="beta-collections-header-left beta-context-section-title">
-                                              <strong><?php echo __('Collections'); ?> <span class="beta-header-count">(<span id="beta-collections-count">0</span>)</span></strong>
+                                   }
+                               }
+                          ?>
+                          <div class="beta-context-section beta-context-section-collections">
+                                       <div class="beta-context-section-header beta-collections-header-row">
+                                           <span class="beta-collections-header-left beta-context-section-title">
+                                               <strong><?php echo __('Collections'); ?> <span class="beta-header-count">(<span id="beta-collections-count">0</span>)</span></strong>
                                           </span>
                                           <span class="beta-context-section-actions">
                                               <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
@@ -1587,17 +1616,17 @@
                                               <?php endif; ?>
                                           </span>
                                       </div>
-                                      <div class="beta-context-section-body">
-                                          <div id="event-collections-container">
-                                              <span class="muted" style="font-size:11px;"><?php echo __('Loading…'); ?></span>
-                                          </div>
-                                      </div>
-                                  </div>
+                                       <div class="beta-context-section-body">
+                                           <div id="event-collections-container">
+                                               <span class="muted" style="font-size:11px;"><?php echo __('Loading…'); ?></span>
+                                           </div>
+                                       </div>
+                          </div>
 
-                                  <div class="beta-context-section beta-context-section-tags">
-                                      <div class="beta-context-section-header beta-collections-header-row">
-                                          <span class="beta-collections-header-left beta-context-section-title">
-                                              <strong><?php echo __('Tags'); ?> <span class="beta-header-count">(<span id="beta-tags-count"><?php echo h($eventTagCount); ?></span>)</span></strong>
+                          <div class="beta-context-section beta-context-section-tags">
+                                       <div class="beta-context-section-header beta-collections-header-row">
+                                           <span class="beta-collections-header-left beta-context-section-title">
+                                               <strong><?php echo __('Tags'); ?> <span class="beta-header-count">(<span id="beta-tags-count"><?php echo h($eventTagCount); ?></span>)</span></strong>
                                           </span>
                                           <span class="beta-context-section-actions">
                                               <?php if ($canAddGlobalTag): ?>
@@ -1624,16 +1653,16 @@
                                                         'tagConflicts' => $tagConflicts,
                                                         'popoverPlacement' => 'left',
                                                         'hide_add_buttons' => true
-                                                    ]);
-                                              ?>
-                                          </span>
-                                      </div>
-                                  </div>
+                                                     ]);
+                                               ?>
+                                           </span>
+                                       </div>
+                          </div>
 
-                                  <div class="beta-context-section beta-context-section-galaxies">
-                                      <div class="beta-context-section-header beta-collections-header-row">
-                                          <span class="beta-collections-header-left beta-context-section-title">
-                                              <strong><?php echo __('Galaxies'); ?> <span class="beta-header-count">(<span id="beta-galaxies-count"><?php echo h($galaxyCount); ?></span>)</span></strong>
+                          <div class="beta-context-section beta-context-section-galaxies">
+                                       <div class="beta-context-section-header beta-collections-header-row">
+                                           <span class="beta-collections-header-left beta-context-section-title">
+                                               <strong><?php echo __('Galaxies'); ?> <span class="beta-header-count">(<span id="beta-galaxies-count"><?php echo h($galaxyCount); ?></span>)</span></strong>
                                           </span>
                                           <span class="beta-context-section-actions">
                                               <button type="button" class="btn btn-link btn-xs noPrint" id="beta-galaxies-expand-all-toggle" style="display:none; padding: 0 8px 0 0; vertical-align: middle;">
@@ -1679,10 +1708,8 @@
                                                 }
                                             ?>
                                           </div>
-                                      </div>
-                                  </div>
-                                    </div>
-                                </div>
+                                       </div>
+                          </div>
                            <!-- Warninglist Matches -->
                           <?php
                               $warninglistMatches = [];
@@ -2521,10 +2548,6 @@
 
     function toggleExportSection() {
         toggleSidebarSection('#beta-export-content-wrap', '#beta-export-toggle-icon');
-    }
-
-    function toggleContextSection() {
-        toggleSidebarSection('#beta-context-content-wrap', '#beta-context-toggle-icon');
     }
 
     function updateTagCount() {
