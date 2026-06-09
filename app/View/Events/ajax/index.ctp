@@ -14,9 +14,7 @@
             ?>
             </ul>
         </div>
-        <?php
-            echo $this->element('Events/eventIndexTable');
-        ?>
+        <?= $this->element('Events/eventIndexTable'); ?>
         <p>
         <?php
         echo $this->Paginator->counter(array(
