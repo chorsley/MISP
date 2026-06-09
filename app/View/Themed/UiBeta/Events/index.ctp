@@ -10,7 +10,7 @@
  * @since 2.5.x (beta)
  */
 ?>
-<div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index">
+<div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index" style="padding-bottom: 96px;">
     <?php
         $searchScopes = [
             'searcheventinfo' => __('Event info'),
@@ -77,6 +77,9 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li><a href="<?= $baseurl ?>/events/add_misp_export"><i class="fa fa-file-import"></i> <?= __('Create event from import') ?></a></li>
+                            <?php if ($this->Acl->canAccess('eventTemplates', 'index') && $this->Acl->canAccess('eventTemplates', 'instantiate')): ?>
+                                <li><a href="#" onclick="event.preventDefault();openEventTemplatePicker();"><i class="fa fa-clone"></i> <?= __('Create event from template') ?></a></li>
+                            <?php endif; ?>
                         </ul>
                     </div>
                 <?php endif; ?>
@@ -166,6 +169,136 @@
 </div>
 <script>
     var passedArgsArray = <?php echo $passedArgs; ?>;
+    var betaEventsIndexBaseurl = <?php echo json_encode($baseurl); ?>;
+    var betaViewCollectionLabel = <?php echo json_encode(__('View collection')); ?>;
+
+    window.eventCollectionContext = null;
+
+    function getEventCollectionsContainer(eventId) {
+        return document.getElementById('event-collections-container-' + eventId);
+    }
+
+    function buildCollectionChip(collection) {
+        var collectionType = (collection && collection.type) ? String(collection.type) : 'other';
+        var collectionTypeClass = collectionType.replace(/[^a-z0-9_-]/gi, '');
+        var collectionDescription = collection && collection.description ? String(collection.description).substring(0, 80) : '';
+        var link = document.createElement('a');
+
+        link.href = betaEventsIndexBaseurl + '/collections/view/' + encodeURIComponent(collection.id);
+        link.className = 'beta-collection-chip beta-type-' + collectionTypeClass;
+        link.title = collectionType + (collectionDescription ? ': ' + collectionDescription : '');
+        link.setAttribute('aria-label', betaViewCollectionLabel + ' ' + ((collection && collection.name) || ''));
+
+        var icon = document.createElement('i');
+        icon.className = 'fa fa-folder';
+        icon.style.fontSize = '10px';
+        icon.style.marginRight = '3px';
+        link.appendChild(icon);
+        link.appendChild(document.createTextNode(collection && collection.name ? String(collection.name) : ''));
+
+        return link;
+    }
+
+    function renderEventCollections(container, collections) {
+        container.innerHTML = '';
+        if (!Array.isArray(collections) || collections.length === 0) {
+            return;
+        }
+
+        var chips = document.createElement('div');
+        chips.className = 'beta-event-collections-chips';
+
+        collections.forEach(function(collection) {
+            chips.appendChild(buildCollectionChip(collection));
+        });
+        container.appendChild(chips);
+    }
+
+    function applyCollectionsToContainer(container, data) {
+        if (!container) {
+            return;
+        }
+
+        var eventUuid = container.getAttribute('data-event-uuid');
+        var collections = data && typeof data === 'object' && eventUuid && Array.isArray(data[eventUuid]) ? data[eventUuid] : [];
+        renderEventCollections(container, collections);
+        container.setAttribute('data-collections-loaded', '1');
+    }
+
+    function loadCollectionsForContainers(containers) {
+        var uuids = [];
+
+        containers.forEach(function(container) {
+            if (!container || container.getAttribute('data-collections-loaded') === '1') {
+                return;
+            }
+
+            var eventUuid = container.getAttribute('data-event-uuid');
+            if (!eventUuid) {
+                return;
+            }
+
+            container.setAttribute('data-collections-loaded', 'loading');
+            if (uuids.indexOf(eventUuid) === -1) {
+                uuids.push(eventUuid);
+            }
+        });
+
+        if (uuids.length === 0) {
+            return;
+        }
+
+        $.ajax({
+            url: betaEventsIndexBaseurl + '/collections/getCollectionsForElements/Event.json',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ uuids: uuids }),
+            dataType: 'json',
+            success: function(data) {
+                containers.forEach(function(container) {
+                    applyCollectionsToContainer(container, data);
+                });
+            },
+            error: function() {
+                containers.forEach(function(container) {
+                    if (container) {
+                        container.removeAttribute('data-collections-loaded');
+                    }
+                });
+            }
+        });
+    }
+
+    function loadVisibleEventCollections() {
+        var containers = [];
+        $('[id^="event-collections-container-"]').each(function() {
+            containers.push(this);
+        });
+        loadCollectionsForContainers(containers);
+    }
+
+    window.openAddToCollectionModal = function(eventUuid, eventId) {
+        window.eventCollectionContext = {
+            eventUuid: eventUuid,
+            eventId: parseInt(eventId, 10)
+        };
+        openGenericModal(betaEventsIndexBaseurl + '/collectionElements/addElementToCollection/Event/' + encodeURIComponent(eventUuid));
+    };
+
+    window.loadEventCollections = function() {
+        var context = window.eventCollectionContext;
+        if (!context || !context.eventUuid || !context.eventId) {
+            return;
+        }
+
+        var container = getEventCollectionsContainer(context.eventId);
+        if (!container) {
+            return;
+        }
+
+        loadCollectionsForContainers([container]);
+    };
+
     $(function() {
         $('.searchFilterButton').click(function() {
             runIndexFilter(this);
@@ -176,11 +309,18 @@
         $('#quickFilterButton').click(function() {
             runIndexQuickFilter();
         });
+        loadVisibleEventCollections();
     });
 </script>
 <?php
 echo $this->element('genericElements/assetLoader', [
     'css' => ['vis', 'distribution-graph'],
-    'js' => ['vis', 'jquery-ui.min', 'network-distribution-graph', 'beta-events-timestamps'],
+    'js' => ['vis', 'jquery-ui.min', 'network-distribution-graph', 'event-timestamps'],
 ]);
+if (!$ajax
+    && $this->Acl->canAccess('eventTemplates', 'index')
+    && $this->Acl->canAccess('eventTemplates', 'instantiate')
+) {
+    echo $this->element('eventTemplates/templatePickerModal');
+}
 ?>

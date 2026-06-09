@@ -11,6 +11,71 @@
  * 
  * @since 2.5.x (beta)
  */
+
+$buildVisibleTagFamilies = function (array $tags) {
+    $tagFamilies = [];
+    foreach ($tags as $tag) {
+        $tagName = $tag['Tag']['name'] ?? '';
+        if ($tagName === '') {
+            continue;
+        }
+        $tagFamily = strpos($tagName, ':') !== false ? explode(':', $tagName, 2)[0] : $tagName;
+        if (!isset($tagFamilies[$tagFamily])) {
+            $tagFamilies[$tagFamily] = [];
+        }
+        $tagFamilies[$tagFamily][] = $tag;
+    }
+
+    $visibleTags = [];
+    foreach ($tagFamilies as $familyTags) {
+        $visibleTags[] = reset($familyTags);
+    }
+    return $visibleTags;
+};
+
+$buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
+    if (empty($galaxyTags)) {
+        return [];
+    }
+    $galaxies = [];
+    foreach ($galaxyTags as $galaxyTag) {
+        $tagName = $galaxyTag['Tag']['name'] ?? '';
+        if (strpos($tagName, 'misp-galaxy:') !== 0) {
+            continue;
+        }
+        $parts = explode(':', $tagName);
+        if (count($parts) < 2) {
+            continue;
+        }
+        $galaxyName = $parts[1];
+        $clusterValue = '';
+        if (count($parts) >= 3) {
+            $clusterValue = trim($parts[2], '"');
+            $clusterValue = explode('=', $clusterValue);
+            $clusterValue = end($clusterValue);
+            $clusterValue = trim($clusterValue, '"');
+        }
+        if (!isset($galaxies[$galaxyName])) {
+            $galaxies[$galaxyName] = [];
+        }
+        $galaxies[$galaxyName][] = [
+            'value' => $clusterValue,
+            'local' => $galaxyTag['local'],
+            'relationship_type' => $galaxyTag['relationship_type'],
+            'tag_id' => $galaxyTag['Tag']['id'],
+        ];
+    }
+
+    $galaxyCards = [];
+    foreach ($galaxies as $galaxyName => $clusters) {
+        $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', [
+            'galaxyName' => $galaxyName,
+            'clusters' => $clusters,
+            'baseurl' => $baseurl,
+        ]);
+    }
+    return $galaxyCards;
+};
 ?>
 <table class="table table-striped table-hover table-condensed beta-events-table">
     <tr>
@@ -52,7 +117,9 @@
         <?php if (in_array('timestamp', $columns, true)): ?><th class="col-timestamp" title="<?= __('Last mod') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?><th class="col-publish-timestamp" title="<?= __('Pub time') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Pub time')) ?></th><?php endif; ?>
     </tr>
-    <?php foreach ($events as $event): $eventId = (int)$event['Event']['id']; ?>
+    <?php foreach ($events as $event):
+        $eventId = (int)$event['Event']['id'];
+    ?>
     <tr id="event_<?= $eventId ?>">
         <td style="width:10px" class="beta-checkbox-actions-cell">
             <div class="beta-checkbox-actions-wrapper">
@@ -66,6 +133,11 @@
                         <?php if ($this->Acl->canModifyEvent($event)): ?>
                             <li><a href="<?= $baseurl."/events/edit/".$eventId ?>" title="<?= __('Edit') ?>"><i class="fa fa-edit"></i> <?= __('Edit') ?></a></li>
                             <li><a href="#" class="beta-delete-action" onclick="event.preventDefault();deleteEventPopup(<?= $eventId ?>)" title="<?= __('Delete') ?>"><i class="fa fa-trash"></i> <?= __('Delete') ?></a></li>
+                        <?php endif; ?>
+                        <li class="divider"></li>
+                        <li><a href="#" onclick="event.preventDefault();return copyEventIndexUuid(this, '<?= h($event['Event']['uuid']) ?>');" title="<?= __('Copy UUID') ?>"><i class="fa fa-copy"></i> <?= __('Copy UUID') ?></a></li>
+                        <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
+                            <li><a href="#" onclick="event.preventDefault();openAddToCollectionModal('<?= h($event['Event']['uuid']) ?>', <?= $eventId ?>)" title="<?= __('Add to Collection') ?>"><i class="fa fa-folder-plus"></i> <?= __('Add to Collection') ?></a></li>
                         <?php endif; ?>
                         <?php if (0 == $event['Event']['published'] && $this->Acl->canPublishEvent($event)): ?>
                             <li class="divider"></li>
@@ -97,6 +169,15 @@
                 <a href="<?= $baseurl."/events/view/".$eventId ?>" class="beta-info-link" title="<?= h($event['Event']['info']) ?>">
                     <?= nl2br(h($event['Event']['info']), false) ?>
                 </a>
+                <?php if (!empty($event['Event']['report_count'])): ?>
+                    <a href="<?= "$baseurl/events/view/$eventId#summary-reports-section" ?>" title="<?= __n('1 report available', '%s reports available', $event['Event']['report_count'], $event['Event']['report_count']) ?>">
+                        <i class="fas fa-file-alt" style="margin-left: 5px; color: #428bca;"></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <div id="event-collections-container-<?= $eventId ?>" data-event-uuid="<?= h($event['Event']['uuid']) ?>" style="margin-top: 0.35em;">
+                <div class="beta-event-collections-placeholder"></div>
             </div>
 
             <?php if ($extends_info): ?>
@@ -162,42 +243,105 @@
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
-        <td class="short col-clusters">
+        <td class="col-clusters">
             <?php
-                $galaxies = array();
                 if (!empty($event['GalaxyCluster'])) {
+                    $galaxies = array();
                     foreach ($event['GalaxyCluster'] as $galaxy_cluster) {
-                        $galaxy_id = $galaxy_cluster['Galaxy']['id'];
-                        if (!isset($galaxies[$galaxy_id])) {
-                            $galaxies[$galaxy_id] = $galaxy_cluster['Galaxy'];
+                        $galaxy_name = $galaxy_cluster['Galaxy']['name'];
+                        if (!isset($galaxies[$galaxy_name])) {
+                            $galaxies[$galaxy_name] = array();
                         }
-                        unset($galaxy_cluster['Galaxy']);
-                        $galaxies[$galaxy_id]['GalaxyCluster'][] = $galaxy_cluster;
+                        $galaxies[$galaxy_name][] = $galaxy_cluster;
                     }
-                    echo $this->element('galaxyQuickViewNew', array(
-                      'data' => $galaxies,
-                      'event' => $event,
-                      'target_id' => $eventId,
-                      'target_type' => 'event',
-                      'static_tags_only' => true,
-                    ));
+                    $galaxyCards = [];
+                    foreach ($galaxies as $galaxyName => $clusters) {
+                        $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', array(
+                            'galaxyName' => $galaxyName,
+                            'clusters' => $clusters,
+                            'baseurl' => $baseurl
+                        ));
+                    }
+
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    foreach ($galaxyCards as $galaxyCard) {
+                        echo $galaxyCard;
+                    }
+                    echo '</div>';
                 }
             ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?>
         <td class="shortish col-tags">
-            <?= $this->element('ajaxTags', [
-                'event' => $event,
-                'tags' => $event['EventTag'],
-                'tagAccess' => false,
-                'localTagAccess' => false,
-                'missingTaxonomies' => false,
-                'columnised' => true,
-                'static_tags_only' => 1,
-                'tag_display_style' => Configure::check('MISP.full_tags_on_event_index') ? Configure::read('MISP.full_tags_on_event_index') : 1,
-                'highlightedTags' => $event['Event']['highlightedTags'] ?? [],
-            ]);
+            <?php
+                $highlightedTags = $event['Event']['highlightedTags'] ?? [];
+                $tags = $event['EventTag'];
+                $galaxyTags = [];
+                foreach ($tags as $k => $tag) {
+                    if ($tag['Tag']['is_galaxy']) {
+                        $galaxyTags[] = $tag;
+                        unset($tags[$k]);
+                    }
+                }
+
+                if (!empty($highlightedTags)) {
+                    $highlightedTagNames = [];
+                    foreach ($highlightedTags as $highlightedTaxonomy) {
+                        if (empty($highlightedTaxonomy['tags'])) {
+                            continue;
+                        }
+
+                        foreach ($highlightedTaxonomy['tags'] as $highlightedTag) {
+                            if (!empty($highlightedTag['Tag']['name'])) {
+                                $highlightedTagNames[$highlightedTag['Tag']['name']] = true;
+                            }
+                        }
+                    }
+                    if (!empty($highlightedTagNames)) {
+                        foreach ($tags as $k => $tag) {
+                            $tagName = $tag['Tag']['name'] ?? null;
+                            if ($tagName !== null && isset($highlightedTagNames[$tagName])) {
+                                unset($tags[$k]);
+                            }
+                        }
+                    }
+                }
+
+                $totalRegularTagCount = count($tags);
+                $visibleTags = $buildVisibleTagFamilies($tags);
+
+                $maxVisibleTags = 3;
+                if (count($visibleTags) > $maxVisibleTags) {
+                    $visibleTags = array_slice($visibleTags, 0, $maxVisibleTags);
+                }
+                $hiddenTagCount = max(0, $totalRegularTagCount - count($visibleTags));
+
+                $galaxyCards = $buildGalaxyCardsFromTags($galaxyTags);
+                if (!empty($galaxyCards)) {
+                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
+                    foreach ($galaxyCards as $galaxyCard) {
+                        echo $galaxyCard;
+                    }
+                    echo '</div>';
+                }
+            ?>
+            <?php
+                $tagElementOptions = [
+                    'event' => $event,
+                    'tagAccess' => false,
+                    'localTagAccess' => false,
+                    'missingTaxonomies' => false,
+                    'columnised' => true,
+                    'static_tags_only' => 1,
+                    'tag_display_style' => Configure::check('MISP.full_tags_on_event_index') ? Configure::read('MISP.full_tags_on_event_index') : 1,
+                    'highlightedTags' => $highlightedTags
+                ];
+
+                echo $this->element('ajaxTags', $tagElementOptions + ['tags' => $visibleTags]);
+                if ($hiddenTagCount > 0) {
+                    echo '<span class="beta-context-more-count" title="' . h(__n('%s additional tag', '%s additional tags', $hiddenTagCount, $hiddenTagCount)) . '">(+'. (int)$hiddenTagCount .')</span>';
+                }
             ?>
         </td>
         <?php endif; ?>
@@ -308,6 +452,41 @@
 </table>
 <script>
     var lastSelected = false;
+
+    function copyEventIndexUuid(linkElement, uuid) {
+        var textArea = document.createElement('textarea');
+        textArea.value = uuid;
+        textArea.setAttribute('readonly', 'readonly');
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, textArea.value.length);
+
+        var copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (err) {
+            copied = false;
+        }
+
+        document.body.removeChild(textArea);
+
+        if (!copied && navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            navigator.clipboard.writeText(uuid).then(function() {
+                showMessage('success', 'UUID copied');
+            }).catch(function() {
+                showMessage('fail', 'Could not copy UUID');
+            });
+            return false;
+        }
+
+        showMessage(copied ? 'success' : 'fail', copied ? 'UUID copied' : 'Could not copy UUID');
+        return false;
+    }
+
     $(function() {
         // Prevent checkbox clicks from toggling the dropdown menu
         $('.beta-checkbox-actions-wrapper input.select').on('click', function(e) {
@@ -327,8 +506,9 @@
 
         $('.distributionNetworkToggle').each(function() {
             $(this).distributionNetwork({
-                distributionData: <?= json_encode($distributionData, JSON_UNESCAPED_UNICODE); ?>,
+                distributionData: <?= json_encode($this->DistributionGraph->getGraphData(-1), JSON_UNESCAPED_UNICODE); ?>,
             });
         });
+
     });
 </script>

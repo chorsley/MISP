@@ -105,6 +105,21 @@ class EventReportsController extends AppController
         $this->__injectTemplateVariables($this->Auth->user());
     }
 
+    /**
+     * Renders the report as read-only rendered markdown (viewer mode only, no editor toolbar).
+     * Designed to be embedded in an iframe for previewing reports.
+     */
+    public function viewRendered($reportId)
+    {
+        $report = $this->EventReport->simpleFetchById($this->Auth->user(), $reportId);
+        $this->set('id', $reportId);
+        $this->set('report', $report);
+        $this->set('canEdit', false);
+        $this->__injectDistributionLevelToViewContext();
+        $this->__injectTemplateVariables();
+        $this->layout = 'report_iframe';
+    }
+
     public function edit($id)
     {
         $savedReport = $this->EventReport->fetchIfAuthorized($this->Auth->user(), $id, 'edit', $throwErrors=true, $full=true);
@@ -359,7 +374,7 @@ class EventReportsController extends AppController
 
     public function index()
     {
-        $filters = $this->IndexFilter->harvestParameters(['event_id', 'value', 'context', 'index_for_event', 'extended_event', 'extending_event']);
+        $filters = $this->IndexFilter->harvestParameters(['event_id', 'value', 'context', 'index_for_event', 'extended_event', 'extending_event', 'beta']);
         $filters['embedded_view']  = $this->request->is('ajax');
         $compiledConditions = $this->__generateIndexConditions($filters);
         $this->EventReport->includeAnalystData = true;

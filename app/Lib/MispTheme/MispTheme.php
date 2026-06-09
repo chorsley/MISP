@@ -54,4 +54,5 @@ class MispTheme
         }
         return $themes;
     }
+
 }

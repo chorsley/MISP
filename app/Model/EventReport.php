@@ -409,6 +409,35 @@ class EventReport extends AppModel
         return $events;
     }
 
+    public function getSummaryForEvent(array $user, $eventId)
+    {
+        $eventReports = $this->fetchReports($user, [
+            'conditions' => [
+                'EventReport.event_id' => $eventId,
+                'EventReport.deleted' => 0,
+            ],
+        ]);
+
+        $firstEventReport = null;
+        foreach ($eventReports as $report) {
+            $content = $report['EventReport']['content'] ?? '';
+            if (!empty(trim($content))) {
+                $firstEventReport = $report;
+                break;
+            }
+        }
+
+        if ($firstEventReport === null && !empty($eventReports)) {
+            $firstEventReport = $eventReports[0];
+        }
+
+        return [
+            'id' => $firstEventReport['EventReport']['id'] ?? null,
+            'markdown' => $firstEventReport['EventReport']['content'] ?? null,
+            'count' => count($eventReports),
+        ];
+    }
+
 
     /**
      * fetchById Simple ACL-aware method to fetch a report by Id or UUID
@@ -1837,4 +1866,5 @@ class EventReport extends AppModel
         }
         return $this->redis->get(sprintf('%s:%s', self::REDIS_KEY_PICTURE_FILENAME_FROM_ALIAS, $alias));
     }
+
 }
