@@ -24,7 +24,7 @@
                 ];
                 foreach ($contexts as $ctx => $label):
                     $active = ($context === $ctx);
-                    $url = sprintf('%s/eventReports/index/event_id:%s/index_for_event:1/context:%s/beta:1', $baseurl, h($event_id), h($ctx));
+                    $url = sprintf('%s/eventReports/index/event_id:%s/index_for_event:1/context:%s', $baseurl, h($event_id), h($ctx));
             ?>
                 <a href="<?php echo $url; ?>" class="btn btn-default <?php echo $active ? 'active' : ''; ?> <?php echo $ctx === 'default' ? 'defaultContext' : ''; ?>"><?php echo $label; ?></a>
             <?php endforeach; ?>

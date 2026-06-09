@@ -374,7 +374,7 @@ class EventReportsController extends AppController
 
     public function index()
     {
-        $filters = $this->IndexFilter->harvestParameters(['event_id', 'value', 'context', 'index_for_event', 'extended_event', 'extending_event', 'beta']);
+        $filters = $this->IndexFilter->harvestParameters(['event_id', 'value', 'context', 'index_for_event', 'extended_event', 'extending_event']);
         $filters['embedded_view']  = $this->request->is('ajax');
         $compiledConditions = $this->__generateIndexConditions($filters);
         $this->EventReport->includeAnalystData = true;
