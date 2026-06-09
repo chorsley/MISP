@@ -17,7 +17,7 @@
         border: 1px solid #c8d8e8;
         border-radius: 16px;
         background: linear-gradient(180deg, #eef5fc 0%, #dde8f4 100%);
-        box-shadow: 0 14px 34px rgba(72, 101, 134, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+        box-shadow: 0 8px 18px rgba(72, 101, 134, 0.14), 0 1px 3px rgba(72, 101, 134, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.82);
         position: relative;
         overflow: hidden;
     }
@@ -48,7 +48,7 @@
         border-radius: 10px 10px 0 0;
         border-bottom-color: #d8e4ef;
         background: linear-gradient(180deg, #ffffff 0%, #e8f1f9 100%);
-        box-shadow: 0 10px 22px rgba(77, 106, 139, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+        box-shadow: 0 6px 14px rgba(77, 106, 139, 0.13), 0 1px 2px rgba(77, 106, 139, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.84);
     }
     .beta-event-title {
         font-weight: 600;
@@ -151,7 +151,7 @@
         border-top: 0;
         border-radius: 0 0 10px 10px;
         background: linear-gradient(180deg, #f8fbff 0%, #edf4fa 100%);
-        box-shadow: 0 10px 20px rgba(77, 106, 139, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        box-shadow: 0 5px 12px rgba(77, 106, 139, 0.09), 0 1px 2px rgba(77, 106, 139, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
     .beta-meta-group {
         display: flex;
@@ -487,6 +487,7 @@
         border: 1px solid #e0e0e0;
         border-radius: 4px;
         margin-bottom: 20px;
+        box-shadow: 0 6px 14px rgba(78, 104, 136, 0.11), 0 1px 2px rgba(78, 104, 136, 0.08);
     }
     .beta-card-accent {
         border-left-width: 4px;
@@ -606,6 +607,7 @@
         border: 0;
         border-radius: 0;
         background: transparent;
+        filter: drop-shadow(0 6px 14px rgba(78, 104, 136, 0.11)) drop-shadow(0 1px 2px rgba(78, 104, 136, 0.07));
     }
     .beta-context-section:last-child {
         margin-bottom: 0;
