@@ -12,7 +12,24 @@
         min-height: 100vh;
     }
     .beta-header-container {
-        margin-bottom: 16px;
+        margin-bottom: 18px;
+        padding: 14px 16px 12px;
+        border: 1px solid #c8d8e8;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #eef5fc 0%, #dde8f4 100%);
+        box-shadow: 0 14px 34px rgba(72, 101, 134, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+        position: relative;
+        overflow: hidden;
+    }
+    .beta-header-container::after {
+        content: "";
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 0;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(91, 121, 156, 0) 0%, rgba(91, 121, 156, 0.55) 14%, rgba(91, 121, 156, 0.72) 50%, rgba(91, 121, 156, 0.55) 86%, rgba(91, 121, 156, 0) 100%);
+        pointer-events: none;
     }
     .beta-event-header-row {
         display: flex;
@@ -26,20 +43,21 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        padding: 12px 16px;
-        border: 1px solid #d9e7f5;
+        padding: 14px 16px;
+        border: 1px solid #c0d2e4;
         border-radius: 10px 10px 0 0;
-        border-bottom-color: #e3edf7;
-        background: linear-gradient(180deg, #fafdff 0%, #eef5fc 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        border-bottom-color: #d8e4ef;
+        background: linear-gradient(180deg, #ffffff 0%, #e8f1f9 100%);
+        box-shadow: 0 10px 22px rgba(77, 106, 139, 0.11), inset 0 1px 0 rgba(255, 255, 255, 0.84);
     }
     .beta-event-title {
         font-weight: 600;
         margin-top: 0;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
         font-size: 0.95em;
         line-height: 1.2;
-        color: #2b3a49;
+        color: #24384d;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
     }
     .beta-event-subtitle {
         display: flex;
@@ -129,11 +147,11 @@
         align-items: center;
         margin-top: 0;
         padding: 8px 14px;
-        border: 1px solid #d9e7f5;
+        border: 1px solid #c7d8e8;
         border-top: 0;
         border-radius: 0 0 10px 10px;
-        background: linear-gradient(180deg, #ffffff 0%, #f7fafd 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+        background: linear-gradient(180deg, #f8fbff 0%, #edf4fa 100%);
+        box-shadow: 0 10px 20px rgba(77, 106, 139, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
     .beta-meta-group {
         display: flex;
@@ -276,8 +294,12 @@
             padding-left: 10px;
         }
     }
+    .beta-tabs-container {
+        position: relative;
+        padding-top: 0;
+    }
     .beta-tabs {
-        margin-top: 20px;
+        margin-top: 0;
         margin-bottom: 0;
         display: flex;
         gap: 0;
