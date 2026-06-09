@@ -1866,5 +1866,4 @@ class EventReport extends AppModel
         }
         return $this->redis->get(sprintf('%s:%s', self::REDIS_KEY_PICTURE_FILENAME_FROM_ALIAS, $alias));
     }
-
 }
