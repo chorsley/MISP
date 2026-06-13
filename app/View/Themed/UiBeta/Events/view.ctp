@@ -11,6 +11,11 @@
         background-color: #f9f9f9;
         min-height: 100vh;
     }
+    .beta-sankey-shell {
+        position: relative;
+        width: 100%;
+        overflow: visible;
+    }
     .beta-header-container {
         margin-bottom: 18px;
         padding: 14px 16px 12px;
@@ -2470,10 +2475,17 @@
                                      <input type="checkbox" id="sankey-latest-events-toggle">
                                      <span class="beta-sankey-toggle-switch" aria-hidden="true"></span>
                                  </label>
+                                 <label for="sankey-show-publisher-toggle" class="beta-sankey-toggle">
+                                     <span class="beta-sankey-toggle-label"><?php echo __('Show publisher'); ?></span>
+                                     <input type="checkbox" id="sankey-show-publisher-toggle" checked>
+                                     <span class="beta-sankey-toggle-switch" aria-hidden="true"></span>
+                                 </label>
                              </div>
                          </div>
                         <div style="display: flex; align-items: flex-start; justify-content: center; width: 100%;">
-                            <div id="correlations-sankey" style="flex: 1 1 auto; max-width: 100%; height: 400px; margin: 0 auto;"></div>
+                            <div id="correlations-sankey-shell" class="beta-sankey-shell" style="flex: 1 1 auto; max-width: 100%; margin: 0 auto;">
+                                <div id="correlations-sankey" style="width: 100%; height: 400px; margin: 0 auto;"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="beta-event-timeline" id="correlationsEventTimeline" style="display:none;">
@@ -3956,8 +3968,10 @@
             var nodes = [];
             var links = [];
             var nodeMap = {};
+            var orgNodeByTargetEventId = {};
             var alignToDate = $('#sankey-date-align-toggle').is(':checked');
             var latestEventsOnly = $('#sankey-latest-events-toggle').is(':checked');
+            var showPublisher = $('#sankey-show-publisher-toggle').is(':checked');
             var latestEventsLimit = 20;
             var currentEventId = '<?php echo h($event['Event']['id']); ?>';
             var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
@@ -3970,6 +3984,7 @@
             if (currentEventInfo) {
                 currentEventFullTitle += ': ' + currentEventInfo;
             }
+            var $sankeyShell = $('#correlations-sankey-shell');
             
             function addNode(name, type, id, fullTitle) {
                 var key = name + '_' + type;
@@ -4080,6 +4095,11 @@
                         fullTitle += ' (' + relDate + ')';
                     }
                     var targetIdx = addNode(targetEventName, 'target', rel.id, fullTitle);
+                    if (showPublisher && orgNodeByTargetEventId[rel.id] === undefined) {
+                        var relOrgName = rel.org_name || (eventDetails && eventDetails[rel.id] && eventDetails[rel.id].orgName) || '<?php echo addslashes(__('Unknown source')); ?>';
+                        var relOrgId = rel.org_id || (eventDetails && eventDetails[rel.id] && eventDetails[rel.id].org) || 'unknown';
+                        orgNodeByTargetEventId[rel.id] = addNode(relOrgName, 'org', relOrgId, relOrgName);
+                    }
                     
                     links.push({
                         source: attrIdx,
@@ -4088,6 +4108,26 @@
                     });
                 });
             });
+
+            if (showPublisher) {
+                Object.keys(orgNodeByTargetEventId).forEach(function(eventId) {
+                    var targetNodeIndex = null;
+                    var orgNodeIndex = orgNodeByTargetEventId[eventId];
+                    for (var i = 0; i < nodes.length; i++) {
+                        if (nodes[i].type === 'target' && String(nodes[i].id) === String(eventId)) {
+                            targetNodeIndex = i;
+                            break;
+                        }
+                    }
+                    if (targetNodeIndex !== null && orgNodeIndex !== undefined) {
+                        links.push({
+                            source: targetNodeIndex,
+                            target: orgNodeIndex,
+                            value: 1
+                        });
+                    }
+                });
+            }
 
             var displayedEventsNodeIds = {};
             links.forEach(function(l) {
@@ -4120,15 +4160,18 @@
             var containerWidth = $('#correlations-sankey').width();
             var sourceLabelText = '★ ' + truncateSourceLabel(currentEventName);
             var longestTargetLabelLength = 0;
+            var longestOrgLabelLength = 0;
             nodes.forEach(function(node) {
                 if (node.type === 'target') {
                     longestTargetLabelLength = Math.max(longestTargetLabelLength, (node.name || '').length);
+                } else if (node.type === 'org') {
+                    longestOrgLabelLength = Math.max(longestOrgLabelLength, (node.name || '').length);
                 }
             });
 
             var margin = {
                 top: 180,
-                right: estimateLabelWidth(Math.min(longestTargetLabelLength, 52), 6.3, 220, Math.max(260, Math.floor(containerWidth * 0.24))),
+                right: estimateLabelWidth(Math.min(longestTargetLabelLength + longestOrgLabelLength + 16, 96), 6.2, 360, Math.max(420, Math.floor(containerWidth * 0.36))),
                 bottom: 20,
                 left: estimateLabelWidth(sourceLabelText.length, 6.6, 180, Math.max(220, Math.floor(containerWidth * 0.22)))
             };
@@ -4171,6 +4214,7 @@
             var sankeyNodeWidth = graph.nodes.length ? (graph.nodes[0].x1 - graph.nodes[0].x0) : 15;
             var attributeMaxX1 = 0;
             var targetNodes = [];
+            var orgNodes = [];
             var targetDateExtents = { min: Infinity, max: -Infinity };
             var currentEventDateTs = _currentEventDateTs;
             graph.nodes.forEach(function(node) {
@@ -4185,6 +4229,8 @@
                         targetDateExtents.max = Math.max(targetDateExtents.max, ts);
                         node.eventDateTs = ts;
                     }
+                } else if (node.type === 'org') {
+                    orgNodes.push(node);
                 }
             });
 
@@ -4211,10 +4257,13 @@
                 ? (useYearScale ? addUtcYears(startOfUtcYear(sankeyDomainMaxTs), 1) : addUtcMonths(startOfUtcMonth(sankeyDomainMaxTs), 1))
                 : sankeyDomainMaxTs;
             var targetLaneStart = Math.min(width - sankeyNodeWidth - 24, attributeMaxX1 + 180);
-            var targetLaneEnd = width - 24;
-            var targetFixedX0 = Math.max(targetLaneStart, width - 110);
+            var targetLaneEnd = Math.max(targetLaneStart + 120, width - 250);
+            var targetFixedX0 = Math.max(targetLaneStart, targetLaneEnd - 80);
+            var orgColumnX0 = Math.min(width - sankeyNodeWidth - 20, targetLaneEnd + 150);
+            var orgLabelGap = 18;
             var targetLabelGap = 18;
             var targetHoverPad = 14;
+            var orgLabelMaxLength = 34;
 
             function formatSankeyGridDate(ts, unit) {
                 var d = new Date(ts);
@@ -4311,9 +4360,19 @@
                 });
             }
 
+            if (orgNodes.length > 0) {
+                orgNodes.forEach(function(node) {
+                    node.x0 = orgColumnX0;
+                    node.x1 = node.x0 + sankeyNodeWidth;
+                });
+            }
+
             function sankeyNodeFill(node) {
                 if (node.type === 'target') {
                     return '#8fbfe8';
+                }
+                if (node.type === 'org') {
+                    return '#b7c5d6';
                 }
                 if (node.type === 'source') {
                     return '#6fbe80';
@@ -4325,25 +4384,50 @@
             }
 
             function isSankeyInteractiveNode(node) {
-                return node && (node.type === 'target' || node.type === 'attribute');
+                return node && (node.type === 'target' || node.type === 'attribute' || node.type === 'org');
             }
 
             function handleSankeyNodeClick(node) {
                 if (node.type === 'target' && node.id) {
                     window.location.href = '<?php echo $baseurl; ?>/events/view/' + node.id;
+                } else if (node.type === 'org' && node.id && node.id !== 'unknown') {
+                    window.location.href = '<?php echo $baseurl; ?>/organisations/view/' + node.id;
                 } else if (node.type === 'attribute' && node.id) {
                     filterCorrelations(node.id);
                 }
             }
 
             function sankeyLinkConnectedToAttribute(link, node) {
+                if (link.source && link.source.type === 'target' && link.target && link.target.type === 'org') {
+                    return graph.links.some(function(candidateLink) {
+                        return candidateLink.source === node && candidateLink.target === link.source;
+                    });
+                }
                 return link.source === node || link.target === node;
             }
 
             function sankeyLinkConnectedToTarget(link, node) {
+                if (node.type === 'target' && link.source === node && link.target && link.target.type === 'org') {
+                    return true;
+                }
                 var isDirectLink = (link.target === node);
                 if (isDirectLink) {
                     return true;
+                }
+                if (node.type === 'org') {
+                    if (link.target === node && link.source && link.source.type === 'target') {
+                        return true;
+                    }
+                    if (link.source && link.source.type === 'attribute' && link.target && link.target.type === 'target') {
+                        var targetNode = link.target;
+                        var connectedToOrg = false;
+                        graph.links.forEach(function(candidateLink) {
+                            if (candidateLink.source === targetNode && candidateLink.target === node) {
+                                connectedToOrg = true;
+                            }
+                        });
+                        return connectedToOrg;
+                    }
                 }
                 var isPathFromSource = false;
                 graph.links.forEach(function(candidateLink) {
@@ -4357,6 +4441,17 @@
             function sankeyNodeConnectedToAttribute(candidateNode, activeNode) {
                 if (candidateNode === activeNode) {
                     return true;
+                }
+                if (candidateNode.type === 'source') {
+                    return true;
+                }
+                if (candidateNode.type === 'org') {
+                    return graph.links.some(function(link) {
+                        return link.source === activeNode && link.target && link.target.type === 'target'
+                            && graph.links.some(function(candidateLink) {
+                                return candidateLink.source === link.target && candidateLink.target === candidateNode;
+                            });
+                    });
                 }
                 var connected = false;
                 graph.links.forEach(function(link) {
@@ -4374,9 +4469,48 @@
                 if (candidateNode.type === 'source') {
                     return true;
                 }
+                if (candidateNode.type === 'org') {
+                    if (activeNode.type === 'org') {
+                        return true;
+                    }
+                    if (activeNode.type === 'target') {
+                        return graph.links.some(function(link) {
+                            return link.source === activeNode && link.target === candidateNode;
+                        });
+                    }
+                    if (activeNode.type === 'attribute') {
+                        return graph.links.some(function(link) {
+                            return link.source === activeNode && link.target && link.target.type === 'target'
+                                && graph.links.some(function(candidateLink) {
+                                    return candidateLink.source === link.target && candidateLink.target === candidateNode;
+                                });
+                        });
+                    }
+                    return false;
+                }
+                if (activeNode.type === 'target' && candidateNode.type === 'attribute') {
+                    return graph.links.some(function(link) {
+                        return link.source === candidateNode && link.target === activeNode;
+                    });
+                }
+                if (activeNode.type === 'org') {
+                    if (candidateNode.type === 'target') {
+                        return graph.links.some(function(link) {
+                            return link.source === candidateNode && link.target === activeNode;
+                        });
+                    }
+                    if (candidateNode.type === 'attribute') {
+                        return graph.links.some(function(link) {
+                            return link.source === candidateNode && link.target && link.target.type === 'target'
+                                && graph.links.some(function(candidateLink) {
+                                    return candidateLink.source === link.target && candidateLink.target === activeNode;
+                                });
+                        });
+                    }
+                }
                 var connected = false;
                 graph.links.forEach(function(link) {
-                    if (link.target === activeNode && link.source === candidateNode) {
+                    if ((link.target === activeNode && link.source === candidateNode) || (link.source === activeNode && link.target === candidateNode)) {
                         connected = true;
                     }
                 });
@@ -4394,7 +4528,13 @@
                         var connected = activeNode.type === 'attribute'
                             ? sankeyLinkConnectedToAttribute(link, activeNode)
                             : sankeyLinkConnectedToTarget(link, activeNode);
-                        return connected ? linkOpacity : 0.1;
+                        if (!connected) {
+                            return 0.08;
+                        }
+                        if (link.source && link.source.type === 'target' && link.target && link.target.type === 'org') {
+                            return activeNode.type === 'org' ? 0.28 : linkOpacity;
+                        }
+                        return linkOpacity;
                     });
                 svg.selectAll('.sankey-label')
                     .transition()
@@ -4404,6 +4544,27 @@
                             ? sankeyNodeConnectedToAttribute(node, activeNode)
                             : sankeyNodeConnectedToTarget(node, activeNode);
                         return connected ? 1 : 0.1;
+                    })
+                    .style('fill', function(node) {
+                        if (node.type === 'source') {
+                            return '#21486f';
+                        }
+                        if (node.type === 'org') {
+                            var connected = activeNode.type === 'attribute'
+                                ? sankeyNodeConnectedToAttribute(node, activeNode)
+                                : sankeyNodeConnectedToTarget(node, activeNode);
+                            return connected ? '#31465b' : 'rgba(86, 105, 125, 0.5)';
+                        }
+                        return null;
+                    })
+                    .style('font-weight', function(node) {
+                        if (node.type === 'org') {
+                            var connected = activeNode.type === 'attribute'
+                                ? sankeyNodeConnectedToAttribute(node, activeNode)
+                                : sankeyNodeConnectedToTarget(node, activeNode);
+                            return connected ? '700' : '400';
+                        }
+                        return isSankeyInteractiveNode(node) ? 'bold' : 'normal';
                     });
                 svg.selectAll('.sankey-node rect:not(.sankey-target-hitbox)')
                     .transition()
@@ -4415,6 +4576,9 @@
                         var connected = activeNode.type === 'attribute'
                             ? sankeyNodeConnectedToAttribute(node, activeNode)
                             : sankeyNodeConnectedToTarget(node, activeNode);
+                        if (node.type === 'org') {
+                            return connected ? 0.9 : 0.22;
+                        }
                         return connected ? 1 : 0.18;
                     });
             }
@@ -4426,15 +4590,34 @@
                 svg.selectAll('.sankey-link')
                     .transition()
                     .duration(200)
-                    .style('stroke-opacity', 0.5);
+                    .style('stroke-opacity', function(link) {
+                        return (link.source && link.source.type === 'target' && link.target && link.target.type === 'org') ? 0.24 : 0.5;
+                    });
                 svg.selectAll('.sankey-label')
                     .transition()
                     .duration(200)
-                    .style('opacity', 1);
+                    .style('opacity', 1)
+                    .style('fill', function(node) {
+                        if (node.type === 'source') {
+                            return '#21486f';
+                        }
+                        if (node.type === 'org') {
+                            return 'rgba(86, 105, 125, 0.62)';
+                        }
+                        return null;
+                    })
+                    .style('font-weight', function(node) {
+                        if (node.type === 'org') {
+                            return '500';
+                        }
+                        return isSankeyInteractiveNode(node) ? 'bold' : 'normal';
+                    });
                 svg.selectAll('.sankey-node rect:not(.sankey-target-hitbox)')
                     .transition()
                     .duration(200)
-                    .style('opacity', 1);
+                    .style('opacity', function(node) {
+                        return node.type === 'org' ? 0.58 : 1;
+                    });
             }
 
             // D3 v3 compatibility for scale and color
@@ -4558,12 +4741,19 @@
                 .append("g")
                 .attr("class", function(d) { return 'sankey-node sankey-node-' + d.type; });
 
-            nodeGroup.filter(function(d) { return d.type === 'target'; })
+            nodeGroup.filter(function(d) { return d.type === 'target' || d.type === 'org'; })
                 .append('rect')
-                .attr('class', 'sankey-target-hitbox')
-                .attr('x', function(d) { return Math.max(targetLaneStart - 4, d.x0 - targetHoverPad); })
+                .attr('class', function(d) { return d.type === 'org' ? 'sankey-org-hitbox' : 'sankey-target-hitbox'; })
+                .attr('x', function(d) { return d.type === 'org' ? d.x0 - 2 : Math.max(targetLaneStart - 4, d.x0 - targetHoverPad); })
                 .attr('y', function(d) { return Math.max(0, d.y0 - 3); })
-                .attr('width', function(d) { return Math.max((d.x1 - d.x0) + targetHoverPad + targetLabelGap + 8, 42); })
+                .attr('width', function(d) {
+                    if (d.type === 'org') {
+                        var orgLabel = d.name || '';
+                        var visibleOrgLabel = orgLabel.length > orgLabelMaxLength ? orgLabel.substring(0, orgLabelMaxLength - 3) + '...' : orgLabel;
+                        return Math.max((d.x1 - d.x0) + orgLabelGap + (visibleOrgLabel.length * 6.2) + 8, 52);
+                    }
+                    return Math.max((d.x1 - d.x0) + targetHoverPad + targetLabelGap + 8, 42);
+                })
                 .attr('height', function(d) { return Math.max((d.y1 - d.y0) + 6, 16); })
                 .attr('fill', 'rgba(255,255,255,0)')
                 .attr('cursor', 'pointer')
@@ -4581,6 +4771,7 @@
                 .on("click", handleSankeyNodeClick)
                 .on("mouseover", function(d) { applySankeyHoverState(d, 0.7); })
                 .on("mouseout", resetSankeyHoverState)
+                .style('opacity', function(d) { return d.type === 'org' ? 0.42 : 1; })
                 .append("title")
                 .text(function(d) { return d.fullTitle || d.name; });
 
@@ -4611,6 +4802,9 @@
                     }
                     if (d.source && d.source.type === 'attribute' && d.target && d.target.type === 'target') {
                         return '#7ec8f3';
+                    }
+                    if (d.source && d.source.type === 'target' && d.target && d.target.type === 'org') {
+                        return 'rgba(116, 147, 179, 0.22)';
                     }
                     return typeof color === 'function' ? color(d.source.type) : color;
                 })
@@ -4648,6 +4842,9 @@
                     if (d.type === 'target') {
                         return d.x1 + targetLabelGap;
                     }
+                    if (d.type === 'org') {
+                        return d.x1 + orgLabelGap;
+                    }
                     return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6;
                 })
                 .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
@@ -4662,15 +4859,31 @@
                     if (d.type === 'target') {
                         return 'start';
                     }
+                    if (d.type === 'org') {
+                        return 'start';
+                    }
                     return d.x0 < width / 2 ? 'start' : 'end';
                 })
                 .attr("cursor", function(d) { return isSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
-                .style("fill", function(d) { return d.type === 'source' ? '#21486f' : null; })
+                .style("fill", function(d) {
+                    if (d.type === 'source') {
+                        return '#21486f';
+                    }
+                    if (d.type === 'org') {
+                        return 'rgba(86, 105, 125, 0.48)';
+                    }
+                    return null;
+                })
                 .style("paint-order", function(d) { return d.type === 'source' ? 'stroke' : null; })
                 .style("stroke", function(d) { return d.type === 'source' ? 'rgba(255, 255, 255, 0.96)' : 'none'; })
                 .style("stroke-width", function(d) { return d.type === 'source' ? 4 : 0; })
                 .style("stroke-linejoin", function(d) { return d.type === 'source' ? 'round' : null; })
-                .style("font-weight", function(d) { return isSankeyInteractiveNode(d) ? 'bold' : 'normal'; });
+                .style("font-weight", function(d) {
+                    if (d.type === 'org') {
+                        return '400';
+                    }
+                    return isSankeyInteractiveNode(d) ? 'bold' : 'normal';
+                });
 
             labelSelection.append("title")
                 .text(function(d) { return d.fullTitle || d.name; });
@@ -4683,7 +4896,7 @@
                     if (d.type === 'source') {
                         return '★ ' + truncateSourceLabel(d.name);
                     }
-                    var maxLength = d.type === 'target' ? 60 : (d.x0 < width / 2 ? 50 : 70);
+                    var maxLength = d.type === 'target' ? 60 : (d.type === 'org' ? orgLabelMaxLength : (d.x0 < width / 2 ? 50 : 70));
                     var label = d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
                     return label;
                 });
@@ -4768,6 +4981,7 @@
                         .duration(duration)
                         .style('opacity', activeAlignToDate ? 1 : 0);
                 }
+
             }
 
             $('#sankey-date-align-toggle').off('change.sankeyAlign').on('change.sankeyAlign', function() {
@@ -4775,6 +4989,10 @@
             });
 
             $('#sankey-latest-events-toggle').off('change.sankeyLatest').on('change.sankeyLatest', function() {
+                renderSankey(data, eventDetails, filterAttributeId, {animateToggle: true});
+            });
+
+            $('#sankey-show-publisher-toggle').off('change.sankeyPublisher').on('change.sankeyPublisher', function() {
                 renderSankey(data, eventDetails, filterAttributeId, {animateToggle: true});
             });
 
