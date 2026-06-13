@@ -662,6 +662,21 @@
     .beta-context-section-actions .addButton .fas {
         line-height: 1;
     }
+    .beta-event-report-empty-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .beta-event-report-empty-action .btn {
+        margin-bottom: 0;
+        display: inline-flex;
+        align-items: center;
+    }
+    .beta-event-report-empty-action .muted {
+        margin: 0;
+        line-height: 1.2;
+    }
     .beta-context-section-collections {
         --beta-context-accent: #d79a45;
         --beta-context-border: #f2dfc0;
@@ -1762,11 +1777,13 @@
                                               <a href="#summary-reports-section" onclick="toggleSummaryReports(true); document.getElementById('summary-reports-section').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;"><?php echo __('See all reports'); ?></a>
                                            </div>
                                     <?php else: ?>
-                                        <p class="muted"><?php echo __('No report content available. Always consider adding an event report to explain the "so what" and context!'); ?></p>
                                         <?php if ((int)$eventReportCount === 0 && $this->Acl->canAccess('eventReports', 'add') && $this->Acl->canModifyEvent($event)): ?>
-                                            <a href="<?php echo $baseurl; ?>/eventReports/add/<?php echo h($event['Event']['id']); ?>" class="btn btn-link modal-open" style="padding-left: 0;" title="<?php echo __('Add Event Report'); ?>">
-                                                <i class="fa fa-plus"></i> <?php echo __('Add an event report'); ?>
-                                            </a>
+                                            <div class="beta-event-report-empty-action">
+                                                <a href="<?php echo $baseurl; ?>/eventReports/add/<?php echo h($event['Event']['id']); ?>" class="btn btn-link modal-open" style="padding-left: 0;" title="<?php echo __('Add Event Report'); ?>">
+                                                    <i class="fa fa-plus"></i> <?php echo __('Add an event report'); ?>
+                                                </a>
+                                                <span class="muted"><?php echo __('(Good events always have a report to explain context!)'); ?></span>
+                                            </div>
                                         <?php endif; ?>
                                     <?php endif; ?>
 
