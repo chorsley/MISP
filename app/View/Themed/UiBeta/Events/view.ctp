@@ -226,6 +226,57 @@
         background: #d7e0ea;
         transform: translateY(-50%);
     }
+    .beta-sankey-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: auto;
+        color: #61707e;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+    }
+    .beta-sankey-toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+    }
+    .beta-sankey-toggle-label {
+        white-space: nowrap;
+    }
+    .beta-sankey-toggle-switch {
+        position: relative;
+        width: 42px;
+        height: 24px;
+        border-radius: 999px;
+        background: #c7d0d9;
+        box-shadow: inset 0 0 0 1px rgba(56, 73, 91, 0.08);
+        transition: background 160ms ease, box-shadow 160ms ease;
+    }
+    .beta-sankey-toggle-switch::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(22, 32, 43, 0.28);
+        transition: transform 160ms ease;
+    }
+    .beta-sankey-toggle input:checked + .beta-sankey-toggle-switch {
+        background: #4cd964;
+    }
+    .beta-sankey-toggle input:checked + .beta-sankey-toggle-switch::after {
+        transform: translateX(18px);
+    }
+    .beta-sankey-toggle input:focus + .beta-sankey-toggle-switch {
+        box-shadow: inset 0 0 0 1px rgba(56, 73, 91, 0.08), 0 0 0 3px rgba(76, 217, 100, 0.18);
+    }
     .beta-meta-item-label {
         color: #8c98a5;
         font-size: 11px;
@@ -2358,16 +2409,17 @@
                 </div>
                 <div id="correlations-content" style="display: none;">
                     <div id="correlations-sankey-stage" style="display: none; margin: 0 auto 30px; max-width: min(100vw - 40px, 1760px); text-align: center;">
-                        <div id="correlations-sankey-toolbar" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; min-height: 24px;">
+                        <div id="correlations-sankey-toolbar" style="display: flex; justify-content: flex-start; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; min-height: 24px; width: 100%;">
                             <span id="sankey-filter-badge" style="display: none; background: #d9534f; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; white-space: nowrap;">
                                 <i class="fa fa-filter"></i> <span id="sankey-filter-label"></span>
                                 <a href="#" onclick="resetCorrelationFilter(); return false;" style="color: #fff; margin-left: 6px; text-decoration: none;" title="<?php echo __('Remove filter'); ?>"><i class="fa fa-times-circle"></i></a>
                             </span>
-                            <label for="sankey-date-align-toggle" style="display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #61707e; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;">
-                                <input type="checkbox" id="sankey-date-align-toggle" checked style="margin: 0;">
-                                <?php echo __('Align to event date'); ?>
-                            </label>
                             <span id="sankey-limit-msg" style="font-size: 12px; color: #7d8894;"></span>
+                            <label for="sankey-date-align-toggle" class="beta-sankey-toggle">
+                                <span class="beta-sankey-toggle-label"><?php echo __('Align to event date'); ?></span>
+                                <input type="checkbox" id="sankey-date-align-toggle" checked>
+                                <span class="beta-sankey-toggle-switch" aria-hidden="true"></span>
+                            </label>
                         </div>
                         <div style="display: flex; align-items: flex-start; justify-content: center; gap: 8px; width: 100%;">
                             <div id="correlations-sankey-source-label" style="width: 86px; padding-top: 190px; text-align: right; font-size: 12px; font-weight: 600; color: #6b7785; white-space: nowrap;">
@@ -3490,6 +3542,113 @@
     var _correlationEventDetails = null;
     var _correlationsLoading = false;
 
+    function formatTimelineDateUtc(ts) {
+        var d = new Date(ts);
+        var y = d.getUTCFullYear();
+        var m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        var day = String(d.getUTCDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+    }
+
+    function highlightCorrelationCard(eventId) {
+        if (!eventId) return;
+        $('.beta-correlation-card-highlight').removeClass('beta-correlation-card-highlight');
+        var $card = $('.correlation-event-card[data-event-id="' + String(eventId).replace(/"/g, '\\"') + '"]').first();
+        if (!$card.length) return;
+        $card.addClass('beta-correlation-card-highlight');
+        $('html, body').animate({
+            scrollTop: Math.max($card.offset().top - 120, 0)
+        }, 350);
+        window.setTimeout(function() {
+            $card.removeClass('beta-correlation-card-highlight');
+        }, 1400);
+    }
+
+    function renderCorrelationsTimeline(detailsMap) {
+        var timeline = document.getElementById('correlationsEventTimeline');
+        if (!timeline) return;
+
+        var markers = timeline.querySelector('.beta-event-timeline-markers');
+        var ticks = timeline.querySelector('.beta-event-timeline-ticks');
+        var rangeLabel = document.getElementById('correlationsEventTimelineRange');
+        if (!markers || !ticks) return;
+
+        var items = Object.keys(detailsMap || {}).map(function(eid) {
+            var details = detailsMap[eid] || {};
+            var date = details.date || '';
+            var ts = Date.parse(date + 'T00:00:00Z');
+            if (!date || !isFinite(ts)) {
+                return null;
+            }
+            return {
+                id: eid,
+                title: details.info || '',
+                date: date,
+                ts: ts
+            };
+        }).filter(function(item) { return item !== null; });
+
+        if (!items.length) {
+            timeline.style.display = 'none';
+            return;
+        }
+
+        items.sort(function(a, b) { return a.ts - b.ts; });
+        var itemMinTs = items[0].ts;
+        var itemMaxTs = items[items.length - 1].ts;
+        var minTs = itemMinTs;
+        var maxTs = itemMaxTs;
+        var rawRange = maxTs - minTs;
+        var range = Math.max(rawRange, 1);
+
+        ticks.innerHTML = '';
+        var tickCount = rawRange === 0 ? 1 : Math.min(7, Math.max(3, items.length + 1));
+        for (var i = 0; i < tickCount; i++) {
+            var tick = document.createElement('span');
+            var pctTick = tickCount === 1 ? 50 : (i / (tickCount - 1)) * 100;
+            var isEdgeTick = i === 0 || i === tickCount - 1;
+            tick.className = 'beta-event-timeline-tick' + (isEdgeTick ? ' beta-event-timeline-tick-edge' : '');
+            tick.style.left = pctTick + '%';
+
+            var tickTs = rawRange === 0 ? minTs : minTs + ((range * i) / Math.max(1, tickCount - 1));
+            var label = document.createElement('span');
+            label.className = 'beta-event-timeline-tick-label';
+            if (i === 0) {
+                label.className += ' beta-event-timeline-tick-label-start';
+            } else if (i === tickCount - 1) {
+                label.className += ' beta-event-timeline-tick-label-end';
+            }
+            label.textContent = formatTimelineDateUtc(tickTs);
+            tick.appendChild(label);
+            ticks.appendChild(tick);
+        }
+
+        markers.innerHTML = '';
+        items.forEach(function(item) {
+            var marker = document.createElement('button');
+            marker.type = 'button';
+            marker.className = 'beta-event-timeline-marker';
+            marker.style.left = (range > 0 ? ((item.ts - minTs) / range) * 100 : 50) + '%';
+            marker.title = (item.title || 'Event #' + item.id) + ' - ' + item.date;
+            marker.setAttribute('data-event-id', item.id);
+            marker.setAttribute('aria-label', 'Open correlated event #' + item.id + ' on timeline');
+            markers.appendChild(marker);
+        });
+
+        if (rangeLabel) {
+            var start = formatTimelineDateUtc(itemMinTs);
+            var end = formatTimelineDateUtc(maxTs);
+            rangeLabel.textContent = start === end ? start : (start + ' → ' + end);
+        }
+
+        timeline.style.display = '';
+        markers.onclick = function(e) {
+            var target = e.target.closest('.beta-event-timeline-marker');
+            if (!target) return;
+            highlightCorrelationCard(target.getAttribute('data-event-id'));
+        };
+    }
+
     function loadCorrelations() {
         if (_correlationData !== null || _correlationsLoading) return;
         _correlationsLoading = true;
@@ -3524,113 +3683,6 @@
             var eventCounts = {};
             var eventDetails = {};
             var attributeMap = {};
-
-            function formatTimelineDateUtc(ts) {
-                var d = new Date(ts);
-                var y = d.getUTCFullYear();
-                var m = String(d.getUTCMonth() + 1).padStart(2, '0');
-                var day = String(d.getUTCDate()).padStart(2, '0');
-                return y + '-' + m + '-' + day;
-            }
-
-            function highlightCorrelationCard(eventId) {
-                if (!eventId) return;
-                $('.beta-correlation-card-highlight').removeClass('beta-correlation-card-highlight');
-                var $card = $('.correlation-event-card[data-event-id="' + String(eventId).replace(/"/g, '\\"') + '"]').first();
-                if (!$card.length) return;
-                $card.addClass('beta-correlation-card-highlight');
-                $('html, body').animate({
-                    scrollTop: Math.max($card.offset().top - 120, 0)
-                }, 350);
-                window.setTimeout(function() {
-                    $card.removeClass('beta-correlation-card-highlight');
-                }, 1400);
-            }
-
-            function renderCorrelationsTimeline(detailsMap) {
-                var timeline = document.getElementById('correlationsEventTimeline');
-                if (!timeline) return;
-
-                var markers = timeline.querySelector('.beta-event-timeline-markers');
-                var ticks = timeline.querySelector('.beta-event-timeline-ticks');
-                var rangeLabel = document.getElementById('correlationsEventTimelineRange');
-                if (!markers || !ticks) return;
-
-                var items = Object.keys(detailsMap || {}).map(function(eid) {
-                    var details = detailsMap[eid] || {};
-                    var date = details.date || '';
-                    var ts = Date.parse(date + 'T00:00:00Z');
-                    if (!date || !isFinite(ts)) {
-                        return null;
-                    }
-                    return {
-                        id: eid,
-                        title: details.info || '',
-                        date: date,
-                        ts: ts
-                    };
-                }).filter(function(item) { return item !== null; });
-
-                if (!items.length) {
-                    timeline.style.display = 'none';
-                    return;
-                }
-
-                items.sort(function(a, b) { return a.ts - b.ts; });
-                var itemMinTs = items[0].ts;
-                var itemMaxTs = items[items.length - 1].ts;
-                var minTs = itemMinTs;
-                var maxTs = itemMaxTs;
-                var rawRange = maxTs - minTs;
-                var range = Math.max(rawRange, 1);
-
-                ticks.innerHTML = '';
-                var tickCount = rawRange === 0 ? 1 : Math.min(7, Math.max(3, items.length + 1));
-                for (var i = 0; i < tickCount; i++) {
-                    var tick = document.createElement('span');
-                    var pctTick = tickCount === 1 ? 50 : (i / (tickCount - 1)) * 100;
-                    var isEdgeTick = i === 0 || i === tickCount - 1;
-                    tick.className = 'beta-event-timeline-tick' + (isEdgeTick ? ' beta-event-timeline-tick-edge' : '');
-                    tick.style.left = pctTick + '%';
-
-                    var tickTs = rawRange === 0 ? minTs : minTs + ((range * i) / Math.max(1, tickCount - 1));
-                    var label = document.createElement('span');
-                    label.className = 'beta-event-timeline-tick-label';
-                    if (i === 0) {
-                        label.className += ' beta-event-timeline-tick-label-start';
-                    } else if (i === tickCount - 1) {
-                        label.className += ' beta-event-timeline-tick-label-end';
-                    }
-                    label.textContent = formatTimelineDateUtc(tickTs);
-                    tick.appendChild(label);
-                    ticks.appendChild(tick);
-                }
-
-                markers.innerHTML = '';
-                items.forEach(function(item) {
-                    var marker = document.createElement('button');
-                    marker.type = 'button';
-                    marker.className = 'beta-event-timeline-marker';
-                    marker.style.left = (range > 0 ? ((item.ts - minTs) / range) * 100 : 50) + '%';
-                    marker.title = (item.title || 'Event #' + item.id) + ' - ' + item.date;
-                    marker.setAttribute('data-event-id', item.id);
-                    marker.setAttribute('aria-label', 'Open correlated event #' + item.id + ' on timeline');
-                    markers.appendChild(marker);
-                });
-
-                if (rangeLabel) {
-                    var start = formatTimelineDateUtc(itemMinTs);
-                    var end = formatTimelineDateUtc(maxTs);
-                    rangeLabel.textContent = start === end ? start : (start + ' → ' + end);
-                }
-
-                timeline.style.display = '';
-                markers.onclick = function(e) {
-                    var target = e.target.closest('.beta-event-timeline-marker');
-                    if (!target) return;
-                    highlightCorrelationCard(target.getAttribute('data-event-id'));
-                };
-            }
 
             function buildCorrelationEventHeader(eid, details, count, percent, creatorOrg) {
                 var html = '';
@@ -4068,14 +4120,14 @@
                 if (ticks.length) {
                     ticks[ticks.length - 1].isEdge = true;
                 }
-                if (ticks.length > 8) {
-                    var limitedTicks = [];
-                    var lastIndex = ticks.length - 1;
-                    for (var tickIndex = 0; tickIndex < 8; tickIndex++) {
-                        var sourceIndex = Math.round((lastIndex * tickIndex) / 7);
-                        if (!limitedTicks.length || limitedTicks[limitedTicks.length - 1].x !== ticks[sourceIndex].x) {
-                            limitedTicks.push(ticks[sourceIndex]);
-                        }
+                var maxReadableTicks = tickUseYearScale ? 7 : 8;
+                if (ticks.length > maxReadableTicks) {
+                    var interval = Math.ceil((ticks.length - 1) / (maxReadableTicks - 1));
+                    var limitedTicks = ticks.filter(function(tick, tickIndex) {
+                        return tickIndex === 0 || tickIndex === ticks.length - 1 || (tickIndex % interval) === 0;
+                    });
+                    if (limitedTicks[limitedTicks.length - 1].x !== ticks[ticks.length - 1].x) {
+                        limitedTicks.push(ticks[ticks.length - 1]);
                     }
                     ticks = limitedTicks;
                     ticks[0].isEdge = true;
@@ -4091,7 +4143,10 @@
                     if (hasSpreadableDates && isFinite(node.eventDateTs)) {
                         var ratio = (node.eventDateTs - sankeyScaleMinTs) / Math.max(1, (sankeyScaleMaxTs - sankeyScaleMinTs));
                         ratio = Math.max(0, Math.min(1, ratio));
-                        node.alignedX0 = targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) * ratio);
+                        node.alignedX0 = Math.min(
+                            targetLaneEnd - sankeyNodeWidth,
+                            targetLaneStart + ((targetLaneEnd - targetLaneStart) * ratio)
+                        );
                     } else {
                         node.alignedX0 = targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) / 2);
                     }
@@ -4188,6 +4243,18 @@
                             : sankeyNodeConnectedToTarget(node, activeNode);
                         return connected ? 1 : 0.1;
                     });
+                svg.selectAll('.sankey-node rect:not(.sankey-target-hitbox)')
+                    .transition()
+                    .duration(200)
+                    .style('opacity', function(node) {
+                        if (!isSankeyInteractiveNode(node)) {
+                            return 1;
+                        }
+                        var connected = activeNode.type === 'attribute'
+                            ? sankeyNodeConnectedToAttribute(node, activeNode)
+                            : sankeyNodeConnectedToTarget(node, activeNode);
+                        return connected ? 1 : 0.18;
+                    });
             }
 
             function resetSankeyHoverState(activeNode) {
@@ -4199,6 +4266,10 @@
                     .duration(200)
                     .style('stroke-opacity', 0.5);
                 svg.selectAll('.sankey-label')
+                    .transition()
+                    .duration(200)
+                    .style('opacity', 1);
+                svg.selectAll('.sankey-node rect:not(.sankey-target-hitbox)')
                     .transition()
                     .duration(200)
                     .style('opacity', 1);
@@ -4241,12 +4312,14 @@
                         .attr('stroke-width', 1)
                         .attr('shape-rendering', 'crispEdges');
 
-                    var topLabelY = -48;
+                    var topLabelY = laneTop - 10;
 
                     tickGroup.append('text')
                         .attr('x', function(d) { return d.x; })
                         .attr('y', topLabelY)
                         .attr('text-anchor', 'start')
+                        .attr('dx', '3px')
+                        .attr('dy', '-2px')
                         .attr('transform', function(d) {
                             return 'rotate(-55,' + d.x + ',' + topLabelY + ')';
                         })
@@ -4530,6 +4603,24 @@
     // Pending filter to apply once correlations are loaded
     var _pendingCorrelationFilter = null;
 
+    function buildFilteredCorrelationEventDetails(attributeId) {
+        if (!_correlationEventDetails) {
+            return {};
+        }
+        if (!attributeId || !_correlationData || !_correlationData[attributeId]) {
+            return _correlationEventDetails;
+        }
+
+        var filteredDetails = {};
+        _correlationData[attributeId].forEach(function(rel) {
+            if (!rel || !rel.id || !_correlationEventDetails[rel.id]) {
+                return;
+            }
+            filteredDetails[rel.id] = _correlationEventDetails[rel.id];
+        });
+        return filteredDetails;
+    }
+
     function filterCorrelations(attributeId) {
         // Always switch to correlations tab
         $('.nav-tabs a[href="#correlations"]').tab('show');
@@ -4621,10 +4712,12 @@
                 if (_correlationData[attributeId] && _correlationData[attributeId].length > 0) {
                     attrValue = _correlationData[attributeId][0].value || attributeId;
                 }
+                renderCorrelationsTimeline(buildFilteredCorrelationEventDetails(attributeId));
                 renderSankey(_correlationData, _correlationEventDetails, attributeId);
                 $('#sankey-filter-label').text('<?php echo __('Filtered'); ?>: ' + attrValue);
                 $('#sankey-filter-badge').show();
             } else {
+                renderCorrelationsTimeline(_correlationEventDetails);
                 renderSankey(_correlationData, _correlationEventDetails);
                 $('#sankey-filter-badge').hide();
                 $('#sankey-filter-label').text('');
