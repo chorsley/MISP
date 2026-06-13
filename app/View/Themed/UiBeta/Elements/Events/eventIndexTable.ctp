@@ -166,6 +166,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                      data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
                      data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
                      data-scope-id="<?= $eventId ?>">
+                    <i class="fa fa-share-alt" aria-hidden="true"></i>
                 </div>
                 <div class="beta-info-content">
                     <div class="beta-info-title-row">

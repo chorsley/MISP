@@ -1484,43 +1484,59 @@ body.beta-ui-enabled .beta-view-events {
 
 /* Distribution Graphic Widget */
 .dist-widget {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 24px;
-    height: 8px;
+    height: 12px;
     border-radius: 4px;
     vertical-align: middle;
     margin-right: 0.5rem;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.dist-widget .fa {
+    font-size: 7px;
+    line-height: 1;
+    color: var(--dist-icon-color, #ffffff);
 }
 
 /* 0: Your organisation only - Red */
 .dist-0 {
     background-color: #ff0000;
+    --dist-icon-color: #ffffff;
 }
 
 /* 1: This community only - Dark Green */
 .dist-1 {
     background-color: #155724;
+    --dist-icon-color: #ffffff;
 }
 
 /* 2: Connected communities - Light Green */
 .dist-2 {
     background-color: #5cb85c;
+    --dist-icon-color: #0f3d0f;
 }
 
 /* 3: All communities - White (with border) */
 .dist-3 {
     background-color: #ffffff;
     border: 1px solid #adb5bd;
+    --dist-icon-color: #5f6b76;
 }
 
 /* 4: Sharing group - Amber */
 .dist-4 {
     background-color: #ffc107;
+    --dist-icon-color: #6b4a00;
 }
 
 /* 5: Inherit Event - Grey */
 .dist-5 {
     background-color: #adb5bd;
+    --dist-icon-color: #ffffff;
 }
 
 .dist-inherited {

@@ -1585,7 +1585,7 @@
                 </div>
             </div>
             <div class="beta-meta-group beta-meta-group-scope">
-                <div class="beta-meta-group-title" title="<?php echo __('Scope'); ?>"><i class="fa fa-share-alt"></i></div>
+                <div class="beta-meta-group-title" title="<?php echo __('Scope'); ?>"></div>
                 <div class="beta-meta-items">
                     <div class="beta-meta-item" title="<?php echo h($distributionLevels[$event['Event']['distribution']]); ?>">
                         <span class="beta-meta-item-label"><?php echo __('Distribution'); ?></span>
@@ -1595,6 +1595,7 @@
                                  data-event-distribution="<?= intval($event['Event']['distribution']) ?>"
                                  data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
                                  data-scope-id="<?= h($event['Event']['id']) ?>">
+                                <i class="fa fa-share-alt" aria-hidden="true"></i>
                             </div>
                             <?php 
                                 if ($event['Event']['distribution'] == 4):
