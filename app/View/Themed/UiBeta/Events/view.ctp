@@ -2372,6 +2372,16 @@
                             <div id="correlations-sankey" style="flex: 1 1 auto; max-width: 100%; height: 400px; margin: 0 auto;"></div>
                         </div>
                     </div>
+                    <div class="beta-event-timeline" id="correlationsEventTimeline" style="display:none;">
+                        <div class="beta-event-timeline-header">
+                            <span class="beta-event-timeline-title"><i class="fa fa-stream"></i> <?php echo __('Correlated event timeline'); ?></span>
+                            <span class="beta-event-timeline-range" id="correlationsEventTimelineRange"></span>
+                        </div>
+                        <div class="beta-event-timeline-track">
+                            <div class="beta-event-timeline-ticks" aria-hidden="true"></div>
+                            <div class="beta-event-timeline-markers"></div>
+                        </div>
+                    </div>
                     <div id="correlations-table-filter-banner" style="display: none; margin-bottom: 15px; padding: 10px 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; align-items: center; justify-content: space-between;">
                         <span><i class="fa fa-filter" style="color: #856404;"></i> <strong><?php echo __('Filtered view'); ?></strong> &mdash; <span id="correlations-table-filter-msg"></span></span>
                         <a href="#" onclick="resetCorrelationFilter(); return false;" class="btn btn-xs btn-warning" style="margin-left: 10px;"><i class="fa fa-times"></i> <?php echo __('Clear Filter'); ?></a>
@@ -3511,6 +3521,111 @@
             var eventDetails = {};
             var attributeMap = {};
 
+            function formatTimelineDateUtc(ts) {
+                var d = new Date(ts);
+                var y = d.getUTCFullYear();
+                var m = String(d.getUTCMonth() + 1).padStart(2, '0');
+                var day = String(d.getUTCDate()).padStart(2, '0');
+                return y + '-' + m + '-' + day;
+            }
+
+            function highlightCorrelationCard(eventId) {
+                if (!eventId) return;
+                $('.beta-correlation-card-highlight').removeClass('beta-correlation-card-highlight');
+                var $card = $('.correlation-event-card[data-event-id="' + String(eventId).replace(/"/g, '\\"') + '"]').first();
+                if (!$card.length) return;
+                $card.addClass('beta-correlation-card-highlight');
+                $('html, body').animate({
+                    scrollTop: Math.max($card.offset().top - 120, 0)
+                }, 350);
+                window.setTimeout(function() {
+                    $card.removeClass('beta-correlation-card-highlight');
+                }, 1400);
+            }
+
+            function renderCorrelationsTimeline(detailsMap) {
+                var timeline = document.getElementById('correlationsEventTimeline');
+                if (!timeline) return;
+
+                var markers = timeline.querySelector('.beta-event-timeline-markers');
+                var ticks = timeline.querySelector('.beta-event-timeline-ticks');
+                var rangeLabel = document.getElementById('correlationsEventTimelineRange');
+                if (!markers || !ticks) return;
+
+                var items = Object.keys(detailsMap || {}).map(function(eid) {
+                    var details = detailsMap[eid] || {};
+                    var date = details.date || '';
+                    var ts = Date.parse(date + 'T00:00:00Z');
+                    if (!date || !isFinite(ts)) {
+                        return null;
+                    }
+                    return {
+                        id: eid,
+                        title: details.info || '',
+                        date: date,
+                        ts: ts
+                    };
+                }).filter(function(item) { return item !== null; });
+
+                if (!items.length) {
+                    timeline.style.display = 'none';
+                    return;
+                }
+
+                items.sort(function(a, b) { return a.ts - b.ts; });
+                var minTs = items[0].ts;
+                var maxTs = items[items.length - 1].ts;
+                var rawRange = maxTs - minTs;
+                var range = Math.max(rawRange, 1);
+
+                ticks.innerHTML = '';
+                var tickCount = rawRange === 0 ? 1 : Math.min(7, Math.max(3, items.length + 1));
+                for (var i = 0; i < tickCount; i++) {
+                    var tick = document.createElement('span');
+                    var pctTick = tickCount === 1 ? 50 : (i / (tickCount - 1)) * 100;
+                    var isEdgeTick = i === 0 || i === tickCount - 1;
+                    tick.className = 'beta-event-timeline-tick' + (isEdgeTick ? ' beta-event-timeline-tick-edge' : '');
+                    tick.style.left = pctTick + '%';
+
+                    var tickTs = rawRange === 0 ? minTs : minTs + ((range * i) / Math.max(1, tickCount - 1));
+                    var label = document.createElement('span');
+                    label.className = 'beta-event-timeline-tick-label';
+                    if (i === 0) {
+                        label.className += ' beta-event-timeline-tick-label-start';
+                    } else if (i === tickCount - 1) {
+                        label.className += ' beta-event-timeline-tick-label-end';
+                    }
+                    label.textContent = formatTimelineDateUtc(tickTs);
+                    tick.appendChild(label);
+                    ticks.appendChild(tick);
+                }
+
+                markers.innerHTML = '';
+                items.forEach(function(item) {
+                    var marker = document.createElement('button');
+                    marker.type = 'button';
+                    marker.className = 'beta-event-timeline-marker';
+                    marker.style.left = (range > 0 ? ((item.ts - minTs) / range) * 100 : 50) + '%';
+                    marker.title = (item.title || 'Event #' + item.id) + ' - ' + item.date;
+                    marker.setAttribute('data-event-id', item.id);
+                    marker.setAttribute('aria-label', 'Open correlated event #' + item.id + ' on timeline');
+                    markers.appendChild(marker);
+                });
+
+                if (rangeLabel) {
+                    var start = items[0].date;
+                    var end = items[items.length - 1].date;
+                    rangeLabel.textContent = start === end ? start : (start + ' → ' + end);
+                }
+
+                timeline.style.display = '';
+                markers.onclick = function(e) {
+                    var target = e.target.closest('.beta-event-timeline-marker');
+                    if (!target) return;
+                    highlightCorrelationCard(target.getAttribute('data-event-id'));
+                };
+            }
+
             function buildCorrelationEventHeader(eid, details, count, percent, creatorOrg) {
                 var html = '';
                 html += '  <div class="beta-card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">';
@@ -3685,7 +3800,7 @@
                 var attrIds = attrs.map(function(a) { return a.id; }).join(',');
                 var creatorOrg = details.orgName ? $('<div/>').text(details.orgName).html() : '';
                 
-                html += '<div class="beta-card correlation-event-card" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
+                html += '<div class="beta-card correlation-event-card" data-event-id="' + eid + '" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
                 html += buildCorrelationEventHeader(eid, details, count, percent, creatorOrg);
                 html += '  <div class="beta-card-body" style="padding: 0;">';
                 html += '    <table class="beta-attr-table" style="margin-top: 0;">';
@@ -3705,6 +3820,7 @@
             $('#correlations-table-container').html(html);
             
             _correlationEventDetails = eventDetails;
+            renderCorrelationsTimeline(eventDetails);
             renderSankey(data, eventDetails);
         }
 
