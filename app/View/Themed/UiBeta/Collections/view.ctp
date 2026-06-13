@@ -294,10 +294,15 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
                                 <span class="beta-event-timeline-title"><i class="fa fa-stream"></i> <?= __('Event timeline') ?></span>
                                 <span class="beta-event-timeline-range" id="collectionEventTimelineRange"></span>
                             </div>
+                            <div class="beta-event-timeline-body beta-event-timeline-body-collapsed" id="collectionEventTimelineBody">
                             <div class="beta-event-timeline-track">
                                 <div class="beta-event-timeline-ticks" aria-hidden="true"></div>
-                                <div class="beta-event-timeline-markers"></div>
+                                <div class="beta-event-timeline-rows"></div>
                             </div>
+                            </div>
+                            <a href="#" id="collectionEventTimelineToggle" class="beta-event-timeline-toggle-bar" data-expand-label="<?= h(__('Expand timeline')) ?>" data-collapse-label="<?= h(__('Collapse timeline')) ?>" aria-label="<?= h(__('Expand timeline')) ?>" title="<?= h(__('Expand timeline')) ?>" style="display:none;">
+                                <i id="collectionEventTimelineToggleIcon" class="fa fa-angle-double-down" aria-hidden="true"></i>
+                            </a>
                         </div>
 
                         <div class="beta-elements-list" id="eventElementsList">
@@ -473,6 +478,7 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
     var baseurl   = <?= json_encode($baseurl) ?>;
     var eventUuids = <?= json_encode($eventUuids) ?>;
     var sortSelector = document.getElementById('elementSortSelector');
+    var collectionTimelineExpanded = false;
     function getSortableRows() {
         return Array.prototype.slice.call(document.querySelectorAll('.beta-element-row[data-uuid]'));
     }
@@ -783,10 +789,12 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
     function buildEventTimeline(eventMap) {
         var timeline = document.getElementById('collectionEventTimeline');
         if (!timeline) return;
-        var markers = timeline.querySelector('.beta-event-timeline-markers');
+        var timelineBody = document.getElementById('collectionEventTimelineBody');
+        var toggle = document.getElementById('collectionEventTimelineToggle');
+        var rowsWrap = timeline.querySelector('.beta-event-timeline-rows');
         var ticks = timeline.querySelector('.beta-event-timeline-ticks');
         var rangeLabel = document.getElementById('collectionEventTimelineRange');
-        if (!markers) return;
+        if (!rowsWrap || !timelineBody) return;
 
         function formatDateUtc(ts) {
             var d = new Date(ts);
@@ -794,6 +802,119 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
             var m = String(d.getUTCMonth() + 1).padStart(2, '0');
             var day = String(d.getUTCDate()).padStart(2, '0');
             return y + '-' + m + '-' + day;
+        }
+
+        function formatTimelineTickDate(ts, unit) {
+            return formatDateUtc(ts);
+        }
+
+        function startOfUtcMonth(ts) {
+            var d = new Date(ts);
+            return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+        }
+
+        function addUtcMonths(ts, count) {
+            var d = new Date(ts);
+            return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + count, 1);
+        }
+
+        function startOfUtcYear(ts) {
+            var d = new Date(ts);
+            return Date.UTC(d.getUTCFullYear(), 0, 1);
+        }
+
+        function addUtcYears(ts, count) {
+            var d = new Date(ts);
+            return Date.UTC(d.getUTCFullYear() + count, 0, 1);
+        }
+
+        function buildTimelineTicks(minTs, maxTs) {
+            if (!isFinite(minTs) || !isFinite(maxTs)) {
+                return [];
+            }
+
+            var minDate = new Date(minTs);
+            var maxDate = new Date(maxTs);
+            var spanDays = Math.max(0, Math.round((maxTs - minTs) / 86400000));
+            var tickUseYearScale = minDate.getUTCFullYear() !== maxDate.getUTCFullYear() && spanDays > 366;
+            var roundedMin = tickUseYearScale ? startOfUtcYear(minTs) : startOfUtcMonth(minTs);
+            var roundedMax = tickUseYearScale ? addUtcYears(startOfUtcYear(maxTs), 1) : addUtcMonths(startOfUtcMonth(maxTs), 1);
+
+            if (roundedMax <= roundedMin) {
+                return [{
+                    ts: roundedMin,
+                    label: formatTimelineTickDate(roundedMin, tickUseYearScale ? 'year' : 'month'),
+                    isEdge: true,
+                    scaleMin: roundedMin,
+                    scaleMax: roundedMax
+                }];
+            }
+
+            var ticksOut = [];
+            var cursor = roundedMin;
+            var index = 0;
+            while (cursor <= roundedMax) {
+                ticksOut.push({
+                    ts: cursor,
+                    label: formatTimelineTickDate(cursor, tickUseYearScale ? 'year' : 'month'),
+                    isEdge: index === 0
+                });
+                cursor = tickUseYearScale ? addUtcYears(cursor, 1) : addUtcMonths(cursor, 1);
+                index++;
+            }
+
+            if (ticksOut.length) {
+                ticksOut[ticksOut.length - 1].isEdge = true;
+            }
+
+            var maxReadableTicks = tickUseYearScale ? 7 : 8;
+            if (ticksOut.length > maxReadableTicks) {
+                var interval = Math.ceil((ticksOut.length - 1) / (maxReadableTicks - 1));
+                var limitedTicks = ticksOut.filter(function (tick, tickIndex) {
+                    return tickIndex === 0 || tickIndex === ticksOut.length - 1 || (tickIndex % interval) === 0;
+                });
+                if (limitedTicks[limitedTicks.length - 1].ts !== ticksOut[ticksOut.length - 1].ts) {
+                    limitedTicks.push(ticksOut[ticksOut.length - 1]);
+                }
+                ticksOut = limitedTicks;
+                ticksOut[0].isEdge = true;
+                ticksOut[ticksOut.length - 1].isEdge = true;
+            }
+
+            ticksOut.scaleMin = roundedMin;
+            ticksOut.scaleMax = roundedMax;
+            return ticksOut;
+        }
+
+        function applyCollectionTimelineHeight() {
+            if (!timelineBody || !toggle) return;
+            var collapsedHeight = 320;
+            var shouldCollapse = rowsWrap.scrollHeight > collapsedHeight;
+
+            toggle.style.display = shouldCollapse ? '' : 'none';
+
+            if (!shouldCollapse) {
+                timelineBody.classList.remove('beta-event-timeline-body-collapsed');
+                timelineBody.style.maxHeight = '';
+                collectionTimelineExpanded = false;
+            } else if (collectionTimelineExpanded) {
+                timelineBody.classList.remove('beta-event-timeline-body-collapsed');
+                timelineBody.style.maxHeight = rowsWrap.scrollHeight + 42 + 'px';
+            } else {
+                timelineBody.classList.add('beta-event-timeline-body-collapsed');
+                timelineBody.style.maxHeight = collapsedHeight + 'px';
+            }
+
+            var expandLabel = toggle.getAttribute('data-expand-label') || 'Expand timeline';
+            var collapseLabel = toggle.getAttribute('data-collapse-label') || 'Collapse timeline';
+            var label = collectionTimelineExpanded && shouldCollapse ? collapseLabel : expandLabel;
+            toggle.setAttribute('aria-label', label);
+            toggle.setAttribute('title', label);
+
+            var icon = document.getElementById('collectionEventTimelineToggleIcon');
+            if (icon) {
+                icon.className = collectionTimelineExpanded && shouldCollapse ? 'fa fa-angle-double-up' : 'fa fa-angle-double-down';
+            }
         }
 
         var items = [];
@@ -812,61 +933,99 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
         });
 
         if (!items.length) return;
-        items.sort(function (a, b) { return a.ts - b.ts; });
-        var minTs = items[0].ts;
-        var maxTs = items[items.length - 1].ts;
+        items.sort(function (a, b) { return b.ts - a.ts; });
+        var minTs = items[items.length - 1].ts;
+        var maxTs = items[0].ts;
         var rawRange = maxTs - minTs;
-        var range = Math.max(1, rawRange);
+        var timelineTicks = buildTimelineTicks(minTs, maxTs);
+        var scaleMin = timelineTicks.scaleMin;
+        var scaleMax = timelineTicks.scaleMax;
+        if (timelineTicks.length > 1) {
+            scaleMax = timelineTicks[timelineTicks.length - 1].ts;
+        }
+        var scaleRange = Math.max(1, scaleMax - scaleMin);
 
         if (ticks) {
             ticks.innerHTML = '';
-            var tickCount = rawRange === 0 ? 1 : Math.min(7, Math.max(3, items.length + 1));
-            for (var i = 0; i < tickCount; i++) {
+            timelineTicks.forEach(function (tickEntry, i) {
                 var tick = document.createElement('span');
-                var pctTick = tickCount === 1 ? 50 : (i / (tickCount - 1)) * 100;
-                var isEdgeTick = i === 0 || i === tickCount - 1;
-                tick.className = 'beta-event-timeline-tick' + (isEdgeTick ? ' beta-event-timeline-tick-edge' : '');
+                var pctTick = scaleRange > 0 ? ((tickEntry.ts - scaleMin) / scaleRange) * 100 : 50;
+                tick.className = 'beta-event-timeline-tick' + (tickEntry.isEdge ? ' beta-event-timeline-tick-edge' : '');
                 tick.style.left = pctTick + '%';
 
-                var tickTs = rawRange === 0
-                    ? minTs
-                    : minTs + ((range * i) / Math.max(1, tickCount - 1));
                 var label = document.createElement('span');
                 label.className = 'beta-event-timeline-tick-label';
                 if (i === 0) {
                     label.className += ' beta-event-timeline-tick-label-start';
-                } else if (i === tickCount - 1) {
+                } else if (i === timelineTicks.length - 1) {
                     label.className += ' beta-event-timeline-tick-label-end';
                 }
-                label.textContent = formatDateUtc(tickTs);
+                label.textContent = tickEntry.label;
                 tick.appendChild(label);
 
                 ticks.appendChild(tick);
-            }
+            });
+
         }
 
-        markers.innerHTML = '';
+        rowsWrap.innerHTML = '';
+        var tickGuideLayer = document.createElement('div');
+        tickGuideLayer.className = 'beta-event-timeline-grid';
+        timelineTicks.forEach(function (tickEntry) {
+            var guide = document.createElement('span');
+            var pctGuide = scaleRange > 0 ? ((tickEntry.ts - scaleMin) / scaleRange) * 100 : 50;
+            guide.className = 'beta-event-timeline-grid-line' + (tickEntry.isEdge ? ' beta-event-timeline-grid-line-edge' : '');
+            guide.style.left = pctGuide + '%';
+            tickGuideLayer.appendChild(guide);
+        });
+        rowsWrap.appendChild(tickGuideLayer);
+
         items.forEach(function (item) {
-            var dot = document.createElement('button');
-            dot.type = 'button';
-            dot.className = 'beta-event-timeline-marker';
-            var pct = range > 0 ? ((item.ts - minTs) / range) * 100 : 50;
-            dot.style.left = pct + '%';
-            dot.title = (item.title || 'Event') + ' - ' + item.date;
-            dot.setAttribute('data-event-uuid', item.uuid);
-            dot.setAttribute('data-event-id', item.id);
-            markers.appendChild(dot);
+            var pct = scaleRange > 0 ? ((item.ts - scaleMin) / scaleRange) * 100 : 50;
+            var alignRight = pct >= 50;
+
+            var lane = document.createElement('div');
+            lane.className = 'beta-event-timeline-row';
+
+            var guide = document.createElement('span');
+            guide.className = 'beta-event-timeline-row-guide';
+            guide.style.left = pct + '%';
+            lane.appendChild(guide);
+
+            var itemBtn = document.createElement('button');
+            itemBtn.type = 'button';
+            itemBtn.className = 'beta-event-timeline-item';
+            if (alignRight) {
+                itemBtn.classList.add('beta-event-timeline-item-right');
+            }
+            itemBtn.style.left = pct + '%';
+            itemBtn.title = (item.title || 'Event') + ' - ' + item.date;
+            itemBtn.setAttribute('data-event-uuid', item.uuid);
+            itemBtn.setAttribute('data-event-id', item.id);
+
+            var dot = document.createElement('span');
+            dot.className = 'beta-event-timeline-item-dot';
+            itemBtn.appendChild(dot);
+
+            var label = document.createElement('span');
+            label.className = 'beta-event-timeline-item-label';
+            label.textContent = item.title || ('#' + (item.id || '?'));
+            itemBtn.appendChild(label);
+
+            lane.appendChild(itemBtn);
+            rowsWrap.appendChild(lane);
         });
 
         if (rangeLabel) {
-            var start = items[0].date;
-            var end = items[items.length - 1].date;
+            var start = items[items.length - 1].date;
+            var end = items[0].date;
             rangeLabel.textContent = start === end ? start : (start + ' → ' + end);
         }
 
         timeline.style.display = '';
-        markers.addEventListener('click', function (e) {
-            var target = e.target.closest('.beta-event-timeline-marker');
+        applyCollectionTimelineHeight();
+        rowsWrap.onclick = function (e) {
+            var target = e.target.closest('.beta-event-timeline-item');
             if (!target) return;
             var eventId = target.getAttribute('data-event-id');
             var row = eventId ? document.getElementById('event_' + eventId) : null;
@@ -881,7 +1040,15 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
             setTimeout(function () {
                 row.classList.remove('beta-element-row-highlight');
             }, 1400);
-        });
+        };
+
+        if (toggle) {
+            toggle.onclick = function (e) {
+                e.preventDefault();
+                collectionTimelineExpanded = !collectionTimelineExpanded;
+                applyCollectionTimelineHeight();
+            };
+        }
     }
 
     function renderGraph(nodeData, edgeSet, container, statusEl) {
