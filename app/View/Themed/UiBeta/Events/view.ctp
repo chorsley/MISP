@@ -288,7 +288,7 @@
         top: 0;
         bottom: 0;
         width: 0;
-        border-left: 2px dashed rgba(143, 191, 232, 0.95);
+        border-left: 2px dashed rgba(111, 190, 128, 0.95);
         pointer-events: none;
         z-index: 1;
     }
@@ -300,7 +300,7 @@
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: #8fbfe8;
+        background: #6fbe80;
         box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
     }
     .beta-event-timeline-current-label {
@@ -309,15 +309,15 @@
         transform: translateX(-50%);
         padding: 2px 8px;
         border-radius: 999px;
-        background: rgba(143, 191, 232, 0.96);
-        color: #21486f;
+        background: rgba(111, 190, 128, 0.96);
+        color: #1d4b29;
         font-size: 10px;
         font-weight: 700;
         line-height: 1.2;
         white-space: nowrap;
         pointer-events: none;
         z-index: 2;
-        box-shadow: 0 2px 8px rgba(33, 72, 111, 0.18);
+        box-shadow: 0 2px 8px rgba(29, 75, 41, 0.18);
         transform-origin: center bottom;
         rotate: -22deg;
     }
@@ -4316,7 +4316,7 @@
                     return '#8fbfe8';
                 }
                 if (node.type === 'source') {
-                    return '#8fbfe8';
+                    return '#6fbe80';
                 }
                 if (node.type === 'attribute') {
                     return '#f39a1f';
@@ -4474,9 +4474,9 @@
                         .attr('stroke-width', 1)
                         .attr('shape-rendering', 'crispEdges');
 
-                    var topLabelY = laneTop - 5;
+                    var topLabelY = laneTop - 38;
 
-                    tickGroup.append('text')
+                    var tickLabel = tickGroup.append('text')
                         .attr('x', function(d) { return d.x; })
                         .attr('y', topLabelY)
                         .attr('text-anchor', 'start')
@@ -4485,61 +4485,68 @@
                         .attr('transform', function(d) {
                             return 'rotate(-55,' + d.x + ',' + topLabelY + ')';
                         })
-                        .style('font', '10px sans-serif')
-                        .style('fill', '#6f7c88')
+                        .style('font', '700 10px sans-serif')
+                        .style('fill', '#44515f')
                         .text(function(d) { return d.label; });
 
                     if (isFinite(currentEventDateTs) && isFinite(sankeyScaleMinTs) && isFinite(sankeyScaleMaxTs) && sankeyScaleMaxTs > sankeyScaleMinTs) {
                         var currentEventRatio = (currentEventDateTs - sankeyScaleMinTs) / Math.max(1, (sankeyScaleMaxTs - sankeyScaleMinTs));
                         currentEventRatio = Math.max(0, Math.min(1, currentEventRatio));
                         var currentEventX = targetLaneStart + ((targetLaneEnd - targetLaneStart) * currentEventRatio);
-                        var currentEventLabelY = -56;
-                        var currentEventLineTopY = currentEventLabelY + 22;
-                        var currentEventText = '★ <?php echo addslashes(__('This Event')); ?>';
+                        var currentEventBlockText = truncateSourceLabel(currentEventName);
+                        var currentEventNodeY = laneTop - 18;
+                        var currentEventNodeHeight = 16;
+                        var currentEventNodeWidth = sankeyNodeWidth;
+                        var currentEventNodeX = Math.max(targetLaneStart, Math.min(targetLaneEnd - currentEventNodeWidth, currentEventX - (currentEventNodeWidth / 2)));
+                        var currentEventNodeCenterY = currentEventNodeY + (currentEventNodeHeight / 2);
+                        var currentEventLineTopY = currentEventNodeCenterY;
+                        var currentEventLabelX = currentEventNodeX + currentEventNodeWidth + targetLabelGap;
+                        var currentEventLabelY = currentEventNodeCenterY;
+                        var currentEventLeaderEndX = currentEventLabelX - 6;
                         var currentEventMarkerGroup = gridGroup.append('g').attr('class', 'sankey-current-event-marker');
 
-                        currentEventMarkerGroup.append('line')
-                            .attr('x1', currentEventX)
-                            .attr('x2', currentEventX)
-                            .attr('y1', currentEventLineTopY)
-                            .attr('y2', laneBottom)
-                            .attr('stroke', 'rgba(143, 191, 232, 0.62)')
-                            .attr('stroke-width', 2)
-                            .attr('stroke-dasharray', '5,4')
-                            .attr('shape-rendering', 'crispEdges');
+                        currentEventMarkerGroup.append('rect')
+                            .attr('x', currentEventNodeX)
+                            .attr('y', currentEventNodeY)
+                            .attr('width', currentEventNodeWidth)
+                            .attr('height', currentEventNodeHeight)
+                            .attr('fill', '#6fbe80')
+                            .append('title')
+                            .text(currentEventFullTitle);
 
-                        currentEventMarkerGroup.append('circle')
-                            .attr('cx', currentEventX)
-                            .attr('cy', currentEventLineTopY)
-                            .attr('r', 4)
-                            .attr('fill', '#8fbfe8')
-                            .attr('stroke', '#fff')
-                            .attr('stroke-width', 2);
-
-                        var currentEventLabel = currentEventMarkerGroup.append('text')
-                            .attr('x', currentEventX)
-                            .attr('y', currentEventLabelY)
+                        currentEventMarkerGroup.append('text')
+                            .attr('x', currentEventNodeX + (currentEventNodeWidth / 2))
+                            .attr('y', currentEventNodeCenterY)
                             .attr('text-anchor', 'middle')
                             .attr('dy', '0.35em')
                             .style('font', '700 10px sans-serif')
-                            .style('fill', '#21486f')
-                            .text(currentEventText);
+                            .style('fill', '#ffffff')
+                            .text('★')
+                            .append('title')
+                            .text(currentEventFullTitle);
 
-                        var currentEventLabelNode = currentEventLabel.node();
-                        if (currentEventLabelNode && currentEventLabelNode.getBBox) {
-                            var currentEventLabelBox = currentEventLabelNode.getBBox();
-                            currentEventMarkerGroup.insert('rect', 'text')
-                                .attr('x', currentEventLabelBox.x - 6)
-                                .attr('y', currentEventLabelBox.y - 2)
-                                .attr('width', currentEventLabelBox.width + 12)
-                                .attr('height', currentEventLabelBox.height + 4)
-                                .attr('rx', 10)
-                                .attr('ry', 10)
-                                .attr('fill', 'rgba(143, 191, 232, 0.96)')
-                                .attr('stroke', 'rgba(33, 72, 111, 0.18)')
-                                .attr('stroke-width', 1);
-                        }
+                        currentEventMarkerGroup.append('line')
+                            .attr('x1', currentEventNodeX + currentEventNodeWidth)
+                            .attr('x2', currentEventLeaderEndX)
+                            .attr('y1', currentEventNodeCenterY)
+                            .attr('y2', currentEventNodeCenterY)
+                            .attr('stroke', 'rgba(74, 92, 112, 0.45)')
+                            .attr('stroke-width', 1)
+                            .attr('shape-rendering', 'crispEdges')
+                            .attr('pointer-events', 'none');
+
+                        currentEventMarkerGroup.append('text')
+                            .attr('x', currentEventLabelX)
+                            .attr('y', currentEventLabelY)
+                            .attr('text-anchor', 'start')
+                            .attr('dy', '0.35em')
+                            .style('font', '700 10px sans-serif')
+                            .style('fill', '#26313d')
+                            .text(currentEventBlockText)
+                            .append('title')
+                            .text(currentEventFullTitle);
                     }
+
                 }
             }
 
@@ -4600,7 +4607,7 @@
                 })
                 .attr("stroke", function(d) {
                     if (d.source && d.source.type === 'source' && d.target && d.target.type === 'attribute') {
-                        return '#f2c57c';
+                        return '#f6e8a6';
                     }
                     if (d.source && d.source.type === 'attribute' && d.target && d.target.type === 'target') {
                         return '#7ec8f3';
