@@ -27,10 +27,12 @@ $isCollectionsFilterActive = function ($filterName) use ($currentFilter) {
             <h2><?= __('Event Collections') ?></h2>
             <div class="beta-header-filters beta-collections-filters">
                 <?php if ($this->Acl->canAccess('collections', 'add')): ?>
-                    <button class="btn btn-primary beta-filter-button"
-                            onclick="openGenericModal('<?= $baseurl ?>/collections/add')">
-                        <i class="fa fa-plus"></i> <?= __('New Collection') ?>
-                    </button>
+                    <div class="btn-group beta-create-event-group">
+                        <button class="btn btn-primary"
+                                onclick="openGenericModal('<?= $baseurl ?>/collections/add')">
+                            <i class="fa fa-plus"></i> <?= __('New Collection') ?>
+                        </button>
+                    </div>
                 <?php endif; ?>
                 <a href="<?= $buildCollectionsIndexUrl('my_collections') ?>"
                    class="btn btn-default beta-filter-button <?= $isCollectionsFilterActive('my_collections') ? 'active' : '' ?>">

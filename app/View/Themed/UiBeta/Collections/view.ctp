@@ -143,18 +143,381 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
     ];
 };
 ?>
-<?php echo $this->element('genericElements/assetLoader', ['js' => ['d3', 'd3.custom', 'd3-sankey.min']]); ?>
+<?php echo $this->element('genericElements/assetLoader', ['js' => ['d3', 'd3.custom', 'd3-sankey.min', 'event-timestamps']]); ?>
 
 <style>
-    .beta-tabs-container .beta-tabs {
-        margin-top: 20px;
-        border-bottom: 1px solid #ddd;
+    .beta-collection-breadcrumb {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        color: #7c6c8f;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
     }
 
-    .beta-tabs-container .beta-tabs > li > a {
-        padding: 10px 20px;
+    .beta-collection-breadcrumb:hover,
+    .beta-collection-breadcrumb:focus {
+        color: #5a3d79;
+        text-decoration: none;
+    }
+
+    .beta-collection-breadcrumb .fa {
+        color: #8c75a8;
+    }
+
+    .beta-collections-view {
+        padding: 20px 20px 84px;
+        background: #f9f9f9;
+        min-height: 100vh;
+    }
+
+    .beta-collection-header-container {
+        margin-bottom: 18px;
+        padding: 14px 16px 12px;
+        border: 1px solid #d8cce8;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #faf3fe 0%, #ebe1f7 100%);
+        box-shadow: 0 8px 18px rgba(109, 86, 146, 0.12), 0 1px 3px rgba(109, 86, 146, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .beta-collection-header-container::after {
+        content: "";
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 0;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(132, 89, 171, 0) 0%, rgba(132, 89, 171, 0.45) 14%, rgba(132, 89, 171, 0.65) 50%, rgba(132, 89, 171, 0.45) 86%, rgba(132, 89, 171, 0) 100%);
+        pointer-events: none;
+    }
+
+    .beta-collection-header-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .beta-collection-metadata-panel {
+        flex: 1 1 420px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 16px;
+        border: 1px solid #d9cae8;
+        border-radius: 10px 10px 0 0;
+        border-bottom-color: #eadff4;
+        background: linear-gradient(180deg, #ffffff 0%, #f3ebfb 100%);
+        box-shadow: 0 6px 14px rgba(111, 83, 150, 0.11), 0 1px 2px rgba(111, 83, 150, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    }
+
+    .beta-collection-title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .beta-collection-title {
+        margin: 0;
         font-weight: 600;
-        color: #666;
+        font-size: 0.98em;
+        line-height: 1.2;
+        color: #3f2f57;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    .beta-collection-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 28px;
+        padding: 0 11px;
+        border-radius: 999px;
+        border: 1px solid rgba(127, 90, 167, 0.22);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 236, 252, 0.94) 100%);
+        color: #6e4e96;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .beta-collection-subtitle {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .beta-collection-subtitle-main {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+        flex: 1 1 320px;
+    }
+
+    .beta-collection-subtitle-chips,
+    .beta-collection-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .beta-collection-header-actions {
+        justify-content: flex-end;
+        align-self: stretch;
+    }
+
+    .beta-id-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 12px;
+        border: 1px solid #e1d9ea;
+        border-radius: 999px;
+        box-sizing: border-box;
+        background: linear-gradient(180deg, #fffdfd 0%, #f7f2fb 100%);
+        font-size: 11px;
+        color: #695e76;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .beta-id-badge-label {
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-size: 10px;
+        color: #9688a4;
+    }
+
+    .beta-id-badge-value {
+        font-family: Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        color: #544768;
+    }
+
+    .beta-collection-header-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        height: 36px;
+        padding: 0 12px;
+        border: 1px solid #e2d8ee;
+        border-radius: 999px;
+        box-sizing: border-box;
+        background: linear-gradient(180deg, #ffffff 0%, #f8f2fb 100%);
+        color: #6b587b;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+    }
+
+    .beta-collection-header-control .fa {
+        color: #876d9f;
+    }
+
+    .beta-collection-header-control:hover,
+    .beta-collection-header-control:focus {
+        color: #51336e;
+        text-decoration: none;
+        background: linear-gradient(180deg, #ffffff 0%, #efe3f8 100%);
+        border-color: #d2bfe4;
+    }
+
+    .beta-collection-header-control.is-primary {
+        border-color: #b79ad4;
+        background: linear-gradient(180deg, #ffffff 0%, #eadcf7 100%);
+        color: #603e83;
+    }
+
+    .beta-collection-header-control.is-danger {
+        border-color: #e2c6d0;
+        background: linear-gradient(180deg, #fffefe 0%, #faedf1 100%);
+        color: #9c4b63;
+    }
+
+    .beta-collection-description {
+        margin: 0;
+        color: #655676;
+        font-size: 13px;
+        line-height: 1.55;
+        max-width: 960px;
+    }
+
+    .beta-collection-description.is-empty {
+        color: #9a8aa9;
+        font-style: italic;
+    }
+
+    .beta-collection-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-top: 0;
+        padding: 8px 14px;
+        border: 1px solid #dacde8;
+        border-top: 0;
+        border-radius: 0 0 10px 10px;
+        background: linear-gradient(180deg, #fdfaff 0%, #f3ecfa 100%);
+        box-shadow: 0 5px 12px rgba(111, 83, 150, 0.09), 0 1px 2px rgba(111, 83, 150, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    }
+
+    .beta-collection-meta-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1 1 280px;
+        min-width: 0;
+        padding: 2px 10px 2px 0;
+    }
+
+    .beta-collection-meta-group.beta-collection-meta-group-scope {
+        flex: 0.85 1 240px;
+        justify-content: flex-end;
+    }
+
+    .beta-collection-meta-group + .beta-collection-meta-group {
+        border-left: 1px solid #eadff3;
+        padding-left: 14px;
+    }
+
+    .beta-collection-meta-group-title {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 0;
+        flex: 0 0 auto;
+        color: #937ea9;
+    }
+
+    .beta-collection-meta-group-title .fa {
+        width: 12px;
+        text-align: center;
+        color: #8f77a7;
+        font-size: 11px;
+    }
+
+    .beta-collection-meta-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 0;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .beta-collection-meta-group.beta-collection-meta-group-scope .beta-collection-meta-items {
+        justify-content: flex-end;
+    }
+
+    .beta-collection-meta-item {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        color: #6a5b79;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+    }
+
+    .beta-collection-meta-item + .beta-collection-meta-item {
+        margin-left: 12px;
+        padding-left: 14px;
+    }
+
+    .beta-collection-meta-item + .beta-collection-meta-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 1px;
+        height: 14px;
+        background: #e2d7eb;
+        transform: translateY(-50%);
+    }
+
+    .beta-collection-meta-item-label {
+        color: #9988aa;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .beta-collection-meta-item-value {
+        color: #473a58;
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .beta-collection-meta-item-value a {
+        font-weight: 600;
+    }
+
+    .beta-collection-meta-item-value.beta-relative-timestamp {
+        cursor: pointer;
+    }
+
+    @media (max-width: 1024px) {
+        .beta-collection-meta-group {
+            flex-basis: 100%;
+        }
+
+        .beta-collection-meta-group + .beta-collection-meta-group {
+            border-left: 0;
+            padding-left: 0;
+        }
+
+        .beta-collection-meta-group.beta-collection-meta-group-scope,
+        .beta-collection-meta-group.beta-collection-meta-group-scope .beta-collection-meta-items {
+            justify-content: flex-start;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .beta-collections-view {
+            padding: 16px 12px 72px;
+        }
+
+        .beta-collection-metadata-panel,
+        .beta-collection-meta-row {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        .beta-collection-subtitle {
+            align-items: stretch;
+        }
+
+        .beta-collection-header-actions {
+            justify-content: flex-start;
+        }
+
+        .beta-collection-meta-group {
+            flex-basis: 100%;
+            align-items: flex-start;
+            gap: 8px;
+            padding-right: 0;
+        }
+
+        .beta-collection-meta-item + .beta-collection-meta-item {
+            margin-left: 10px;
+            padding-left: 10px;
+        }
     }
 
     .beta-tab-count-badge {
@@ -174,67 +537,188 @@ $partitionVisibleItems = function (array $items, $visibleLimit) {
         vertical-align: middle;
     }
 
-    .beta-tabs-container .beta-tab-content {
+    .beta-tabs-container {
+        position: relative;
+        padding-top: 0;
+    }
+
+    .beta-tabs {
+        margin-top: 0;
+        margin-bottom: 0;
+        display: flex;
+        gap: 0;
+        padding: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .beta-tabs > li {
+        margin-bottom: -1px;
+    }
+
+    .beta-tabs > li + li {
+        margin-left: -1px;
+    }
+
+    .beta-tabs > li > a {
+        padding: 11px 18px;
+        font-weight: 600;
+        color: #5a6775;
+        border: 1px solid #cfd9e4;
+        border-radius: 8px 8px 0 0;
+        background: linear-gradient(180deg, #ffffff 0%, #edf2f7 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 rgba(215, 222, 231, 0.8);
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .beta-tabs > li > a:hover,
+    .beta-tabs > li > a:focus {
+        color: #2d4a68;
+        background: linear-gradient(180deg, #ffffff 0%, #f2f6fa 100%);
+        border-color: #c5d1dd;
+    }
+
+    .beta-tabs > li.active > a,
+    .beta-tabs > li.active > a:hover,
+    .beta-tabs > li.active > a:focus {
+        color: #24384d;
+        border-color: #c7d8e8;
+        border-bottom-color: transparent;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 70%, #ffffff 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 -1px 0 rgba(255, 255, 255, 0.6);
+        position: relative;
+        z-index: 2;
+    }
+
+    .beta-tab-content {
         background: #fff;
-        border: 1px solid #ddd;
+        border: 1px solid #c7d8e8;
         border-top: none;
         padding: 20px;
-        border-radius: 0 0 4px 4px;
+        border-radius: 0 10px 10px 10px;
+        box-shadow: 0 8px 18px rgba(72, 101, 134, 0.08), 0 1px 3px rgba(72, 101, 134, 0.06);
     }
 
 </style>
 
 <div class="beta-collections-view">
 
-    <!-- ── Collection Hero ──────────────────────────────────────────────────── -->
-    <div class="beta-collection-hero">
-        <div class="beta-collection-hero-main">
-            <div class="beta-collection-hero-title-row">
-                <h2 class="beta-collection-hero-name"><?= h($collection['name']) ?></h2>
-                <span class="beta-collection-type-badge beta-type-<?= h($type) ?>"><?= h($type) ?></span>
-            </div>
+    <a href="<?= $baseurl ?>/collections/index" class="beta-collection-breadcrumb">
+        <i class="fa fa-chevron-left"></i>
+        <span><?= __('All Collections') ?></span>
+    </a>
 
-            <?php if (!empty($collection['description'])): ?>
-                <div class="beta-collection-hero-desc"><?= nl2br(h($collection['description'])) ?></div>
-            <?php else: ?>
-                <div class="beta-collection-hero-desc" style="color:#aaa;font-style:italic;"><?= __('No description provided.') ?></div>
-            <?php endif; ?>
-
-            <div class="beta-collection-hero-meta">
-                <?php if (!empty($orgcName)): ?>
-                    <span class="beta-hero-meta-item"><i class="fa fa-building"></i> <?= h($orgcName) ?></span>
-                <?php endif; ?>
-                <span class="beta-hero-meta-item">
-                    <span class="dist-widget dist-<?= $distribution ?>"></span> <?= h($distLabel) ?>
-                </span>
-                <span class="beta-hero-meta-item"><i class="fa fa-calendar"></i> <?= h($collection['created']) ?></span>
-                <span class="beta-hero-meta-item"><i class="fa fa-clock"></i> <?= h($collection['modified']) ?></span>
-                <span class="beta-hero-meta-item">
-                    <i class="fa fa-layer-group"></i>
-                    <strong><?= count($elements) ?></strong> <?= count($elements) === 1 ? __('element') : __('elements') ?>
-                </span>
+    <div class="beta-collection-header-container">
+        <div class="beta-collection-header-row">
+            <div class="beta-collection-metadata-panel">
+                <div class="beta-collection-title-row">
+                    <h2 class="beta-collection-title"><?= h($collection['name']) ?></h2>
+                    <span class="beta-collection-type-badge beta-type-<?= h($type) ?>"><?= h($type) ?></span>
+                </div>
+                <div class="beta-collection-subtitle">
+                    <div class="beta-collection-subtitle-main">
+                        <div class="beta-collection-subtitle-chips">
+                            <span class="beta-id-badge">
+                                <span class="beta-id-badge-label"><?= __('ID') ?></span>
+                                <span class="beta-id-badge-value"><?= h($collection['id']) ?></span>
+                            </span>
+                            <span class="beta-id-badge">
+                                <span class="beta-id-badge-label"><?= __('Type') ?></span>
+                                <span class="beta-id-badge-value"><?= h($type) ?></span>
+                            </span>
+                        </div>
+                        <?php if (!empty($collection['description'])): ?>
+                            <p class="beta-collection-description"><?= nl2br(h($collection['description'])) ?></p>
+                        <?php else: ?>
+                            <p class="beta-collection-description is-empty"><?= __('No description provided.') ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="beta-collection-header-actions">
+                        <a href="<?= $baseurl ?>/collections/index" class="beta-collection-header-control">
+                            <i class="fa fa-arrow-left"></i>
+                            <span><?= __('All Collections') ?></span>
+                        </a>
+                        <?php if ($mayModify): ?>
+                            <a href="#" onclick="openGenericModal('<?= $baseurl ?>/collections/edit/<?= h($collection['id']) ?>'); return false;"
+                               class="beta-collection-header-control">
+                                <i class="fa fa-edit"></i>
+                                <span><?= __('Edit') ?></span>
+                            </a>
+                            <a href="#" onclick="openGenericModal('<?= $baseurl ?>/collections/delete/<?= h($collection['id']) ?>'); return false;"
+                               class="beta-collection-header-control is-danger">
+                                <i class="fa fa-trash"></i>
+                                <span><?= __('Delete') ?></span>
+                            </a>
+                        <?php endif; ?>
+                        <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
+                            <a href="<?= $baseurl ?>/events/index" class="beta-collection-header-control is-primary">
+                                <i class="fa fa-plus"></i>
+                                <span><?= __('Add Events') ?></span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="beta-collection-hero-actions">
-            <a href="<?= $baseurl ?>/collections/index" class="btn btn-default btn-sm">
-                <i class="fa fa-arrow-left"></i> <?= __('All Collections') ?>
-            </a>
-            <?php if ($mayModify): ?>
-                <a href="#" onclick="openGenericModal('<?= $baseurl ?>/collections/edit/<?= h($collection['id']) ?>'); return false;"
-                   class="btn btn-default btn-sm">
-                    <i class="fa fa-edit"></i> <?= __('Edit') ?>
-                </a>
-                <a href="#" onclick="openGenericModal('<?= $baseurl ?>/collections/delete/<?= h($collection['id']) ?>'); return false;"
-                   class="btn btn-danger btn-sm">
-                    <i class="fa fa-trash"></i> <?= __('Delete') ?>
-                </a>
-            <?php endif; ?>
-            <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
-                <a href="<?= $baseurl ?>/events/index" class="btn btn-primary btn-sm">
-                    <i class="fa fa-plus"></i> <?= __('Add Events') ?>
-                </a>
-            <?php endif; ?>
+        <div class="beta-collection-meta-row">
+            <div class="beta-collection-meta-group">
+                <div class="beta-collection-meta-group-title" title="<?= __('When') ?>"><i class="fa fa-calendar"></i></div>
+                <div class="beta-collection-meta-items">
+                    <div class="beta-collection-meta-item">
+                        <span class="beta-collection-meta-item-label"><?= __('Created') ?></span>
+                        <span class="beta-collection-meta-item-value beta-relative-timestamp"
+                              data-timestamp="<?= h(strtotime($collection['created'])) ?>"
+                              data-absolute="<?= h($collection['created']) ?>"
+                              title="<?= h($collection['created']) ?> (<?= h(__('click to copy')) ?>)">
+                        </span>
+                    </div>
+                    <div class="beta-collection-meta-item">
+                        <span class="beta-collection-meta-item-label"><?= __('Updated') ?></span>
+                        <span class="beta-collection-meta-item-value beta-relative-timestamp"
+                              data-timestamp="<?= h(strtotime($collection['modified'])) ?>"
+                              data-absolute="<?= h($collection['modified']) ?>"
+                              title="<?= h($collection['modified']) ?> (<?= h(__('click to copy')) ?>)">
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="beta-collection-meta-group">
+                <div class="beta-collection-meta-group-title" title="<?= __('Who') ?>"><i class="fa fa-users"></i></div>
+                <div class="beta-collection-meta-items">
+                    <?php if (!empty($orgcName)): ?>
+                        <div class="beta-collection-meta-item">
+                            <span class="beta-collection-meta-item-label"><?= __('Creator') ?></span>
+                            <span class="beta-collection-meta-item-value"><?= h($orgcName) ?></span>
+                        </div>
+                    <?php endif; ?>
+                    <div class="beta-collection-meta-item">
+                        <span class="beta-collection-meta-item-label"><?= __('Reports') ?></span>
+                        <span class="beta-collection-meta-item-value"><?= count($eventElements) ?></span>
+                    </div>
+                    <div class="beta-collection-meta-item">
+                        <span class="beta-collection-meta-item-label"><?= __('Elements') ?></span>
+                        <span class="beta-collection-meta-item-value"><?= count($elements) ?></span>
+                    </div>
+                </div>
+            </div>
+            <div class="beta-collection-meta-group beta-collection-meta-group-scope">
+                <div class="beta-collection-meta-group-title" title="<?= __('Scope') ?>"></div>
+                <div class="beta-collection-meta-items">
+                    <div class="beta-collection-meta-item">
+                        <span class="beta-collection-meta-item-label"><?= __('Distribution') ?></span>
+                        <span class="beta-collection-meta-item-value">
+                            <div class="dist-widget dist-<?= intval($distribution) ?> distributionNetworkToggle"
+                                 title="<?= h($distLabel) ?>"
+                                 data-event-distribution="<?= intval($distribution) ?>"
+                                 data-event-distribution-name="<?= h($distLabel) ?>"
+                                 data-scope-id="collection-<?= h($collection['id']) ?>">
+                                <i class="fa fa-share-alt" aria-hidden="true"></i>
+                            </div>
+                            <?= h($distLabel) ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
