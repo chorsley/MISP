@@ -4090,13 +4090,16 @@
                     var shortTargetName = rawTargetName.length > 56 ? rawTargetName.substring(0, 53) + '...' : rawTargetName;
                     var targetEventName = count > 1 ? '(' + count + ') ' + shortTargetName : shortTargetName;
                     var relDate = rel.date || '';
+                    var relOrgName = rel.org_name || (eventDetails && eventDetails[rel.id] && eventDetails[rel.id].orgName) || '<?php echo addslashes(__('Unknown source')); ?>';
                     var fullTitle = count > 1 ? '(' + count + ') ' + rawTargetName : rawTargetName;
                     if (relDate) {
                         fullTitle += ' (' + relDate + ')';
                     }
+                    if (relOrgName) {
+                        fullTitle += ' | ' + '<?php echo addslashes(__('Publisher')); ?>' + ': ' + relOrgName;
+                    }
                     var targetIdx = addNode(targetEventName, 'target', rel.id, fullTitle);
                     if (showPublisher && orgNodeByTargetEventId[rel.id] === undefined) {
-                        var relOrgName = rel.org_name || (eventDetails && eventDetails[rel.id] && eventDetails[rel.id].orgName) || '<?php echo addslashes(__('Unknown source')); ?>';
                         var relOrgId = rel.org_id || (eventDetails && eventDetails[rel.id] && eventDetails[rel.id].org) || 'unknown';
                         orgNodeByTargetEventId[rel.id] = addNode(relOrgName, 'org', relOrgId, relOrgName);
                     }
