@@ -11,6 +11,18 @@ if (empty($tag['Tag'])) {
 if (empty($tag['Tag']['colour'])) {
     $tag['Tag']['colour'] = '#0088cc';
 }
+$scopeTitle = !empty($tag['local']) ? __('Local tag') : __('Global tag');
+$scopeLabel = $scopeTitle;
+$scopeIconClass = 'fas fa-' . (!empty($tag['local']) ? 'user' : 'globe-americas');
+if (!empty($tag['Tag']['is_galaxy']) && !empty($tag['Tag']['name'])) {
+    $GalaxyCluster = ClassRegistry::init('GalaxyCluster');
+    $cluster = $GalaxyCluster->getCluster($tag['Tag']['name'], $this->get('me'));
+    if (!empty($cluster['Galaxy']['icon'])) {
+        $scopeIconClass = $this->FontAwesome->getClass($cluster['Galaxy']['icon']);
+        $scopeTitle = __('Galaxy tag');
+        $scopeLabel = __('Galaxy tag');
+    }
+}
 
 // Beta UI Lightweight Style
 // Text black, Background 10% opacity of tag color
@@ -102,13 +114,13 @@ $aText = h($aText);
 
 // Scope icon: Icon color adapts to background brightness (white for dark, black for light)
 $span_scope = !empty($hide_global_scope) ? '' : sprintf(
-    '<span class="%s" title="%s" role="img" aria-label="%s" style="background-color: %s; color: %s; display: inline-flex; align-items: center; justify-content: center;"><i class="fas fa-%s" style="font-size: 11px;"></i></span>',
+    '<span class="%s" title="%s" role="img" aria-label="%s" style="background-color: %s; color: %s; display: inline-flex; align-items: center; justify-content: center;"><i class="%s" style="font-size: 11px;"></i></span>',
     'tag-scope-icon',
-    !empty($tag['local']) ? __('Local tag') : __('Global tag'),
-    !empty($tag['local']) ? __('Local tag') : __('Global tag'),
+    $scopeTitle,
+    $scopeLabel,
     $rgba, // 70% opacity colored background
     $iconColor, // Adaptive icon color based on luminance
-    !empty($tag['local']) ? 'user' : 'globe-americas'
+    h($scopeIconClass)
 );
 
 $span_relationship_type = empty($tag['relationship_type']) ? '' : sprintf(

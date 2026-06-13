@@ -41,11 +41,29 @@
         $visibleCount = 1;
         $hiddenCount = max(0, count($clusters) - $visibleCount);
         $chipId = 'beta-galaxy-chip-' . substr(md5($galaxyName . '|' . serialize(array_column($clusters, 'id'))), 0, 12);
+        $galaxyIconClass = 'fas fa-star';
+        foreach ($clusters as $cluster) {
+            if (!empty($cluster['Galaxy']['icon'])) {
+                $galaxyIconClass = $this->FontAwesome->getClass($cluster['Galaxy']['icon']);
+                break;
+            }
+        }
+        if ($galaxyIconClass === 'fas fa-star' && !empty($galaxyName)) {
+            $Galaxy = ClassRegistry::init('Galaxy');
+            $resolvedGalaxy = $Galaxy->find('first', [
+                'recursive' => -1,
+                'conditions' => ['Galaxy.name' => $galaxyName],
+                'fields' => ['Galaxy.icon'],
+            ]);
+            if (!empty($resolvedGalaxy['Galaxy']['icon'])) {
+                $galaxyIconClass = $this->FontAwesome->getClass($resolvedGalaxy['Galaxy']['icon']);
+            }
+        }
     ?>
     <div class="beta-galaxy-wrapper">
         <div class="beta-galaxy-cluster beta-galaxy-cluster-group" data-pattern="<?php echo $patternIndex; ?>" data-galaxy-chip-id="<?php echo h($chipId); ?>" data-cluster-count="<?php echo (int) count($clusters); ?>" style="background-color: <?php echo $bgColor; ?>; border-color: <?php echo $borderColor; ?>; position: relative; font-size: 13px; line-height: 1.25;">
             <div class="beta-galaxy-header" style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-star beta-galaxy-icon-star"></i>
+                <i class="<?php echo h($galaxyIconClass); ?> beta-galaxy-icon-star" style="color: #000;"></i>
                 <span class="beta-galaxy-cluster-label" style="color: <?php echo $labelColor; ?>; font-size: 16px; line-height: 1.1; font-weight: 700;"><?php echo h(strtoupper($galaxyName)); ?></span>
                 <?php if ($hiddenCount > 0): ?>
                     <button
@@ -81,7 +99,7 @@
                         $showActions = $hasUtilityActions || $showEditActions;
                         $isCollapsed = $index >= $visibleCount;
                     ?>
-                    <span class="beta-galaxy-member<?php echo $isCollapsed ? ' beta-galaxy-member-collapsed' : ''; ?>"<?php echo $isCollapsed ? ' style="display:none;"' : ''; ?>>
+                    <span class="beta-galaxy-member<?php echo $isCollapsed ? ' beta-galaxy-member-collapsed' : ''; ?>"<?php echo $isCollapsed ? ' style="display:none; align-items:center;"' : ' style="display:inline-flex; align-items:center;"'; ?>>
                         <span class="beta-galaxy-member-scope" title="<?php echo $local ? __('Local') : __('Public'); ?>">
                             <i class="fas fa-<?php echo $local ? 'user' : 'globe-americas'; ?> beta-galaxy-icon-scope"></i>
                         </span>
@@ -104,7 +122,7 @@
                         <?php if ($showActions): ?>
                             <span class="beta-galaxy-actions noPrint" style="position: relative; display: inline-flex; align-items: center;">
                                 <span class="beta-galaxy-actions-toggle" title="<?php echo __('Actions'); ?>"><i class="fas fa-caret-down"></i></span>
-                                <span class="beta-galaxy-actions-dropdown" style="z-index: 140;">
+                                <span class="beta-galaxy-actions-dropdown" style="display: none; z-index: 140;">
                                     <?php if ($id): ?>
                                         <a href="<?php echo $baseurl; ?>/galaxy_clusters/view/<?php echo h($id); ?>" class="beta-galaxy-action-item">
                                             <i class="fas fa-sitemap"></i> <?php echo __('View cluster'); ?>
