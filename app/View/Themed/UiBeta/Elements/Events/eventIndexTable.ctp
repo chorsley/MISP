@@ -76,6 +76,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
     }
     return $galaxyCards;
 };
+
 ?>
 <table class="table table-striped table-hover table-condensed beta-events-table">
     <tr>
@@ -102,20 +103,20 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
             $date = time();
             $day = 86400;
         ?> 
-        <?php if (in_array('owner_org', $columns, true)): ?><th class="filter col-owner-org"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></th><?php endif; ?>
-        <?php if (in_array('clusters', $columns, true)): ?><th class="col-clusters"><?= __('Clusters') ?></th><?php endif; ?>
-        <?php if (in_array('tags', $columns, true)): ?><th class="col-tags"><?= __('Tags') ?></th><?php endif; ?>
-        <?php if (in_array('highlights', $columns, true)): ?><th class="col-highlights"><?= __('Highlight tags') ?></th><?php endif; ?>
-        <?php if (in_array('attribute_count', $columns, true)): ?><th class="col-attr-count" title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
-        <?php if (in_array('correlations', $columns, true)): ?><th class="col-corr-count" title="<?= __('Correlation Count')  ?>"><?= __('#Corr.') ?></th><?php endif; ?>
-        <?php if (in_array('report_count', $columns, true)): ?><th class="col-report-count" title="<?= __('Report Count') ?>"><?= $this->Paginator->sort('report_count', __('#Reports')) ?></th><?php endif; ?>
-        <?php if (in_array('sightings', $columns, true)): ?><th class="col-sightings-count" title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></th><?php endif; ?>
-        <?php if (in_array('proposals', $columns, true)): ?><th class="col-prop-count" title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
-        <?php if (in_array('discussion', $columns, true)): ?><th class="col-post-count" title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
-        <?php if (in_array('creator_user', $columns, true)): ?><th class="col-creator-user"><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
+        <?php if (in_array('owner_org', $columns, true)): ?><th class="filter col-owner-org" data-beta-column="owner_org"><?= $this->Paginator->sort('Org.name', __('Owner org')) ?></th><?php endif; ?>
+        <?php if (in_array('clusters', $columns, true)): ?><th class="col-clusters" data-beta-column="clusters"><?= __('Clusters') ?></th><?php endif; ?>
+        <?php if (in_array('tags', $columns, true)): ?><th class="col-tags" data-beta-column="tags"><?= __('Tags') ?></th><?php endif; ?>
+        <?php if (in_array('highlights', $columns, true)): ?><th class="col-highlights" data-beta-column="highlights"><?= __('Highlight tags') ?></th><?php endif; ?>
+        <?php if (in_array('attribute_count', $columns, true)): ?><th class="col-attr-count" data-beta-column="attribute_count" title="<?= __('Attribute Count') ?>"><?= $this->Paginator->sort('attribute_count', __('#Attr.')) ?></th><?php endif; ?>
+        <?php if (in_array('correlations', $columns, true)): ?><th class="col-corr-count" data-beta-column="correlations" title="<?= __('Correlation Count')  ?>"><?= __('#Corr.') ?></th><?php endif; ?>
+        <?php if (in_array('report_count', $columns, true)): ?><th class="col-report-count" data-beta-column="report_count" title="<?= __('Report Count') ?>"><?= $this->Paginator->sort('report_count', __('#Reports')) ?></th><?php endif; ?>
+        <?php if (in_array('sightings', $columns, true)): ?><th class="col-sightings-count" data-beta-column="sightings" title="<?= __('Sighting Count')?>"><?= __('#Sightings') ?></th><?php endif; ?>
+        <?php if (in_array('proposals', $columns, true)): ?><th class="col-prop-count" data-beta-column="proposals" title="<?= __('Proposal Count') ?>"><?= __('#Prop') ?></th><?php endif; ?>
+        <?php if (in_array('discussion', $columns, true)): ?><th class="col-post-count" data-beta-column="discussion" title="<?= __('Post Count') ?>"><?= __('#Posts') ?></th><?php endif; ?>
+        <?php if (in_array('creator_user', $columns, true)): ?><th class="col-creator-user" data-beta-column="creator_user"><?= $this->Paginator->sort('user_id', __('Creator user')) ?></th><?php endif; ?>
         <th class="filter col-date"><?= $this->Paginator->sort('date', null, array('direction' => 'desc'));?></th>
-        <?php if (in_array('timestamp', $columns, true)): ?><th class="col-timestamp" title="<?= __('Last mod') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
-        <?php if (in_array('publish_timestamp', $columns, true)): ?><th class="col-publish-timestamp" title="<?= __('Pub time') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Pub time')) ?></th><?php endif; ?>
+        <?php if (in_array('timestamp', $columns, true)): ?><th class="col-timestamp" data-beta-column="timestamp" title="<?= __('Last mod') ?>"><?= $this->Paginator->sort('timestamp', __('Last mod')) ?></th><?php endif; ?>
+        <?php if (in_array('publish_timestamp', $columns, true)): ?><th class="col-publish-timestamp" data-beta-column="publish_timestamp" title="<?= __('Pub time') ?>"><?= $this->Paginator->sort('publish_timestamp', __('Pub time')) ?></th><?php endif; ?>
     </tr>
     <?php foreach ($events as $event):
         $eventId = (int)$event['Event']['id'];
@@ -158,7 +159,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
             $extendedEventsIdByUuid = array_column($extendedEvents, 'id', 'uuid');
             $extends_info = $extendedEventsInfoByUuid[$extends_uuid] ?? null;
         ?>
-        <td class="dblclickElement beta-info-cell" style="min-width: 20vi; white-space: normal;">
+        <td class="dblclickElement beta-info-cell<?= $extends_info && in_array('is_extension', $columns, true) ? ' col-is-extension' : '' ?>"<?= $extends_info && in_array('is_extension', $columns, true) ? ' data-beta-column="is_extension"' : '' ?>>
             <div class="beta-info-wrapper">
                 <div class="dist-widget dist-<?= intval($event['Event']['distribution']) ?> distributionNetworkToggle"
                      title="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($distributionLevels[$event['Event']['distribution']]) ?>"
@@ -227,7 +228,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif;?>
         <?php if (in_array('owner_org', $columns, true) || (Configure::read('MISP.showorgalternate') && Configure::read('MISP.showorg'))): ?>
-        <td class="short col-owner-org" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
+        <td class="short col-owner-org" data-beta-column="owner_org" ondblclick="document.location.href ='<?php echo $baseurl . "/events/index/searchorg:" . $event['Org']['id'];?>'">
             <a href="<?= $baseurl ?>/organisations/view/<?= (int)$event['Org']['id'] ?>" class="beta-org-link" title="<?= h($event['Org']['name']) ?>">
                 <img 
                     src="<?= $baseurl ?>/organisations/getOrgLogo/<?= h($event['Org']['id']) ?>.json"
@@ -243,9 +244,21 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('clusters', $columns, true)): ?>
-        <td class="col-clusters">
+        <td class="col-clusters" data-beta-column="clusters" title="<?= __('Galaxy clusters attached to this event') ?>">
             <?php
-                if (!empty($event['GalaxyCluster'])) {
+                $galaxyCards = [];
+                if (!empty($event['Galaxy'])) {
+                    foreach ($event['Galaxy'] as $galaxy) {
+                        if (empty($galaxy['GalaxyCluster']) || empty($galaxy['name'])) {
+                            continue;
+                        }
+                        $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', array(
+                            'galaxyName' => $galaxy['name'],
+                            'clusters' => $galaxy['GalaxyCluster'],
+                            'baseurl' => $baseurl
+                        ));
+                    }
+                } elseif (!empty($event['GalaxyCluster'])) {
                     $galaxies = array();
                     foreach ($event['GalaxyCluster'] as $galaxy_cluster) {
                         $galaxy_name = $galaxy_cluster['Galaxy']['name'];
@@ -254,7 +267,6 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                         }
                         $galaxies[$galaxy_name][] = $galaxy_cluster;
                     }
-                    $galaxyCards = [];
                     foreach ($galaxies as $galaxyName => $clusters) {
                         $galaxyCards[] = $this->element('Events/View/galaxy_compact_beta', array(
                             'galaxyName' => $galaxyName,
@@ -262,7 +274,32 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                             'baseurl' => $baseurl
                         ));
                     }
+                }
 
+                if (empty($galaxyCards)) {
+                    $eventGalaxyTags = [];
+                    if (!empty($event['EventTag'])) {
+                        $eventGalaxyTags = array_filter($event['EventTag'], function ($tag) {
+                            return !empty($tag['Tag']['is_galaxy']);
+                        });
+                    } elseif (!empty($event['Tag'])) {
+                        $eventGalaxyTags = array_map(function ($tag) {
+                            return [
+                                'Tag' => $tag,
+                                'local' => $tag['local'] ?? false,
+                                'relationship_type' => $tag['relationship_type'] ?? false,
+                            ];
+                        }, array_filter($event['Tag'], function ($tag) {
+                            return !empty($tag['is_galaxy']);
+                        }));
+                    }
+
+                    if (!empty($eventGalaxyTags)) {
+                        $galaxyCards = array_merge($galaxyCards, $buildGalaxyCardsFromTags($eventGalaxyTags));
+                    }
+                }
+
+                if (!empty($galaxyCards)) {
                     echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
                     foreach ($galaxyCards as $galaxyCard) {
                         echo $galaxyCard;
@@ -273,14 +310,12 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('tags', $columns, true)): ?>
-        <td class="shortish col-tags">
+        <td class="shortish col-tags" data-beta-column="tags">
             <?php
                 $highlightedTags = $event['Event']['highlightedTags'] ?? [];
                 $tags = $event['EventTag'];
-                $galaxyTags = [];
                 foreach ($tags as $k => $tag) {
                     if ($tag['Tag']['is_galaxy']) {
-                        $galaxyTags[] = $tag;
                         unset($tags[$k]);
                     }
                 }
@@ -317,14 +352,6 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                 }
                 $hiddenTagCount = max(0, $totalRegularTagCount - count($visibleTags));
 
-                $galaxyCards = $buildGalaxyCardsFromTags($galaxyTags);
-                if (!empty($galaxyCards)) {
-                    echo '<div class="beta-galaxies-container" title="' . __('Galaxy clusters attached to this event') . '">';
-                    foreach ($galaxyCards as $galaxyCard) {
-                        echo $galaxyCard;
-                    }
-                    echo '</div>';
-                }
             ?>
             <?php
                 $tagElementOptions = [
@@ -346,7 +373,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('highlights', $columns, true)): ?>
-        <td class="shortish col-highlights">
+        <td class="shortish col-highlights" data-beta-column="highlights">
             <?php
                 // Display only highlighted tags using the standard rich_tag element
                 $highlightedTags = $event['Event']['highlightedTags'] ?? [];
@@ -371,12 +398,12 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('attribute_count', $columns, true)): ?>
-        <td class="dblclickElement col-attr-count" style="width:30px">
+        <td class="dblclickElement col-attr-count" data-beta-column="attribute_count" style="width:30px">
             <?= $event['Event']['attribute_count']; ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?>
-        <td class="bold col-corr-count" style="width:30px">
+        <td class="bold col-corr-count" data-beta-column="correlations" style="width:30px">
             <?php if (!empty($event['Event']['correlation_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/correlation:1" ?>" title="<?= __n('%s correlation', '%s correlations', $event['Event']['correlation_count'], $event['Event']['correlation_count']), '. ' . __('Show filtered event with correlation only.');?>">
                     <?= intval($event['Event']['correlation_count']); ?>
@@ -385,12 +412,12 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('report_count', $columns, true)): ?>
-        <td class="bold col-report-count" style="width:30px">
+        <td class="bold col-report-count" data-beta-column="report_count" style="width:30px">
             <?= $event['Event']['report_count']; ?>
         </td>
         <?php endif; ?>
         <?php if (in_array('sightings', $columns, true)): ?>
-        <td class="bold col-sightings-count" style="width:30px">
+        <td class="bold col-sightings-count" data-beta-column="sightings" style="width:30px">
             <?php if (!empty($event['Event']['sightings_count'])): ?>
                 <a href="<?= "$baseurl/events/view/$eventId/sighting:1" ?>" title="<?= __n("1 sighting. Show filtered event with sighting only.", "%s sightings. Show filtered event with sightings only.", $event['Event']['sightings_count'], intval($event['Event']['sightings_count'])) ?>">
                     <?= intval($event['Event']['sightings_count']) ?>
@@ -399,12 +426,12 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('proposals', $columns, true)): ?>
-        <td class="bold dblclickElement col-prop-count" style="width:30px" title="<?= __n('%s proposal', '%s proposals', $event['Event']['proposals_count'], $event['Event']['proposals_count']) ?>">
+        <td class="bold dblclickElement col-prop-count" data-beta-column="proposals" style="width:30px" title="<?= __n('%s proposal', '%s proposals', $event['Event']['proposals_count'], $event['Event']['proposals_count']) ?>">
             <?= !empty($event['Event']['proposals_count']) ? intval($event['Event']['proposals_count']) : ''; ?>
         </td>
         <?php endif;?>
         <?php if (in_array('discussion', $columns, true)): ?>
-        <td class="bold dblclickElement col-post-count" style="width:30px">
+        <td class="bold dblclickElement col-post-count" data-beta-column="discussion" style="width:30px">
             <?php
                 if (!empty($event['Event']['post_count'])) {
                     $post_count = h($event['Event']['post_count']);
@@ -419,7 +446,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif;?>
         <?php if (in_array('creator_user', $columns, true)): ?>
-        <td class="short dblclickElement col-creator-user">
+        <td class="short dblclickElement col-creator-user" data-beta-column="creator_user">
             <?php echo h($event['User']['email']); ?>
         </td>
         <?php endif; ?>
@@ -427,7 +454,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
             <time><?= $event['Event']['date'] ?></time>
         </td>
         <?php if (in_array('timestamp', $columns, true)): ?>
-        <td class="short dblclickElement col-timestamp beta-relative-timestamp" 
+        <td class="short dblclickElement col-timestamp beta-relative-timestamp" data-beta-column="timestamp"
             data-timestamp="<?= h($event['Event']['timestamp']) ?>" 
             data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?>" 
             title="<?= h(date('Y-m-d H:i:s', $event['Event']['timestamp'])) ?> (click to copy)" 
@@ -436,7 +463,7 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('publish_timestamp', $columns, true)): ?>
-        <td class="short dblclickElement col-publish-timestamp beta-relative-timestamp" 
+        <td class="short dblclickElement col-publish-timestamp beta-relative-timestamp" data-beta-column="publish_timestamp"
             <?php if (!empty($event['Event']['publish_timestamp'])): ?>
             data-timestamp="<?= h($event['Event']['publish_timestamp']) ?>" 
             data-absolute="<?= h(date('Y-m-d H:i:s', $event['Event']['publish_timestamp'])) ?>" 

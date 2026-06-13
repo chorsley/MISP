@@ -136,6 +136,7 @@
         </div>
 
     </div>
+    <div class="beta-column-overflow-notice hidden" aria-live="polite"></div>
     <?php if (count($passedArgsArray) > 0): ?>
         <div class="beta-active-filters">
             <span class="bold"><?= __('Filters') ?>:</span> <?= h($filterParamsString) ?>
@@ -171,6 +172,23 @@
     var passedArgsArray = <?php echo $passedArgs; ?>;
     var betaEventsIndexBaseurl = <?php echo json_encode($baseurl); ?>;
     var betaViewCollectionLabel = <?php echo json_encode(__('View collection')); ?>;
+    var betaColumnDescriptions = <?php echo json_encode($columnsDescription); ?>;
+    var betaColumnPriority = <?php echo json_encode([
+        'creator_user',
+        'publish_timestamp',
+        'timestamp',
+        'discussion',
+        'proposals',
+        'sightings',
+        'report_count',
+        'correlations',
+        'highlights',
+        'attribute_count',
+        'tags',
+        'clusters',
+        'owner_org',
+        'is_extension',
+    ]); ?>;
 
     window.eventCollectionContext = null;
 
@@ -299,7 +317,92 @@
         loadCollectionsForContainers([container]);
     };
 
+    function fadeOutOverflowNotice(notice) {
+        window.setTimeout(function() {
+            notice.classList.add('beta-column-overflow-notice-fading');
+            window.setTimeout(function() {
+                notice.classList.add('hidden');
+                notice.classList.remove('beta-column-overflow-notice-fading');
+                notice.innerHTML = '';
+            }, 400);
+        }, 5000);
+    }
+
+    function updateOverflowNotice(hiddenColumns) {
+        var notice = document.querySelector('.beta-column-overflow-notice');
+        if (!notice) {
+            return;
+        }
+        if (!hiddenColumns.length) {
+            notice.classList.add('hidden');
+            notice.classList.remove('beta-column-overflow-notice-fading');
+            notice.innerHTML = '';
+            return;
+        }
+
+        var labels = hiddenColumns.map(function(columnName) {
+            return betaColumnDescriptions[columnName] || columnName;
+        });
+        notice.innerHTML = '<i class="fa fa-columns"></i>' +
+            <?= json_encode(__('Some selected columns were hidden to keep the table on-screen:')) ?> +
+            ' ' + labels.join(', ') + '. ' +
+            <?= json_encode(__('Use the "Columns" button to customise your columns.')) ?>;
+        notice.classList.remove('hidden', 'beta-column-overflow-notice-fading');
+        fadeOutOverflowNotice(notice);
+    }
+
+    function resetAutoHiddenColumns(table) {
+        betaColumnPriority.forEach(function(columnName) {
+            table.find('[data-beta-column="' + columnName + '"]').removeClass('beta-column-auto-hidden');
+        });
+    }
+
+    function fitBetaEventColumns() {
+        var $table = $('.beta-events-table').first();
+        if (!$table.length) {
+            return;
+        }
+
+        var table = $table;
+        var container = $table.parent();
+        var hiddenColumns = [];
+        resetAutoHiddenColumns(table);
+
+        betaColumnPriority.forEach(function(columnName) {
+            var $cells = table.find('[data-beta-column="' + columnName + '"]');
+            if (!$cells.length) {
+                return;
+            }
+            if ($cells.filter(':visible').length === 0) {
+                return;
+            }
+            if ($table[0].scrollWidth <= container[0].clientWidth) {
+                return;
+            }
+            $cells.addClass('beta-column-auto-hidden');
+            hiddenColumns.push(columnName);
+        });
+
+        updateOverflowNotice(hiddenColumns);
+    }
+
+    var fitBetaEventColumnsDebounced = (function() {
+        var timer = null;
+        return function() {
+            if (timer !== null) {
+                window.clearTimeout(timer);
+            }
+            timer = window.setTimeout(function() {
+                timer = null;
+                fitBetaEventColumns();
+            }, 80);
+        };
+    }());
+
     $(function() {
+        fitBetaEventColumns();
+        $(window).on('resize', fitBetaEventColumnsDebounced);
+
         $('.searchFilterButton').click(function() {
             runIndexFilter(this);
         });
