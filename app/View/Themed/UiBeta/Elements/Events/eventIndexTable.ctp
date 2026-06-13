@@ -167,18 +167,22 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                      data-event-distribution-name="<?= $event['Event']['distribution'] == 4 ? h($event['SharingGroup']['name']) : h($shortDist[$event['Event']['distribution']]) ?>"
                      data-scope-id="<?= $eventId ?>">
                 </div>
-                <a href="<?= $baseurl."/events/view/".$eventId ?>" class="beta-info-link" title="<?= h($event['Event']['info']) ?>">
-                    <?= nl2br(h($event['Event']['info']), false) ?>
-                </a>
-                <?php if (!empty($event['Event']['report_count'])): ?>
-                    <a href="<?= "$baseurl/events/view/$eventId#summary-reports-section" ?>" title="<?= __n('1 report available', '%s reports available', $event['Event']['report_count'], $event['Event']['report_count']) ?>">
-                        <i class="fas fa-file-alt" style="margin-left: 5px; color: #428bca;"></i>
-                    </a>
-                <?php endif; ?>
-            </div>
+                <div class="beta-info-content">
+                    <div class="beta-info-title-row">
+                        <a href="<?= $baseurl."/events/view/".$eventId ?>" class="beta-info-link" title="<?= h($event['Event']['info']) ?>">
+                            <?= nl2br(h($event['Event']['info']), false) ?>
+                        </a>
+                        <?php if (!empty($event['Event']['report_count'])): ?>
+                            <a href="<?= "$baseurl/events/view/$eventId#summary-reports-section" ?>" title="<?= __n('1 report available', '%s reports available', $event['Event']['report_count'], $event['Event']['report_count']) ?>">
+                                <i class="fas fa-file-alt" style="margin-left: 5px; color: #428bca;"></i>
+                            </a>
+                        <?php endif; ?>
+                    </div>
 
-            <div id="event-collections-container-<?= $eventId ?>" data-event-uuid="<?= h($event['Event']['uuid']) ?>" style="margin-top: 0.35em;">
-                <div class="beta-event-collections-placeholder"></div>
+                    <div id="event-collections-container-<?= $eventId ?>" class="beta-index-event-collections" data-event-uuid="<?= h($event['Event']['uuid']) ?>" style="margin-top: 0.35em;">
+                        <div class="beta-event-collections-placeholder"></div>
+                    </div>
+                </div>
             </div>
 
             <?php if ($extends_info): ?>

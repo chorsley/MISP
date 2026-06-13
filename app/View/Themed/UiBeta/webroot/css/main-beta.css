@@ -565,10 +565,24 @@ pre {
     gap: 0.5rem;
 }
 
+.beta-info-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.beta-info-title-row {
+    display: flex;
+    align-items: flex-start;
+}
+
 .beta-info-wrapper .dist-widget {
     margin-top: 3px;
     /* Align with text baseline */
     flex-shrink: 0;
+}
+
+.beta-index-event-collections {
+    margin-left: 0;
 }
 
 /* Enhanced ID column styling - consistent with other links */
