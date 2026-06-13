@@ -283,6 +283,44 @@
     .beta-sankey-toggle input:focus + .beta-sankey-toggle-switch {
         box-shadow: inset 0 0 0 1px rgba(56, 73, 91, 0.08), 0 0 0 3px rgba(76, 217, 100, 0.18);
     }
+    .beta-event-timeline-current-marker {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 0;
+        border-left: 2px dashed rgba(143, 191, 232, 0.95);
+        pointer-events: none;
+        z-index: 1;
+    }
+    .beta-event-timeline-current-marker::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -4px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #8fbfe8;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
+    }
+    .beta-event-timeline-current-label {
+        position: absolute;
+        top: -42px;
+        transform: translateX(-50%);
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(143, 191, 232, 0.96);
+        color: #21486f;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(33, 72, 111, 0.18);
+        transform-origin: center bottom;
+        rotate: -22deg;
+    }
     .beta-meta-item-label {
         color: #8c98a5;
         font-size: 11px;
@@ -3551,6 +3589,8 @@
     var _correlationData = null;
     var _correlationEventDetails = null;
     var _correlationsLoading = false;
+    var _currentEventDate = '<?php echo addslashes(h($event['Event']['date'])); ?>';
+    var _currentEventDateTs = _currentEventDate ? Date.parse(_currentEventDate + 'T00:00:00Z') : NaN;
 
     function formatTimelineDateUtc(ts) {
         var d = new Date(ts);
@@ -3608,6 +3648,10 @@
         var itemMaxTs = items[items.length - 1].ts;
         var minTs = itemMinTs;
         var maxTs = itemMaxTs;
+        if (isFinite(_currentEventDateTs)) {
+            minTs = Math.min(minTs, _currentEventDateTs);
+            maxTs = Math.max(maxTs, _currentEventDateTs);
+        }
         var rawRange = maxTs - minTs;
         var range = Math.max(rawRange, 1);
 
@@ -3634,6 +3678,20 @@
         }
 
         markers.innerHTML = '';
+        if (isFinite(_currentEventDateTs)) {
+            var currentMarker = document.createElement('span');
+            currentMarker.className = 'beta-event-timeline-current-marker';
+            currentMarker.style.left = (range > 0 ? ((_currentEventDateTs - minTs) / range) * 100 : 50) + '%';
+            currentMarker.setAttribute('aria-hidden', 'true');
+            markers.appendChild(currentMarker);
+
+            var currentLabel = document.createElement('span');
+            currentLabel.className = 'beta-event-timeline-current-label';
+            currentLabel.style.left = currentMarker.style.left;
+            currentLabel.textContent = '★ <?php echo addslashes(__('This Event')); ?>';
+            currentLabel.setAttribute('aria-hidden', 'true');
+            markers.appendChild(currentLabel);
+        }
         items.forEach(function(item) {
             var marker = document.createElement('button');
             marker.type = 'button';
@@ -4069,7 +4127,7 @@
             });
 
             var margin = {
-                top: 98,
+                top: 180,
                 right: estimateLabelWidth(Math.min(longestTargetLabelLength, 52), 6.3, 220, Math.max(260, Math.floor(containerWidth * 0.24))),
                 bottom: 20,
                 left: estimateLabelWidth(sourceLabelText.length, 6.6, 180, Math.max(220, Math.floor(containerWidth * 0.22)))
@@ -4114,6 +4172,7 @@
             var attributeMaxX1 = 0;
             var targetNodes = [];
             var targetDateExtents = { min: Infinity, max: -Infinity };
+            var currentEventDateTs = _currentEventDateTs;
             graph.nodes.forEach(function(node) {
                 if (node.type === 'attribute') {
                     attributeMaxX1 = Math.max(attributeMaxX1, node.x1);
@@ -4132,19 +4191,25 @@
             var hasSpreadableDates = isFinite(targetDateExtents.min)
                 && isFinite(targetDateExtents.max)
                 && targetDateExtents.max > targetDateExtents.min;
-            var sankeyScaleMinTs = targetDateExtents.min;
-            var sankeyScaleMaxTs = targetDateExtents.max;
-            var useYearScale = isFinite(sankeyScaleMinTs)
-                && isFinite(sankeyScaleMaxTs)
-                && (sankeyScaleMaxTs - sankeyScaleMinTs) >= (366 * 24 * 60 * 60 * 1000);
-            if (isFinite(sankeyScaleMaxTs)) {
-                sankeyScaleMaxTs = useYearScale
-                    ? addUtcYears(startOfUtcYear(sankeyScaleMaxTs), 1)
-                    : addUtcMonths(startOfUtcMonth(sankeyScaleMaxTs), 1);
+            var sankeyDomainMinTs = targetDateExtents.min;
+            var sankeyDomainMaxTs = targetDateExtents.max;
+            if (isFinite(currentEventDateTs)) {
+                sankeyDomainMinTs = isFinite(sankeyDomainMinTs)
+                    ? Math.min(sankeyDomainMinTs, currentEventDateTs)
+                    : currentEventDateTs;
+                sankeyDomainMaxTs = isFinite(sankeyDomainMaxTs)
+                    ? Math.max(sankeyDomainMaxTs, currentEventDateTs)
+                    : currentEventDateTs;
             }
-            if (isFinite(sankeyScaleMinTs) && isFinite(sankeyScaleMaxTs) && sankeyScaleMaxTs > sankeyScaleMinTs) {
-                sankeyScaleMinTs = Math.max(0, sankeyScaleMinTs - ((sankeyScaleMaxTs - sankeyScaleMinTs) * 0.08));
-            }
+            var useYearScale = isFinite(sankeyDomainMinTs)
+                && isFinite(sankeyDomainMaxTs)
+                && new Date(sankeyDomainMinTs).getUTCFullYear() !== new Date(sankeyDomainMaxTs).getUTCFullYear();
+            var sankeyScaleMinTs = isFinite(sankeyDomainMinTs)
+                ? (useYearScale ? startOfUtcYear(sankeyDomainMinTs) : startOfUtcMonth(sankeyDomainMinTs))
+                : sankeyDomainMinTs;
+            var sankeyScaleMaxTs = isFinite(sankeyDomainMaxTs)
+                ? (useYearScale ? addUtcYears(startOfUtcYear(sankeyDomainMaxTs), 1) : addUtcMonths(startOfUtcMonth(sankeyDomainMaxTs), 1))
+                : sankeyDomainMaxTs;
             var targetLaneStart = Math.min(width - sankeyNodeWidth - 24, attributeMaxX1 + 180);
             var targetLaneEnd = width - 24;
             var targetFixedX0 = Math.max(targetLaneStart, width - 110);
@@ -4186,10 +4251,9 @@
                 if (!isFinite(minTs) || !isFinite(maxTs) || laneWidth <= 0) {
                     return [];
                 }
-                var rangeMs = Math.max(0, maxTs - minTs);
-                var tickUseYearScale = rangeMs >= (366 * 24 * 60 * 60 * 1000);
-                var roundedMin = tickUseYearScale ? startOfUtcYear(minTs) : startOfUtcMonth(minTs);
-                var roundedMax = tickUseYearScale ? startOfUtcYear(maxTs) : startOfUtcMonth(maxTs);
+                var tickUseYearScale = new Date(minTs).getUTCFullYear() !== new Date(maxTs).getUTCFullYear();
+                var roundedMin = minTs;
+                var roundedMax = maxTs;
                 if (roundedMax <= roundedMin) {
                     return [{ x: laneStart + (laneWidth / 2), label: formatSankeyGridDate(roundedMin, tickUseYearScale ? 'year' : 'month'), isEdge: true }];
                 }
@@ -4232,9 +4296,12 @@
                     if (hasSpreadableDates && isFinite(node.eventDateTs)) {
                         var ratio = (node.eventDateTs - sankeyScaleMinTs) / Math.max(1, (sankeyScaleMaxTs - sankeyScaleMinTs));
                         ratio = Math.max(0, Math.min(1, ratio));
-                        node.alignedX0 = Math.min(
-                            targetLaneEnd - sankeyNodeWidth,
-                            targetLaneStart + ((targetLaneEnd - targetLaneStart) * ratio)
+                        node.alignedX0 = Math.max(
+                            targetLaneStart,
+                            Math.min(
+                                targetLaneEnd - sankeyNodeWidth,
+                                targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) * ratio)
+                            )
                         );
                     } else {
                         node.alignedX0 = targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) / 2);
@@ -4421,6 +4488,58 @@
                         .style('font', '10px sans-serif')
                         .style('fill', '#6f7c88')
                         .text(function(d) { return d.label; });
+
+                    if (isFinite(currentEventDateTs) && isFinite(sankeyScaleMinTs) && isFinite(sankeyScaleMaxTs) && sankeyScaleMaxTs > sankeyScaleMinTs) {
+                        var currentEventRatio = (currentEventDateTs - sankeyScaleMinTs) / Math.max(1, (sankeyScaleMaxTs - sankeyScaleMinTs));
+                        currentEventRatio = Math.max(0, Math.min(1, currentEventRatio));
+                        var currentEventX = targetLaneStart + ((targetLaneEnd - targetLaneStart) * currentEventRatio);
+                        var currentEventLabelY = -56;
+                        var currentEventLineTopY = currentEventLabelY + 22;
+                        var currentEventText = '★ <?php echo addslashes(__('This Event')); ?>';
+                        var currentEventMarkerGroup = gridGroup.append('g').attr('class', 'sankey-current-event-marker');
+
+                        currentEventMarkerGroup.append('line')
+                            .attr('x1', currentEventX)
+                            .attr('x2', currentEventX)
+                            .attr('y1', currentEventLineTopY)
+                            .attr('y2', laneBottom)
+                            .attr('stroke', 'rgba(143, 191, 232, 0.62)')
+                            .attr('stroke-width', 2)
+                            .attr('stroke-dasharray', '5,4')
+                            .attr('shape-rendering', 'crispEdges');
+
+                        currentEventMarkerGroup.append('circle')
+                            .attr('cx', currentEventX)
+                            .attr('cy', currentEventLineTopY)
+                            .attr('r', 4)
+                            .attr('fill', '#8fbfe8')
+                            .attr('stroke', '#fff')
+                            .attr('stroke-width', 2);
+
+                        var currentEventLabel = currentEventMarkerGroup.append('text')
+                            .attr('x', currentEventX)
+                            .attr('y', currentEventLabelY)
+                            .attr('text-anchor', 'middle')
+                            .attr('dy', '0.35em')
+                            .style('font', '700 10px sans-serif')
+                            .style('fill', '#21486f')
+                            .text(currentEventText);
+
+                        var currentEventLabelNode = currentEventLabel.node();
+                        if (currentEventLabelNode && currentEventLabelNode.getBBox) {
+                            var currentEventLabelBox = currentEventLabelNode.getBBox();
+                            currentEventMarkerGroup.insert('rect', 'text')
+                                .attr('x', currentEventLabelBox.x - 6)
+                                .attr('y', currentEventLabelBox.y - 2)
+                                .attr('width', currentEventLabelBox.width + 12)
+                                .attr('height', currentEventLabelBox.height + 4)
+                                .attr('rx', 10)
+                                .attr('ry', 10)
+                                .attr('fill', 'rgba(143, 191, 232, 0.96)')
+                                .attr('stroke', 'rgba(33, 72, 111, 0.18)')
+                                .attr('stroke-width', 1);
+                        }
+                    }
                 }
             }
 
@@ -4561,6 +4680,29 @@
                     var label = d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
                     return label;
                 });
+
+            svg.append('g')
+                .attr('class', 'sankey-target-label-hitboxes')
+                .selectAll('rect')
+                .data(graph.nodes.filter(function(d) { return d.type === 'target'; }))
+                .enter()
+                .append('rect')
+                .attr('x', function(d) { return d.x1 + targetLabelGap - 4; })
+                .attr('y', function(d) { return Math.max(0, ((d.y0 + d.y1) / 2) - 8); })
+                .attr('width', function(d) {
+                    var label = d.name || '';
+                    var maxLength = 60;
+                    var visibleLabel = label.length > maxLength ? label.substring(0, maxLength - 3) + '...' : label;
+                    return Math.max(42, (visibleLabel.length * 6.2) + 8);
+                })
+                .attr('height', 16)
+                .attr('fill', 'rgba(255,255,255,0)')
+                .attr('cursor', 'pointer')
+                .on("click", handleSankeyNodeClick)
+                .on("mouseover", function(d) { applySankeyHoverState(d, 0.5); })
+                .on("mouseout", resetSankeyHoverState)
+                .append("title")
+                .text(function(d) { return d.fullTitle || d.name; });
 
             function updateTargetNodePositions(animate) {
                 var duration = animate ? 450 : 0;
