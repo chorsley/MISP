@@ -230,12 +230,18 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        margin-left: auto;
         color: #61707e;
         font-size: 12px;
         font-weight: 600;
         cursor: pointer;
         user-select: none;
+    }
+    .beta-sankey-toggle-group {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
     }
     .beta-sankey-toggle input {
         position: absolute;
@@ -2408,23 +2414,27 @@
                     <p style="color: #666; font-size: 1.1em;"><?php echo __('Analyzing correlations...'); ?></p>
                 </div>
                 <div id="correlations-content" style="display: none;">
-                    <div id="correlations-sankey-stage" style="display: none; margin: 0 auto 30px; max-width: min(100vw - 40px, 1760px); text-align: center;">
-                        <div id="correlations-sankey-toolbar" style="display: flex; justify-content: flex-start; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; min-height: 24px; width: 100%;">
+                    <div id="correlations-sankey-stage" style="display: none; margin: 0 auto 30px; max-width: min(100vw - 12px, 2100px); text-align: center;">
+                        <div id="correlations-sankey-toolbar" style="display: flex; justify-content: flex-start; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; min-height: 24px; width: 100%;">
                             <span id="sankey-filter-badge" style="display: none; background: #d9534f; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; white-space: nowrap;">
                                 <i class="fa fa-filter"></i> <span id="sankey-filter-label"></span>
                                 <a href="#" onclick="resetCorrelationFilter(); return false;" style="color: #fff; margin-left: 6px; text-decoration: none;" title="<?php echo __('Remove filter'); ?>"><i class="fa fa-times-circle"></i></a>
                             </span>
                             <span id="sankey-limit-msg" style="font-size: 12px; color: #7d8894;"></span>
-                            <label for="sankey-date-align-toggle" class="beta-sankey-toggle">
-                                <span class="beta-sankey-toggle-label"><?php echo __('Align to event date'); ?></span>
-                                <input type="checkbox" id="sankey-date-align-toggle" checked>
-                                <span class="beta-sankey-toggle-switch" aria-hidden="true"></span>
-                            </label>
-                        </div>
-                        <div style="display: flex; align-items: flex-start; justify-content: center; gap: 8px; width: 100%;">
-                            <div id="correlations-sankey-source-label" style="width: 86px; padding-top: 190px; text-align: right; font-size: 12px; font-weight: 600; color: #6b7785; white-space: nowrap;">
-                                <?php echo __('This event'); ?>
-                            </div>
+                             <div class="beta-sankey-toggle-group">
+                                 <label for="sankey-date-align-toggle" class="beta-sankey-toggle">
+                                     <span class="beta-sankey-toggle-label"><?php echo __('Show timeline view'); ?></span>
+                                     <input type="checkbox" id="sankey-date-align-toggle" checked>
+                                     <span class="beta-sankey-toggle-switch" aria-hidden="true"></span>
+                                 </label>
+                                 <label for="sankey-latest-events-toggle" class="beta-sankey-toggle">
+                                     <span class="beta-sankey-toggle-label"><?php echo __('Show latest 20 events only'); ?></span>
+                                     <input type="checkbox" id="sankey-latest-events-toggle">
+                                     <span class="beta-sankey-toggle-switch" aria-hidden="true"></span>
+                                 </label>
+                             </div>
+                         </div>
+                        <div style="display: flex; align-items: flex-start; justify-content: center; width: 100%;">
                             <div id="correlations-sankey" style="flex: 1 1 auto; max-width: 100%; height: 400px; margin: 0 auto;"></div>
                         </div>
                     </div>
@@ -3642,6 +3652,7 @@
         }
 
         timeline.style.display = '';
+        updateCorrelationsTimelineVisibility();
         markers.onclick = function(e) {
             var target = e.target.closest('.beta-event-timeline-marker');
             if (!target) return;
@@ -3882,14 +3893,17 @@
             renderSankey(data, eventDetails);
         }
 
-        function renderSankey(data, eventDetails, filterAttributeId) {
+        function renderSankey(data, eventDetails, filterAttributeId, options) {
+            options = options || {};
             var nodes = [];
             var links = [];
             var nodeMap = {};
             var alignToDate = $('#sankey-date-align-toggle').is(':checked');
+            var latestEventsOnly = $('#sankey-latest-events-toggle').is(':checked');
+            var latestEventsLimit = 20;
             var currentEventId = '<?php echo h($event['Event']['id']); ?>';
             var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
-            var currentEventName = '<?php echo addslashes(__('This event')); ?>';
+            var currentEventName = currentEventInfo || ('Event #' + currentEventId);
             var currentEventDate = '<?php echo addslashes(h($event['Event']['date'])); ?>';
             var currentEventFullTitle = 'Event #' + currentEventId;
             if (currentEventDate) {
@@ -3927,6 +3941,37 @@
                 parentIds = parentIds.slice(0, maxSankeyAttributes);
             }
 
+            var allowedTargetEventIds = null;
+            if (latestEventsOnly) {
+                var latestTargetEvents = [];
+                var latestTargetEventSeen = {};
+                parentIds.forEach(function(parentId) {
+                    (data[parentId] || []).forEach(function(rel) {
+                        if (latestTargetEventSeen[rel.id]) {
+                            return;
+                        }
+                        latestTargetEventSeen[rel.id] = true;
+                        var details = eventDetails && eventDetails[rel.id] ? eventDetails[rel.id] : null;
+                        var eventDate = rel.date || (details && details.date) || '';
+                        var eventDateTs = eventDate ? Date.parse(eventDate + 'T00:00:00Z') : NaN;
+                        latestTargetEvents.push({
+                            id: String(rel.id),
+                            dateTs: isFinite(eventDateTs) ? eventDateTs : -Infinity
+                        });
+                    });
+                });
+                latestTargetEvents.sort(function(a, b) {
+                    if (b.dateTs !== a.dateTs) {
+                        return b.dateTs - a.dateTs;
+                    }
+                    return String(b.id).localeCompare(String(a.id), undefined, {numeric: true});
+                });
+                allowedTargetEventIds = {};
+                latestTargetEvents.slice(0, latestEventsLimit).forEach(function(item) {
+                    allowedTargetEventIds[item.id] = true;
+                });
+            }
+
             var eventLinkCounts = {};
             if (eventDetails) {
                 for (var eid in eventDetails) {
@@ -3938,6 +3983,9 @@
             parentIds.forEach(function(parentId) {
                 var relations = data[parentId];
                 relations.forEach(function(rel) {
+                    if (allowedTargetEventIds && !allowedTargetEventIds[String(rel.id)]) {
+                        return;
+                    }
                     if (eventLinkCounts[rel.id] !== undefined) {
                         eventLinkCounts[rel.id]++;
                     } else {
@@ -3948,16 +3996,22 @@
 
             parentIds.forEach(function(parentId) {
                 var relations = data[parentId];
+                var filteredRelations = relations.filter(function(rel) {
+                    return !allowedTargetEventIds || !!allowedTargetEventIds[String(rel.id)];
+                });
+                if (!filteredRelations.length) {
+                    return;
+                }
                 var attrValue = relations[0].value || ('Attr #' + parentId);
                 var attrIdx = addNode(attrValue, 'attribute', parentId);
-                
+
                 links.push({
                     source: sourceIdx,
                     target: attrIdx,
-                    value: relations.length
+                    value: filteredRelations.length
                 });
 
-                relations.forEach(function(rel) {
+                filteredRelations.forEach(function(rel) {
                     var count = eventLinkCounts[rel.id] || 1;
                     var rawTargetName = rel.info || ('#' + rel.id);
                     var shortTargetName = rawTargetName.length > 56 ? rawTargetName.substring(0, 53) + '...' : rawTargetName;
@@ -3995,12 +4049,46 @@
             if (links.length === 0) return;
             $('#correlations-sankey-stage').show();
 
-            var margin = {top: 132, right: 540, bottom: 20, left: 24},
-                width = $('#correlations-sankey').width() - margin.left - margin.right;
+            function truncateSourceLabel(name) {
+                var sourceVisibleChars = 30;
+                return name.length > sourceVisibleChars ? name.substring(0, sourceVisibleChars) + '...' : name;
+            }
+
+            function estimateLabelWidth(chars, charWidth, minWidth, maxWidth) {
+                var widthEstimate = (chars * charWidth);
+                return Math.max(minWidth, Math.min(maxWidth, widthEstimate));
+            }
+
+            var containerWidth = $('#correlations-sankey').width();
+            var sourceLabelText = '★ ' + truncateSourceLabel(currentEventName);
+            var longestTargetLabelLength = 0;
+            nodes.forEach(function(node) {
+                if (node.type === 'target') {
+                    longestTargetLabelLength = Math.max(longestTargetLabelLength, (node.name || '').length);
+                }
+            });
+
+            var margin = {
+                top: 98,
+                right: estimateLabelWidth(Math.min(longestTargetLabelLength, 52), 6.3, 220, Math.max(260, Math.floor(containerWidth * 0.24))),
+                bottom: 20,
+                left: estimateLabelWidth(sourceLabelText.length, 6.6, 180, Math.max(220, Math.floor(containerWidth * 0.22)))
+            };
+            var width = Math.max(640, containerWidth - margin.left - margin.right);
             
-            // Dynamic height: base height + extra per attribute node
-            var height = Math.max(400, (parentIds.length * 20) + 100);
-            $('#correlations-sankey').css('height', height + 'px');
+            var displayedAttributeCount = nodes.filter(function(node) { return node.type === 'attribute'; }).length;
+            var displayedTargetCount = nodes.filter(function(node) { return node.type === 'target'; }).length;
+            var estimatedRows = Math.max(displayedAttributeCount, displayedTargetCount);
+            var rowHeight = 22;
+            var baseHeight = 180;
+            var maxHeight = 1800;
+            var height = Math.max(280, Math.min(maxHeight, baseHeight + (estimatedRows * rowHeight)));
+
+            if (options.animateToggle) {
+                $('#correlations-sankey').stop(true, true).animate({height: height + 'px', opacity: 0.18}, 180);
+            } else {
+                $('#correlations-sankey').css({height: height + 'px', opacity: 1});
+            }
             
             height = height - margin.top - margin.bottom;
 
@@ -4008,6 +4096,7 @@
             var svg = d3.select("#correlations-sankey").append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
+                .style("opacity", options.animateToggle ? 0 : 1)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -4157,7 +4246,13 @@
 
             function sankeyNodeFill(node) {
                 if (node.type === 'target') {
-                    return '#33a04a';
+                    return '#8fbfe8';
+                }
+                if (node.type === 'source') {
+                    return '#8fbfe8';
+                }
+                if (node.type === 'attribute') {
+                    return '#f39a1f';
                 }
                 return typeof color === 'function' ? color(node.type) : color;
             }
@@ -4282,7 +4377,7 @@
 
             if (targetNodes.length > 0 && targetLaneEnd > targetLaneStart && alignToDate) {
                 var gridTicks = buildSankeyGridTicks(sankeyScaleMinTs, sankeyScaleMaxTs, targetLaneStart, targetLaneEnd);
-                var laneTop = Math.max(0, d3.min(targetNodes, function(d) { return d.y0; }) - 20);
+                var laneTop = Math.max(0, d3.min(targetNodes, function(d) { return d.y0; }) - 12);
                 var laneBottom = Math.min(height, d3.max(targetNodes, function(d) { return d.y1; }) + 8);
                 var laneHeight = Math.max(0, laneBottom - laneTop);
 
@@ -4312,7 +4407,7 @@
                         .attr('stroke-width', 1)
                         .attr('shape-rendering', 'crispEdges');
 
-                    var topLabelY = laneTop - 10;
+                    var topLabelY = laneTop - 5;
 
                     tickGroup.append('text')
                         .attr('x', function(d) { return d.x; })
@@ -4384,7 +4479,15 @@
                          + " " + x3 + "," + y1
                          + " " + x1 + "," + y1;
                 })
-                .attr("stroke", function(d) { return typeof color === 'function' ? color(d.source.type) : color; })
+                .attr("stroke", function(d) {
+                    if (d.source && d.source.type === 'source' && d.target && d.target.type === 'attribute') {
+                        return '#f2c57c';
+                    }
+                    if (d.source && d.source.type === 'attribute' && d.target && d.target.type === 'target') {
+                        return '#7ec8f3';
+                    }
+                    return typeof color === 'function' ? color(d.source.type) : color;
+                })
                 .attr("stroke-width", function(d) { return Math.max(1, d.width); });
 
             var leaderLines = svg.append('g')
@@ -4410,6 +4513,12 @@
                 .append("text")
                 .attr("class", "sankey-label")
                 .attr("x", function(d) {
+                    if (d.type === 'source') {
+                        return d.x0 - 18;
+                    }
+                    if (d.type === 'attribute') {
+                        return d.x0 - 8;
+                    }
                     if (d.type === 'target') {
                         return d.x1 + targetLabelGap;
                     }
@@ -4418,12 +4527,23 @@
                 .attr("y", function(d) { return (d.y1 + d.y0) / 2; })
                 .attr("dy", "0.35em")
                 .attr("text-anchor", function(d) {
+                    if (d.type === 'source') {
+                        return 'end';
+                    }
+                    if (d.type === 'attribute') {
+                        return 'end';
+                    }
                     if (d.type === 'target') {
                         return 'start';
                     }
                     return d.x0 < width / 2 ? 'start' : 'end';
                 })
                 .attr("cursor", function(d) { return isSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
+                .style("fill", function(d) { return d.type === 'source' ? '#21486f' : null; })
+                .style("paint-order", function(d) { return d.type === 'source' ? 'stroke' : null; })
+                .style("stroke", function(d) { return d.type === 'source' ? 'rgba(255, 255, 255, 0.96)' : 'none'; })
+                .style("stroke-width", function(d) { return d.type === 'source' ? 4 : 0; })
+                .style("stroke-linejoin", function(d) { return d.type === 'source' ? 'round' : null; })
                 .style("font-weight", function(d) { return isSankeyInteractiveNode(d) ? 'bold' : 'normal'; });
 
             labelSelection.append("title")
@@ -4434,9 +4554,12 @@
                 .on("mouseover", function(d) { applySankeyHoverState(d, 0.5); })
                 .on("mouseout", resetSankeyHoverState)
                 .text(function(d) {
-                    if (d.type === 'source') return '';
+                    if (d.type === 'source') {
+                        return '★ ' + truncateSourceLabel(d.name);
+                    }
                     var maxLength = d.type === 'target' ? 60 : (d.x0 < width / 2 ? 50 : 70);
-                    return d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
+                    var label = d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
+                    return label;
                 });
 
             function updateTargetNodePositions(animate) {
@@ -4501,9 +4624,22 @@
             $('#sankey-date-align-toggle').off('change.sankeyAlign').on('change.sankeyAlign', function() {
                 updateTargetNodePositions(true);
             });
+
+            $('#sankey-latest-events-toggle').off('change.sankeyLatest').on('change.sankeyLatest', function() {
+                renderSankey(data, eventDetails, filterAttributeId, {animateToggle: true});
+            });
+
+            if (options.animateToggle) {
+                $('#correlations-sankey').stop(true, true).animate({opacity: 1}, 260);
+                d3.select('#correlations-sankey svg').transition().duration(260).style('opacity', 1);
+            }
         }
 
     $(document).ready(function() {
+        $('#correlations-timeline-view-toggle').off('change.timelineView').on('change.timelineView', function() {
+            updateCorrelationsTimelineVisibility();
+        });
+
         function updatePublishedLabelState(isPublished) {
             var $label = $('#publishedLabel');
             if (!$label.length) {
@@ -4602,6 +4738,7 @@
     };
     // Pending filter to apply once correlations are loaded
     var _pendingCorrelationFilter = null;
+    var _activeCorrelationFilter = null;
 
     function buildFilteredCorrelationEventDetails(attributeId) {
         if (!_correlationEventDetails) {
@@ -4619,6 +4756,13 @@
             filteredDetails[rel.id] = _correlationEventDetails[rel.id];
         });
         return filteredDetails;
+    }
+
+    function updateCorrelationsTimelineVisibility() {
+        var timeline = document.getElementById('correlationsEventTimeline');
+        if (!timeline) return;
+        var showTimeline = $('#correlations-timeline-view-toggle').is(':checked');
+        timeline.style.display = showTimeline ? '' : 'none';
     }
 
     function filterCorrelations(attributeId) {
@@ -4640,6 +4784,8 @@
     }
 
     function _applyCorrelationFilter(attributeId) {
+        _activeCorrelationFilter = attributeId || null;
+
         function buildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue) {
             if (metaBlockHtml) {
                 return '          <td colspan="2">' + metaBlockHtml + '</td>';
