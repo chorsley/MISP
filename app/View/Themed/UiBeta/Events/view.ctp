@@ -2357,12 +2357,16 @@
                     <p style="color: #666; font-size: 1.1em;"><?php echo __('Analyzing correlations...'); ?></p>
                 </div>
                 <div id="correlations-content" style="display: none;">
-                    <div id="correlations-sankey-stage" style="display: none; margin: 0 auto 30px; max-width: 1400px; text-align: center;">
+                    <div id="correlations-sankey-stage" style="display: none; margin: 0 auto 30px; max-width: min(100vw - 40px, 1760px); text-align: center;">
                         <div id="correlations-sankey-toolbar" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; min-height: 24px;">
                             <span id="sankey-filter-badge" style="display: none; background: #d9534f; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; white-space: nowrap;">
                                 <i class="fa fa-filter"></i> <span id="sankey-filter-label"></span>
                                 <a href="#" onclick="resetCorrelationFilter(); return false;" style="color: #fff; margin-left: 6px; text-decoration: none;" title="<?php echo __('Remove filter'); ?>"><i class="fa fa-times-circle"></i></a>
                             </span>
+                            <label for="sankey-date-align-toggle" style="display: inline-flex; align-items: center; gap: 6px; margin: 0; color: #61707e; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="sankey-date-align-toggle" checked style="margin: 0;">
+                                <?php echo __('Align to event date'); ?>
+                            </label>
                             <span id="sankey-limit-msg" style="font-size: 12px; color: #7d8894;"></span>
                         </div>
                         <div style="display: flex; align-items: flex-start; justify-content: center; gap: 8px; width: 100%;">
@@ -3573,8 +3577,10 @@
                 }
 
                 items.sort(function(a, b) { return a.ts - b.ts; });
-                var minTs = items[0].ts;
-                var maxTs = items[items.length - 1].ts;
+                var itemMinTs = items[0].ts;
+                var itemMaxTs = items[items.length - 1].ts;
+                var minTs = itemMinTs;
+                var maxTs = itemMaxTs;
                 var rawRange = maxTs - minTs;
                 var range = Math.max(rawRange, 1);
 
@@ -3613,8 +3619,8 @@
                 });
 
                 if (rangeLabel) {
-                    var start = items[0].date;
-                    var end = items[items.length - 1].date;
+                    var start = formatTimelineDateUtc(itemMinTs);
+                    var end = formatTimelineDateUtc(maxTs);
                     rangeLabel.textContent = start === end ? start : (start + ' → ' + end);
                 }
 
@@ -3828,10 +3834,15 @@
             var nodes = [];
             var links = [];
             var nodeMap = {};
+            var alignToDate = $('#sankey-date-align-toggle').is(':checked');
             var currentEventId = '<?php echo h($event['Event']['id']); ?>';
             var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
             var currentEventName = '<?php echo addslashes(__('This event')); ?>';
+            var currentEventDate = '<?php echo addslashes(h($event['Event']['date'])); ?>';
             var currentEventFullTitle = 'Event #' + currentEventId;
+            if (currentEventDate) {
+                currentEventFullTitle += ' (' + currentEventDate + ')';
+            }
             if (currentEventInfo) {
                 currentEventFullTitle += ': ' + currentEventInfo;
             }
@@ -3899,7 +3910,11 @@
                     var rawTargetName = rel.info || ('#' + rel.id);
                     var shortTargetName = rawTargetName.length > 56 ? rawTargetName.substring(0, 53) + '...' : rawTargetName;
                     var targetEventName = count > 1 ? '(' + count + ') ' + shortTargetName : shortTargetName;
+                    var relDate = rel.date || '';
                     var fullTitle = count > 1 ? '(' + count + ') ' + rawTargetName : rawTargetName;
+                    if (relDate) {
+                        fullTitle += ' (' + relDate + ')';
+                    }
                     var targetIdx = addNode(targetEventName, 'target', rel.id, fullTitle);
                     
                     links.push({
@@ -3928,7 +3943,7 @@
             if (links.length === 0) return;
             $('#correlations-sankey-stage').show();
 
-            var margin = {top: 10, right: 420, bottom: 10, left: 24},
+            var margin = {top: 132, right: 540, bottom: 20, left: 24},
                 width = $('#correlations-sankey').width() - margin.left - margin.right;
             
             // Dynamic height: base height + extra per attribute node
@@ -3953,6 +3968,144 @@
                 nodes: nodes.map(function(d) { return Object.assign({}, d); }),
                 links: links.map(function(d) { return Object.assign({}, d); })
             });
+
+            var sankeyNodeWidth = graph.nodes.length ? (graph.nodes[0].x1 - graph.nodes[0].x0) : 15;
+            var attributeMaxX1 = 0;
+            var targetNodes = [];
+            var targetDateExtents = { min: Infinity, max: -Infinity };
+            graph.nodes.forEach(function(node) {
+                if (node.type === 'attribute') {
+                    attributeMaxX1 = Math.max(attributeMaxX1, node.x1);
+                } else if (node.type === 'target') {
+                    targetNodes.push(node);
+                    var details = eventDetails && node.id ? eventDetails[node.id] : null;
+                    var ts = details && details.date ? Date.parse(details.date + 'T00:00:00Z') : NaN;
+                    if (isFinite(ts)) {
+                        targetDateExtents.min = Math.min(targetDateExtents.min, ts);
+                        targetDateExtents.max = Math.max(targetDateExtents.max, ts);
+                        node.eventDateTs = ts;
+                    }
+                }
+            });
+
+            var hasSpreadableDates = isFinite(targetDateExtents.min)
+                && isFinite(targetDateExtents.max)
+                && targetDateExtents.max > targetDateExtents.min;
+            var sankeyScaleMinTs = targetDateExtents.min;
+            var sankeyScaleMaxTs = targetDateExtents.max;
+            var useYearScale = isFinite(sankeyScaleMinTs)
+                && isFinite(sankeyScaleMaxTs)
+                && (sankeyScaleMaxTs - sankeyScaleMinTs) >= (366 * 24 * 60 * 60 * 1000);
+            if (isFinite(sankeyScaleMaxTs)) {
+                sankeyScaleMaxTs = useYearScale
+                    ? addUtcYears(startOfUtcYear(sankeyScaleMaxTs), 1)
+                    : addUtcMonths(startOfUtcMonth(sankeyScaleMaxTs), 1);
+            }
+            if (isFinite(sankeyScaleMinTs) && isFinite(sankeyScaleMaxTs) && sankeyScaleMaxTs > sankeyScaleMinTs) {
+                sankeyScaleMinTs = Math.max(0, sankeyScaleMinTs - ((sankeyScaleMaxTs - sankeyScaleMinTs) * 0.08));
+            }
+            var targetLaneStart = Math.min(width - sankeyNodeWidth - 24, attributeMaxX1 + 180);
+            var targetLaneEnd = width - 24;
+            var targetFixedX0 = Math.max(targetLaneStart, width - 110);
+            var targetLabelGap = 18;
+            var targetHoverPad = 14;
+
+            function formatSankeyGridDate(ts, unit) {
+                var d = new Date(ts);
+                var y = d.getUTCFullYear();
+                if (unit === 'year') {
+                    return String(y);
+                }
+                var m = String(d.getUTCMonth() + 1).padStart(2, '0');
+                return y + '-' + m;
+            }
+
+            function startOfUtcMonth(ts) {
+                var d = new Date(ts);
+                return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+            }
+
+            function addUtcMonths(ts, count) {
+                var d = new Date(ts);
+                return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + count, 1);
+            }
+
+            function startOfUtcYear(ts) {
+                var d = new Date(ts);
+                return Date.UTC(d.getUTCFullYear(), 0, 1);
+            }
+
+            function addUtcYears(ts, count) {
+                var d = new Date(ts);
+                return Date.UTC(d.getUTCFullYear() + count, 0, 1);
+            }
+
+            function buildSankeyGridTicks(minTs, maxTs, laneStart, laneEnd) {
+                var laneWidth = laneEnd - laneStart;
+                if (!isFinite(minTs) || !isFinite(maxTs) || laneWidth <= 0) {
+                    return [];
+                }
+                var rangeMs = Math.max(0, maxTs - minTs);
+                var tickUseYearScale = rangeMs >= (366 * 24 * 60 * 60 * 1000);
+                var roundedMin = tickUseYearScale ? startOfUtcYear(minTs) : startOfUtcMonth(minTs);
+                var roundedMax = tickUseYearScale ? startOfUtcYear(maxTs) : startOfUtcMonth(maxTs);
+                if (roundedMax <= roundedMin) {
+                    return [{ x: laneStart + (laneWidth / 2), label: formatSankeyGridDate(roundedMin, tickUseYearScale ? 'year' : 'month'), isEdge: true }];
+                }
+                var ticks = [];
+                var cursor = roundedMin;
+                var index = 0;
+                while (cursor <= roundedMax) {
+                    var ratio = (cursor - roundedMin) / Math.max(1, (roundedMax - roundedMin));
+                    ticks.push({
+                        x: laneStart + (laneWidth * ratio),
+                        label: formatSankeyGridDate(cursor, tickUseYearScale ? 'year' : 'month'),
+                        isEdge: index === 0
+                    });
+                    cursor = tickUseYearScale ? addUtcYears(cursor, 1) : addUtcMonths(cursor, 1);
+                    index++;
+                }
+                if (ticks.length) {
+                    ticks[ticks.length - 1].isEdge = true;
+                }
+                if (ticks.length > 8) {
+                    var limitedTicks = [];
+                    var lastIndex = ticks.length - 1;
+                    for (var tickIndex = 0; tickIndex < 8; tickIndex++) {
+                        var sourceIndex = Math.round((lastIndex * tickIndex) / 7);
+                        if (!limitedTicks.length || limitedTicks[limitedTicks.length - 1].x !== ticks[sourceIndex].x) {
+                            limitedTicks.push(ticks[sourceIndex]);
+                        }
+                    }
+                    ticks = limitedTicks;
+                    ticks[0].isEdge = true;
+                    ticks[ticks.length - 1].isEdge = true;
+                }
+                return ticks;
+            }
+
+            if (targetNodes.length > 0 && targetLaneEnd > targetLaneStart) {
+                targetNodes.forEach(function(node) {
+                    node.fixedX0 = targetFixedX0;
+                    node.fixedX1 = node.fixedX0 + sankeyNodeWidth;
+                    if (hasSpreadableDates && isFinite(node.eventDateTs)) {
+                        var ratio = (node.eventDateTs - sankeyScaleMinTs) / Math.max(1, (sankeyScaleMaxTs - sankeyScaleMinTs));
+                        ratio = Math.max(0, Math.min(1, ratio));
+                        node.alignedX0 = targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) * ratio);
+                    } else {
+                        node.alignedX0 = targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) / 2);
+                    }
+                    node.x0 = alignToDate ? node.alignedX0 : node.fixedX0;
+                    node.x1 = node.x0 + sankeyNodeWidth;
+                });
+            }
+
+            function sankeyNodeFill(node) {
+                if (node.type === 'target') {
+                    return '#33a04a';
+                }
+                return typeof color === 'function' ? color(node.type) : color;
+            }
 
             function isSankeyInteractiveNode(node) {
                 return node && (node.type === 'target' || node.type === 'attribute');
@@ -4054,17 +4207,82 @@
             // D3 v3 compatibility for scale and color
             var color = d3.scale ? d3.scale.category10() : (d3.scaleOrdinal ? d3.scaleOrdinal(d3.schemeCategory10) : function() { return '#428bca'; });
 
+            var gridGroup = null;
+
+            if (targetNodes.length > 0 && targetLaneEnd > targetLaneStart && alignToDate) {
+                var gridTicks = buildSankeyGridTicks(sankeyScaleMinTs, sankeyScaleMaxTs, targetLaneStart, targetLaneEnd);
+                var laneTop = Math.max(0, d3.min(targetNodes, function(d) { return d.y0; }) - 20);
+                var laneBottom = Math.min(height, d3.max(targetNodes, function(d) { return d.y1; }) + 8);
+                var laneHeight = Math.max(0, laneBottom - laneTop);
+
+                if (laneHeight > 0) {
+                    gridGroup = svg.append('g').attr('class', 'sankey-target-grid');
+                    gridGroup.append('rect')
+                        .attr('x', targetLaneStart)
+                        .attr('y', laneTop)
+                        .attr('width', targetLaneEnd - targetLaneStart)
+                        .attr('height', laneHeight)
+                        .attr('fill', 'rgba(84, 142, 94, 0.02)')
+                        .attr('stroke', 'rgba(71, 109, 79, 0.08)')
+                        .attr('stroke-width', 1);
+
+                    var tickGroup = gridGroup.selectAll('g')
+                        .data(gridTicks)
+                        .enter()
+                        .append('g')
+                        .attr('class', 'sankey-target-grid-tick');
+
+                    tickGroup.append('line')
+                        .attr('x1', function(d) { return d.x; })
+                        .attr('x2', function(d) { return d.x; })
+                        .attr('y1', laneTop)
+                        .attr('y2', laneBottom)
+                        .attr('stroke', function(d) { return d.isEdge ? 'rgba(63, 88, 70, 0.22)' : 'rgba(63, 88, 70, 0.14)'; })
+                        .attr('stroke-width', 1)
+                        .attr('shape-rendering', 'crispEdges');
+
+                    var topLabelY = -48;
+
+                    tickGroup.append('text')
+                        .attr('x', function(d) { return d.x; })
+                        .attr('y', topLabelY)
+                        .attr('text-anchor', 'start')
+                        .attr('transform', function(d) {
+                            return 'rotate(-55,' + d.x + ',' + topLabelY + ')';
+                        })
+                        .style('font', '10px sans-serif')
+                        .style('fill', '#6f7c88')
+                        .text(function(d) { return d.label; });
+                }
+            }
+
             // D3 v3 compatibility: use enter().append() instead of join()
-            svg.append("g")
-                .selectAll("rect")
+            var nodeGroup = svg.append("g")
+                .selectAll("g")
                 .data(graph.nodes)
                 .enter()
-                .append("rect")
+                .append("g")
+                .attr("class", function(d) { return 'sankey-node sankey-node-' + d.type; });
+
+            nodeGroup.filter(function(d) { return d.type === 'target'; })
+                .append('rect')
+                .attr('class', 'sankey-target-hitbox')
+                .attr('x', function(d) { return Math.max(targetLaneStart - 4, d.x0 - targetHoverPad); })
+                .attr('y', function(d) { return Math.max(0, d.y0 - 3); })
+                .attr('width', function(d) { return Math.max((d.x1 - d.x0) + targetHoverPad + targetLabelGap + 8, 42); })
+                .attr('height', function(d) { return Math.max((d.y1 - d.y0) + 6, 16); })
+                .attr('fill', 'rgba(255,255,255,0)')
+                .attr('cursor', 'pointer')
+                .on("click", handleSankeyNodeClick)
+                .on("mouseover", function(d) { applySankeyHoverState(d, 0.7); })
+                .on("mouseout", resetSankeyHoverState);
+
+            nodeGroup.append("rect")
                 .attr("x", function(d) { return d.x0; })
                 .attr("y", function(d) { return d.y0; })
                 .attr("height", function(d) { return d.y1 - d.y0; })
                 .attr("width", function(d) { return d.x1 - d.x0; })
-                .attr("fill", function(d) { return typeof color === 'function' ? color(d.type) : color; })
+                .attr("fill", sankeyNodeFill)
                 .attr("cursor", function(d) { return isSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
                 .on("click", handleSankeyNodeClick)
                 .on("mouseover", function(d) { applySankeyHoverState(d, 0.7); })
@@ -4096,7 +4314,22 @@
                 .attr("stroke", function(d) { return typeof color === 'function' ? color(d.source.type) : color; })
                 .attr("stroke-width", function(d) { return Math.max(1, d.width); });
 
-            svg.append("g")
+            var leaderLines = svg.append('g')
+                .selectAll('line')
+                .data(graph.nodes.filter(function(d) { return d.type === 'target'; }))
+                .enter()
+                .append('line')
+                .attr('class', 'sankey-target-label-line')
+                .attr('x1', function(d) { return d.x1; })
+                .attr('x2', function(d) { return d.x1 + targetLabelGap - 6; })
+                .attr('y1', function(d) { return (d.y0 + d.y1) / 2; })
+                .attr('y2', function(d) { return (d.y0 + d.y1) / 2; })
+                .attr('stroke', 'rgba(74, 92, 112, 0.45)')
+                .attr('stroke-width', 1)
+                .attr('shape-rendering', 'crispEdges')
+                .attr('pointer-events', 'none');
+
+            var labelSelection = svg.append("g")
                 .style("font", "10px sans-serif")
                 .selectAll("text")
                 .data(graph.nodes)
@@ -4105,7 +4338,7 @@
                 .attr("class", "sankey-label")
                 .attr("x", function(d) {
                     if (d.type === 'target') {
-                        return width + 16;
+                        return d.x1 + targetLabelGap;
                     }
                     return d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6;
                 })
@@ -4118,7 +4351,12 @@
                     return d.x0 < width / 2 ? 'start' : 'end';
                 })
                 .attr("cursor", function(d) { return isSankeyInteractiveNode(d) ? 'pointer' : 'default'; })
-                .style("font-weight", function(d) { return isSankeyInteractiveNode(d) ? 'bold' : 'normal'; })
+                .style("font-weight", function(d) { return isSankeyInteractiveNode(d) ? 'bold' : 'normal'; });
+
+            labelSelection.append("title")
+                .text(function(d) { return d.fullTitle || d.name; });
+
+            labelSelection
                 .on("click", handleSankeyNodeClick)
                 .on("mouseover", function(d) { applySankeyHoverState(d, 0.5); })
                 .on("mouseout", resetSankeyHoverState)
@@ -4127,6 +4365,69 @@
                     var maxLength = d.type === 'target' ? 60 : (d.x0 < width / 2 ? 50 : 70);
                     return d.name.length > maxLength ? d.name.substring(0, maxLength - 3) + '...' : d.name;
                 });
+
+            function updateTargetNodePositions(animate) {
+                var duration = animate ? 450 : 0;
+                var activeAlignToDate = $('#sankey-date-align-toggle').is(':checked');
+
+                graph.nodes.forEach(function(node) {
+                    if (node.type !== 'target') {
+                        return;
+                    }
+                    node.x0 = activeAlignToDate ? node.alignedX0 : node.fixedX0;
+                    node.x1 = node.x0 + sankeyNodeWidth;
+                });
+
+                nodeGroup.filter(function(d) { return d.type === 'target'; })
+                    .selectAll('rect:not(.sankey-target-hitbox)')
+                    .transition()
+                    .duration(duration)
+                    .attr('x', function(d) { return d.x0; })
+                    .attr('width', function(d) { return d.x1 - d.x0; });
+
+                nodeGroup.filter(function(d) { return d.type === 'target'; })
+                    .select('.sankey-target-hitbox')
+                    .transition()
+                    .duration(duration)
+                    .attr('x', function(d) { return Math.max(targetLaneStart - 4, d.x0 - targetHoverPad); })
+                    .attr('width', function(d) { return Math.max((d.x1 - d.x0) + targetHoverPad + targetLabelGap + 8, 42); });
+
+                link.transition()
+                    .duration(duration)
+                    .attr("d", function(d) {
+                        var x0 = d.source.x1,
+                            x1 = d.target.x0,
+                            xi = d3.interpolateNumber(x0, x1),
+                            x2 = xi(0.5),
+                            x3 = xi(0.5),
+                            y0 = d.y0,
+                            y1 = d.y1;
+                        return "M" + x0 + "," + y0
+                             + "C" + x2 + "," + y0
+                             + " " + x3 + "," + y1
+                             + " " + x1 + "," + y1;
+                    });
+
+                leaderLines.transition()
+                    .duration(duration)
+                    .attr('x1', function(d) { return d.x1; })
+                    .attr('x2', function(d) { return d.x1 + targetLabelGap - 6; });
+
+                labelSelection.filter(function(d) { return d.type === 'target'; })
+                    .transition()
+                    .duration(duration)
+                    .attr('x', function(d) { return d.x1 + targetLabelGap; });
+
+                if (gridGroup) {
+                    gridGroup.transition()
+                        .duration(duration)
+                        .style('opacity', activeAlignToDate ? 1 : 0);
+                }
+            }
+
+            $('#sankey-date-align-toggle').off('change.sankeyAlign').on('change.sankeyAlign', function() {
+                updateTargetNodePositions(true);
+            });
         }
 
     $(document).ready(function() {
