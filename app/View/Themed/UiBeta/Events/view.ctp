@@ -1067,11 +1067,29 @@
     .beta-correlation-comment-inline {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        font-size: 12px;
-        color: #8693a0;
-        font-style: italic;
+        gap: 6px;
+        min-height: 24px;
+        max-width: min(100%, 520px);
+        padding: 3px 10px;
+        border: 1px solid #dbe5ef;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #667686;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.35;
         overflow-wrap: anywhere;
+        box-shadow: 0 1px 2px rgba(31, 57, 83, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .beta-correlation-comment-inline span {
+        min-width: 0;
+    }
+    .beta-correlation-comment-inline .fa,
+    .beta-correlation-comment-inline .fas {
+        flex: 0 0 auto;
+        color: #7d91a4;
+        font-size: 10px;
+        opacity: 0.95;
     }
     .beta-correlation-value-row {
         display: inline-flex;
@@ -3847,11 +3865,18 @@
                 if (!comment) {
                     return '';
                 }
+                var iconHtml = '<i class="fa fa-comment"></i>';
                 if (comment.length > 50) {
-                    return comment.substring(0, 50) + '... '
-                        + '<i class="fa fa-comment-dots" style="cursor: pointer;" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' + comment + '"></i>';
+                    return '<span class="beta-correlation-comment-inline">'
+                        + iconHtml
+                        + '<span>' + comment.substring(0, 50) + '...</span>'
+                        + '<i class="fa fa-comment-dots" style="cursor: pointer;" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' + comment + '"></i>'
+                        + '</span>';
                 }
-                return comment;
+                return '<span class="beta-correlation-comment-inline">'
+                    + iconHtml
+                    + '<span>' + comment + '</span>'
+                    + '</span>';
             }
 
             function buildCorrelationAttributeRow(eid, entry) {
@@ -3881,7 +3906,7 @@
                 html += '                  <span class="beta-correlation-chevron beta-correlation-type"><span>' + attr.type + '</span></span>';
                 html += '                </span>';
                 if (attr.comment) {
-                    html += '                <span class="beta-correlation-comment-inline"><i class="fa fa-comment"></i><span>' + attr.comment + '</span></span>';
+                    html += '                ' + buildCorrelationCommentHtml(attr.comment);
                 }
                 html += '              </div>';
                 html += '              <div class="beta-correlation-value-row">';
@@ -4582,9 +4607,6 @@
                         if (!connected) {
                             return 0.08;
                         }
-                        if (link.source && link.source.type === 'target' && link.target && link.target.type === 'org') {
-                            return activeNode.type === 'org' ? 0.28 : linkOpacity;
-                        }
                         return linkOpacity;
                     });
                 svg.selectAll('.sankey-label')
@@ -4684,14 +4706,26 @@
 
                 if (laneHeight > 0) {
                     gridGroup = svg.append('g').attr('class', 'sankey-target-grid');
+                    var timelineAxisY = laneTop - 28;
+                    var timelineTickTopY = timelineAxisY - 12;
+
                     gridGroup.append('rect')
                         .attr('x', targetLaneStart)
                         .attr('y', laneTop)
                         .attr('width', targetLaneEnd - targetLaneStart)
                         .attr('height', laneHeight)
-                        .attr('fill', 'rgba(84, 142, 94, 0.02)')
-                        .attr('stroke', 'rgba(71, 109, 79, 0.08)')
+                        .attr('fill', 'rgba(84, 142, 94, 0.035)')
+                        .attr('stroke', 'rgba(71, 109, 79, 0.12)')
                         .attr('stroke-width', 1);
+
+                    gridGroup.append('line')
+                        .attr('x1', targetLaneStart)
+                        .attr('x2', targetLaneEnd)
+                        .attr('y1', timelineAxisY)
+                        .attr('y2', timelineAxisY)
+                        .attr('stroke', 'rgba(63, 88, 70, 0.34)')
+                        .attr('stroke-width', 2)
+                        .attr('shape-rendering', 'geometricPrecision');
 
                     var tickGroup = gridGroup.selectAll('g')
                         .data(gridTicks)
@@ -4702,13 +4736,22 @@
                     tickGroup.append('line')
                         .attr('x1', function(d) { return d.x; })
                         .attr('x2', function(d) { return d.x; })
-                        .attr('y1', laneTop)
+                        .attr('y1', timelineTickTopY)
                         .attr('y2', laneBottom)
-                        .attr('stroke', function(d) { return d.isEdge ? 'rgba(63, 88, 70, 0.22)' : 'rgba(63, 88, 70, 0.14)'; })
+                        .attr('stroke', function(d) { return d.isEdge ? 'rgba(63, 88, 70, 0.28)' : 'rgba(63, 88, 70, 0.18)'; })
                         .attr('stroke-width', 1)
                         .attr('shape-rendering', 'crispEdges');
 
                     var topLabelY = laneTop - 38;
+
+                    tickGroup.append('line')
+                        .attr('x1', function(d) { return d.x; })
+                        .attr('x2', function(d) { return d.x; })
+                        .attr('y1', timelineTickTopY)
+                        .attr('y2', timelineAxisY)
+                        .attr('stroke', 'rgba(63, 88, 70, 0.42)')
+                        .attr('stroke-width', 1.4)
+                        .attr('shape-rendering', 'crispEdges');
 
                     var tickLabel = tickGroup.append('text')
                         .attr('x', function(d) { return d.x; })
