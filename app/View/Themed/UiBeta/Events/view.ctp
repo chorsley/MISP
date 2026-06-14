@@ -927,11 +927,6 @@
         overflow: hidden;
         background: #fff;
         box-shadow: 0 1px 2px rgba(31, 45, 61, 0.04);
-        transition: transform 220ms ease, opacity 220ms ease, box-shadow 220ms ease;
-    }
-    .correlation-event-card.is-filter-transitioning {
-        opacity: 0.18;
-        transform: translateY(-10px) scale(0.985);
     }
     .correlation-event-card .beta-card-header {
         padding: 12px 18px;
@@ -1095,6 +1090,58 @@
         color: #7d91a4;
         font-size: 10px;
         opacity: 0.95;
+    }
+    .beta-correlation-filter-comments {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 10px;
+        color: #c96b11;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    .beta-correlation-filter-comments:empty {
+        display: none;
+    }
+    .beta-correlation-filter-comments-label {
+        flex: 0 0 auto;
+        font-size: 13px;
+        font-weight: 500;
+        color: #ff6f00;
+    }
+    .beta-correlation-filter-comment-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        padding: 6px 12px;
+        border: 1px solid #c7d7e8;
+        border-radius: 999px;
+        background: #fff;
+        color: #4f6478;
+        font-size: 13px;
+        line-height: 1.4;
+        cursor: pointer;
+        text-align: left;
+    }
+    .beta-correlation-filter-comment-chip:hover,
+    .beta-correlation-filter-comment-chip:focus {
+        color: #2f4b67;
+        border-color: #9fb7d1;
+        text-decoration: none;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(66, 139, 202, 0.14);
+    }
+    .beta-correlation-filter-comment-chip i {
+        flex: 0 0 auto;
+        color: #7d91a4;
+        font-size: 10px;
+    }
+    .beta-correlation-filter-comment-chip span {
+        min-width: 0;
+        white-space: normal;
+        word-break: break-word;
     }
     .beta-correlation-value-row {
         display: inline-flex;
@@ -2544,6 +2591,7 @@
                             <div class="beta-event-timeline-markers"></div>
                         </div>
                     </div>
+                    <div id="correlations-filter-comments" class="beta-correlation-filter-comments"></div>
                     <div id="correlations-table-filter-banner" style="display: none; margin-bottom: 15px; padding: 10px 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; align-items: center; justify-content: space-between;">
                         <span><i class="fa fa-filter" style="color: #856404;"></i> <strong><?php echo __('Filtered view'); ?></strong> &mdash; <span id="correlations-table-filter-msg"></span></span>
                         <a href="#" onclick="resetCorrelationFilter(); return false;" class="btn btn-xs btn-warning" style="margin-left: 10px;"><i class="fa fa-times"></i> <?php echo __('Clear Filter'); ?></a>
@@ -3798,6 +3846,59 @@
         });
     }
 
+    function buildCorrelationCommentHtml(comment) {
+        if (!comment) {
+            return '';
+        }
+        var iconHtml = '<i class="fa fa-comment"></i>';
+        if (comment.length > 50) {
+            return '<span class="beta-correlation-comment-inline">'
+                + iconHtml
+                + '<span>' + comment.substring(0, 50) + '...</span>'
+                + '<i class="fa fa-comment-dots" style="cursor: pointer;" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' + comment + '"></i>'
+                + '</span>';
+        }
+        return '<span class="beta-correlation-comment-inline">'
+            + iconHtml
+            + '<span>' + comment + '</span>'
+            + '</span>';
+    }
+
+    function buildFilteredCorrelationCommentChip(entry) {
+        if (!entry || !entry.comment) {
+            return '';
+        }
+        var eventId = entry.eventId ? String(entry.eventId) : '';
+        var isCurrentEvent = entry.isCurrentEvent ? '1' : '0';
+        var safeComment = $('<div/>').text(entry.comment).html();
+        var safeTitle = $('<div/>').text(entry.title || entry.comment).html();
+        return '<button type="button" class="beta-correlation-filter-comment-chip" data-event-id="' + eventId.replace(/"/g, '&quot;') + '" data-current-event="' + isCurrentEvent + '" title="' + safeTitle + '">'
+            + '<i class="fa fa-comment"></i>'
+            + '<span>' + safeComment + '</span>'
+            + '</button>';
+    }
+
+    function scrollToCorrelationCommentTarget(eventId, isCurrentEvent) {
+        var $target = $();
+        if (isCurrentEvent) {
+            $target = $('#correlations-this-event-card');
+        }
+        if (!$target.length && eventId) {
+            $target = $('.correlation-event-card[data-event-id="' + String(eventId).replace(/"/g, '\\"') + '"]').first();
+        }
+        if (!$target.length) {
+            return;
+        }
+        $('.beta-correlation-card-highlight').removeClass('beta-correlation-card-highlight');
+        $target.addClass('beta-correlation-card-highlight');
+        $('html, body').animate({
+            scrollTop: Math.max($target.offset().top - 120, 0)
+        }, 350);
+        window.setTimeout(function() {
+            $target.removeClass('beta-correlation-card-highlight');
+        }, 1400);
+    }
+
     function renderCorrelations(data) {
             _correlationData = data;
             var eventCounts = {};
@@ -3864,24 +3965,6 @@
                 html += '  <span class="tag nowrap" style="background-color: transparent; border: 1px solid #d0d0d0; color: #000; padding: 3px 8px; font-size: 12px; border-radius: 0 4px 4px 0;">' + tag.name + '</span>';
                 html += '</div>';
                 return html;
-            }
-
-            function buildCorrelationCommentHtml(comment) {
-                if (!comment) {
-                    return '';
-                }
-                var iconHtml = '<i class="fa fa-comment"></i>';
-                if (comment.length > 50) {
-                    return '<span class="beta-correlation-comment-inline">'
-                        + iconHtml
-                        + '<span>' + comment.substring(0, 50) + '...</span>'
-                        + '<i class="fa fa-comment-dots" style="cursor: pointer;" data-toggle="popover" data-trigger="click" data-placement="top" data-content="' + comment + '"></i>'
-                        + '</span>';
-                }
-                return '<span class="beta-correlation-comment-inline">'
-                    + iconHtml
-                    + '<span>' + comment + '</span>'
-                    + '</span>';
             }
 
             function buildCorrelationAttributeRow(eid, entry) {
@@ -4005,6 +4088,7 @@
             $('#correlations-table-container').html(html);
             
             _correlationEventDetails = eventDetails;
+            _correlationAttributeMap = attributeMap;
             renderCorrelationsTimeline(eventDetails);
             renderSankey(data, eventDetails);
         }
@@ -5110,6 +5194,10 @@
         }
 
     $(document).ready(function() {
+        $(document).off('click.correlationCommentChip').on('click.correlationCommentChip', '.beta-correlation-filter-comment-chip', function() {
+            scrollToCorrelationCommentTarget($(this).data('event-id'), String($(this).data('current-event')) === '1');
+        });
+
         $('#correlations-timeline-view-toggle').off('change.timelineView').on('change.timelineView', function() {
             updateCorrelationsTimelineVisibility();
         });
@@ -5214,6 +5302,7 @@
     var _pendingCorrelationFilter = null;
     var _activeCorrelationFilter = null;
     var _activeCorrelationFilterType = null;
+    var _correlationAttributeMap = null;
 
     function buildFilteredCorrelationEventDetails(attributeId) {
         if (!_correlationEventDetails) {
@@ -5248,6 +5337,96 @@
         return filteredDetails;
     }
 
+    function collectFilteredCorrelationComments(filterValue, filterType) {
+        if (!_correlationAttributeMap || !filterValue) {
+            return [];
+        }
+
+        var seen = {};
+        var comments = [];
+        var registerComment = function(comment, eventId, title, isCurrentEvent) {
+            var normalizedComment = comment ? String(comment).trim() : '';
+            if (!normalizedComment || seen[normalizedComment]) {
+                return;
+            }
+            seen[normalizedComment] = true;
+            comments.push({
+                comment: normalizedComment,
+                eventId: eventId ? String(eventId) : '',
+                title: title || normalizedComment,
+                isCurrentEvent: !!isCurrentEvent
+            });
+        };
+
+        if (filterType === 'attribute') {
+            var $currentRow = $('[data-primary-id="' + String(filterValue).replace(/"/g, '\\"') + '"]').first();
+            var currentComment = $currentRow.find('.beta-attr-comment-inline span').first().text().trim();
+            if (currentComment) {
+                registerComment(currentComment, '<?php echo h($event['Event']['id']); ?>', '<?php echo addslashes(h($event['Event']['info'])); ?>', true);
+            }
+            Object.keys(_correlationAttributeMap).forEach(function(eventId) {
+                (_correlationAttributeMap[eventId] || []).forEach(function(entry) {
+                    if (String(entry.id) !== String(filterValue)) {
+                        return;
+                    }
+                    var attr = entry && entry.attribute ? entry.attribute : null;
+                    registerComment(
+                        attr && attr.comment ? String(attr.comment).trim() : '',
+                        eventId,
+                        (_correlationEventDetails && _correlationEventDetails[eventId] && _correlationEventDetails[eventId].info) ? _correlationEventDetails[eventId].info : '',
+                        false
+                    );
+                });
+            });
+        } else {
+            Object.keys(_correlationAttributeMap).forEach(function(eventId) {
+                if (!_correlationEventDetails || !_correlationEventDetails[eventId] || String(_correlationEventDetails[eventId].org) !== String(filterValue)) {
+                    return;
+                }
+                (_correlationAttributeMap[eventId] || []).forEach(function(entry) {
+                    var attr = entry && entry.attribute ? entry.attribute : null;
+                    registerComment(
+                        attr && attr.comment ? String(attr.comment).trim() : '',
+                        eventId,
+                        _correlationEventDetails[eventId].info || '',
+                        false
+                    );
+                });
+            });
+        }
+
+        comments.sort(function(a, b) {
+            return a.comment.localeCompare(b.comment);
+        });
+
+        return comments;
+    }
+
+    function renderFilteredCorrelationComments(filterValue, filterType) {
+        var $comments = $('#correlations-filter-comments');
+        if (!$comments.length) {
+            return;
+        }
+
+        if (!filterValue || !filterType) {
+            $comments.empty().hide();
+            return;
+        }
+
+        var comments = collectFilteredCorrelationComments(filterValue, filterType);
+        if (!comments.length) {
+            $comments.empty().hide();
+            return;
+        }
+
+        var html = '<div class="beta-correlation-filter-comments-label"><?php echo addslashes(__('Cross-event comments:')); ?></div>';
+        comments.forEach(function(commentEntry) {
+            html += buildFilteredCorrelationCommentChip(commentEntry);
+        });
+
+        $comments.html(html).show();
+    }
+
     function updateCorrelationsTimelineVisibility() {
         var timeline = document.getElementById('correlationsEventTimeline');
         if (!timeline) return;
@@ -5279,25 +5458,15 @@
 
     function animateCorrelationFilterTransition(applyFilterFn) {
         var $sankey = $('#correlations-sankey');
-        var $cards = $('.correlation-event-card:visible');
 
         if (!$sankey.length) {
             applyFilterFn();
             return;
         }
 
-        $cards.addClass('is-filter-transitioning');
         $sankey.stop(true, true).animate({opacity: 0.18}, 140, function() {
             applyFilterFn();
             $('#correlations-sankey').stop(true, true).css('opacity', 0.18).animate({opacity: 1}, 240);
-
-            var $updatedCards = $('.correlation-event-card:visible');
-            $updatedCards.addClass('is-filter-transitioning');
-            window.requestAnimationFrame(function() {
-                window.requestAnimationFrame(function() {
-                    $updatedCards.removeClass('is-filter-transitioning');
-                });
-            });
         });
     }
 
@@ -5535,6 +5704,7 @@
                 // Show filter banner above the table
                 $('#correlations-table-filter-msg').text('<?php echo __('Showing correlations for'); ?>: ' + attrValue);
                 $('#correlations-table-filter-banner').css('display', 'flex');
+                renderFilteredCorrelationComments(filterValue, filterType);
 
                 $('#correlation-filter-msg').text('<?php echo __('Filtered by'); ?>: ' + attrValue);
                 $('#correlation-filter-controls').show();
@@ -5543,6 +5713,7 @@
                 cards.show();
                 cards.find('.beta-correlation-row').show();
                 $('#correlations-table-filter-banner').hide();
+                $('#correlations-filter-comments').empty().hide();
                 $('#correlation-filter-controls').hide();
             }
         });
