@@ -1139,7 +1139,11 @@
                                 $relatedCount = $countRelatedEvents($item['RelatedAttribute'] ?? []);
                             ?>
                             <?php if ($relatedCount > 0): ?>
-                                <span class="beta-related-count-badge" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($item['id']); ?>'); return false;"><i class="fa fa-code-branch"></i><span><?php echo $relatedCount; ?></span></span>
+                                <?= $this->element('Events/correlation_badge', [
+                                    'count' => $relatedCount,
+                                    'title' => __('Show correlations'),
+                                    'onclick' => "filterCorrelations('" . h($item['id']) . "'); return false;",
+                                ]) ?>
                             <?php endif; ?>
                         </td>
                     <?php endif; ?>
@@ -1371,7 +1375,11 @@
                                     $subRelatedCount = $countRelatedEvents($subAttr['RelatedAttribute'] ?? []);
                                 ?>
                                 <?php if ($subRelatedCount > 0): ?>
-                                    <span class="beta-related-count-badge" title="<?php echo __('Show correlations'); ?>" onclick="filterCorrelations('<?php echo h($subAttr['id']); ?>'); return false;"><i class="fa fa-code-branch"></i><span><?php echo $subRelatedCount; ?></span></span>
+                                <?= $this->element('Events/correlation_badge', [
+                                    'count' => $subRelatedCount,
+                                    'title' => __('Show correlations'),
+                                    'onclick' => "filterCorrelations('" . h($subAttr['id']) . "'); return false;",
+                                ]) ?>
                                 <?php endif; ?>
                             </td>
 

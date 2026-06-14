@@ -77,7 +77,308 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
     return $galaxyCards;
 };
 
+$buildRecencyMeta = function ($timestamp, $scaleLabel, $ageType = 'date') {
+    $hasDateOnlyPrecision = $ageType === 'date';
+    $normalisedTimestamp = is_numeric($timestamp) ? (int)$timestamp : strtotime((string)$timestamp);
+    if (empty($normalisedTimestamp)) {
+        return [
+            'class' => 'is-unknown',
+            'title' => __('unavailable'),
+            'filled' => 0,
+            'band' => __('Unknown'),
+        ];
+    }
+
+    $nowTs = time();
+    if ($hasDateOnlyPrecision) {
+        $normalisedTimestamp = strtotime(date('Y-m-d', $normalisedTimestamp) . ' 00:00:00');
+        $nowTs = strtotime(date('Y-m-d', $nowTs) . ' 00:00:00');
+    }
+
+    $ageDays = max(0, (int)floor(($nowTs - $normalisedTimestamp) / 86400));
+    if ($ageDays <= 3) {
+        return [
+            'class' => 'is-hot',
+            'title' => __('within last 3 days (%s days old)', $ageDays),
+            'filled' => 6,
+            'band' => __('0-3d'),
+        ];
+    }
+    if ($ageDays <= 14) {
+        return [
+            'class' => 'is-week',
+            'title' => __('within last 14 days (%s days old)', $ageDays),
+            'filled' => 5,
+            'band' => __('4-14d'),
+        ];
+    }
+    if ($ageDays <= 90) {
+        return [
+            'class' => 'is-month',
+            'title' => __('within last 90 days (%s days old)', $ageDays),
+            'filled' => 4,
+            'band' => __('15-90d'),
+        ];
+    }
+    if ($ageDays <= 180) {
+        return [
+            'class' => 'is-quarter',
+            'title' => __('within last 6 months (%s days old)', $ageDays),
+            'filled' => 3,
+            'band' => __('3-6mo'),
+        ];
+    }
+    if ($ageDays <= 730) {
+        return [
+            'class' => 'is-year',
+            'title' => __('within last 2 years (%s days old)', $ageDays),
+            'filled' => 2,
+            'band' => __('6-24mo'),
+        ];
+    }
+
+    return [
+        'class' => 'is-older',
+        'title' => __('older than 2 years (%s days old)', $ageDays),
+        'filled' => 1,
+        'band' => __('2y+'),
+    ];
+};
+
 ?>
+<style>
+    .beta-event-date-stack {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 0.35em;
+        flex-wrap: wrap;
+    }
+
+    .beta-event-freshness-pair {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        box-sizing: border-box;
+        opacity: 0.72;
+        transition: opacity 120ms ease;
+        cursor: default;
+    }
+
+    .beta-event-freshness-pair:hover,
+    .beta-event-freshness-pair:focus {
+        opacity: 0.92;
+    }
+
+    .beta-event-freshness-icon {
+        color: #a8b1bc;
+        font-size: 10px;
+        line-height: 1;
+        width: 10px;
+        text-align: center;
+        flex: 0 0 10px;
+    }
+
+    .beta-event-freshness-grid {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .beta-event-recency-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        min-width: 0;
+    }
+
+    .beta-event-date-label {
+        color: #7b8593;
+        font-size: 12px;
+        line-height: 1.3;
+        white-space: nowrap;
+    }
+
+    .beta-event-freshness-scale {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .beta-event-freshness-rail {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        padding: 0;
+    }
+
+    .beta-event-freshness-segment {
+        width: 7px;
+        height: 6px;
+        border-radius: 0;
+        background: #e5e9ee;
+        transition: background-color 120ms ease, opacity 120ms ease;
+        opacity: 0.5;
+    }
+
+    .beta-event-freshness-segment:first-child {
+        border-radius: 2px 0 0 2px;
+    }
+
+    .beta-event-freshness-segment:last-child {
+        border-radius: 0 2px 2px 0;
+    }
+
+    .beta-event-freshness-scale.is-hot .beta-event-freshness-segment:nth-child(-n+6),
+    .beta-event-freshness-scale.is-week .beta-event-freshness-segment:nth-child(-n+5),
+    .beta-event-freshness-scale.is-month .beta-event-freshness-segment:nth-child(-n+4),
+    .beta-event-freshness-scale.is-quarter .beta-event-freshness-segment:nth-child(-n+3),
+    .beta-event-freshness-scale.is-year .beta-event-freshness-segment:nth-child(-n+2),
+    .beta-event-freshness-scale.is-older .beta-event-freshness-segment:nth-child(-n+1) {
+        opacity: 1;
+    }
+
+    .beta-event-freshness-scale.is-hot .beta-event-freshness-segment:nth-child(-n+6) {
+        background: linear-gradient(180deg, #86ef8c 0%, #2db13f 100%);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    }
+
+    .beta-event-freshness-scale.is-week .beta-event-freshness-segment:nth-child(-n+5) {
+        background: linear-gradient(180deg, #72c96a 0%, #538f49 100%);
+    }
+
+    .beta-event-freshness-scale.is-month .beta-event-freshness-segment:nth-child(-n+4) {
+        background: linear-gradient(180deg, #9ec86b 0%, #748f4e 100%);
+    }
+
+    .beta-event-freshness-scale.is-quarter .beta-event-freshness-segment:nth-child(-n+3) {
+        background: linear-gradient(180deg, #b4c66e 0%, #8a8d53 100%);
+    }
+
+    .beta-event-freshness-scale.is-year .beta-event-freshness-segment:nth-child(-n+2) {
+        background: linear-gradient(180deg, #c3be74 0%, #9a8656 100%);
+    }
+
+    .beta-event-freshness-scale.is-older .beta-event-freshness-segment:nth-child(-n+1) {
+        background: linear-gradient(180deg, #c8b47a 0%, #8e7755 100%);
+    }
+
+    .beta-event-freshness-scale.is-unknown .beta-event-freshness-segment {
+        background: #e7eaee;
+        opacity: 0.65;
+    }
+
+    .beta-events-table .beta-info-link {
+        font-weight: 700;
+    }
+
+    .beta-freshness-popover {
+        text-align: left;
+        line-height: 1.35;
+        width: 420px;
+    }
+
+    .beta-freshness-popover-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .beta-freshness-popover-row + .beta-freshness-popover-row {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .beta-freshness-popover-meta {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .beta-freshness-popover-label {
+        display: inline-block;
+        font-weight: 700;
+        color: #2f3338;
+        margin-bottom: 0;
+        flex: 0 0 88px;
+    }
+
+    .beta-freshness-popover-copy {
+        color: #2f3338;
+        min-width: 0;
+        flex: 1 1 180px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .beta-freshness-popover-scale {
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        margin-top: 2px;
+    }
+
+    .beta-freshness-popover-scale .beta-event-freshness-segment {
+        width: 9px;
+        height: 8px;
+        opacity: 0.3;
+    }
+
+    .beta-freshness-popover-scale.is-hot .beta-event-freshness-segment:nth-child(-n+6),
+    .beta-freshness-popover-scale.is-week .beta-event-freshness-segment:nth-child(-n+5),
+    .beta-freshness-popover-scale.is-month .beta-event-freshness-segment:nth-child(-n+4),
+    .beta-freshness-popover-scale.is-quarter .beta-event-freshness-segment:nth-child(-n+3),
+    .beta-freshness-popover-scale.is-year .beta-event-freshness-segment:nth-child(-n+2),
+    .beta-freshness-popover-scale.is-older .beta-event-freshness-segment:nth-child(-n+1) {
+        opacity: 1;
+    }
+
+    .beta-freshness-popover-scale.is-hot .beta-event-freshness-segment:nth-child(-n+6) {
+        background: linear-gradient(180deg, #86ef8c 0%, #2db13f 100%);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    }
+
+    .beta-freshness-popover-scale.is-week .beta-event-freshness-segment:nth-child(-n+5) {
+        background: linear-gradient(180deg, #72c96a 0%, #538f49 100%);
+    }
+
+    .beta-freshness-popover-scale.is-month .beta-event-freshness-segment:nth-child(-n+4) {
+        background: linear-gradient(180deg, #9ec86b 0%, #748f4e 100%);
+    }
+
+    .beta-freshness-popover-scale.is-quarter .beta-event-freshness-segment:nth-child(-n+3) {
+        background: linear-gradient(180deg, #b4c66e 0%, #8a8d53 100%);
+    }
+
+    .beta-freshness-popover-scale.is-year .beta-event-freshness-segment:nth-child(-n+2) {
+        background: linear-gradient(180deg, #c3be74 0%, #9a8656 100%);
+    }
+
+    .beta-freshness-popover-scale.is-older .beta-event-freshness-segment:nth-child(-n+1) {
+        background: linear-gradient(180deg, #c8b47a 0%, #8e7755 100%);
+    }
+
+    .beta-freshness-popover-scale.is-unknown .beta-event-freshness-segment {
+        background: #e7eaee;
+        opacity: 0.5;
+    }
+
+    .beta-events-table .beta-org-link,
+    .beta-events-table .beta-org-link span {
+        font-weight: 400;
+    }
+
+</style>
 <table class="table table-striped table-hover table-condensed beta-events-table">
     <tr>
         <th>
@@ -120,6 +421,9 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
     </tr>
     <?php foreach ($events as $event):
         $eventId = (int)$event['Event']['id'];
+        $eventDateTimestamp = !empty($event['Event']['date']) ? strtotime($event['Event']['date'] . ' 00:00:00') : null;
+        $dateRecencyMeta = $buildRecencyMeta($eventDateTimestamp, __('Event date'), 'date');
+        $updateRecencyMeta = $buildRecencyMeta($event['Event']['timestamp'] ?? null, __('MISP update'), 'timestamp');
     ?>
     <tr id="event_<?= $eventId ?>">
         <td style="width:10px" class="beta-checkbox-actions-cell">
@@ -178,6 +482,52 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                                 <i class="fas fa-file-alt" style="margin-left: 5px; color: #428bca;"></i>
                             </a>
                         <?php endif; ?>
+                    </div>
+
+                    <div class="beta-event-date-stack">
+                        <time class="beta-event-date-label" datetime="<?= h($event['Event']['date']) ?>"><?= h($event['Event']['date']) ?></time>
+                        <?php
+                            $freshnessAriaLabel = __('Event date: %s. Last update: %s.', $dateRecencyMeta['title'], $updateRecencyMeta['title']);
+                            $buildPopoverScale = function ($recencyMeta) {
+                                $segments = '';
+                                for ($segment = 1; $segment <= 6; $segment++) {
+                                    $segments .= '<span class="beta-event-freshness-segment"></span>';
+                                }
+                                return '<span class="beta-freshness-popover-scale beta-event-freshness-scale ' . h($recencyMeta['class']) . '"><span class="beta-event-freshness-rail">' . $segments . '</span></span>';
+                            };
+                            $freshnessPopover = sprintf(
+                                '<div class="beta-freshness-popover"><div class="beta-freshness-popover-row">%s<div class="beta-freshness-popover-meta"><span class="beta-freshness-popover-label">%s</span><div class="beta-freshness-popover-copy">%s</div></div></div><div class="beta-freshness-popover-row">%s<div class="beta-freshness-popover-meta"><span class="beta-freshness-popover-label">%s</span><div class="beta-freshness-popover-copy">%s</div></div></div></div>',
+                                $buildPopoverScale($dateRecencyMeta),
+                                h(__('Event date')),
+                                h($dateRecencyMeta['title']),
+                                $buildPopoverScale($updateRecencyMeta),
+                                h(__('MISP last update')),
+                                h($updateRecencyMeta['title'])
+                            );
+                        ?>
+                        <span class="beta-event-freshness-pair" data-original-title="<?= h(__('Event freshness')) ?>" aria-label="<?= h($freshnessAriaLabel) ?>" data-toggle="popover" data-trigger="hover focus" data-placement="top" data-html="true" data-container="body" data-content="<?= h($freshnessPopover) ?>" data-title="<?= h(__('Event freshness')) ?>">
+                            <i class="fa fa-seedling beta-event-freshness-icon" aria-hidden="true"></i>
+                            <span class="beta-event-freshness-grid" aria-hidden="true">
+                            <span class="beta-event-recency-row">
+                                <span class="beta-event-freshness-scale <?= h($dateRecencyMeta['class']) ?>">
+                                    <span class="beta-event-freshness-rail" aria-hidden="true">
+                                        <?php for ($segment = 1; $segment <= 6; $segment++): ?>
+                                            <span class="beta-event-freshness-segment<?= $segment <= (int)$dateRecencyMeta['filled'] ? ' is-filled' : '' ?>"></span>
+                                        <?php endfor; ?>
+                                    </span>
+                                </span>
+                            </span>
+                            <span class="beta-event-recency-row">
+                                <span class="beta-event-freshness-scale <?= h($updateRecencyMeta['class']) ?>">
+                                    <span class="beta-event-freshness-rail" aria-hidden="true">
+                                        <?php for ($segment = 1; $segment <= 6; $segment++): ?>
+                                            <span class="beta-event-freshness-segment<?= $segment <= (int)$updateRecencyMeta['filled'] ? ' is-filled' : '' ?>"></span>
+                                        <?php endfor; ?>
+                                    </span>
+                                </span>
+                            </span>
+                            </span>
+                        </span>
                     </div>
 
                     <div id="event-collections-container-<?= $eventId ?>" class="beta-index-event-collections" data-event-uuid="<?= h($event['Event']['uuid']) ?>" style="margin-top: 0.35em;">
@@ -408,11 +758,14 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
         </td>
         <?php endif; ?>
         <?php if (in_array('correlations', $columns, true)): ?>
-        <td class="bold col-corr-count" data-beta-column="correlations" style="width:30px">
+        <td class="col-corr-count" data-beta-column="correlations" style="width:30px">
             <?php if (!empty($event['Event']['correlation_count'])): ?>
-                <a href="<?= "$baseurl/events/view/$eventId/correlation:1" ?>" title="<?= __n('%s correlation', '%s correlations', $event['Event']['correlation_count'], $event['Event']['correlation_count']), '. ' . __('Show filtered event with correlation only.');?>">
-                    <?= intval($event['Event']['correlation_count']); ?>
-                </a>
+                <?= $this->element('Events/correlation_badge', [
+                    'tag' => 'a',
+                    'href' => "$baseurl/events/view/$eventId/correlation:1",
+                    'count' => (int)$event['Event']['correlation_count'],
+                    'title' => __n('%s correlation', '%s correlations', $event['Event']['correlation_count'], $event['Event']['correlation_count']),
+                ]) ?>
             <?php endif; ?>
         </td>
         <?php endif; ?>
@@ -541,6 +894,10 @@ $buildGalaxyCardsFromTags = function (array $galaxyTags) use ($baseurl) {
                 distributionData: <?= json_encode($this->DistributionGraph->getGraphData(-1), JSON_UNESCAPED_UNICODE); ?>,
             });
         });
+
+        if (typeof popoverStartup === 'function') {
+            popoverStartup();
+        }
 
     });
 </script>
