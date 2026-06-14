@@ -1,6 +1,9 @@
 <?php
 $edit = $this->request->params['action'] === 'edit' ? true : false;
-$hasAttachTarget = !empty($attachElementType) && !empty($attachElementUuid);
+$attachElementUuids = !empty($attachElementUuids)
+    ? array_values(array_filter((array)$attachElementUuids))
+    : (!empty($attachElementUuid) ? [$attachElementUuid] : []);
+$hasAttachTarget = !empty($attachElementType) && !empty($attachElementUuids);
 $fields = [
     [
         'field' => 'name',
@@ -40,10 +43,12 @@ if ($hasAttachTarget) {
         '<input type="hidden" name="data[Collection][_attach_element_type]" value="%s">',
         h($attachElementType)
     );
-    $metaFields[] = sprintf(
-        '<input type="hidden" name="data[Collection][_attach_element_uuid]" value="%s">',
-        h($attachElementUuid)
-    );
+    foreach ($attachElementUuids as $attachElementUuidValue) {
+        $metaFields[] = sprintf(
+            '<input type="hidden" name="data[Collection][_attach_element_uuid][]" value="%s">',
+            h($attachElementUuidValue)
+        );
+    }
 }
 
 $submitConfig = [
@@ -76,6 +81,72 @@ function submitCollectionCreateAndReturnToEvent() {
         $('#genericModal').modal('hide').remove();
         $('.modal-backdrop').remove();
         $('body').removeClass('modal-open').css('padding-right', '');
+    };
+
+    var normalizeMessage = function(message, fallback) {
+        if (typeof message === 'string' && message.length) {
+            return message;
+        }
+        if (Array.isArray(message)) {
+            return message.join(', ');
+        }
+        if (message && typeof message === 'object') {
+            try {
+                return Object.values(message).flat().join(', ');
+            } catch (e) {
+                return fallback;
+            }
+        }
+        return fallback;
+    };
+
+    var addEventsToCreatedCollection = function(createdCollectionId) {
+        var context = window.eventCollectionContext || {};
+        var eventUuids = Array.isArray(context.eventUuids) ? context.eventUuids.filter(function(uuid) {
+            return typeof uuid === 'string' && uuid.length > 0;
+        }) : [];
+        var eventType = context.eventType || <?php echo json_encode($attachElementType); ?>;
+
+        if (!eventUuids.length || !createdCollectionId) {
+            if (typeof window.loadEventCollections === 'function') {
+                window.loadEventCollections(true);
+            }
+            closeModal();
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: <?php echo json_encode($baseurl . '/collectionElements/addElementToCollection/'); ?> + encodeURIComponent(eventType) + '/' + encodeURIComponent(eventUuids[0]),
+            data: {
+                'data[CollectionElement][collection_id]': createdCollectionId,
+                'data[CollectionElement][description]': '',
+                'data[CollectionElement][element_uuid]': eventUuids
+            },
+            headers: { Accept: 'application/json' },
+            success: function(addData) {
+                var addResponse = addData;
+                if (typeof addData === 'string') {
+                    try {
+                        addResponse = JSON.parse(addData);
+                    } catch (e) {
+                        addResponse = null;
+                    }
+                }
+
+                if (addResponse && addResponse.saved) {
+                    showMessage('success', normalizeMessage(addResponse.success || addResponse.message, 'Collection created and events added.'));
+                    closeModal();
+                    if (typeof window.loadEventCollections === 'function') {
+                        window.loadEventCollections(true);
+                    }
+                    return;
+                }
+
+                showMessage('fail', normalizeMessage(addResponse && (addResponse.errors || addResponse.error || addResponse.message), 'Collection created, but the selected events could not be added.'));
+            },
+            error: xhrFailCallback
+        });
     };
 
     var $genericForm = $('#genericModal .genericForm');
@@ -123,11 +194,8 @@ function submitCollectionCreateAndReturnToEvent() {
             }
 
             if (isSuccess) {
-                showMessage('success', payload.message || response.message || 'Collection created and element added.');
-                closeModal();
-                if (typeof window.loadEventCollections === 'function') {
-                    window.loadEventCollections();
-                }
+                var createdCollectionId = payload && payload.Collection && payload.Collection.id ? payload.Collection.id : null;
+                addEventsToCreatedCollection(createdCollectionId);
                 return;
             }
 

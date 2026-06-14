@@ -11,6 +11,13 @@
  */
 $currentElementType = !empty($this->request->params['pass'][0]) ? $this->request->params['pass'][0] : 'Event';
 $currentElementUuid = !empty($this->request->params['pass'][1]) ? $this->request->params['pass'][1] : '';
+$selectedElementUuids = !empty($this->request->data['CollectionElement']['element_uuid'])
+    ? (array)$this->request->data['CollectionElement']['element_uuid']
+    : [$currentElementUuid];
+$selectedElementUuids = array_values(array_filter(array_map('trim', $selectedElementUuids), function ($uuid) {
+    return $uuid !== '';
+}));
+$selectedElementCount = count($selectedElementUuids);
 $canCreateCollection = $this->Acl->canAccess('collections', 'add');
 $createCollectionOptionValue = '__create_new_collection__';
 $collectionOptions = $dropdownData['collections'];
@@ -50,16 +57,29 @@ $description = sprintf(
     . '<hr style="margin: 12px 0;">',
     __('Add to Collection'),
     h($currentElementType),
-    !empty($currentElementUuid) ? ' &mdash; <code style="font-size:11px;">' . h(substr($currentElementUuid, 0, 12)) . '…</code>' : ''
+    $selectedElementCount > 1
+        ? ' &mdash; <strong>' . h(__n('%s selected event', '%s selected events', $selectedElementCount, $selectedElementCount)) . '</strong>'
+        : (!empty($currentElementUuid) ? ' &mdash; <code style="font-size:11px;">' . h(substr($currentElementUuid, 0, 12)) . '…</code>' : '')
 );
 
 $metaFields = [];
+if ($selectedElementCount > 1) {
+    foreach ($selectedElementUuids as $selectedElementUuid) {
+        $metaFields[] = sprintf(
+            '<input type="hidden" name="data[CollectionElement][element_uuid][]" value="%s">',
+            h($selectedElementUuid)
+        );
+    }
+}
 if ($canCreateCollection) {
+    $createCollectionQuery = http_build_query([
+        'attach_element_type' => $currentElementType,
+        'attach_element_uuid' => $selectedElementUuids,
+    ]);
     $createCollectionUrl = sprintf(
-        '%s/collections/add/attach_element_type:%s/attach_element_uuid:%s',
+        '%s/collections/add?%s',
         h($baseurl),
-        rawurlencode($currentElementType),
-        rawurlencode($currentElementUuid)
+        $createCollectionQuery
     );
 }
 
@@ -126,6 +146,37 @@ function getCollectionModalForm() {
     return $genericForm.length ? $genericForm : $('.genericForm').first();
 }
 
+function getEventCollectionContextUuids() {
+    var context = window.eventCollectionContext;
+    if (!context || !Array.isArray(context.eventUuids)) {
+        return [];
+    }
+    return context.eventUuids.filter(function(uuid) {
+        return typeof uuid === 'string' && uuid.length > 0;
+    });
+}
+
+function syncEventCollectionContextForm($form) {
+    var selectedEventUuids = getEventCollectionContextUuids();
+    if (!selectedEventUuids.length) {
+        return;
+    }
+
+    if (typeof window.syncSelectedEventCollectionFields === 'function') {
+        window.syncSelectedEventCollectionFields($form, selectedEventUuids);
+        return;
+    }
+
+    $form.find('input[name="data[CollectionElement][element_uuid][]"]').remove();
+    selectedEventUuids.forEach(function(eventUuid) {
+        $('<input>', {
+            type: 'hidden',
+            name: 'data[CollectionElement][element_uuid][]',
+            value: eventUuid
+        }).appendTo($form);
+    });
+}
+
 function parseCollectionModalResponse(data) {
     if (typeof data !== 'string') {
         return data;
@@ -139,6 +190,7 @@ function parseCollectionModalResponse(data) {
 
 function submitAddElementToCollectionBeta() {
     var $genericForm = getCollectionModalForm();
+    syncEventCollectionContextForm($genericForm);
 
     $.ajax({
         type: 'POST',

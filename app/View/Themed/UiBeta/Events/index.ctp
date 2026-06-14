@@ -10,6 +10,89 @@
  * @since 2.5.x (beta)
  */
 ?>
+<style>
+    .beta-event-list-bulk-actions-bar {
+        display: none;
+        padding: 10px 14px;
+        border: 1px solid #d9e5f2;
+        border-radius: 8px 8px 0 0;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef5fc 100%);
+        position: fixed;
+        left: 24px;
+        right: 24px;
+        bottom: 0;
+        z-index: 1100;
+        box-shadow: 0 -4px 16px rgba(80, 108, 140, 0.14);
+    }
+    .beta-event-list-bulk-actions-bar.is-visible {
+        display: block;
+    }
+    .beta-event-list-bulk-actions-bar-inner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        justify-content: space-between;
+    }
+    .beta-event-list-bulk-actions-summary {
+        font-size: 13px;
+        font-weight: 600;
+        color: #36506b;
+        white-space: nowrap;
+    }
+    .beta-event-list-bulk-actions-buttons {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex: 1 1 auto;
+        flex-wrap: wrap;
+    }
+    .beta-event-list-bulk-actions-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .beta-event-list-bulk-actions-group.beta-event-list-bulk-actions-group-danger {
+        margin-left: auto;
+    }
+    .beta-event-list-bulk-actions-bar .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    body.beta-event-list-bulk-actions-visible {
+        padding-bottom: 84px;
+    }
+    @media (max-width: 767px) {
+        .beta-event-list-bulk-actions-bar {
+            left: 12px;
+            right: 12px;
+            bottom: 0;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        }
+        .beta-event-list-bulk-actions-bar-inner {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+        .beta-event-list-bulk-actions-buttons,
+        .beta-event-list-bulk-actions-group {
+            width: 100%;
+            justify-content: stretch;
+        }
+        .beta-event-list-bulk-actions-group.beta-event-list-bulk-actions-group-danger {
+            margin-left: 0;
+        }
+        .beta-event-list-bulk-actions-bar .btn {
+            justify-content: center;
+            flex: 1 1 auto;
+        }
+        body.beta-event-list-bulk-actions-visible {
+            padding-bottom: 132px;
+        }
+    }
+</style>
 <div class="events <?php if (!$ajax) echo 'index'; ?> beta-events-index" style="padding-bottom: 96px;">
     <?php
         $searchScopes = [
@@ -130,12 +213,6 @@
                 <button class="btn btn-default beta-advanced-filter-button" onclick="getPopup(<?= h(json_encode($urlparams)) ?>, 'events', 'filterEventIndex')">
                     <i class="fa fa-search"></i> <?= __('Advanced Filter...') ?>
                 </button>
-                <button id="multi-delete-button" class="btn btn-default hidden mass-delete" onclick="multiSelectDeleteEvents()" title="<?= __('Delete selected events') ?>">
-                    <i class="fa fa-trash"></i>
-                </button>
-                <button id="multi-export-button" class="btn btn-default hidden mass-export" onclick="multiSelectExportEvents()" title="<?= __('Export selected events') ?>">
-                    <i class="fa fa-file-export"></i>
-                </button>
             </div>
         </div>
 
@@ -152,6 +229,30 @@
     endif;
         echo $this->element('Events/eventIndexTable');
     ?>
+    <div id="beta-event-list-bulk-actions-bar" class="beta-event-list-bulk-actions-bar" aria-hidden="true">
+        <div class="beta-event-list-bulk-actions-bar-inner">
+            <div class="beta-event-list-bulk-actions-summary">
+                <span id="beta-event-list-selected-count">0</span> <?= __('selected'); ?>
+            </div>
+            <div class="beta-event-list-bulk-actions-buttons">
+                <div class="beta-event-list-bulk-actions-group">
+                    <button id="multi-export-button" type="button" class="btn btn-default mass-export" onclick="multiSelectExportEvents(); return false;" title="<?= __('Export selected events') ?>">
+                        <i class="fa fa-file-export"></i> <?= __('Export'); ?>
+                    </button>
+                    <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
+                    <button id="multi-collection-button" type="button" class="btn btn-default mass-collection" onclick="openAddSelectedEventsToCollectionModal(); return false;" title="<?= __('Add selected events to a collection') ?>">
+                        <i class="fa fa-folder-plus"></i> <?= __('Add to Collection'); ?>
+                    </button>
+                    <?php endif; ?>
+                </div>
+                <div class="beta-event-list-bulk-actions-group beta-event-list-bulk-actions-group-danger">
+                    <button id="multi-delete-button" type="button" class="btn btn-danger mass-delete" onclick="multiSelectDeleteEvents(); return false;" title="<?= __('Delete selected events') ?>">
+                        <i class="fa fa-trash"></i> <?= __('Delete'); ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="beta-pagination-bottom">
         <p>
         <?php
@@ -195,6 +296,95 @@
     ]); ?>;
 
     window.eventCollectionContext = null;
+
+    function getSelectedEventIds() {
+        var selected = [];
+        $('.select:checked').each(function() {
+            var eventId = $(this).data('id');
+            if (eventId != null) {
+                selected.push(parseInt(eventId, 10));
+            }
+        });
+        return selected;
+    }
+
+    function getSelectedEventUuids() {
+        var selectedUuids = [];
+        $('.select:checked').each(function() {
+            var eventId = $(this).data('id');
+            if (eventId == null) {
+                return;
+            }
+
+            var container = getEventCollectionsContainer(eventId);
+            var eventUuid = container ? container.getAttribute('data-event-uuid') : null;
+            if (eventUuid) {
+                selectedUuids.push(String(eventUuid));
+            }
+        });
+        return selectedUuids;
+    }
+
+    window.updateBetaEventListBulkActions = function() {
+        var selectedCount = $('.select:checked').length;
+        var deletableCount = $('.select:checked[data-can-modify="1"]').length;
+        var $bar = $('#beta-event-list-bulk-actions-bar');
+
+        $('#beta-event-list-selected-count').text(selectedCount);
+        $bar.toggleClass('is-visible', selectedCount > 0);
+        $bar.attr('aria-hidden', selectedCount > 0 ? 'false' : 'true');
+        $('body').toggleClass('beta-event-list-bulk-actions-visible', selectedCount > 0);
+
+        $('#multi-delete-button').prop('disabled', deletableCount === 0);
+    };
+
+    $(document)
+        .off('change.betaEventBulkActions', '.select')
+        .on('change.betaEventBulkActions', '.select', function() {
+            window.updateBetaEventListBulkActions();
+        });
+
+    function syncSelectedEventCollectionFields($form, eventUuids) {
+        if (!$form || !$form.length || !Array.isArray(eventUuids) || eventUuids.length === 0) {
+            return;
+        }
+
+        $form.find('input[name="data[CollectionElement][element_uuid][]"]').remove();
+        eventUuids.forEach(function(eventUuid) {
+            $('<input>', {
+                type: 'hidden',
+                name: 'data[CollectionElement][element_uuid][]',
+                value: eventUuid
+            }).appendTo($form);
+        });
+    }
+
+    window.syncSelectedEventCollectionFields = syncSelectedEventCollectionFields;
+
+    window.openAddSelectedEventsToCollectionModal = function() {
+        var selectedEventUuids = getSelectedEventUuids();
+        if (selectedEventUuids.length === 0) {
+            return false;
+        }
+
+        window.eventCollectionContext = {
+            eventUuids: selectedEventUuids,
+            eventIds: getSelectedEventIds()
+        };
+        openGenericModal(
+            betaEventsIndexBaseurl + '/collectionElements/addElementToCollection/Event/' + encodeURIComponent(selectedEventUuids[0]),
+            undefined,
+            function() {
+                var $form = $('#genericModal .genericForm');
+                if (!$form.length) {
+                    return;
+                }
+
+                syncSelectedEventCollectionFields($form, selectedEventUuids);
+            }
+        );
+        return false;
+    };
 
     function getEventCollectionsContainer(eventId) {
         return document.getElementById('event-collections-container-' + eventId);
@@ -317,12 +507,54 @@
 
     window.loadEventCollections = function(forceReload) {
         var context = window.eventCollectionContext;
-        if (!context || !context.eventUuid || !context.eventId) {
+        if (!context) {
+            return;
+        }
+
+        if ((!Array.isArray(context.eventUuids) || context.eventUuids.length === 0) && Array.isArray(context.eventIds) && context.eventIds.length > 0) {
+            context.eventUuids = [];
+            context.eventIds.forEach(function(eventId) {
+                var container = getEventCollectionsContainer(eventId);
+                if (!container) {
+                    return;
+                }
+                var eventUuid = container.getAttribute('data-event-uuid');
+                if (eventUuid) {
+                    context.eventUuids.push(String(eventUuid));
+                }
+            });
+        }
+
+        if (Array.isArray(context.eventUuids) && context.eventUuids.length > 0) {
+            var containersByUuid = {};
+            $('[id^="event-collections-container-"]').each(function() {
+                var eventUuid = this.getAttribute('data-event-uuid');
+                if (eventUuid) {
+                    containersByUuid[eventUuid] = this;
+                }
+            });
+
+            var containers = [];
+            context.eventUuids.forEach(function(eventUuid) {
+                var container = containersByUuid[eventUuid];
+                if (container) {
+                    containers.push(container);
+                }
+            });
+            if (containers.length > 0) {
+                loadCollectionsForContainers(containers, !!forceReload);
+            }
+            window.eventCollectionContext = null;
+            return;
+        }
+
+        if (!context.eventUuid || !context.eventId) {
             return;
         }
 
         var container = getEventCollectionsContainer(context.eventId);
         if (!container) {
+            window.eventCollectionContext = null;
             return;
         }
 

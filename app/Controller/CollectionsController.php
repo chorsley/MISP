@@ -28,7 +28,8 @@ class CollectionsController extends AppController
         $currentUser = $this->Auth->user();
         $attachTarget = $this->__getAttachTargetFromRequest();
         $attachElementType = $attachTarget['type'] ?? null;
-        $attachElementUuid = $attachTarget['uuid'] ?? null;
+        $attachElementUuids = $attachTarget['uuids'] ?? [];
+        $attachElementUuid = !empty($attachElementUuids) ? $attachElementUuids[0] : null;
         $params = [];
         $this->loadModel('Event');
         if ($this->request->is('post')) {
@@ -46,11 +47,13 @@ class CollectionsController extends AppController
                 'afterSave' => function (array $collection) use ($attachTarget) {
                     $this->Collection->CollectionElement->captureElements($collection);
                     if ($attachTarget !== null) {
-                        $this->__attachElementToCollection(
-                            $collection['Collection']['id'],
-                            $attachTarget['type'],
-                            $attachTarget['uuid']
-                        );
+                        foreach ($attachTarget['uuids'] as $attachElementUuid) {
+                            $this->__attachElementToCollection(
+                                $collection['Collection']['id'],
+                                $attachTarget['type'],
+                                $attachElementUuid
+                            );
+                        }
                     }
                     return $collection;
                 }
@@ -67,7 +70,7 @@ class CollectionsController extends AppController
             'sgs' => $this->Event->SharingGroup->fetchAllAuthorised($this->Auth->user(), 'name', 1)  
         ];
         $this->set('initialDistribution', Configure::read('MISP.default_event_distribution'));
-        $this->set(compact('dropdownData', 'attachElementType', 'attachElementUuid'));
+        $this->set(compact('dropdownData', 'attachElementType', 'attachElementUuid', 'attachElementUuids'));
         if($this->theme === "Overmind"){
             $this->layout = false;
         }
@@ -77,14 +80,14 @@ class CollectionsController extends AppController
     private function __getAttachTargetFromRequest()
     {
         $attachElementType = null;
-        $attachElementUuid = null;
+        $attachElementUuids = [];
 
         if ($this->request->is('post')) {
             if (!empty($this->request->data['Collection']['_attach_element_type'])) {
                 $attachElementType = $this->request->data['Collection']['_attach_element_type'];
             }
             if (!empty($this->request->data['Collection']['_attach_element_uuid'])) {
-                $attachElementUuid = $this->request->data['Collection']['_attach_element_uuid'];
+                $attachElementUuids = (array)$this->request->data['Collection']['_attach_element_uuid'];
             }
         }
 
@@ -95,29 +98,39 @@ class CollectionsController extends AppController
             $attachElementType = $this->request->params['named']['attach_element_type'];
         }
 
-        if (empty($attachElementUuid)) {
-            $attachElementUuid = $this->request->query('attach_element_uuid');
+        if (empty($attachElementUuids)) {
+            $queryAttachElementUuid = $this->request->query('attach_element_uuid');
+            if ($queryAttachElementUuid !== null) {
+                $attachElementUuids = (array)$queryAttachElementUuid;
+            }
         }
-        if (empty($attachElementUuid) && !empty($this->request->params['named']['attach_element_uuid'])) {
-            $attachElementUuid = $this->request->params['named']['attach_element_uuid'];
+        if (empty($attachElementUuids) && !empty($this->request->params['named']['attach_element_uuid'])) {
+            $attachElementUuids = (array)$this->request->params['named']['attach_element_uuid'];
         }
 
-        if (empty($attachElementType) && empty($attachElementUuid)) {
+        $attachElementUuids = array_values(array_unique(array_filter(array_map(function ($uuid) {
+            return is_scalar($uuid) ? trim((string)$uuid) : '';
+        }, $attachElementUuids))));
+
+        if (empty($attachElementType) && empty($attachElementUuids)) {
             return null;
         }
-        if (empty($attachElementType) || empty($attachElementUuid)) {
+        if (empty($attachElementType) || empty($attachElementUuids)) {
             throw new BadRequestException(__('Incomplete collection attachment target.'));
         }
         if (!in_array($attachElementType, $this->Collection->CollectionElement->valid_types, true)) {
             throw new BadRequestException(__('Invalid element type for collection attachment.'));
         }
-        if (!Validation::uuid($attachElementUuid)) {
-            throw new BadRequestException(__('Invalid element UUID for collection attachment.'));
+        foreach ($attachElementUuids as $attachElementUuid) {
+            if (!Validation::uuid($attachElementUuid)) {
+                throw new BadRequestException(__('Invalid element UUID for collection attachment.'));
+            }
         }
 
         return [
             'type' => $attachElementType,
-            'uuid' => $attachElementUuid,
+            'uuid' => $attachElementUuids[0],
+            'uuids' => $attachElementUuids,
         ];
     }
 
