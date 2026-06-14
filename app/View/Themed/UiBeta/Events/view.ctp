@@ -16,6 +16,12 @@
         width: 100%;
         overflow: visible;
     }
+    .beta-sankey-stage {
+        display: none;
+        width: 100%;
+        margin: 0 0 30px;
+        text-align: center;
+    }
     .beta-header-container {
         margin-bottom: 18px;
         padding: 14px 16px 12px;
@@ -2457,7 +2463,7 @@
                     <p style="color: #666; font-size: 1.1em;"><?php echo __('Analyzing correlations...'); ?></p>
                 </div>
                 <div id="correlations-content" style="display: none;">
-                    <div id="correlations-sankey-stage" style="display: none; margin: 0 auto 30px; max-width: min(100vw - 12px, 2100px); text-align: center;">
+                    <div id="correlations-sankey-stage" class="beta-sankey-stage">
                         <div id="correlations-sankey-toolbar" style="display: flex; justify-content: flex-start; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; min-height: 24px; width: 100%;">
                             <span id="sankey-filter-badge" style="display: none; background: #d9534f; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; white-space: nowrap;">
                                 <i class="fa fa-filter"></i> <span id="sankey-filter-label"></span>
@@ -4153,7 +4159,12 @@
                 return Math.max(minWidth, Math.min(maxWidth, widthEstimate));
             }
 
-            var containerWidth = $('#correlations-sankey').width();
+            var $sankeyStage = $('#correlations-sankey-stage');
+            var viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+            var stageWidth = Math.max($sankeyStage.innerWidth() || 0, $('#correlations-sankey').width() || 0);
+            var stageRect = $sankeyStage.length ? $sankeyStage[0].getBoundingClientRect() : null;
+            var viewportPadding = stageRect ? Math.max(stageRect.left || 0, viewportWidth - (stageRect.right || viewportWidth), 12) : 12;
+            var containerWidth = Math.max(720, Math.min(stageWidth || viewportWidth, viewportWidth - (viewportPadding * 2)));
             var sourceLabelText = '★ ' + truncateSourceLabel(currentEventName);
             var longestTargetLabelLength = 0;
             var longestOrgLabelLength = 0;
@@ -4165,11 +4176,19 @@
                 }
             });
 
+            var sourceLabelBudget = estimateLabelWidth(sourceLabelText.length, 6.2, 150, 260);
+            var rightLabelBudget = estimateLabelWidth(longestOrgLabelLength + 6, 6.1, showPublisher ? 96 : 36, showPublisher ? 220 : 72);
+            var minDiagramWidth = 420;
+            var availableForMargins = Math.max(0, containerWidth - minDiagramWidth);
+            var totalRequestedMargins = sourceLabelBudget + rightLabelBudget;
+            var marginCompressionRatio = totalRequestedMargins > 0
+                ? Math.min(1, availableForMargins / totalRequestedMargins)
+                : 1;
             var margin = {
                 top: 180,
-                right: estimateLabelWidth(Math.min(longestTargetLabelLength + longestOrgLabelLength + 16, 96), 6.2, 360, Math.max(420, Math.floor(containerWidth * 0.36))),
+                right: Math.max(showPublisher ? 96 : 32, Math.floor(rightLabelBudget * marginCompressionRatio)),
                 bottom: 20,
-                left: estimateLabelWidth(sourceLabelText.length, 6.6, 180, Math.max(220, Math.floor(containerWidth * 0.22)))
+                left: Math.max(120, Math.floor(sourceLabelBudget * marginCompressionRatio))
             };
             var width = Math.max(640, containerWidth - margin.left - margin.right);
             
@@ -4252,10 +4271,14 @@
             var sankeyScaleMaxTs = isFinite(sankeyDomainMaxTs)
                 ? (useYearScale ? addUtcYears(startOfUtcYear(sankeyDomainMaxTs), 1) : addUtcMonths(startOfUtcMonth(sankeyDomainMaxTs), 1))
                 : sankeyDomainMaxTs;
-            var targetLaneStart = Math.min(width - sankeyNodeWidth - 24, attributeMaxX1 + 180);
-            var targetLaneEnd = Math.max(targetLaneStart + 120, width - 250);
-            var targetFixedX0 = Math.max(targetLaneStart, targetLaneEnd - 80);
-            var orgColumnX0 = Math.min(width - sankeyNodeWidth - 20, targetLaneEnd + 150);
+            var rightLabelPadding = showPublisher ? 16 : 10;
+            var targetToOrgGap = showPublisher ? 56 : 36;
+            var minTargetLaneWidth = Math.max(160, Math.floor(width * (alignToDate ? 0.28 : 0.18)));
+            var orgColumnX0 = Math.max(attributeMaxX1 + targetToOrgGap + sankeyNodeWidth, width - sankeyNodeWidth - rightLabelPadding);
+            var targetLaneEnd = Math.max(attributeMaxX1 + 120 + minTargetLaneWidth, orgColumnX0 - targetToOrgGap);
+            var maxTargetLaneWidth = Math.max(minTargetLaneWidth, targetLaneEnd - (attributeMaxX1 + 90));
+            var targetLaneStart = Math.min(targetLaneEnd - minTargetLaneWidth, Math.max(attributeMaxX1 + 90, targetLaneEnd - maxTargetLaneWidth));
+            var targetFixedX0 = Math.max(targetLaneStart, targetLaneEnd - Math.max(42, Math.floor(width * 0.035)));
             var orgLabelGap = 18;
             var targetLabelGap = 18;
             var targetHoverPad = 14;
