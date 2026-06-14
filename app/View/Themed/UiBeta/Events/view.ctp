@@ -19,8 +19,25 @@
     .beta-sankey-stage {
         display: none;
         width: 100%;
-        margin: 0 0 30px;
+        margin: 0 0 18px;
         text-align: center;
+    }
+    #correlations.beta-tab-pane-tight {
+        padding-top: 6px;
+    }
+    #correlations.beta-tab-pane-tight #correlations-content {
+        margin-top: 0;
+    }
+    #correlations.beta-tab-pane-tight #correlations-sankey-stage {
+        margin-top: 0;
+    }
+    #correlations.beta-tab-pane-tight #correlations-sankey-toolbar {
+        margin-top: 0;
+        margin-bottom: 4px;
+        min-height: 20px;
+    }
+    #correlations.beta-tab-pane-tight .beta-event-timeline {
+        margin-top: 0;
     }
     .beta-header-container {
         margin-bottom: 18px;
@@ -2457,7 +2474,7 @@
              </div>
             
              <!-- Other Tabs Placeholders -->
-              <div role="tabpanel" class="tab-pane" id="correlations">
+              <div role="tabpanel" class="tab-pane beta-tab-pane-tight" id="correlations">
                 <div id="correlations-loader" style="text-align: center; padding: 40px;">
                     <i class="fa fa-spinner fa-spin fa-3x" style="color: #428bca; margin-bottom: 15px;"></i>
                     <p style="color: #666; font-size: 1.1em;"><?php echo __('Analyzing correlations...'); ?></p>
@@ -4185,7 +4202,7 @@
                 ? Math.min(1, availableForMargins / totalRequestedMargins)
                 : 1;
             var margin = {
-                top: 180,
+                top: 88,
                 right: Math.max(showPublisher ? 96 : 32, Math.floor(rightLabelBudget * marginCompressionRatio)),
                 bottom: 20,
                 left: Math.max(120, Math.floor(sourceLabelBudget * marginCompressionRatio))
@@ -4196,7 +4213,7 @@
             var displayedTargetCount = nodes.filter(function(node) { return node.type === 'target'; }).length;
             var estimatedRows = Math.max(displayedAttributeCount, displayedTargetCount);
             var rowHeight = 22;
-            var baseHeight = 180;
+            var baseHeight = 110;
             var maxHeight = 1800;
             var height = Math.max(280, Math.min(maxHeight, baseHeight + (estimatedRows * rowHeight)));
 
@@ -4272,12 +4289,27 @@
                 ? (useYearScale ? addUtcYears(startOfUtcYear(sankeyDomainMaxTs), 1) : addUtcMonths(startOfUtcMonth(sankeyDomainMaxTs), 1))
                 : sankeyDomainMaxTs;
             var rightLabelPadding = showPublisher ? 16 : 10;
-            var targetToOrgGap = showPublisher ? 56 : 36;
-            var minTargetLaneWidth = Math.max(160, Math.floor(width * (alignToDate ? 0.28 : 0.18)));
+            var orgLabelReserve = showPublisher ? 260 : 28;
+            var targetToOrgGap = alignToDate
+                ? (showPublisher ? 84 : 52)
+                : (showPublisher ? 56 : 36);
+            var targetLaneStartFloor = attributeMaxX1 + 90;
+            var targetLaneStart = targetLaneStartFloor;
+            var timelineBandStartRatio = alignToDate ? 0.42 : 0.68;
+            var timelineBandEndRatio = alignToDate ? 0.74 : 0.82;
+            var preferredTimelineBandStart = Math.floor(width * timelineBandStartRatio);
+            var preferredTimelineBandEnd = Math.floor(width * timelineBandEndRatio);
+            var alignedLaneStart = Math.max(targetLaneStartFloor, preferredTimelineBandStart);
+            var alignedLaneEnd = Math.max(alignedLaneStart + sankeyNodeWidth + 120, preferredTimelineBandEnd);
+            var maxAlignedLaneEnd = width - orgLabelReserve - targetToOrgGap - sankeyNodeWidth;
+            if (alignedLaneEnd > maxAlignedLaneEnd) {
+                alignedLaneEnd = Math.max(alignedLaneStart + sankeyNodeWidth + 80, maxAlignedLaneEnd);
+            }
+            if (alignedLaneStart > alignedLaneEnd - sankeyNodeWidth - 80) {
+                alignedLaneStart = Math.max(targetLaneStartFloor, alignedLaneEnd - sankeyNodeWidth - 80);
+            }
             var orgColumnX0 = Math.max(attributeMaxX1 + targetToOrgGap + sankeyNodeWidth, width - sankeyNodeWidth - rightLabelPadding);
-            var targetLaneEnd = Math.max(attributeMaxX1 + 120 + minTargetLaneWidth, orgColumnX0 - targetToOrgGap);
-            var maxTargetLaneWidth = Math.max(minTargetLaneWidth, targetLaneEnd - (attributeMaxX1 + 90));
-            var targetLaneStart = Math.min(targetLaneEnd - minTargetLaneWidth, Math.max(attributeMaxX1 + 90, targetLaneEnd - maxTargetLaneWidth));
+            var targetLaneEnd = alignToDate ? Math.min(alignedLaneEnd, orgColumnX0 - targetToOrgGap) : Math.max(alignedLaneEnd, orgColumnX0 - targetToOrgGap);
             var targetFixedX0 = Math.max(targetLaneStart, targetLaneEnd - Math.max(42, Math.floor(width * 0.035)));
             var orgLabelGap = 18;
             var targetLabelGap = 18;
@@ -4365,14 +4397,14 @@
                         var ratio = (node.eventDateTs - sankeyScaleMinTs) / Math.max(1, (sankeyScaleMaxTs - sankeyScaleMinTs));
                         ratio = Math.max(0, Math.min(1, ratio));
                         node.alignedX0 = Math.max(
-                            targetLaneStart,
+                            alignedLaneStart,
                             Math.min(
-                                targetLaneEnd - sankeyNodeWidth,
-                                targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) * ratio)
+                                alignedLaneEnd - sankeyNodeWidth,
+                                alignedLaneStart + ((alignedLaneEnd - alignedLaneStart - sankeyNodeWidth) * ratio)
                             )
                         );
                     } else {
-                        node.alignedX0 = targetLaneStart + ((targetLaneEnd - targetLaneStart - sankeyNodeWidth) / 2);
+                        node.alignedX0 = alignedLaneStart + ((alignedLaneEnd - alignedLaneStart - sankeyNodeWidth) / 2);
                     }
                     node.x0 = alignToDate ? node.alignedX0 : node.fixedX0;
                     node.x1 = node.x0 + sankeyNodeWidth;
