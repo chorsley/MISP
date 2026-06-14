@@ -383,17 +383,6 @@
         font-weight: bold;
         font-size: 14px;
     }
-    .beta-uuid-compact {
-        font-size: 10px;
-        color: #bbb;
-        cursor: pointer;
-        margin-left: 5px;
-        opacity: 0;
-        transition: opacity 0.2s;
-    }
-    .beta-attr-row:hover .beta-uuid-compact {
-        opacity: 1;
-    }
     .beta-tagging-links {
         display: none;
     }
@@ -741,16 +730,29 @@
     .beta-attr-comment-inline {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        font-size: 12px;
-        color: #8693a0;
-        font-style: italic;
+        gap: 6px;
+        min-height: 24px;
+        max-width: min(100%, 520px);
+        padding: 3px 10px;
+        border: 1px solid #dbe5ef;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #667686;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.35;
         overflow-wrap: anywhere;
+        box-shadow: 0 1px 2px rgba(31, 57, 83, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+    .beta-attr-comment-inline span {
+        min-width: 0;
     }
     .beta-attr-comment-inline .fa,
     .beta-attr-comment-inline .fas {
-        font-style: normal;
-        opacity: 0.85;
+        flex: 0 0 auto;
+        color: #7d91a4;
+        font-size: 10px;
+        opacity: 0.95;
     }
     .beta-attr-table {
         width: 100%;
@@ -1093,7 +1095,6 @@
                                     <?php if (!empty($item['comment'])): ?>
                                         <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($item['comment']); ?></span></span>
                                     <?php endif; ?>
-                                    <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($item['uuid']); ?>" onclick="return betaCopyUuid('<?php echo h($item['uuid']); ?>');"></i>
                                 </div>
                                 
                                 <?php
@@ -1329,7 +1330,6 @@
                                         <?php if (!empty($subAttr['comment'])): ?>
                                             <span class="beta-attr-comment-inline"><i class="fa fa-comment"></i><span><?php echo h($subAttr['comment']); ?></span></span>
                                         <?php endif; ?>
-                                        <i class="fa fa-fingerprint beta-uuid-compact" title="<?php echo h($subAttr['uuid']); ?>" onclick="return betaCopyUuid('<?php echo h($subAttr['uuid']); ?>');"></i>
                                     </div>
 
                                         <?php
@@ -1504,46 +1504,6 @@
             $('.beta-page-btn').prop('disabled', true);
         }
         return $container;
-    }
-
-    function betaCopyUuid(uuid) {
-        var textArea = document.createElement('textarea');
-        var copied = false;
-
-        textArea.value = uuid;
-        textArea.setAttribute('readonly', 'readonly');
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        textArea.setSelectionRange(0, textArea.value.length);
-
-        try {
-            copied = document.execCommand('copy');
-        } catch (err) {
-            copied = false;
-        }
-
-        document.body.removeChild(textArea);
-
-        if (copied) {
-            showMessage('success', 'UUID copied');
-            return false;
-        }
-
-        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
-            navigator.clipboard.writeText(uuid).then(function() {
-                showMessage('success', 'UUID copied');
-            }).catch(function() {
-                showMessage('fail', 'Could not copy UUID');
-            });
-            return false;
-        }
-
-        showMessage('fail', 'Could not copy UUID');
-        return false;
     }
 
     function buildAttributesUrl(params) {

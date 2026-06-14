@@ -247,11 +247,19 @@
         container.setAttribute('data-collections-loaded', '1');
     }
 
-    function loadCollectionsForContainers(containers) {
+    function loadCollectionsForContainers(containers, forceReload) {
         var uuids = [];
 
         containers.forEach(function(container) {
-            if (!container || container.getAttribute('data-collections-loaded') === '1') {
+            if (!container) {
+                return;
+            }
+
+            if (forceReload) {
+                container.removeAttribute('data-collections-loaded');
+            }
+
+            if (container.getAttribute('data-collections-loaded') === '1') {
                 return;
             }
 
@@ -307,7 +315,7 @@
         openGenericModal(betaEventsIndexBaseurl + '/collectionElements/addElementToCollection/Event/' + encodeURIComponent(eventUuid));
     };
 
-    window.loadEventCollections = function() {
+    window.loadEventCollections = function(forceReload) {
         var context = window.eventCollectionContext;
         if (!context || !context.eventUuid || !context.eventId) {
             return;
@@ -318,7 +326,8 @@
             return;
         }
 
-        loadCollectionsForContainers([container]);
+        loadCollectionsForContainers([container], !!forceReload);
+        window.eventCollectionContext = null;
     };
 
     function fadeOutOverflowNotice(notice) {

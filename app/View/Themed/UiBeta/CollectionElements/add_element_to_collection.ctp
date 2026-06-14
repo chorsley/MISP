@@ -152,7 +152,7 @@ function submitAddElementToCollectionBeta() {
                 showMessage('success', normalizeCollectionModalMessage(response.success || response.message, 'Element added to the Collection.'));
                 $('#genericModal').modal('hide').remove();
                 if (typeof window.loadEventCollections === 'function') {
-                    window.loadEventCollections();
+                    window.loadEventCollections(true);
                 }
                 return;
             }
