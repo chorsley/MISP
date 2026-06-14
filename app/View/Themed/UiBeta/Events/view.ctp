@@ -3546,40 +3546,33 @@
         toggle.setAttribute('data-expanded', expanded ? '0' : '1');
     }
 
-    function filterAttributesByComment(comment) {
-        // Switch to Attributes tab
-        $('.nav-tabs a[href="#attributes"]').tab('show');
-        
-        // Disable pagination during filtering
-        if (typeof paginationState !== 'undefined') {
-            paginationState.searchActive = true;
-            $('.beta-pagination-container').hide();
-        }
-
-        // Reset previous filters
-        $('.beta-attr-row').show();
+    function applyCommentAttributeFilter(comment) {
         $('.filter-active-msg').remove();
+        $('#beta-attr-search').val(comment).trigger('keyup');
 
-        // Apply filter
-        $('.beta-attr-row').hide();
-        
-        // Show rows where the comment column matches
-        $('.beta-attr-row').each(function() {
-            var $commentCell = $(this).find('.col-comment').first();
-            var rowComment = ($commentCell.data('comment-full') || $commentCell.text() || '').trim();
-            if (rowComment === comment) {
-                $(this).show();
-            }
-        });
-
+        var filterMessage = buildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>');
         if ($('.beta-toolbar').length) {
-            $('.beta-toolbar').after(buildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'));
+            $('.beta-toolbar').after(filterMessage);
         } else {
-            renderFilterMessage(
-                buildFilterMessage('Filtering by Comment: <strong>' + comment + '</strong>'),
-                ''
-            );
+            renderFilterMessage(filterMessage, '');
         }
+    }
+
+    function filterAttributesByComment(comment) {
+        var $attributesTab = $('.nav-tabs a[href="#attributes"]');
+        if (!$attributesTab.length) {
+            return;
+        }
+
+        if ($('#attributes').hasClass('active')) {
+            applyCommentAttributeFilter(comment);
+            return;
+        }
+
+        $attributesTab.one('shown.bs.tab.commentFilter', function () {
+            applyCommentAttributeFilter(comment);
+        });
+        $attributesTab.tab('show');
     }
 
     function toggleSummaryReports(forceOpen) {
