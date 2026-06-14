@@ -3785,7 +3785,7 @@
                 if (_pendingCorrelationFilter !== null) {
                     var pendingFilter = _pendingCorrelationFilter;
                     _pendingCorrelationFilter = null;
-                    _applyCorrelationFilter(pendingFilter);
+                    _applyCorrelationFilter(pendingFilter.value, pendingFilter.type);
                     $('html, body').animate({
                         scrollTop: $(".beta-tabs-container").offset().top
                     }, 500);
@@ -3985,7 +3985,7 @@
                 var attrIds = attrs.map(function(a) { return a.id; }).join(',');
                 var creatorOrg = details.orgName ? $('<div/>').text(details.orgName).html() : '';
                 
-                html += '<div class="beta-card correlation-event-card" data-event-id="' + eid + '" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
+                html += '<div class="beta-card correlation-event-card" data-event-id="' + eid + '" data-org-id="' + (details.org || '') + '" data-org-name="' + creatorOrg.replace(/"/g, '&quot;') + '" data-attribute-ids=",' + attrIds + '," style="margin-bottom: 20px; border-left: 4px solid #428bca;">';
                 html += buildCorrelationEventHeader(eid, details, count, percent, creatorOrg);
                 html += '  <div class="beta-card-body" style="padding: 0;">';
                 html += '    <table class="beta-attr-table" style="margin-top: 0;">';
@@ -4015,6 +4015,7 @@
             var links = [];
             var nodeMap = {};
             var orgNodeByTargetEventId = {};
+            var filterOrgId = options.filterOrgId || null;
             var alignToDate = $('#sankey-date-align-toggle').is(':checked');
             var latestEventsOnly = $('#sankey-latest-events-toggle').is(':checked');
             var showPublisher = $('#sankey-show-publisher-toggle').is(':checked');
@@ -4116,7 +4117,14 @@
             parentIds.forEach(function(parentId) {
                 var relations = data[parentId];
                 var filteredRelations = relations.filter(function(rel) {
-                    return !allowedTargetEventIds || !!allowedTargetEventIds[String(rel.id)];
+                    if (allowedTargetEventIds && !allowedTargetEventIds[String(rel.id)]) {
+                        return false;
+                    }
+                    if (filterOrgId) {
+                        var relOrgId = rel.org_id || (eventDetails && eventDetails[rel.id] && eventDetails[rel.id].org) || 'unknown';
+                        return String(relOrgId) === String(filterOrgId);
+                    }
+                    return true;
                 });
                 if (!filteredRelations.length) {
                     return;
@@ -4472,9 +4480,9 @@
                 if (node.type === 'target' && node.id) {
                     window.location.href = '<?php echo $baseurl; ?>/events/view/' + node.id;
                 } else if (node.type === 'org' && node.id && node.id !== 'unknown') {
-                    window.location.href = '<?php echo $baseurl; ?>/organisations/view/' + node.id;
+                    filterCorrelations(node.id, 'org');
                 } else if (node.type === 'attribute' && node.id) {
-                    filterCorrelations(node.id);
+                    filterCorrelations(node.id, 'attribute');
                 }
             }
 
@@ -5205,6 +5213,7 @@
     // Pending filter to apply once correlations are loaded
     var _pendingCorrelationFilter = null;
     var _activeCorrelationFilter = null;
+    var _activeCorrelationFilterType = null;
 
     function buildFilteredCorrelationEventDetails(attributeId) {
         if (!_correlationEventDetails) {
@@ -5224,6 +5233,21 @@
         return filteredDetails;
     }
 
+    function buildFilteredCorrelationEventDetailsByOrg(orgId) {
+        if (!_correlationEventDetails || !orgId) {
+            return _correlationEventDetails || {};
+        }
+
+        var filteredDetails = {};
+        Object.keys(_correlationEventDetails).forEach(function(eid) {
+            var details = _correlationEventDetails[eid];
+            if (details && String(details.org) === String(orgId)) {
+                filteredDetails[eid] = details;
+            }
+        });
+        return filteredDetails;
+    }
+
     function updateCorrelationsTimelineVisibility() {
         var timeline = document.getElementById('correlationsEventTimeline');
         if (!timeline) return;
@@ -5231,17 +5255,21 @@
         timeline.style.display = showTimeline ? '' : 'none';
     }
 
-    function filterCorrelations(attributeId) {
+    function filterCorrelations(filterValue, filterType) {
+        filterType = filterType || 'attribute';
         // Always switch to correlations tab
         $('.nav-tabs a[href="#correlations"]').tab('show');
 
         // If correlations haven't loaded yet, store the filter and apply it once loaded
         if (!_correlationData) {
-            _pendingCorrelationFilter = attributeId;
+            _pendingCorrelationFilter = {
+                value: filterValue,
+                type: filterType
+            };
             return;
         }
 
-        _applyCorrelationFilter(attributeId);
+        _applyCorrelationFilter(filterValue, filterType);
 
         // Scroll to top of correlations tab
         $('html, body').animate({
@@ -5273,8 +5301,10 @@
         });
     }
 
-    function _applyCorrelationFilter(attributeId) {
-        _activeCorrelationFilter = attributeId || null;
+    function _applyCorrelationFilter(filterValue, filterType) {
+        filterType = filterType || 'attribute';
+        _activeCorrelationFilter = filterValue || null;
+        _activeCorrelationFilterType = filterValue ? filterType : null;
 
         function buildThisEventMetaBlock(metaBlockHtml, attrCategory, attrType, attrValue) {
             if (metaBlockHtml) {
@@ -5343,15 +5373,21 @@
         // Re-render the Sankey with or without filter
         animateCorrelationFilterTransition(function() {
             if (_correlationData && _correlationEventDetails) {
-                if (attributeId) {
-                    // Get the attribute value for the label
-                    var attrValue = attributeId;
-                    if (_correlationData[attributeId] && _correlationData[attributeId].length > 0) {
-                        attrValue = _correlationData[attributeId][0].value || attributeId;
+                if (filterValue) {
+                    var filterLabel = filterValue;
+                    if (filterType === 'attribute' && _correlationData[filterValue] && _correlationData[filterValue].length > 0) {
+                        filterLabel = _correlationData[filterValue][0].value || filterValue;
+                    } else if (filterType === 'org') {
+                        var matchingOrgDetails = Object.keys(_correlationEventDetails).map(function(eid) {
+                            return _correlationEventDetails[eid];
+                        }).find(function(details) {
+                            return details && String(details.org) === String(filterValue);
+                        });
+                        filterLabel = matchingOrgDetails && matchingOrgDetails.orgName ? matchingOrgDetails.orgName : filterValue;
                     }
-                    renderCorrelationsTimeline(buildFilteredCorrelationEventDetails(attributeId));
-                    renderSankey(_correlationData, _correlationEventDetails, attributeId, {animateToggle: true});
-                    $('#sankey-filter-label').text('<?php echo __('Filtered'); ?>: ' + attrValue);
+                    renderCorrelationsTimeline(filterType === 'attribute' ? buildFilteredCorrelationEventDetails(filterValue) : buildFilteredCorrelationEventDetailsByOrg(filterValue));
+                    renderSankey(_correlationData, _correlationEventDetails, filterType === 'attribute' ? filterValue : null, {animateToggle: true, filterOrgId: filterType === 'org' ? filterValue : null});
+                    $('#sankey-filter-label').text('<?php echo __('Filtered'); ?>: ' + filterLabel);
                     $('#sankey-filter-badge').show();
                 } else {
                     renderCorrelationsTimeline(_correlationEventDetails);
@@ -5366,41 +5402,54 @@
 
             // Filter the correlations table cards and rows within them
             var cards = $('.correlation-event-card');
-            if (attributeId) {
-                var attrValue = attributeId;
+            if (filterValue) {
+                var attrValue = filterValue;
                 var attrType = '';
                 var attrCategory = '';
-                if (_correlationData && _correlationData[attributeId] && _correlationData[attributeId].length > 0) {
-                    var firstRel = _correlationData[attributeId][0];
-                    attrValue = firstRel.value || attributeId;
+                if (filterType === 'attribute' && _correlationData && _correlationData[filterValue] && _correlationData[filterValue].length > 0) {
+                    var firstRel = _correlationData[filterValue][0];
+                    attrValue = firstRel.value || filterValue;
+                } else if (filterType === 'org') {
+                    var matchingOrgCard = $('.correlation-event-card[data-org-id="' + String(filterValue).replace(/"/g, '\\"') + '"]').first();
+                    var matchingOrgName = matchingOrgCard.data('org-name');
+                    if (matchingOrgName) {
+                        attrValue = matchingOrgName;
+                    }
                 }
                 // Try to get type/category from the DOM (attributes table)
-                var domRow = $('[data-primary-id="' + attributeId + '"]');
-                if (domRow.length) {
+                var domRow = filterType === 'attribute' ? $('[data-primary-id="' + filterValue + '"]') : $();
+                if (filterType === 'attribute' && domRow.length) {
                     attrType = domRow.find('.beta-type-insight').first().text().trim();
                     attrCategory = domRow.find('.beta-category-label').first().text().trim();
                 }
 
-                // Show only cards that contain this attribute; within each card, show only matching rows
+                // Show only matching cards; for attribute filters also narrow to matching rows
                 cards.each(function() {
                     var card = $(this);
-                    var attrIds = card.data('attribute-ids') || '';
-                    var hasAttr = attrIds.indexOf(',' + attributeId + ',') !== -1;
-                    if (hasAttr) {
+                    var isMatch = false;
+                    if (filterType === 'attribute') {
+                        var attrIds = card.data('attribute-ids') || '';
+                        isMatch = attrIds.indexOf(',' + filterValue + ',') !== -1;
+                    } else if (filterType === 'org') {
+                        isMatch = String(card.data('org-id') || '') === String(filterValue);
+                    }
+                    if (isMatch) {
                         card.show();
-                        // Hide non-matching rows, show matching rows
                         card.find('.beta-correlation-row').each(function() {
                             var row = $(this);
-                            var rowAttrId = row.data('attribute-id');
-                            row.toggle(rowAttrId == attributeId);
+                            if (filterType === 'attribute') {
+                                var rowAttrId = row.data('attribute-id');
+                                row.toggle(rowAttrId == filterValue);
+                            } else {
+                                row.show();
+                            }
                         });
                     } else {
                         card.hide();
                     }
                 });
 
-                // Build "This Event" card showing the current event's attribute
-                // Clone the meta block from the DOM to include tags, comments, etc.
+                // Build "This Event" card only for attribute filters
                 var currentEventId = '<?php echo h($event['Event']['id']); ?>';
                 var currentEventInfo = '<?php echo addslashes(h($event['Event']['info'])); ?>';
                 var currentEventDate = '<?php echo addslashes(h($event['Event']['date'])); ?>';
@@ -5416,7 +5465,7 @@
                 var distributionHtml = '';
                 var dateHtml = '';
 
-                if (domRow.length) {
+                if (filterType === 'attribute' && domRow.length) {
                     // Clone the full meta block (includes type path, value, tags, galaxies)
                     var metaBlock = domRow.find('.beta-attr-meta-block').first().clone();
                     metaBlock.find('.beta-tagging-links').remove();
@@ -5457,28 +5506,30 @@
                     }
                 }
 
-                var thisEventHtml = buildThisEventCorrelationCard(
-                    currentEventDateSafe,
-                    currentEventOrg,
-                    currentEventId,
-                    currentEventInfo,
-                    metaBlockHtml,
-                    attrCategory,
-                    attrType,
-                    attrValue,
-                    idsHtml,
-                    correlationHtml,
-                    sightingsHtml,
-                    distributionHtml,
-                    dateHtml
-                );
+                if (filterType === 'attribute') {
+                    var thisEventHtml = buildThisEventCorrelationCard(
+                        currentEventDateSafe,
+                        currentEventOrg,
+                        currentEventId,
+                        currentEventInfo,
+                        metaBlockHtml,
+                        attrCategory,
+                        attrType,
+                        attrValue,
+                        idsHtml,
+                        correlationHtml,
+                        sightingsHtml,
+                        distributionHtml,
+                        dateHtml
+                    );
 
-                // Insert "This Event" card before the first correlation card
-                var container = $('#correlations-table-container .beta-correlations-container');
-                if (container.length) {
-                    container.prepend(thisEventHtml);
-                } else {
-                    $('#correlations-table-container').prepend(thisEventHtml);
+                    // Insert "This Event" card before the first correlation card
+                    var container = $('#correlations-table-container .beta-correlations-container');
+                    if (container.length) {
+                        container.prepend(thisEventHtml);
+                    } else {
+                        $('#correlations-table-container').prepend(thisEventHtml);
+                    }
                 }
 
                 // Show filter banner above the table
@@ -5498,7 +5549,7 @@
     }
 
     function resetCorrelationFilter() {
-        filterCorrelations(null);
+        filterCorrelations(null, null);
     }
 
     // ── Collections widget ────────────────────────────────────────────────────
