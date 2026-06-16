@@ -4326,7 +4326,7 @@
             var margin = {
                 top: 88,
                 right: Math.max(showPublisher ? 96 : 32, Math.floor(rightLabelBudget * marginCompressionRatio)),
-                bottom: 20,
+                bottom: alignToDate ? 54 : 20,
                 left: Math.max(120, Math.floor(sourceLabelBudget * marginCompressionRatio))
             };
             var width = Math.max(640, containerWidth - margin.left - margin.right);
@@ -4466,6 +4466,27 @@
             function addUtcYears(ts, count) {
                 var d = new Date(ts);
                 return Date.UTC(d.getUTCFullYear() + count, 0, 1);
+            }
+
+            function defineSankeyTimelineArrowMarker(svgSelection) {
+                var defs = svgSelection.select('defs');
+                if (defs.empty()) {
+                    defs = svgSelection.append('defs');
+                }
+                if (defs.select('#sankey-timeline-arrowhead').empty()) {
+                    defs.append('marker')
+                        .attr('id', 'sankey-timeline-arrowhead')
+                        .attr('viewBox', '0 0 10 10')
+                        .attr('refX', 7)
+                        .attr('refY', 5)
+                        .attr('markerWidth', 6)
+                        .attr('markerHeight', 6)
+                        .attr('markerUnits', 'strokeWidth')
+                        .attr('orient', 'auto')
+                        .append('path')
+                        .attr('d', 'M 0 0 L 10 5 L 0 10 z')
+                        .attr('fill', '#ff4d22');
+                }
             }
 
             function buildSankeyGridTicks(minTs, maxTs, laneStart, laneEnd) {
@@ -4805,6 +4826,10 @@
                     gridGroup = svg.append('g').attr('class', 'sankey-target-grid');
                     var timelineAxisY = laneTop - 28;
                     var timelineTickTopY = timelineAxisY - 12;
+                    var timelineDirectionY = laneBottom + 22;
+                    var timelineDirectionLabelY = timelineDirectionY + 18;
+
+                    defineSankeyTimelineArrowMarker(svg);
 
                     gridGroup.append('rect')
                         .attr('x', targetLaneStart)
@@ -4823,6 +4848,32 @@
                         .attr('stroke', 'rgba(63, 88, 70, 0.34)')
                         .attr('stroke-width', 2)
                         .attr('shape-rendering', 'geometricPrecision');
+
+                    gridGroup.append('line')
+                        .attr('x1', targetLaneStart)
+                        .attr('x2', targetLaneEnd)
+                        .attr('y1', timelineDirectionY)
+                        .attr('y2', timelineDirectionY)
+                        .attr('stroke', '#ff4d22')
+                        .attr('stroke-width', 2.5)
+                        .attr('marker-end', 'url(#sankey-timeline-arrowhead)')
+                        .attr('shape-rendering', 'geometricPrecision');
+
+                    gridGroup.append('text')
+                        .attr('x', targetLaneStart)
+                        .attr('y', timelineDirectionLabelY)
+                        .attr('text-anchor', 'start')
+                        .style('font', '700 11px sans-serif')
+                        .style('fill', '#111111')
+                        .text('<?php echo addslashes(__('Earlier events')); ?>');
+
+                    gridGroup.append('text')
+                        .attr('x', targetLaneEnd)
+                        .attr('y', timelineDirectionLabelY)
+                        .attr('text-anchor', 'end')
+                        .style('font', '700 11px sans-serif')
+                        .style('fill', '#111111')
+                        .text('<?php echo addslashes(__('Later events')); ?>');
 
                     var tickGroup = gridGroup.selectAll('g')
                         .data(gridTicks)
