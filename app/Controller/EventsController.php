@@ -2389,6 +2389,137 @@ class EventsController extends AppController
     }
 
     /**
+     * Paginated mixed event-view items for a given event.
+     * Returns the same combined top-level stream used by the
+     * beta event data tab: standalone attributes plus objects,
+     * sorted and filtered through rearrangeEventForView().
+     *
+     * Supports the same named params / POST filters as the main
+     * event view, including page and limit.
+     *
+     * @param int|string $id Event ID or UUID
+     */
+    public function viewItems($id = null)
+    {
+        $user = $this->Auth->user();
+
+        if (is_numeric($id)) {
+            $conditions = ['eventid' => $id];
+        } elseif (Validation::uuid($id)) {
+            $conditions = ['event_uuid' => $id];
+        } else {
+            throw new NotFoundException(__('Invalid event'));
+        }
+
+        $namedParams = $this->request->params['named'];
+        $requestQuery = $this->request->query;
+        $requestData = $this->request->data;
+
+        $filters = [];
+        foreach (self::ACCEPTED_FILTERING_NAMED_PARAMS as $param) {
+            if (isset($namedParams[$param])) {
+                $filters[$param] = $namedParams[$param];
+            } elseif (isset($requestQuery[$param])) {
+                $filters[$param] = $requestQuery[$param];
+            } elseif (isset($requestData[$param])) {
+                $filters[$param] = $requestData[$param];
+            }
+        }
+        foreach (['page', 'limit', 'sort', 'direction', 'order'] as $param) {
+            if (isset($namedParams[$param])) {
+                $filters[$param] = $namedParams[$param];
+            } elseif (isset($requestQuery[$param])) {
+                $filters[$param] = $requestQuery[$param];
+            } elseif (isset($requestData[$param])) {
+                $filters[$param] = $requestData[$param];
+            }
+        }
+
+        $conditions['includeAllTags'] = true;
+        $conditions['noEventReports'] = true;
+        $conditions['noSightings'] = true;
+        $conditions['fetchFullClusters'] = false;
+        $conditions['excludeLocalTags'] = false;
+        $conditions['includeWarninglistHits'] = true;
+        $conditions['includeFeedCorrelations'] = 1;
+        $conditions['includeGranularCorrelations'] = 1;
+        $conditions['includeServerCorrelations'] = 1;
+
+        $deleted = 0;
+        if (isset($filters['deleted'])) {
+            $deleted = $filters['deleted'];
+        }
+        if (is_array($deleted)) {
+            $conditions['deleted'] = $deleted;
+        } elseif ((int)$deleted === 1) {
+            $conditions['deleted'] = [0, 1];
+        } elseif ((int)$deleted === 0) {
+            $conditions['deleted'] = 0;
+        } else {
+            $conditions['deleted'] = 1;
+        }
+        if (isset($filters['toIDS']) && $filters['toIDS'] != 0) {
+            $conditions['to_ids'] = $filters['toIDS'] == 2 ? 0 : 1;
+        }
+        if (!empty($filters['includeRelatedTags'])) {
+            $conditions['includeRelatedTags'] = 1;
+        }
+        if (!empty($filters['includeDecayScore'])) {
+            $conditions['includeDecayScore'] = 1;
+        }
+        if (isset($namedParams['public']) && $namedParams['public']) {
+            $conditions['distribution'] = [3, 5];
+        }
+
+        $results = $this->Event->fetchEvent($user, $conditions);
+        if (empty($results)) {
+            throw new NotFoundException(__('Invalid event'));
+        }
+        $event = $results[0];
+
+        if (isset($filters['searchFor']) && $filters['searchFor'] !== '') {
+            $this->__applyQueryString($event, $filters['searchFor']);
+        }
+        if (isset($filters['taggedAttributes']) && $filters['taggedAttributes'] !== '') {
+            $this->__applyQueryString($event, $filters['taggedAttributes'], 'Tag.name');
+        }
+        if (isset($filters['galaxyAttachedAttributes']) && $filters['galaxyAttachedAttributes'] !== '') {
+            $this->__applyQueryString($event, $filters['galaxyAttachedAttributes'], 'Tag.name');
+        }
+
+        $page = max(1, (int)($filters['page'] ?? 1));
+        $limit = min(500, max(1, (int)($filters['limit'] ?? 60)));
+
+        $this->loadModel('Sighting');
+        $sightingsData = $this->Sighting->eventsStatistic([$event], $user);
+
+        $allItemsEvent = $event;
+        $this->Event->rearrangeEventForView(
+            $allItemsEvent,
+            ['page' => 0, 'limit' => PHP_INT_MAX],
+            true,
+            $sightingsData
+        );
+
+        $allItems = isset($allItemsEvent['objects']) && is_array($allItemsEvent['objects'])
+            ? array_values($allItemsEvent['objects'])
+            : [];
+        $total = count($allItems);
+        $pageCount = $limit > 0 ? (int)ceil($total / $limit) : 1;
+        $page = min($page, max(1, $pageCount));
+        $offset = ($page - 1) * $limit;
+        $pageItems = array_slice($allItems, $offset, $limit);
+
+        return $this->RestResponse->viewData([
+            'items' => array_values($pageItems),
+            'page' => $page,
+            'limit' => $limit,
+            'total' => $total,
+            'pageCount' => $pageCount,
+        ], 'json');
+    }
+
+    /**
      * Paginated standalone attributes for a given event.
      * Returns JSON with DB-level sorting and
      * pagination — no in-memory rearrangement needed.

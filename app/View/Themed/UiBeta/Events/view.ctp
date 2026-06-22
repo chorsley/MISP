@@ -1938,6 +1938,7 @@
         <ul class="nav nav-tabs beta-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#summary" aria-controls="summary" role="tab" data-toggle="tab"><?php echo __('Summary'); ?></a></li>
             <li role="presentation"><a href="#attributes" aria-controls="attributes" role="tab" data-toggle="tab"><?php echo __('Data'); ?> (<?php echo h($betaTotalAttributes); ?>)</a></li>
+            <li role="presentation"><a href="#data-explorer" aria-controls="data-explorer" role="tab" data-toggle="tab"><?php echo __('Data Explorer'); ?></a></li>
             <li role="presentation"><a href="#correlations" aria-controls="correlations" role="tab" data-toggle="tab"><?php echo __('Correlations'); ?> (<?php echo isset($relatedEventCorrelationCount) ? count($relatedEventCorrelationCount) : 0; ?>)</a></li>
             <li role="presentation"><a href="#history" aria-controls="history" role="tab" data-toggle="tab"><?php echo __('History'); ?></a></li>
         </ul>
@@ -2542,7 +2543,354 @@
                      </div>
                  </div>
              </div>
-            
+             <div role="tabpanel" class="tab-pane" id="data-explorer" style="padding-top: 18px; margin-top: 12px; position: relative; z-index: 0; clear: both;">
+                 <style>
+                     #data-explorer .beta-data-explorer {
+                         display: flex;
+                         gap: 18px;
+                         align-items: stretch;
+                         min-height: 640px;
+                     }
+                     #data-explorer .beta-data-explorer-main {
+                         flex: 1 1 auto;
+                         min-width: 0;
+                         display: flex;
+                         flex-direction: column;
+                         gap: 14px;
+                     }
+                     #data-explorer .beta-data-explorer-sidebar {
+                         flex: 0 0 330px;
+                         max-width: 330px;
+                         display: flex;
+                         flex-direction: column;
+                         gap: 12px;
+                     }
+                     #data-explorer .beta-data-explorer-card {
+                         background: #fff;
+                         border: 1px solid #d9e5f0;
+                         border-radius: 14px;
+                         box-shadow: 0 6px 16px rgba(54, 84, 111, 0.08);
+                         overflow: hidden;
+                     }
+                     #data-explorer .beta-data-explorer-header {
+                         display: flex;
+                         justify-content: space-between;
+                         align-items: center;
+                         gap: 12px;
+                         padding: 14px 16px 10px;
+                         border-bottom: 1px solid #e6eef6;
+                         background: linear-gradient(180deg, #f7fbff 0%, #eef5fb 100%);
+                     }
+                     #data-explorer .beta-data-explorer-title {
+                         margin: 0;
+                         font-size: 18px;
+                         line-height: 1.2;
+                         color: #21384f;
+                     }
+                     #data-explorer .beta-data-explorer-subtitle {
+                         margin: 4px 0 0;
+                         color: #607284;
+                         font-size: 12px;
+                     }
+                     #data-explorer .beta-data-explorer-actions {
+                         display: flex;
+                         gap: 8px;
+                         align-items: center;
+                         flex-wrap: wrap;
+                     }
+                     #data-explorer .beta-data-explorer-status {
+                         font-size: 12px;
+                         color: #56708a;
+                         background: #edf5fd;
+                         border: 1px solid #d8e8f7;
+                         border-radius: 999px;
+                         padding: 6px 10px;
+                         white-space: nowrap;
+                     }
+                     #data-explorer .beta-data-explorer-shell {
+                         padding: 14px 16px 16px;
+                     }
+                     #data-explorer .beta-data-explorer-breadcrumbs {
+                         display: flex;
+                         flex-wrap: wrap;
+                         gap: 6px;
+                         min-height: 32px;
+                     }
+                     #data-explorer .beta-data-explorer-breadcrumb {
+                         border: 1px solid #d6e2ee;
+                         border-radius: 999px;
+                         background: #fff;
+                         color: #3e5a77;
+                         font-size: 12px;
+                         padding: 4px 10px;
+                     }
+                     #data-explorer .beta-data-explorer-breadcrumb.is-actionable {
+                         cursor: pointer;
+                     }
+                     #data-explorer .beta-data-explorer-canvas {
+                         height: 560px;
+                         border-radius: 12px;
+                         overflow: hidden;
+                         background: radial-gradient(circle at top, #f9fcff 0%, #eef4fa 55%, #e4edf6 100%);
+                         border: 1px solid #d6e2ee;
+                     }
+                      #data-explorer .beta-data-explorer-empty {
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                         height: 100%;
+                         padding: 24px;
+                         color: #6b7e92;
+                          font-size: 13px;
+                          text-align: center;
+                      }
+                      #data-explorer .beta-data-explorer-loading {
+                          display: flex;
+                          flex-direction: column;
+                          align-items: center;
+                          justify-content: center;
+                          gap: 12px;
+                          height: 100%;
+                          padding: 24px;
+                          color: #5f7388;
+                          text-align: center;
+                      }
+                      #data-explorer .beta-data-explorer-loading i {
+                          color: #4b79a6;
+                      }
+                      #data-explorer .beta-data-explorer-tooltip {
+                          position: absolute;
+                          z-index: 15;
+                          pointer-events: none;
+                         max-width: 320px;
+                         padding: 8px 10px;
+                         border-radius: 8px;
+                         background: rgba(21, 34, 49, 0.92);
+                         color: #fff;
+                         font-size: 12px;
+                         line-height: 1.4;
+                         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+                         opacity: 0;
+                     }
+                     #data-explorer .beta-data-explorer-tooltip.is-visible {
+                         opacity: 1;
+                     }
+                     #data-explorer .beta-data-explorer-panel {
+                         padding: 14px 16px;
+                     }
+                     #data-explorer .beta-data-explorer-summary-grid {
+                         display: grid;
+                         grid-template-columns: repeat(2, minmax(0, 1fr));
+                         gap: 10px;
+                     }
+                     #data-explorer .beta-data-explorer-stat {
+                         border: 1px solid #deebf6;
+                         border-radius: 12px;
+                         padding: 10px 12px;
+                         background: linear-gradient(180deg, #fcfeff 0%, #f4f9fd 100%);
+                     }
+                     #data-explorer .beta-data-explorer-stat-label {
+                         display: block;
+                         font-size: 11px;
+                         text-transform: uppercase;
+                         letter-spacing: 0.04em;
+                         color: #8091a3;
+                         margin-bottom: 4px;
+                     }
+                     #data-explorer .beta-data-explorer-stat-value {
+                         display: block;
+                         font-size: 20px;
+                         line-height: 1.1;
+                         color: #20364d;
+                         font-weight: 700;
+                     }
+                     #data-explorer .beta-data-explorer-list {
+                         display: flex;
+                         flex-direction: column;
+                         gap: 8px;
+                         max-height: 190px;
+                         overflow: auto;
+                     }
+                     #data-explorer .beta-data-explorer-list-item {
+                         display: flex;
+                         justify-content: space-between;
+                         gap: 8px;
+                         align-items: center;
+                         padding: 7px 10px;
+                         border: 1px solid #e1ebf4;
+                         border-radius: 10px;
+                         background: #fbfdff;
+                         font-size: 12px;
+                         color: #4f657d;
+                     }
+                     #data-explorer .beta-data-explorer-detail-empty,
+                     #data-explorer .beta-data-explorer-detail {
+                         font-size: 12px;
+                         color: #566c83;
+                         line-height: 1.5;
+                     }
+                     #data-explorer .beta-data-explorer-chip {
+                         display: inline-flex;
+                         align-items: center;
+                         gap: 5px;
+                         padding: 4px 8px;
+                         border-radius: 999px;
+                         background: #eef5fb;
+                         border: 1px solid #d7e7f5;
+                         color: #395773;
+                         font-size: 11px;
+                         font-weight: 600;
+                     }
+                     #data-explorer .beta-data-explorer-section-label {
+                         font-size: 11px;
+                         text-transform: uppercase;
+                         letter-spacing: 0.04em;
+                         color: #8595a6;
+                         margin: 12px 0 6px;
+                     }
+                     #data-explorer .beta-data-explorer-textblock {
+                         margin: 0;
+                         padding: 10px 11px;
+                         border: 1px solid #e1ebf4;
+                         border-radius: 10px;
+                         background: #fbfdff;
+                         color: #29435d;
+                         white-space: pre-wrap;
+                         word-break: break-word;
+                         font-size: 12px;
+                         line-height: 1.45;
+                     }
+                     #data-explorer .beta-data-explorer-taglist {
+                         display: flex;
+                         flex-wrap: wrap;
+                         gap: 6px;
+                     }
+                     #data-explorer .beta-data-explorer-tag {
+                         display: inline-flex;
+                         align-items: center;
+                         padding: 4px 8px;
+                         border-radius: 999px;
+                         background: #fff7ea;
+                         border: 1px solid #f2dfb4;
+                         color: #7b5a18;
+                         font-size: 11px;
+                     }
+                     #data-explorer .beta-data-explorer-button {
+                         border: 1px solid #c9dced;
+                         border-radius: 999px;
+                         background: #fff;
+                         color: #365777;
+                         font-size: 12px;
+                         line-height: 1;
+                         padding: 8px 12px;
+                         cursor: pointer;
+                     }
+                     #data-explorer .beta-data-explorer-button[disabled] {
+                         opacity: 0.45;
+                         cursor: default;
+                     }
+                     #data-explorer .beta-data-explorer-legend-note {
+                         margin-top: 10px;
+                         color: #71869b;
+                         font-size: 11px;
+                         line-height: 1.45;
+                     }
+                     #data-explorer .beta-data-explorer-node .node-label,
+                     #data-explorer .beta-data-explorer-node .node-meta,
+                     #data-explorer .beta-data-explorer-node .node-value {
+                         pointer-events: none;
+                     }
+                     @media (max-width: 1100px) {
+                         #data-explorer .beta-data-explorer {
+                             flex-direction: column;
+                         }
+                         #data-explorer .beta-data-explorer-sidebar {
+                             flex: 1 1 auto;
+                             max-width: none;
+                         }
+                     }
+                     #data-explorer .beta-data-explorer,
+                     #data-explorer .beta-data-explorer-main,
+                     #data-explorer .beta-data-explorer-card,
+                     #data-explorer .beta-data-explorer-shell {
+                         position: relative;
+                         z-index: 1;
+                     }
+                     #data-explorer .beta-data-explorer-shell {
+                         display: block;
+                         padding-top: 10px;
+                     }
+                     #data-explorer .beta-data-explorer-actions,
+                     #data-explorer .beta-data-explorer-breadcrumbs {
+                         position: relative;
+                         z-index: 3;
+                     }
+                     #data-explorer .beta-data-explorer-breadcrumbs {
+                         margin-bottom: 14px;
+                     }
+                     #data-explorer .beta-data-explorer-canvas {
+                         position: relative;
+                         z-index: 1;
+                         margin-top: 0;
+                         clear: both;
+                     }
+                     #data-explorer .beta-data-explorer-node {
+                         z-index: 1;
+                     }
+                 </style>
+                 <div class="beta-data-explorer">
+                     <div class="beta-data-explorer-main">
+                         <div class="beta-data-explorer-card">
+                             <div class="beta-data-explorer-header">
+                                 <div>
+                                     <h3 class="beta-data-explorer-title"><?php echo __('Data Explorer'); ?></h3>
+                                     <p class="beta-data-explorer-subtitle"><?php echo __('Interactive treemap over the first 1000 event data elements, grouped by object or attribute type and coloured by attribute type family.'); ?></p>
+                                 </div>
+                                 <div class="beta-data-explorer-actions">
+                                     <span id="beta-data-explorer-status" class="beta-data-explorer-status"><?php echo __('Preparing explorer'); ?></span>
+                                     <button type="button" class="beta-data-explorer-button" id="beta-data-explorer-up-level"><?php echo __('Up One Level'); ?></button>
+                                     <button type="button" class="beta-data-explorer-button" id="beta-data-explorer-reset-view"><?php echo __('Reset View'); ?></button>
+                                 </div>
+                             </div>
+                              <div class="beta-data-explorer-shell">
+                                  <div id="beta-data-explorer-breadcrumbs" class="beta-data-explorer-breadcrumbs"></div>
+                                  <div id="beta-data-explorer-canvas" class="beta-data-explorer-canvas">
+                                      <div id="beta-data-explorer-empty" class="beta-data-explorer-empty"><?php echo __('Treemap will appear here once the explorer sample is loaded.'); ?></div>
+                                      <div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>
+                                  </div>
+                              </div>
+                          </div>
+                     </div>
+                     <div class="beta-data-explorer-sidebar">
+                         <div class="beta-data-explorer-card">
+                             <div class="beta-data-explorer-header">
+                                 <div>
+                                     <h4 class="beta-data-explorer-title" style="font-size: 15px;"><?php echo __('Explorer Summary'); ?></h4>
+                                     <p class="beta-data-explorer-subtitle"><?php echo __('Quick shape indicators for the sampled data.'); ?></p>
+                                 </div>
+                             </div>
+                             <div class="beta-data-explorer-panel">
+                                 <div id="beta-data-explorer-summary-grid" class="beta-data-explorer-summary-grid"></div>
+                                 <div class="beta-data-explorer-section-label"><?php echo __('Dominant regions'); ?></div>
+                                 <div id="beta-data-explorer-top-regions" class="beta-data-explorer-list"></div>
+                                 <div class="beta-data-explorer-legend-note"><?php echo __('Larger rectangles represent more entities. Related objects and attributes are grouped together. Attributes with similar comments are pulled into nearby subregions.'); ?></div>
+                             </div>
+                         </div>
+                         <div class="beta-data-explorer-card">
+                             <div class="beta-data-explorer-header">
+                                 <div>
+                                     <h4 class="beta-data-explorer-title" style="font-size: 15px;"><?php echo __('Selection Detail'); ?></h4>
+                                     <p class="beta-data-explorer-subtitle"><?php echo __('Click an individual square to inspect its context.'); ?></p>
+                                 </div>
+                             </div>
+                             <div class="beta-data-explorer-panel">
+                                 <div id="beta-data-explorer-detail" class="beta-data-explorer-detail-empty"><?php echo __('No item selected yet. Drill into a region, then click an individual object or attribute square to inspect tags, galaxies, comments, and raw values.'); ?></div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+             
              <!-- Other Tabs Placeholders -->
               <div role="tabpanel" class="tab-pane beta-tab-pane-tight" id="correlations">
                 <div id="correlations-loader" style="text-align: center; padding: 40px;">
@@ -2634,6 +2982,191 @@
         $attrTypes = [];
         $seenAttrKeys = [];
         $commentCounts = [];
+        $dataExplorerLimit = 1000;
+        $dataExplorerSourceItems = [];
+        $dataExplorerLeaves = [];
+        $dataExplorerUniqueTypes = [];
+        $dataExplorerUniqueComments = [];
+        $dataExplorerStats = [
+            'objects' => 0,
+            'attributes' => 0,
+        ];
+
+        $normaliseExplorerTag = function($tag) {
+            if (empty($tag) || !is_array($tag)) {
+                return null;
+            }
+            $name = $tag['name'] ?? ($tag['Tag']['name'] ?? null);
+            if ($name === null || $name === '') {
+                return null;
+            }
+            return [
+                'name' => (string)$name,
+                'colour' => (string)($tag['colour'] ?? ($tag['Tag']['colour'] ?? '')),
+                'local' => !empty($tag['local']),
+            ];
+        };
+
+        $extractExplorerTagNames = function($tagCollection) use ($normaliseExplorerTag) {
+            $result = [];
+            if (empty($tagCollection) || !is_array($tagCollection)) {
+                return $result;
+            }
+            foreach ($tagCollection as $tag) {
+                $normalised = $normaliseExplorerTag($tag);
+                if ($normalised === null) {
+                    continue;
+                }
+                $result[] = $normalised;
+            }
+            return $result;
+        };
+
+        $extractExplorerGalaxies = function($entity) {
+            $result = [];
+            if (empty($entity['Galaxy']) || !is_array($entity['Galaxy'])) {
+                return $result;
+            }
+            foreach ($entity['Galaxy'] as $galaxy) {
+                $galaxyName = $galaxy['name'] ?? ($galaxy['Galaxy']['name'] ?? null);
+                if ($galaxyName === null || $galaxyName === '') {
+                    continue;
+                }
+                if (!empty($galaxy['GalaxyCluster']) && is_array($galaxy['GalaxyCluster'])) {
+                    foreach ($galaxy['GalaxyCluster'] as $cluster) {
+                        $clusterValue = $cluster['value'] ?? ($cluster['tag_name'] ?? null);
+                        $result[] = trim($galaxyName . ($clusterValue ? ': ' . $clusterValue : ''));
+                    }
+                } else {
+                    $result[] = (string)$galaxyName;
+                }
+            }
+            return array_values(array_unique($result));
+        };
+
+        $buildCommentClusterKey = function($comment) {
+            $comment = trim((string)$comment);
+            if ($comment === '') {
+                return 'No comment';
+            }
+            $normalized = strtolower($comment);
+            $normalized = preg_replace('/https?:\/\/\S+/i', 'url', $normalized);
+            $normalized = preg_replace('/\b[0-9a-f]{6,}\b/i', 'hex', $normalized);
+            $normalized = preg_replace('/\b\d+\b/', 'n', $normalized);
+            $normalized = preg_replace('/[^a-z0-9]+/', ' ', $normalized);
+            $tokens = preg_split('/\s+/', trim($normalized));
+            $tokens = array_values(array_filter($tokens, function($token) {
+                return strlen($token) >= 4;
+            }));
+            if (empty($tokens)) {
+                return 'Comment: ' . substr($comment, 0, 32);
+            }
+            $tokens = array_slice(array_values(array_unique($tokens)), 0, 3);
+            return 'Comment: ' . implode(' ', $tokens);
+        };
+
+        $buildCommentPreview = function($comment) {
+            $comment = trim((string)$comment);
+            if ($comment === '') {
+                return '';
+            }
+            if (mb_strlen($comment) > 48) {
+                return rtrim(mb_substr($comment, 0, 45)) . '...';
+            }
+            return $comment;
+        };
+
+        $buildExplorerLeaf = function($entity, $entityType, $parentObject = null) use (&$dataExplorerUniqueTypes, &$dataExplorerStats, $extractExplorerTagNames, $extractExplorerGalaxies, $buildCommentPreview) {
+            $tags = $extractExplorerTagNames($entity['AttributeTag'] ?? ($entity['Tag'] ?? []));
+            $galaxies = $extractExplorerGalaxies($entity);
+            $comment = trim((string)($entity['comment'] ?? ''));
+            $commentPreview = $buildCommentPreview($comment);
+            $value = trim((string)($entity['value'] ?? ''));
+            $type = (string)($entity['type'] ?? ($entityType === 'object' ? ($entity['name'] ?? 'object') : 'unknown'));
+            $category = (string)($entity['category'] ?? ($entityType === 'object' ? 'Object' : 'Uncategorized'));
+            $id = isset($entity['id']) ? (string)$entity['id'] : '';
+            $uuid = isset($entity['uuid']) ? (string)$entity['uuid'] : '';
+            $name = $entityType === 'object'
+                ? (string)($entity['name'] ?? 'Object')
+                : ($value !== '' ? $value : 'Attribute');
+            $displayLabel = $entityType === 'object'
+                ? trim($name . (!empty($entity['meta-category']) ? ' [' . $entity['meta-category'] . ']' : ''))
+                : trim($type . ': ' . ($value !== '' ? $value : 'No value'));
+            $typeFamily = $entityType === 'object'
+                ? 'Object: ' . $name
+                : (strpos($type, '|') !== false ? explode('|', $type, 2)[0] : $type);
+            $groupType = $entityType === 'object' ? $name : $typeFamily;
+            $colourKey = $entityType === 'object' ? ('object:' . $name) : ('attribute:' . $typeFamily);
+            $weight = 1;
+            $weight += min(strlen($value), 120) / 90;
+            $weight += min(count($tags), 8) * 0.16;
+            $weight += min(count($galaxies), 6) * 0.2;
+            if ($comment !== '') {
+                $weight += 0.4;
+            }
+            if ($entityType === 'object' && !empty($entity['Attribute']) && is_array($entity['Attribute'])) {
+                $weight += min(count($entity['Attribute']), 12) * 0.55;
+            }
+            $dataExplorerUniqueTypes[$groupType] = true;
+            $dataExplorerStats[$entityType === 'object' ? 'objects' : 'attributes']++;
+
+            return [
+                'id' => $id,
+                'uuid' => $uuid,
+                'entityType' => $entityType,
+                'name' => $name,
+                'label' => $displayLabel,
+                'valuePreview' => $value,
+                'comment' => $comment,
+                'commentPreview' => $commentPreview,
+                'groupKind' => $entityType === 'object' ? 'Objects' : 'Attributes',
+                'groupType' => $groupType,
+                'category' => $category,
+                'typeFamily' => $typeFamily,
+                'type' => $type,
+                'colourKey' => $colourKey,
+                'weight' => round($weight, 3),
+                'tags' => $tags,
+                'galaxies' => $galaxies,
+                'objectName' => $parentObject['name'] ?? ($entityType === 'object' ? $name : ''),
+                'childCount' => !empty($entity['Attribute']) && is_array($entity['Attribute']) ? count($entity['Attribute']) : 0,
+            ];
+        };
+
+        $dataExplorerTopRegions = [];
+        foreach ($dataExplorerLeaves as $leaf) {
+            $regionKey = $leaf['groupKind'] . ' / ' . $leaf['groupType'];
+            if (!isset($dataExplorerTopRegions[$regionKey])) {
+                $dataExplorerTopRegions[$regionKey] = [
+                    'label' => $regionKey,
+                    'count' => 0,
+                    'weight' => 0,
+                ];
+            }
+            $dataExplorerTopRegions[$regionKey]['count']++;
+            $dataExplorerTopRegions[$regionKey]['weight'] += $leaf['weight'];
+        }
+        uasort($dataExplorerTopRegions, function($a, $b) {
+            if ($b['count'] !== $a['count']) {
+                return $b['count'] - $a['count'];
+            }
+            return $b['weight'] <=> $a['weight'];
+        });
+        $dataExplorerPayload = [
+            'sampleLimit' => $dataExplorerLimit,
+            'sampledTopLevelItems' => count($dataExplorerSourceItems),
+            'leafCount' => count($dataExplorerLeaves),
+            'stats' => [
+                ['label' => __('Top-level sample'), 'value' => count($dataExplorerSourceItems)],
+                ['label' => __('Rendered leaves'), 'value' => count($dataExplorerLeaves)],
+                ['label' => __('Object regions'), 'value' => $dataExplorerStats['objects']],
+                ['label' => __('Attribute leaves'), 'value' => $dataExplorerStats['attributes']],
+                ['label' => __('Type families'), 'value' => count($dataExplorerUniqueTypes)],
+                ['label' => __('Top-level type regions'), 'value' => count($dataExplorerTopRegions)],
+            ],
+            'topRegions' => array_slice(array_values($dataExplorerTopRegions), 0, 8),
+            'leaves' => $dataExplorerLeaves,
+        ];
 
         $registerAttrType = function($attr) use (&$attrTypes, &$seenAttrKeys) {
             if (empty($attr) || empty($attr['type'])) {
@@ -2735,7 +3268,42 @@
     ?>
     var compositionData = <?php echo json_encode($compositionData); ?>;
     var commentData = <?php echo json_encode($commentData); ?>;
+    var dataExplorerPayload = <?php echo json_encode($dataExplorerPayload); ?>;
+    var dataExplorerEventId = <?php echo json_encode((string)$event['Event']['id']); ?>;
+    var dataExplorerItemsUrl = <?php echo json_encode($baseurl . '/events/viewItems/' . (string)$event['Event']['id'] . '.json'); ?>;
+    var dataExplorerPaging = <?php echo json_encode([
+        'currentPage' => $betaCurrentPage,
+        'pageSize' => $betaPageSize,
+        'totalItems' => $betaTotalItems,
+        'totalPages' => $betaTotalPages,
+    ]); ?>;
     var _sankeyLayoutSnapshot = null;
+    var _dataExplorerInitialised = false;
+    var _dataExplorerPreloadStarted = false;
+    var _dataExplorerState = {
+        root: null,
+        canvas: null,
+        width: 0,
+        height: 0,
+        currentNode: null,
+        treemap: null,
+        nodes: [],
+        allLeaves: [],
+        loadedPages: {},
+        loading: false,
+        fullyLoaded: false,
+        renderScheduled: false,
+        streamedTopLevelItems: 0,
+        totalTopLevelItems: dataExplorerPaging.totalItems || 0,
+        leafKeyMap: {}
+    };
+
+    (function seedDataExplorerLeafKeys() {
+        (_dataExplorerState.allLeaves || []).forEach(function(leaf, index) {
+            var key = (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || index);
+            _dataExplorerState.leafKeyMap[key] = true;
+        });
+    })();
 
     function escapeHtml(value) {
         return $('<div/>').text(value == null ? '' : String(value)).html();
@@ -2842,6 +3410,652 @@
         }
     }
 
+    function normaliseExplorerGroupName(value, fallback) {
+        var text = value == null ? '' : String(value).trim();
+        return text ? text : fallback;
+    }
+
+    function buildDataExplorerHierarchy(payload) {
+        payload = payload || {};
+        var leaves = Array.isArray(payload.leaves) ? payload.leaves : [];
+        var root = { name: 'All data', kind: 'root', children: [] };
+        var regionsByKind = {};
+
+        leaves.forEach(function(leaf, index) {
+            var groupKind = normaliseExplorerGroupName(leaf.groupKind, 'Other');
+            var groupType = normaliseExplorerGroupName(leaf.groupType, 'Misc');
+            if (!regionsByKind[groupKind]) {
+                regionsByKind[groupKind] = { name: groupKind, kind: 'region', regionType: groupKind, children: [], _childrenByType: {} };
+                root.children.push(regionsByKind[groupKind]);
+            }
+            var region = regionsByKind[groupKind];
+            if (!region._childrenByType[groupType]) {
+                region._childrenByType[groupType] = { name: groupType, kind: 'type-family', regionType: groupKind, colourKey: leaf.colourKey || groupType, children: [] };
+                region.children.push(region._childrenByType[groupType]);
+            }
+            region._childrenByType[groupType].children.push({
+                name: leaf.label || leaf.name || ('Item ' + (index + 1)),
+                kind: 'leaf',
+                regionType: groupKind,
+                colourKey: leaf.colourKey || groupType,
+                size: Math.max(1, Number(leaf.weight) || 1),
+                leaf: leaf,
+                key: (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || index)
+            });
+        });
+
+        function cleanup(node) {
+            if (!node || !node.children) {
+                return;
+            }
+            delete node._childrenByType;
+            node.children.forEach(cleanup);
+        }
+
+        cleanup(root);
+        return root;
+    }
+
+    function getDataExplorerNodeColor(node) {
+        var key = String(node.colourKey || node.name || node.regionType || 'default');
+        var hash = 0;
+        for (var i = 0; i < key.length; i++) {
+            hash = ((hash << 5) - hash) + key.charCodeAt(i);
+            hash |= 0;
+        }
+        var hue = Math.abs(hash) % 360;
+        if (node.kind === 'region') return 'hsl(' + hue + ', 28%, 52%)';
+        if (node.kind === 'type-family') return 'hsl(' + hue + ', 36%, 68%)';
+        return 'hsl(' + hue + ', 34%, 84%)';
+    }
+
+    function getDataExplorerNodeText(node) {
+        if (node.kind === 'leaf' && node.leaf) {
+            if (node.leaf.entityType === 'object') {
+                return node.leaf.objectName || node.leaf.name;
+            }
+            return node.leaf.valuePreviewShort || node.leaf.valuePreview || node.name;
+        }
+        return node.name || '';
+    }
+
+    function getDataExplorerNodeMetaText(node) {
+        if (node.kind === 'leaf' && node.leaf) {
+            return node.leaf.commentPreview || '';
+        }
+        return Math.round(node.value || 0) + ' <?php echo addslashes(__('weight')); ?>';
+    }
+
+    function getDataExplorerNodeValueText(node) {
+        if (node.kind === 'leaf' && node.leaf) {
+            return node.leaf.valuePreviewShort || '';
+        }
+        return '';
+    }
+
+    function updateDataExplorerPayloadStats() {
+        var payload = dataExplorerPayload || {};
+        var leaves = _dataExplorerState.allLeaves || [];
+        var objectCount = 0;
+        var attributeCount = 0;
+        var typeMap = {};
+        var regionMap = {};
+        leaves.forEach(function(leaf) {
+            if (leaf.entityType === 'object') {
+                objectCount++;
+            } else {
+                attributeCount++;
+            }
+            if (leaf.groupType) {
+                typeMap[leaf.groupType] = true;
+            }
+            var regionKey = (leaf.groupKind || 'Other') + ' / ' + (leaf.groupType || 'Misc');
+            if (!regionMap[regionKey]) {
+                regionMap[regionKey] = { label: regionKey, count: 0, weight: 0 };
+            }
+            regionMap[regionKey].count++;
+            regionMap[regionKey].weight += Number(leaf.weight) || 0;
+        });
+        payload.leafCount = leaves.length;
+        payload.sampledTopLevelItems = _dataExplorerState.streamedTopLevelItems || 0;
+        payload.stats = [
+            { label: '<?php echo addslashes(__('Top-level sample')); ?>', value: payload.sampledTopLevelItems },
+            { label: '<?php echo addslashes(__('Rendered leaves')); ?>', value: leaves.length },
+            { label: '<?php echo addslashes(__('Object regions')); ?>', value: objectCount },
+            { label: '<?php echo addslashes(__('Attribute leaves')); ?>', value: attributeCount },
+            { label: '<?php echo addslashes(__('Type families')); ?>', value: Object.keys(typeMap).length },
+            { label: '<?php echo addslashes(__('Top-level type regions')); ?>', value: Object.keys(regionMap).length }
+        ];
+        payload.topRegions = Object.keys(regionMap).map(function(key) {
+            return regionMap[key];
+        }).sort(function(a, b) {
+            if (b.count !== a.count) {
+                return b.count - a.count;
+            }
+            return b.weight - a.weight;
+        }).slice(0, 8);
+        payload.leaves = leaves.slice();
+    }
+
+    function renderDataExplorerLoadingState(message) {
+        var $canvas = $('#beta-data-explorer-canvas');
+        if (!$canvas.length) {
+            return;
+        }
+        $canvas.find('svg').remove();
+        $canvas.find('.beta-data-explorer-node').remove();
+        hideDataExplorerTooltip();
+        $canvas.html(
+            '<div class="beta-data-explorer-loading">'
+                + '<i class="fa fa-spinner fa-spin fa-3x" aria-hidden="true"></i>'
+                + '<div>' + escapeHtml(message || '<?php echo addslashes(__('Loading explorer sample')); ?>') + '</div>'
+            + '</div>'
+            + '<div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>'
+        );
+    }
+
+    function normaliseDataExplorerTagCollection(tagCollection) {
+        if (!Array.isArray(tagCollection) || !tagCollection.length) {
+            return [];
+        }
+        return tagCollection.map(function(tagWrap) {
+            var tag = tagWrap && (tagWrap.Tag || tagWrap);
+            return tag && tag.name ? {
+                name: String(tag.name),
+                colour: String(tag.colour || ''),
+                local: !!(tagWrap && tagWrap.local)
+            } : null;
+        }).filter(Boolean);
+    }
+
+    function normaliseDataExplorerFetchedAttribute(attribute, parentObject) {
+        if (!attribute) {
+            return null;
+        }
+        var rawValue = String(attribute.value || '').trim();
+        var valuePreviewShort = rawValue.length > 42 ? rawValue.slice(0, 39).trim() + '...' : rawValue;
+        var comment = String(attribute.comment || '').trim();
+        var commentPreview = comment.length > 48 ? comment.slice(0, 45).trim() + '...' : comment;
+        var type = String(attribute.type || 'unknown');
+        var typeFamily = type.indexOf('|') !== -1 ? type.split('|', 1)[0] : type;
+        return {
+            id: attribute.id != null ? String(attribute.id) : '',
+            uuid: attribute.uuid != null ? String(attribute.uuid) : '',
+            entityType: 'attribute',
+            name: rawValue || 'Attribute',
+            label: (type + ': ' + (rawValue || 'No value')).trim(),
+            valuePreview: rawValue,
+            valuePreviewShort: valuePreviewShort,
+            comment: comment,
+            commentPreview: commentPreview,
+            groupKind: 'Attributes',
+            groupType: typeFamily,
+            category: String(attribute.category || 'Uncategorized'),
+            typeFamily: typeFamily,
+            type: type,
+            colourKey: 'attribute:' + typeFamily,
+            weight: 1 + Math.min(rawValue.length, 120) / 90 + Math.min(((attribute.AttributeTag || []).length || 0), 8) * 0.16 + (comment ? 0.4 : 0),
+            tags: normaliseDataExplorerTagCollection(attribute.AttributeTag || attribute.Tag || []),
+            galaxies: [],
+            objectName: parentObject && parentObject.name ? String(parentObject.name) : '',
+            childCount: 0
+        };
+    }
+
+    function pushDataExplorerLeaf(leaf) {
+        if (!leaf) {
+            return;
+        }
+        var key = (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || leaf.name || Math.random());
+        if (_dataExplorerState.leafKeyMap[key]) {
+            return;
+        }
+        _dataExplorerState.leafKeyMap[key] = true;
+        _dataExplorerState.allLeaves.push(leaf);
+    }
+
+    function normaliseDataExplorerFetchedObject(objectEntry) {
+        if (!objectEntry) {
+            return null;
+        }
+        var objectData = objectEntry.Object || objectEntry;
+        if (!objectData) {
+            return null;
+        }
+        var objectName = String(objectData.name || 'Object');
+        var comment = String(objectData.comment || '').trim();
+        return {
+            id: objectData.id != null ? String(objectData.id) : '',
+            uuid: objectData.uuid != null ? String(objectData.uuid) : '',
+            entityType: 'object',
+            name: objectName,
+            label: objectData['meta-category'] ? (objectName + ' [' + String(objectData['meta-category']) + ']') : objectName,
+            valuePreview: '',
+            valuePreviewShort: '',
+            comment: comment,
+            commentPreview: comment.length > 48 ? comment.slice(0, 45).trim() + '...' : comment,
+            groupKind: 'Objects',
+            groupType: objectName,
+            category: String(objectData.category || 'Object'),
+            typeFamily: 'Object: ' + objectName,
+            type: objectName,
+            colourKey: 'object:' + objectName,
+            weight: 1 + Math.min((((objectEntry.Attribute || objectData.Attribute || []).length) || 0), 12) * 0.55 + (comment ? 0.4 : 0),
+            tags: normaliseDataExplorerTagCollection(objectData.AttributeTag || objectData.Tag || []),
+            galaxies: [],
+            objectName: objectName,
+            childCount: Array.isArray(objectEntry.Attribute || objectData.Attribute) ? (objectEntry.Attribute || objectData.Attribute).length : 0
+        };
+    }
+
+    function mergeDataExplorerFetchedItems(items) {
+        if (!Array.isArray(items) || !items.length) {
+            return;
+        }
+        items.forEach(function(item) {
+            if (!item) {
+                return;
+            }
+            if (item.objectType === 'object' || item.Object) {
+                var objectLeaf = normaliseDataExplorerFetchedObject(item);
+                if (objectLeaf) {
+                    pushDataExplorerLeaf(objectLeaf);
+                }
+                (item.Attribute || (item.Object && item.Object.Attribute) || []).forEach(function(attribute) {
+                    var parentObject = item.Object || item;
+                    var leaf = normaliseDataExplorerFetchedAttribute(attribute, parentObject);
+                    if (leaf) {
+                        pushDataExplorerLeaf(leaf);
+                    }
+                });
+                return;
+            }
+            if (item.objectType === 'attribute' || item.type) {
+                var leaf = normaliseDataExplorerFetchedAttribute(item, null);
+                if (leaf) {
+                    pushDataExplorerLeaf(leaf);
+                }
+            }
+        });
+    }
+
+    function fetchDataExplorerPage(page) {
+        if (_dataExplorerState.loading || _dataExplorerState.loadedPages[page]) {
+            return;
+        }
+        if (page > (_dataExplorerState.totalTopLevelItems > 0 ? Math.ceil(_dataExplorerState.totalTopLevelItems / (dataExplorerPaging.pageSize || 50)) : 1)) {
+            _dataExplorerState.fullyLoaded = true;
+            return;
+        }
+        _dataExplorerState.loading = true;
+        updateDataExplorerStatus('<?php echo addslashes(__('Loading more data')); ?>' + ' (' + page + ')');
+
+        $.ajax({
+            url: dataExplorerItemsUrl,
+            data: { page: page, limit: dataExplorerPaging.pageSize || 50 },
+            type: 'GET',
+            dataType: 'json'
+        }).done(function(response) {
+            var data = response || {};
+            var itemList = Array.isArray(data) ? data : (data.items || data.response || []);
+            var totalPages = data.pageCount || (data.pagination ? data.pagination.pageCount : null) || dataExplorerPaging.totalPages || 1;
+            var totalItems = data.total || (data.pagination ? data.pagination.count : null) || 0;
+            _dataExplorerState.loadedPages[page] = true;
+            mergeDataExplorerFetchedItems(itemList);
+            _dataExplorerState.streamedTopLevelItems = Math.max(
+                _dataExplorerState.streamedTopLevelItems || 0,
+                ((page - 1) * (dataExplorerPaging.pageSize || 50)) + (itemList.length || 0)
+            );
+            _dataExplorerState.loading = false;
+
+            var nextPage = page + 1;
+            _dataExplorerState.totalTopLevelItems = Math.max(
+                _dataExplorerState.totalTopLevelItems || 0,
+                totalItems || 0,
+                dataExplorerPaging.totalItems || 0
+            );
+            if ((_dataExplorerState.streamedTopLevelItems || 0) < (dataExplorerPayload.sampleLimit || 1000) && nextPage <= totalPages) {
+                fetchDataExplorerPage(nextPage);
+            } else {
+                _dataExplorerState.fullyLoaded = true;
+                updateDataExplorerStatus('<?php echo addslashes(__('Loaded full explorer sample')); ?>');
+                if ($('#data-explorer').hasClass('active')) {
+                    renderDataExplorer();
+                }
+            }
+        }).fail(function() {
+            _dataExplorerState.loading = false;
+            updateDataExplorerStatus('<?php echo addslashes(__('Explorer background loading failed')); ?>');
+            if ($('#data-explorer').hasClass('active') && !(_dataExplorerState.allLeaves || []).length) {
+                $('#beta-data-explorer-canvas').html('<div class="beta-data-explorer-empty"><?php echo addslashes(__('Explorer sample could not be loaded.')); ?></div><div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>');
+            }
+        });
+    }
+
+    function startDataExplorerPreload() {
+        if (_dataExplorerPreloadStarted || _dataExplorerState.fullyLoaded || _dataExplorerState.loading) {
+            return;
+        }
+        _dataExplorerPreloadStarted = true;
+        if ((_dataExplorerState.streamedTopLevelItems || 0) >= (dataExplorerPayload.sampleLimit || 1000)) {
+            _dataExplorerState.fullyLoaded = true;
+            updateDataExplorerStatus('<?php echo addslashes(__('Loaded full explorer sample')); ?>');
+            if ($('#data-explorer').hasClass('active')) {
+                renderDataExplorer();
+            }
+            return;
+        }
+        fetchDataExplorerPage(1);
+    }
+
+    function renderDataExplorerSummary(payload) {
+        var $summary = $('#beta-data-explorer-summary-grid');
+        var $regions = $('#beta-data-explorer-top-regions');
+        $summary.empty();
+        (payload.stats || []).forEach(function(stat) {
+            var card = $('<div class="beta-data-explorer-stat"></div>');
+            card.append('<span class="beta-data-explorer-stat-label">' + escapeHtml(stat.label) + '</span>');
+            card.append('<span class="beta-data-explorer-stat-value">' + escapeHtml(stat.value) + '</span>');
+            $summary.append(card);
+        });
+        $regions.empty();
+        (payload.topRegions || []).forEach(function(region) {
+            var item = $('<div class="beta-data-explorer-list-item"></div>');
+            item.append('<span><strong>' + escapeHtml(region.label) + '</strong></span>');
+            item.append('<span>' + escapeHtml(region.count) + '</span>');
+            $regions.append(item);
+        });
+    }
+
+    function updateDataExplorerStatus(text) {
+        $('#beta-data-explorer-status').text(text);
+    }
+
+    function updateDataExplorerNavigationState() {
+        $('#beta-data-explorer-up-level').prop('disabled', !_dataExplorerState.currentNode || !_dataExplorerState.currentNode.parent);
+    }
+
+    function renderDataExplorerDetail(nodeData) {
+        var $target = $('#beta-data-explorer-detail');
+        if (!nodeData || nodeData.kind !== 'leaf' || !nodeData.leaf) {
+            $target.attr('class', 'beta-data-explorer-detail-empty');
+            $target.html('<?php echo addslashes(__('No item selected yet. Drill into a region, then click an individual object or attribute square to inspect tags, galaxies, comments, and raw values.')); ?>');
+            return;
+        }
+        var leaf = nodeData.leaf;
+        var html = '<div class="beta-data-explorer-detail">';
+        html += '<h4>' + escapeHtml(leaf.label || leaf.name) + '</h4>';
+        html += '<div class="beta-data-explorer-detail-meta">';
+        html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.entityType === 'object' ? '<?php echo addslashes(__('Object')); ?>' : '<?php echo addslashes(__('Attribute')); ?>') + '</span>';
+        if (leaf.type) html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.type) + '</span>';
+        if (leaf.category) html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.category) + '</span>';
+        if (leaf.objectName && leaf.entityType === 'attribute') html += '<span class="beta-data-explorer-chip">' + escapeHtml('<?php echo addslashes(__('In object')); ?>: ' + leaf.objectName) + '</span>';
+        if (leaf.childCount) html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.childCount + ' <?php echo addslashes(__('children')); ?>') + '</span>';
+        html += '</div>';
+        if (leaf.valuePreview) html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Value')); ?></div><div class="beta-data-explorer-textblock">' + escapeHtml(leaf.valuePreview) + '</div>';
+        if (leaf.comment) html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Comment')); ?></div><div class="beta-data-explorer-textblock">' + escapeHtml(leaf.comment) + '</div>';
+        if (leaf.tags && leaf.tags.length) {
+            html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Tags')); ?></div><div class="beta-data-explorer-taglist">';
+            leaf.tags.forEach(function(tag) { html += '<span class="beta-data-explorer-tag">' + escapeHtml(tag.name) + '</span>'; });
+            html += '</div>';
+        }
+        if (leaf.galaxies && leaf.galaxies.length) {
+            html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Galaxies')); ?></div><div class="beta-data-explorer-taglist">';
+            leaf.galaxies.forEach(function(galaxy) { html += '<span class="beta-data-explorer-tag">' + escapeHtml(galaxy) + '</span>'; });
+            html += '</div>';
+        }
+        if (leaf.id) {
+            html += '<a class="beta-data-explorer-inspect-link" href="#Attribute_' + escapeHtml(leaf.id) + '" onclick="openDataExplorerLeafInDataTab(' + JSON.stringify(leaf.id) + '); return false;"><?php echo addslashes(__('Open in Data tab')); ?></a>';
+        }
+        html += '</div>';
+        $target.attr('class', 'beta-data-explorer-detail');
+        $target.html(html);
+    }
+
+    function getDataExplorerAncestors(node) {
+        var ancestors = [];
+        var current = node;
+        while (current) {
+            ancestors.unshift(current);
+            current = current.parent || null;
+        }
+        return ancestors;
+    }
+
+    function getDataExplorerLeafCount(node) {
+        if (!node) {
+            return 0;
+        }
+        if (!node.children || !node.children.length) {
+            return node.kind === 'leaf' ? 1 : 0;
+        }
+        var count = 0;
+        node.children.forEach(function(child) {
+            count += getDataExplorerLeafCount(child);
+        });
+        return count;
+    }
+
+    function renderDataExplorerBreadcrumbs(node) {
+        var $target = $('#beta-data-explorer-breadcrumbs');
+        $target.empty();
+        if (!node) {
+            return;
+        }
+        getDataExplorerAncestors(node).forEach(function(ancestor, index, arr) {
+            var $button = $('<button type="button" class="beta-data-explorer-breadcrumb"></button>');
+            $button.text(ancestor.name || '');
+            if (index < arr.length - 1) {
+                $button.addClass('is-actionable').on('click', function() { zoomDataExplorerTo(ancestor); });
+            } else {
+                $button.prop('disabled', true);
+            }
+            $target.append($button);
+        });
+    }
+
+    function showDataExplorerTooltip(event, node) {
+        var $tooltip = $('#beta-data-explorer-tooltip');
+        var $canvas = $('#beta-data-explorer-canvas');
+        var description = node.kind === 'leaf' && node.leaf ? ((node.leaf.valuePreview || node.leaf.comment || '').slice(0, 180)) : '<?php echo addslashes(__('Click to drill into this region.')); ?>';
+        var count = node.children ? node.children.length : 1;
+        $tooltip.html('<strong>' + escapeHtml(node.name || '') + '</strong><br>' + escapeHtml(description) + '<br><span style="opacity:.8;">' + escapeHtml(count + ' <?php echo addslashes(__('items')); ?>') + '</span>');
+        var offset = $canvas.offset();
+        if (offset) {
+            $tooltip.css({ left: (event.pageX - offset.left + 14) + 'px', top: (event.pageY - offset.top + 14) + 'px' });
+        }
+        $tooltip.addClass('is-visible');
+    }
+
+    function hideDataExplorerTooltip() {
+        $('#beta-data-explorer-tooltip').removeClass('is-visible');
+    }
+
+    function zoomDataExplorerTo(node) {
+        var state = _dataExplorerState;
+        if (!state.root || !node) {
+            return;
+        }
+        state.currentNode = node;
+        renderDataExplorerBreadcrumbs(node);
+        updateDataExplorerNavigationState();
+        var focusX = node.x || 0;
+        var focusY = node.y || 0;
+        var focusW = Math.max(1, node.dx || state.width);
+        var focusH = Math.max(1, node.dy || state.height);
+        var kx = state.width / focusW;
+        var ky = state.height / focusH;
+
+        $('#beta-data-explorer-canvas .beta-data-explorer-node').each(function() {
+            var $node = $(this);
+            var datum = $node.data('nodeData');
+            if (!datum) {
+                return;
+            }
+            var left = (datum.x - focusX) * kx;
+            var top = (datum.y - focusY) * ky;
+            var width = Math.max(0, datum.dx * kx - 1);
+            var height = Math.max(0, datum.dy * ky - 1);
+            $node.stop(true, false).animate({
+                left: left,
+                top: top,
+                width: width,
+                height: height
+            }, 400);
+
+            var visible = datum.x >= focusX && datum.y >= focusY && (datum.x + datum.dx) <= (focusX + focusW) && (datum.y + datum.dy) <= (focusY + focusH);
+            $node.toggle(visible && width > 1 && height > 1);
+
+            $node.find('.node-label').css('opacity', width > 90 && height > 28 ? 1 : 0);
+            $node.find('.node-meta').css('opacity', width > 120 && height > 48 ? 0.82 : 0);
+            $node.find('.node-value').css('opacity', width > 150 && height > 64 ? 0.9 : 0);
+        });
+        updateDataExplorerStatus((node.name || '<?php echo addslashes(__('Selection')); ?>') + ' • ' + getDataExplorerLeafCount(node) + ' <?php echo addslashes(__('leaf nodes')); ?>');
+    }
+
+    function openDataExplorerLeafInDataTab(attributeId) {
+        if (!attributeId) {
+            return;
+        }
+        var targetHash = '#Attribute_' + String(attributeId);
+        var $attributesTab = $('.nav-tabs a[href="#attributes"]');
+        if ($attributesTab.length) {
+            $attributesTab.one('shown.bs.tab.dataExplorerFocus', function () {
+                window.location.hash = targetHash;
+                var target = document.getElementById(targetHash.substring(1));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+            $attributesTab.tab('show');
+        }
+    }
+
+    function renderDataExplorer() {
+        if (!_dataExplorerState.fullyLoaded) {
+            renderDataExplorerLoadingState('<?php echo addslashes(__('Loading full explorer sample')); ?>');
+            updateDataExplorerStatus('<?php echo addslashes(__('Loading full explorer sample')); ?>');
+            startDataExplorerPreload();
+            return;
+        }
+        updateDataExplorerPayloadStats();
+        var payload = dataExplorerPayload || {};
+        var $canvas = $('#beta-data-explorer-canvas');
+        if (!$canvas.length) {
+            return;
+        }
+        renderDataExplorerSummary(payload);
+        if (!Array.isArray(payload.leaves) || !payload.leaves.length) {
+            $canvas.html('<div class="beta-data-explorer-empty"><?php echo addslashes(__('No data available for the explorer sample.')); ?></div>');
+            updateDataExplorerStatus('<?php echo addslashes(__('No explorer data')); ?>');
+            return;
+        }
+        $canvas.find('svg').remove();
+        $canvas.find('.beta-data-explorer-node').remove();
+        $('#beta-data-explorer-empty').remove();
+        hideDataExplorerTooltip();
+        _dataExplorerState.canvas = $canvas;
+        _dataExplorerState.width = $canvas.innerWidth() || 600;
+        _dataExplorerState.height = $canvas.innerHeight() || 560;
+        _dataExplorerState.root = buildDataExplorerHierarchy({
+            leaves: (_dataExplorerState.allLeaves || []).slice()
+        });
+        _dataExplorerState.treemap = d3.layout.treemap()
+            .size([_dataExplorerState.width, _dataExplorerState.height])
+            .sticky(true)
+            .padding(function(d, depth) {
+                if (depth === 0) return [0, 0, 0, 0];
+                if (d.children && d.children.length) return [20, 2, 2, 2];
+                return [2, 2, 2, 2];
+            })
+            .value(function(d) { return d.kind === 'leaf' ? (Number(d.size) || 1) : 0; });
+        _dataExplorerState.nodes = _dataExplorerState.treemap.nodes(_dataExplorerState.root).filter(function(d) {
+            return d.depth > 0;
+        });
+
+        _dataExplorerState.nodes.forEach(function(d) {
+            d._key = d.key || d.name + ':' + d.depth + ':' + (d.parent ? d.parent.name : 'root');
+            d._leafCount = getDataExplorerLeafCount(d);
+            var $node = $('<div class="beta-data-explorer-node"></div>');
+            $node.css({
+                position: 'absolute',
+                left: d.x + 'px',
+                top: d.y + 'px',
+                width: Math.max(0, d.dx - 1) + 'px',
+                height: Math.max(0, d.dy - 1) + 'px',
+                background: getDataExplorerNodeColor(d),
+                border: '1px solid ' + (d.children ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)'),
+                borderRadius: d.children ? '5px' : '3px',
+                boxSizing: 'border-box',
+                overflow: 'hidden',
+                cursor: 'pointer'
+            });
+            $node.data('nodeData', d);
+            $node.append($('<div class="node-label"></div>').css({
+                position: 'absolute',
+                left: '8px',
+                top: '6px',
+                right: '8px',
+                fontSize: d.kind === 'leaf' ? '11px' : '12px',
+                fontWeight: d.kind === 'leaf' ? 600 : 700,
+                color: d.kind === 'leaf' ? '#24415b' : '#ffffff',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                opacity: d.dx > 90 && d.dy > 28 ? 1 : 0
+            }).text(getDataExplorerNodeText(d)));
+            $node.append($('<div class="node-meta"></div>').css({
+                position: 'absolute',
+                left: '8px',
+                top: '22px',
+                right: '8px',
+                fontSize: '10px',
+                color: d.kind === 'leaf' ? '#46627a' : 'rgba(255,255,255,0.9)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                opacity: d.dx > 120 && d.dy > 48 ? 0.82 : 0
+            }).text(getDataExplorerNodeMetaText(d)));
+            $node.append($('<div class="node-value"></div>').css({
+                position: 'absolute',
+                left: '8px',
+                top: '38px',
+                right: '8px',
+                fontSize: '10px',
+                fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+                color: d.kind === 'leaf' ? '#5f7288' : 'rgba(255,255,255,0.82)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                opacity: d.dx > 150 && d.dy > 64 ? 0.9 : 0
+            }).text(getDataExplorerNodeValueText(d)));
+            $node.on('click', function(event) {
+                event.stopPropagation();
+                if (d.kind === 'leaf') {
+                    renderDataExplorerDetail(d);
+                    updateDataExplorerStatus((d.leaf.label || d.name) + ' • <?php echo addslashes(__('selected')); ?>');
+                    return;
+                }
+                renderDataExplorerDetail(null);
+                zoomDataExplorerTo(d);
+            }).on('mousemove', function(event) {
+                showDataExplorerTooltip(event, d);
+            }).on('mouseleave', function() {
+                hideDataExplorerTooltip();
+            });
+            $canvas.append($node);
+        });
+
+        $canvas.off('click.dataExplorerCanvas').on('click.dataExplorerCanvas', function() {
+            renderDataExplorerDetail(null);
+            zoomDataExplorerTo(_dataExplorerState.root);
+        });
+        zoomDataExplorerTo(_dataExplorerState.root);
+        updateDataExplorerNavigationState();
+        updateDataExplorerStatus((_dataExplorerState.allLeaves || []).length + ' <?php echo addslashes(__('leaf nodes currently rendered')); ?>');
+        _dataExplorerInitialised = true;
+    }
+
     $(function() {
         popoverStartup();
         $(document)
@@ -2910,9 +4124,30 @@
             scrollToAttributeAnchor();
         });
 
+        $('a[data-toggle="tab"][href="#data-explorer"]').on('shown.bs.tab', function () {
+            renderDataExplorer();
+        });
+
+        $('#beta-data-explorer-reset-view').on('click', function() {
+            if (_dataExplorerState.root) {
+                renderDataExplorerDetail(null);
+                zoomDataExplorerTo(_dataExplorerState.root);
+            }
+        });
+
+        $('#beta-data-explorer-up-level').on('click', function() {
+            if (_dataExplorerState.currentNode && _dataExplorerState.currentNode.parent) {
+                renderDataExplorerDetail(null);
+                zoomDataExplorerTo(_dataExplorerState.currentNode.parent);
+            }
+        });
+
         $(window).on('resize', function() {
             if ($('#attributes').hasClass('active')) {
                 renderCompositionBar();
+            }
+            if ($('#data-explorer').hasClass('active') && _dataExplorerInitialised && _dataExplorerState.fullyLoaded) {
+                renderDataExplorer();
             }
         });
 
@@ -2959,7 +4194,7 @@
         var rawHash = window.location.hash || historyTab || '';
         var initialTab = '#summary';
         var initialUrlHash = '#summary';
-        if (rawHash === '#summary' || rawHash === '#attributes' || rawHash === '#correlations' || rawHash === '#history') {
+        if (rawHash === '#summary' || rawHash === '#attributes' || rawHash === '#correlations' || rawHash === '#data-explorer' || rawHash === '#history') {
             initialTab = rawHash;
             initialUrlHash = rawHash;
         } else if (rawHash.indexOf('#Attribute_') === 0) {
