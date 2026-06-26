@@ -2546,75 +2546,81 @@
              <div role="tabpanel" class="tab-pane" id="data-explorer" style="padding-top: 18px; margin-top: 12px; position: relative; z-index: 0; clear: both;">
                  <style>
                      #data-explorer .beta-data-explorer {
-                         display: flex;
-                         gap: 18px;
-                         align-items: stretch;
-                         min-height: 640px;
+                         display: block;
+                         min-height: 0;
                      }
                      #data-explorer .beta-data-explorer-main {
                          flex: 1 1 auto;
                          min-width: 0;
                          display: flex;
                          flex-direction: column;
-                         gap: 14px;
-                     }
-                     #data-explorer .beta-data-explorer-sidebar {
-                         flex: 0 0 330px;
-                         max-width: 330px;
-                         display: flex;
-                         flex-direction: column;
-                         gap: 12px;
+                         gap: 10px;
                      }
                      #data-explorer .beta-data-explorer-card {
                          background: #fff;
                          border: 1px solid #d9e5f0;
-                         border-radius: 14px;
-                         box-shadow: 0 6px 16px rgba(54, 84, 111, 0.08);
+                         border-radius: 12px;
+                         box-shadow: 0 4px 12px rgba(54, 84, 111, 0.06);
                          overflow: hidden;
                      }
                      #data-explorer .beta-data-explorer-header {
                          display: flex;
                          justify-content: space-between;
                          align-items: center;
-                         gap: 12px;
-                         padding: 14px 16px 10px;
+                         gap: 10px;
+                         padding: 10px 12px 8px;
                          border-bottom: 1px solid #e6eef6;
                          background: linear-gradient(180deg, #f7fbff 0%, #eef5fb 100%);
                      }
                      #data-explorer .beta-data-explorer-title {
                          margin: 0;
-                         font-size: 18px;
+                         font-size: 16px;
                          line-height: 1.2;
                          color: #21384f;
                      }
                      #data-explorer .beta-data-explorer-subtitle {
-                         margin: 4px 0 0;
+                         margin: 2px 0 0;
                          color: #607284;
-                         font-size: 12px;
+                         font-size: 11px;
                      }
                      #data-explorer .beta-data-explorer-actions {
                          display: flex;
-                         gap: 8px;
+                         gap: 6px;
                          align-items: center;
                          flex-wrap: wrap;
                      }
                      #data-explorer .beta-data-explorer-status {
-                         font-size: 12px;
+                         font-size: 11px;
                          color: #56708a;
                          background: #edf5fd;
                          border: 1px solid #d8e8f7;
                          border-radius: 999px;
-                         padding: 6px 10px;
+                         padding: 5px 9px;
                          white-space: nowrap;
                      }
                      #data-explorer .beta-data-explorer-shell {
-                         padding: 14px 16px 16px;
+                         display: grid;
+                         grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+                         gap: 12px;
+                         padding: 10px;
+                         align-items: stretch;
+                     }
+                     #data-explorer .beta-data-explorer-workspace {
+                         display: flex;
+                         flex-direction: column;
+                         gap: 10px;
+                         min-width: 0;
+                     }
+                     #data-explorer .beta-data-explorer-canvas-card {
+                         display: flex;
+                         flex-direction: column;
+                         min-width: 0;
                      }
                      #data-explorer .beta-data-explorer-breadcrumbs {
                          display: flex;
                          flex-wrap: wrap;
                          gap: 6px;
-                         min-height: 32px;
+                         min-height: 24px;
                      }
                      #data-explorer .beta-data-explorer-breadcrumb {
                          border: 1px solid #d6e2ee;
@@ -2622,13 +2628,13 @@
                          background: #fff;
                          color: #3e5a77;
                          font-size: 12px;
-                         padding: 4px 10px;
+                         padding: 3px 9px;
                      }
                      #data-explorer .beta-data-explorer-breadcrumb.is-actionable {
                          cursor: pointer;
                      }
                      #data-explorer .beta-data-explorer-canvas {
-                         height: 560px;
+                         height: 540px;
                          border-radius: 12px;
                          overflow: hidden;
                          background: radial-gradient(circle at top, #f9fcff 0%, #eef4fa 55%, #e4edf6 100%);
@@ -2676,17 +2682,20 @@
                          opacity: 1;
                      }
                      #data-explorer .beta-data-explorer-panel {
-                         padding: 14px 16px;
+                         padding: 10px 12px;
+                         display: flex;
+                         flex-direction: column;
+                         gap: 10px;
                      }
                      #data-explorer .beta-data-explorer-summary-grid {
-                         display: grid;
-                         grid-template-columns: repeat(2, minmax(0, 1fr));
-                         gap: 10px;
+                         display: flex;
+                         flex-wrap: wrap;
+                         gap: 8px;
                      }
                      #data-explorer .beta-data-explorer-stat {
                          border: 1px solid #deebf6;
-                         border-radius: 12px;
-                         padding: 10px 12px;
+                         border-radius: 999px;
+                         padding: 6px 10px;
                          background: linear-gradient(180deg, #fcfeff 0%, #f4f9fd 100%);
                      }
                      #data-explorer .beta-data-explorer-stat-label {
@@ -2699,7 +2708,7 @@
                      }
                      #data-explorer .beta-data-explorer-stat-value {
                          display: block;
-                         font-size: 20px;
+                         font-size: 16px;
                          line-height: 1.1;
                          color: #20364d;
                          font-weight: 700;
@@ -2707,8 +2716,8 @@
                      #data-explorer .beta-data-explorer-list {
                          display: flex;
                          flex-direction: column;
-                         gap: 8px;
-                         max-height: 190px;
+                         gap: 6px;
+                         max-height: 120px;
                          overflow: auto;
                      }
                      #data-explorer .beta-data-explorer-list-item {
@@ -2716,11 +2725,11 @@
                          justify-content: space-between;
                          gap: 8px;
                          align-items: center;
-                         padding: 7px 10px;
+                         padding: 6px 8px;
                          border: 1px solid #e1ebf4;
                          border-radius: 10px;
                          background: #fbfdff;
-                         font-size: 12px;
+                         font-size: 11px;
                          color: #4f657d;
                      }
                      #data-explorer .beta-data-explorer-detail-empty,
@@ -2790,9 +2799,9 @@
                          cursor: default;
                      }
                      #data-explorer .beta-data-explorer-legend-note {
-                         margin-top: 10px;
+                         margin-top: 8px;
                          color: #71869b;
-                         font-size: 11px;
+                         font-size: 10px;
                          line-height: 1.45;
                      }
                      #data-explorer .beta-data-explorer-node .node-label,
@@ -2800,15 +2809,11 @@
                      #data-explorer .beta-data-explorer-node .node-value {
                          pointer-events: none;
                      }
-                     @media (max-width: 1100px) {
-                         #data-explorer .beta-data-explorer {
-                             flex-direction: column;
-                         }
-                         #data-explorer .beta-data-explorer-sidebar {
-                             flex: 1 1 auto;
-                             max-width: none;
-                         }
-                     }
+                      @media (max-width: 1100px) {
+                          #data-explorer .beta-data-explorer-shell {
+                              grid-template-columns: 1fr;
+                          }
+                      }
                      #data-explorer .beta-data-explorer,
                      #data-explorer .beta-data-explorer-main,
                      #data-explorer .beta-data-explorer-card,
@@ -2816,9 +2821,175 @@
                          position: relative;
                          z-index: 1;
                      }
-                     #data-explorer .beta-data-explorer-shell {
+                      #data-explorer .beta-data-explorer-overview {
+                          display: flex;
+                          flex-direction: column;
+                          gap: 10px;
+                     }
+                     #data-explorer .beta-data-explorer-overview-grid {
+                         display: grid;
+                         grid-template-columns: repeat(2, minmax(0, 1fr));
+                         gap: 10px;
+                     }
+                     #data-explorer .beta-data-explorer-overview-card {
+                         border: 1px solid #d8e6f2;
+                         border-radius: 10px;
+                         background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+                         overflow: hidden;
+                     }
+                     #data-explorer .beta-data-explorer-overview-card-header {
+                         padding: 8px 10px 6px;
+                         border-bottom: 1px solid #e6eef6;
+                         background: linear-gradient(180deg, #fbfdff 0%, #f0f6fc 100%);
+                     }
+                     #data-explorer .beta-data-explorer-overview-card-title {
+                         margin: 0;
+                         font-size: 12px;
+                         font-weight: 700;
+                         color: #2a425a;
+                     }
+                     #data-explorer .beta-data-explorer-overview-card-subtitle {
+                         margin: 2px 0 0;
+                         color: #73879a;
+                         font-size: 10px;
+                     }
+                     #data-explorer .beta-data-explorer-overview-card-body {
+                         padding: 10px;
+                     }
+                     #data-explorer .beta-data-explorer-filter-chips {
+                         display: flex;
+                         flex-wrap: wrap;
+                         gap: 6px;
+                     }
+                     #data-explorer .beta-data-explorer-filter-chip {
+                          display: inline-flex;
+                          align-items: center;
+                          gap: 6px;
+                         border: 1px solid #d4e4f2;
+                         border-radius: 999px;
+                         background: #f8fbfe;
+                         color: #355472;
+                          font-size: 11px;
+                          padding: 4px 8px;
+                      }
+                      #data-explorer .beta-data-explorer-filter-chip.is-clear-all {
+                          background: #eef5fb;
+                          border-style: dashed;
+                      }
+                      #data-explorer .beta-data-explorer-filter-chip button {
+                          border: 0;
+                          background: transparent;
+                          color: #5e7790;
+                          cursor: pointer;
+                         padding: 0;
+                         line-height: 1;
+                     }
+                     #data-explorer .beta-data-explorer-matrix {
+                         display: grid;
+                         grid-template-columns: minmax(132px, 1.15fr) repeat(6, minmax(58px, 1fr));
+                         border: 1px solid #d9e6f1;
+                         border-radius: 12px;
+                         overflow: hidden;
+                         background: #fff;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-cell {
+                         min-height: 42px;
+                         padding: 7px 8px;
+                         border-right: 1px solid #e6eef6;
+                         border-bottom: 1px solid #e6eef6;
+                         background: #fff;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-cell:nth-child(7n) {
+                         border-right: 0;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-cell.is-header {
+                         min-height: 0;
+                         background: #f2f7fc;
+                         color: #61778d;
+                         font-size: 10px;
+                         font-weight: 700;
+                         text-transform: uppercase;
+                         letter-spacing: 0.04em;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-row-header {
+                         display: flex;
+                         flex-direction: column;
+                         gap: 2px;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-row-type {
+                         color: #28425d;
+                         font-size: 12px;
+                         font-weight: 700;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-row-meta {
+                         color: #7a8da0;
+                         font-size: 10px;
+                     }
+                      #data-explorer .beta-data-explorer-matrix-hit {
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          width: 100%;
+                          min-height: 26px;
+                          padding: 5px 6px;
+                         border: 1px solid #d7e5f2;
+                         border-radius: 8px;
+                         background: #f8fbfe;
+                         color: #2f4e6c;
+                         cursor: pointer;
+                         transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-hit:hover,
+                     #data-explorer .beta-data-explorer-matrix-hit:focus {
+                         transform: translateY(-1px);
+                         border-color: #bdd4e8;
+                         box-shadow: 0 5px 14px rgba(75, 112, 146, 0.12);
+                     }
+                     #data-explorer .beta-data-explorer-matrix-hit.is-empty {
+                         cursor: default;
+                         opacity: 0.45;
+                         box-shadow: none;
+                      }
+                      #data-explorer .beta-data-explorer-matrix-hit-count {
+                          font-size: 13px;
+                          font-weight: 700;
+                          line-height: 1;
+                          text-align: center;
+                      }
+                     #data-explorer .beta-data-explorer-toplist {
+                         display: grid;
+                         grid-template-columns: repeat(2, minmax(0, 1fr));
+                         gap: 8px;
+                     }
+                     #data-explorer .beta-data-explorer-toplist-card {
+                         border: 1px solid #deebf6;
+                         border-radius: 10px;
+                         padding: 8px 10px;
+                         background: linear-gradient(180deg, #fcfeff 0%, #f4f9fd 100%);
+                     }
+                     #data-explorer .beta-data-explorer-toplist-card strong {
                          display: block;
-                         padding-top: 10px;
+                         font-size: 11px;
+                         color: #27405a;
+                         margin-bottom: 5px;
+                     }
+                     #data-explorer .beta-data-explorer-toplist-list {
+                         display: flex;
+                         flex-direction: column;
+                         gap: 5px;
+                     }
+                     #data-explorer .beta-data-explorer-toplist-item {
+                         display: flex;
+                         justify-content: space-between;
+                         gap: 8px;
+                         font-size: 11px;
+                         color: #4d647d;
+                     }
+                     #data-explorer .beta-data-explorer-overview-card.is-collapsed .beta-data-explorer-overview-card-body {
+                         display: none;
+                     }
+                     #data-explorer .beta-data-explorer-overview-card.is-collapsed .beta-data-explorer-overview-card-subtitle {
+                         display: none;
                      }
                      #data-explorer .beta-data-explorer-actions,
                      #data-explorer .beta-data-explorer-breadcrumbs {
@@ -2826,7 +2997,7 @@
                          z-index: 3;
                      }
                      #data-explorer .beta-data-explorer-breadcrumbs {
-                         margin-bottom: 14px;
+                         margin-bottom: 8px;
                      }
                      #data-explorer .beta-data-explorer-canvas {
                          position: relative;
@@ -2837,58 +3008,78 @@
                      #data-explorer .beta-data-explorer-node {
                          z-index: 1;
                      }
+                      @media (max-width: 1100px) {
+                          #data-explorer .beta-data-explorer-shell,
+                          #data-explorer .beta-data-explorer-overview-grid,
+                          #data-explorer .beta-data-explorer-toplist {
+                              grid-template-columns: 1fr;
+                          }
+                          #data-explorer .beta-data-explorer-canvas {
+                              height: 420px;
+                          }
+                      }
                  </style>
-                 <div class="beta-data-explorer">
-                     <div class="beta-data-explorer-main">
-                         <div class="beta-data-explorer-card">
-                             <div class="beta-data-explorer-header">
-                                 <div>
-                                     <h3 class="beta-data-explorer-title"><?php echo __('Data Explorer'); ?></h3>
-                                     <p class="beta-data-explorer-subtitle"><?php echo __('Interactive treemap over the first 1000 event data elements, grouped by object or attribute type and coloured by attribute type family.'); ?></p>
-                                 </div>
-                                 <div class="beta-data-explorer-actions">
-                                     <span id="beta-data-explorer-status" class="beta-data-explorer-status"><?php echo __('Preparing explorer'); ?></span>
-                                     <button type="button" class="beta-data-explorer-button" id="beta-data-explorer-up-level"><?php echo __('Up One Level'); ?></button>
-                                     <button type="button" class="beta-data-explorer-button" id="beta-data-explorer-reset-view"><?php echo __('Reset View'); ?></button>
-                                 </div>
-                             </div>
-                              <div class="beta-data-explorer-shell">
-                                  <div id="beta-data-explorer-breadcrumbs" class="beta-data-explorer-breadcrumbs"></div>
-                                  <div id="beta-data-explorer-canvas" class="beta-data-explorer-canvas">
-                                      <div id="beta-data-explorer-empty" class="beta-data-explorer-empty"><?php echo __('Treemap will appear here once the explorer sample is loaded.'); ?></div>
-                                      <div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>
-                                  </div>
-                              </div>
-                          </div>
-                     </div>
-                     <div class="beta-data-explorer-sidebar">
-                         <div class="beta-data-explorer-card">
-                             <div class="beta-data-explorer-header">
-                                 <div>
-                                     <h4 class="beta-data-explorer-title" style="font-size: 15px;"><?php echo __('Explorer Summary'); ?></h4>
-                                     <p class="beta-data-explorer-subtitle"><?php echo __('Quick shape indicators for the sampled data.'); ?></p>
-                                 </div>
-                             </div>
-                             <div class="beta-data-explorer-panel">
-                                 <div id="beta-data-explorer-summary-grid" class="beta-data-explorer-summary-grid"></div>
-                                 <div class="beta-data-explorer-section-label"><?php echo __('Dominant regions'); ?></div>
-                                 <div id="beta-data-explorer-top-regions" class="beta-data-explorer-list"></div>
-                                 <div class="beta-data-explorer-legend-note"><?php echo __('Larger rectangles represent more entities. Related objects and attributes are grouped together. Attributes with similar comments are pulled into nearby subregions.'); ?></div>
-                             </div>
-                         </div>
-                         <div class="beta-data-explorer-card">
-                             <div class="beta-data-explorer-header">
-                                 <div>
-                                     <h4 class="beta-data-explorer-title" style="font-size: 15px;"><?php echo __('Selection Detail'); ?></h4>
-                                     <p class="beta-data-explorer-subtitle"><?php echo __('Click an individual square to inspect its context.'); ?></p>
-                                 </div>
-                             </div>
-                             <div class="beta-data-explorer-panel">
-                                 <div id="beta-data-explorer-detail" class="beta-data-explorer-detail-empty"><?php echo __('No item selected yet. Drill into a region, then click an individual object or attribute square to inspect tags, galaxies, comments, and raw values.'); ?></div>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
+                  <div class="beta-data-explorer">
+                      <div class="beta-data-explorer-main">
+                          <div class="beta-data-explorer-card">
+                              <div class="beta-data-explorer-header">
+                                   <div>
+                                       <h3 class="beta-data-explorer-title"><?php echo __('Data Explorer'); ?></h3>
+                                       <p class="beta-data-explorer-subtitle"><?php echo __('Compact analyst view over the first 1000 event data elements, with a live treemap that tracks the active slice.'); ?></p>
+                                   </div>
+                                   <div class="beta-data-explorer-actions">
+                                       <span id="beta-data-explorer-status" class="beta-data-explorer-status"><?php echo __('Preparing explorer'); ?></span>
+                                       <button type="button" class="beta-data-explorer-button" id="beta-data-explorer-up-level"><?php echo __('Up One Level'); ?></button>
+                                       <button type="button" class="beta-data-explorer-button" id="beta-data-explorer-reset-view"><?php echo __('Reset View'); ?></button>
+                                   </div>
+                               </div>
+                                <div class="beta-data-explorer-shell">
+                                    <div class="beta-data-explorer-workspace">
+                                        <div id="beta-data-explorer-active-filters" class="beta-data-explorer-filter-chips" style="display:none;"></div>
+                                        <div id="beta-data-explorer-summary-grid" class="beta-data-explorer-summary-grid"></div>
+                                        <div class="beta-data-explorer-overview">
+                                            <div class="beta-data-explorer-overview-grid">
+                                                <div class="beta-data-explorer-overview-card">
+                                                    <div class="beta-data-explorer-overview-card-header">
+                                                        <h4 class="beta-data-explorer-overview-card-title"><?php echo __('Type x Context'); ?></h4>
+                                                        <p class="beta-data-explorer-overview-card-subtitle"><?php echo __('Primary filter grid for type, object membership, IDS, correlation, tags, and galaxies.'); ?></p>
+                                                    </div>
+                                                    <div class="beta-data-explorer-overview-card-body">
+                                                        <div id="beta-data-explorer-matrix" class="beta-data-explorer-matrix"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="beta-data-explorer-overview-card">
+                                                    <div class="beta-data-explorer-overview-card-header">
+                                                        <h4 class="beta-data-explorer-overview-card-title"><?php echo __('Top Signals'); ?></h4>
+                                                        <p class="beta-data-explorer-overview-card-subtitle"><?php echo __('Fast ranking of the current slice by type, tags, galaxies, and correlation.'); ?></p>
+                                                    </div>
+                                                    <div class="beta-data-explorer-overview-card-body">
+                                                        <div id="beta-data-explorer-toplists" class="beta-data-explorer-toplist"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="beta-data-explorer-card beta-data-explorer-canvas-card">
+                                        <div class="beta-data-explorer-header">
+                                            <div>
+                                                <h4 class="beta-data-explorer-title" style="font-size: 15px;"><?php echo __('Treemap'); ?></h4>
+                                                <p class="beta-data-explorer-subtitle"><?php echo __('Animated spatial view of the current slice.'); ?></p>
+                                            </div>
+                                        </div>
+                                        <div class="beta-data-explorer-panel">
+                                            <div id="beta-data-explorer-breadcrumbs" class="beta-data-explorer-breadcrumbs"></div>
+                                            <div id="beta-data-explorer-canvas" class="beta-data-explorer-canvas">
+                                                <div id="beta-data-explorer-empty" class="beta-data-explorer-empty"><?php echo __('Treemap will appear here once the explorer sample is loaded.'); ?></div>
+                                                <div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>
+                                            </div>
+                                            <div class="beta-data-explorer-legend-note"><?php echo __('Apply filters from the left pane to reshape the treemap in place. Click a region to drill down and click the background to zoom back out.'); ?></div>
+                                        </div>
+                                    </div>
+                                </div>
+                           </div>
+                      </div>
+                  </div>
              </div>
              
              <!-- Other Tabs Placeholders -->
@@ -3086,6 +3277,15 @@
             $category = (string)($entity['category'] ?? ($entityType === 'object' ? 'Object' : 'Uncategorized'));
             $id = isset($entity['id']) ? (string)$entity['id'] : '';
             $uuid = isset($entity['uuid']) ? (string)$entity['uuid'] : '';
+            $correlationCount = 0;
+            if (!empty($entity['RelatedAttribute']) && is_array($entity['RelatedAttribute'])) {
+                $correlationCount = count($entity['RelatedAttribute']);
+            } elseif (!empty($entity['correlations']) && is_array($entity['correlations'])) {
+                $correlationCount = count($entity['correlations']);
+            } elseif (isset($entity['correlation_count']) && is_numeric($entity['correlation_count'])) {
+                $correlationCount = (int)$entity['correlation_count'];
+            }
+            $toIds = !empty($entity['to_ids']);
             $name = $entityType === 'object'
                 ? (string)($entity['name'] ?? 'Object')
                 : ($value !== '' ? $value : 'Attribute');
@@ -3129,7 +3329,13 @@
                 'tags' => $tags,
                 'galaxies' => $galaxies,
                 'objectName' => $parentObject['name'] ?? ($entityType === 'object' ? $name : ''),
+                'objectKey' => $entityType === 'object'
+                    ? ($uuid !== '' ? ('object:' . $uuid) : ($id !== '' ? ('object:' . $id) : ('object-name:' . $name)))
+                    : (!empty($parentObject['uuid']) ? ('object:' . $parentObject['uuid']) : (!empty($parentObject['id']) ? ('object:' . $parentObject['id']) : (!empty($parentObject['name']) ? ('object-name:' . $parentObject['name']) : ''))),
                 'childCount' => !empty($entity['Attribute']) && is_array($entity['Attribute']) ? count($entity['Attribute']) : 0,
+                'correlationCount' => $correlationCount,
+                'toIds' => $toIds,
+                'isInObject' => $entityType === 'attribute' && !empty($parentObject['name']),
             ];
         };
 
@@ -3280,6 +3486,7 @@
     var _sankeyLayoutSnapshot = null;
     var _dataExplorerInitialised = false;
     var _dataExplorerPreloadStarted = false;
+    var _dataExplorerTooltipFrame = null;
     var _dataExplorerState = {
         root: null,
         canvas: null,
@@ -3295,18 +3502,338 @@
         renderScheduled: false,
         streamedTopLevelItems: 0,
         totalTopLevelItems: dataExplorerPaging.totalItems || 0,
-        leafKeyMap: {}
+        leafKeyMap: {},
+        currentView: 'split',
+        overviewAggregates: null,
+        activeFilters: {}
     };
 
     (function seedDataExplorerLeafKeys() {
         (_dataExplorerState.allLeaves || []).forEach(function(leaf, index) {
-            var key = (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || index);
+            var objectScope = leaf.entityType === 'attribute' && (leaf.objectKey || leaf.objectName)
+                ? (':object:' + String(leaf.objectKey || leaf.objectName))
+                : ':top';
+            var key = (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || index) + objectScope;
             _dataExplorerState.leafKeyMap[key] = true;
         });
     })();
 
-    function escapeHtml(value) {
+    function betaEscapeHtml(value) {
         return $('<div/>').text(value == null ? '' : String(value)).html();
+    }
+
+    function normaliseDataExplorerMetricList(map, limit) {
+        return Object.keys(map || {}).map(function(key) {
+            return { label: key, value: map[key] };
+        }).sort(function(a, b) {
+            if (b.value !== a.value) {
+                return b.value - a.value;
+            }
+            return a.label.localeCompare(b.label);
+        }).slice(0, limit || 6);
+    }
+
+    function getDataExplorerContextColumns() {
+        return [
+            { key: 'standalone', label: '<?php echo addslashes(__('Standalone')); ?>' },
+            { key: 'inObject', label: '<?php echo addslashes(__('In Object')); ?>' },
+            { key: 'ids', label: '<?php echo addslashes(__('IDS')); ?>' },
+            { key: 'correlated', label: '<?php echo addslashes(__('Correlated')); ?>' },
+            { key: 'tagged', label: '<?php echo addslashes(__('Tagged')); ?>' },
+            { key: 'galaxy', label: '<?php echo addslashes(__('Galaxy')); ?>' }
+        ];
+    }
+
+    function computeDataExplorerOverviewAggregates(leaves) {
+        leaves = Array.isArray(leaves) ? leaves : [];
+        var aggregates = {
+            summary: { objects: 0, attributes: 0, standalone: 0, inObject: 0, ids: 0, correlated: 0, tagged: 0, galaxy: 0 },
+            typeRows: {},
+            topTypes: {},
+            topTags: {},
+            topGalaxies: {},
+            topCorrelatedTypes: {},
+            objects: []
+        };
+        var objectsByName = {};
+        function ensureObjectBucket(objectKey, objectName) {
+            objectKey = String(objectKey || objectName || ('object-' + Object.keys(objectsByName).length));
+            if (!objectsByName[objectKey]) {
+                objectsByName[objectKey] = {
+                    id: '',
+                    uuid: '',
+                    name: objectName || '<?php echo addslashes(__('Object')); ?>',
+                    comment: '',
+                    childCount: 0,
+                    correlationCount: 0,
+                    idsCount: 0,
+                    tagCount: 0,
+                    galaxyCount: 0,
+                    sampleValues: [],
+                    typeCounts: {}
+                };
+            }
+            return objectsByName[objectKey];
+        }
+        leaves.forEach(function(leaf) {
+            if (!leaf) return;
+            var isObject = leaf.entityType === 'object';
+            if (isObject) {
+                aggregates.summary.objects++;
+            } else {
+                aggregates.summary.attributes++;
+            }
+            if (leaf.toIds) aggregates.summary.ids++;
+            if ((leaf.correlationCount || 0) > 0) aggregates.summary.correlated++;
+            if ((leaf.tags || []).length) aggregates.summary.tagged++;
+            if ((leaf.galaxies || []).length) aggregates.summary.galaxy++;
+            if (!isObject) {
+                if (leaf.isInObject) aggregates.summary.inObject++;
+                else aggregates.summary.standalone++;
+                var rowKey = String(leaf.typeFamily || leaf.type || '<?php echo addslashes(__('Unknown')); ?>');
+                if (!aggregates.typeRows[rowKey]) {
+                    aggregates.typeRows[rowKey] = { key: rowKey, total: 0, standalone: 0, inObject: 0, ids: 0, correlated: 0, tagged: 0, galaxy: 0 };
+                }
+                var row = aggregates.typeRows[rowKey];
+                row.total++;
+                row[leaf.isInObject ? 'inObject' : 'standalone']++;
+                if (leaf.toIds) row.ids++;
+                if ((leaf.correlationCount || 0) > 0) row.correlated++;
+                if ((leaf.tags || []).length) row.tagged++;
+                if ((leaf.galaxies || []).length) row.galaxy++;
+                aggregates.topTypes[rowKey] = (aggregates.topTypes[rowKey] || 0) + 1;
+                if ((leaf.correlationCount || 0) > 0) {
+                    aggregates.topCorrelatedTypes[rowKey] = (aggregates.topCorrelatedTypes[rowKey] || 0) + (leaf.correlationCount || 0);
+                }
+            }
+            (leaf.tags || []).forEach(function(tag) {
+                if (tag && tag.name) aggregates.topTags[tag.name] = (aggregates.topTags[tag.name] || 0) + 1;
+            });
+            (leaf.galaxies || []).forEach(function(galaxy) {
+                if (galaxy) aggregates.topGalaxies[galaxy] = (aggregates.topGalaxies[galaxy] || 0) + 1;
+            });
+            if (isObject) {
+                var objectKey = String(leaf.id || leaf.uuid || leaf.name || ('object-' + aggregates.objects.length));
+                var objectBucket = ensureObjectBucket(objectKey, leaf.objectName || leaf.name || '<?php echo addslashes(__('Object')); ?>');
+                objectBucket.id = leaf.id || objectBucket.id;
+                objectBucket.uuid = leaf.uuid || objectBucket.uuid;
+                objectBucket.comment = leaf.comment || objectBucket.comment;
+                objectBucket.childCount = Math.max(objectBucket.childCount || 0, leaf.childCount || 0);
+                objectBucket.correlationCount += leaf.correlationCount || 0;
+                if (leaf.toIds) objectBucket.idsCount++;
+                objectBucket.tagCount += (leaf.tags || []).length;
+                objectBucket.galaxyCount += (leaf.galaxies || []).length;
+            }
+        });
+        leaves.forEach(function(leaf) {
+            if (!leaf || leaf.entityType !== 'attribute' || !leaf.isInObject || !leaf.objectName) return;
+            var objectMatch = ensureObjectBucket('name:' + leaf.objectName, leaf.objectName);
+            objectMatch.correlationCount += leaf.correlationCount || 0;
+            if (leaf.toIds) objectMatch.idsCount++;
+            objectMatch.tagCount += (leaf.tags || []).length;
+            objectMatch.galaxyCount += (leaf.galaxies || []).length;
+            objectMatch.childCount++;
+            var typeKey = leaf.typeFamily || leaf.type || 'unknown';
+            objectMatch.typeCounts[typeKey] = (objectMatch.typeCounts[typeKey] || 0) + 1;
+            if (leaf.valuePreview && objectMatch.sampleValues.length < 4) {
+                objectMatch.sampleValues.push({ type: leaf.type || '', value: leaf.valuePreviewShort || leaf.valuePreview });
+            }
+        });
+        aggregates.typeRows = Object.keys(aggregates.typeRows).map(function(key) {
+            return aggregates.typeRows[key];
+        }).sort(function(a, b) {
+            if (b.total !== a.total) return b.total - a.total;
+            return a.key.localeCompare(b.key);
+        }).slice(0, 12);
+        aggregates.topLists = {
+            types: normaliseDataExplorerMetricList(aggregates.topTypes, 6),
+            tags: normaliseDataExplorerMetricList(aggregates.topTags, 6),
+            galaxies: normaliseDataExplorerMetricList(aggregates.topGalaxies, 6),
+            correlatedTypes: normaliseDataExplorerMetricList(aggregates.topCorrelatedTypes, 6)
+        };
+        aggregates.objects = Object.keys(objectsByName).map(function(key) {
+            return objectsByName[key];
+        }).sort(function(a, b) {
+            if (b.childCount !== a.childCount) return b.childCount - a.childCount;
+            return b.correlationCount - a.correlationCount;
+        }).slice(0, 8);
+        return aggregates;
+    }
+
+    function dataExplorerLeafMatchesFilters(leaf, filters) {
+        filters = filters || {};
+        if (!leaf) return false;
+        if (filters.type && String(leaf.typeFamily || leaf.type || '') !== String(filters.type)) return false;
+        if (filters.context === 'standalone' && (leaf.entityType !== 'attribute' || leaf.isInObject)) return false;
+        if (filters.context === 'inObject' && (leaf.entityType !== 'attribute' || !leaf.isInObject)) return false;
+        if (filters.context === 'ids' && !leaf.toIds) return false;
+        if (filters.context === 'correlated' && !((leaf.correlationCount || 0) > 0)) return false;
+        if (filters.context === 'tagged' && !((leaf.tags || []).length > 0)) return false;
+        if (filters.context === 'galaxy' && !((leaf.galaxies || []).length > 0)) return false;
+        return true;
+    }
+
+    function getFilteredDataExplorerLeaves() {
+        var leaves = _dataExplorerState.allLeaves || [];
+        var filters = _dataExplorerState.activeFilters || {};
+        if (!filters.type && !filters.context) return leaves.slice();
+        return leaves.filter(function(leaf) {
+            return dataExplorerLeafMatchesFilters(leaf, filters);
+        });
+    }
+
+    function setDataExplorerView(view) {
+        _dataExplorerState.currentView = 'split';
+        $('#beta-data-explorer-up-level, #beta-data-explorer-reset-view').show();
+    }
+
+    function setDataExplorerFilters(filters) {
+        _dataExplorerState.activeFilters = filters || {};
+        renderDataExplorerOverviewFilters();
+        renderDataExplorerOverview();
+        if ($('#data-explorer').hasClass('active') && _dataExplorerState.fullyLoaded) {
+            renderDataExplorer(true);
+        }
+    }
+
+    function clearAllDataExplorerFilters() {
+        setDataExplorerFilters({});
+    }
+
+    function clearSingleDataExplorerFilter(filterKey) {
+        var next = $.extend({}, _dataExplorerState.activeFilters || {});
+        delete next[filterKey];
+        setDataExplorerFilters(next);
+    }
+
+    function renderDataExplorerOverviewFilters() {
+        var filters = _dataExplorerState.activeFilters || {};
+        var $target = $('#beta-data-explorer-active-filters');
+        if (!$target.length) return;
+        var chips = [];
+        if (filters.type) chips.push({ key: 'type', label: '<?php echo addslashes(__('Type')); ?>: ' + filters.type });
+        if (filters.context) {
+            var contextLabels = {
+                standalone: '<?php echo addslashes(__('Standalone')); ?>',
+                inObject: '<?php echo addslashes(__('In Object')); ?>',
+                ids: '<?php echo addslashes(__('IDS')); ?>',
+                correlated: '<?php echo addslashes(__('Correlated')); ?>',
+                tagged: '<?php echo addslashes(__('Tagged')); ?>',
+                galaxy: '<?php echo addslashes(__('Galaxy')); ?>'
+            };
+            chips.push({ key: 'context', label: '<?php echo addslashes(__('Context')); ?>: ' + (contextLabels[filters.context] || filters.context) });
+        }
+        $target.empty();
+        if (!chips.length) {
+            $target.hide();
+            return;
+        }
+        chips.forEach(function(chip) {
+            var $chip = $('<div class="beta-data-explorer-filter-chip"></div>');
+            $chip.append('<span>' + betaEscapeHtml(chip.label) + '</span>');
+            $('<button type="button" aria-label="<?php echo addslashes(__('Remove filter')); ?>">&times;</button>').on('click', function() {
+                clearSingleDataExplorerFilter(chip.key);
+            }).appendTo($chip);
+            $target.append($chip);
+        });
+        var $clearAll = $('<button type="button" class="beta-data-explorer-filter-chip is-clear-all"></button>');
+        $clearAll.append('<span><?php echo addslashes(__('Remove all filters')); ?></span>');
+        $clearAll.on('click', function() {
+            clearAllDataExplorerFilters();
+        });
+        $target.append($clearAll);
+        $target.show();
+    }
+
+    function renderDataExplorerTopLists(topLists) {
+        var $target = $('#beta-data-explorer-toplists');
+        if (!$target.length) return;
+        $target.empty();
+        [
+            { key: 'types', title: '<?php echo addslashes(__('Top types')); ?>' },
+            { key: 'tags', title: '<?php echo addslashes(__('Top tags')); ?>' },
+            { key: 'galaxies', title: '<?php echo addslashes(__('Top galaxies')); ?>' },
+            { key: 'correlatedTypes', title: '<?php echo addslashes(__('Top correlated types')); ?>' }
+        ].forEach(function(section) {
+            var items = (topLists && topLists[section.key]) || [];
+            var $card = $('<div class="beta-data-explorer-toplist-card"></div>');
+            $card.append('<strong>' + betaEscapeHtml(section.title) + '</strong>');
+            var $list = $('<div class="beta-data-explorer-toplist-list"></div>');
+            if (!items.length) {
+                $list.append('<div class="beta-data-explorer-toplist-item"><span><?php echo addslashes(__('No data')); ?></span><span>0</span></div>');
+            } else {
+                items.forEach(function(item) {
+                    var $item = $('<div class="beta-data-explorer-toplist-item"></div>');
+                    $item.append('<span>' + betaEscapeHtml(item.label) + '</span>');
+                    $item.append('<span>' + betaEscapeHtml(item.value) + '</span>');
+                    $list.append($item);
+                });
+            }
+            $card.append($list);
+            $target.append($card);
+        });
+    }
+
+    function renderDataExplorerMatrix(typeRows) {
+        var $target = $('#beta-data-explorer-matrix');
+        if (!$target.length) return;
+        var contextColumns = getDataExplorerContextColumns();
+        $target.empty();
+        $target.append('<div class="beta-data-explorer-matrix-cell is-header"></div>');
+        contextColumns.forEach(function(column) {
+            $target.append('<div class="beta-data-explorer-matrix-cell is-header">' + betaEscapeHtml(column.label) + '</div>');
+        });
+        (typeRows || []).forEach(function(row) {
+            var typePalette = getDataExplorerPalette('attribute:' + row.key);
+            var $rowHeader = $('<div class="beta-data-explorer-matrix-cell"></div>');
+            $rowHeader.css({
+                borderLeft: '4px solid ' + typePalette.strong,
+                background: typePalette.soft,
+                color: typePalette.ink
+            });
+            $rowHeader.append('<div class="beta-data-explorer-matrix-row-header"><div class="beta-data-explorer-matrix-row-type">' + betaEscapeHtml(row.key) + '</div><div class="beta-data-explorer-matrix-row-meta">' + betaEscapeHtml(row.total) + ' <?php echo addslashes(__('attributes')); ?></div></div>');
+            $target.append($rowHeader);
+            contextColumns.forEach(function(column) {
+                var count = row[column.key] || 0;
+                var intensity = row.total > 0 ? Math.min(1, count / row.total) : 0;
+                var $cell = $('<div class="beta-data-explorer-matrix-cell"></div>');
+                var $button = $('<button type="button" class="beta-data-explorer-matrix-hit"></button>');
+                if (!count) {
+                    $button.addClass('is-empty').prop('disabled', true);
+                } else {
+                    $button.css({
+                        background: 'hsla(' + typePalette.hue + ', ' + typePalette.saturation + '%, ' + typePalette.lightness + '%, ' + (0.16 + (intensity * 0.28)).toFixed(2) + ')',
+                        borderColor: 'hsla(' + typePalette.hue + ', ' + typePalette.saturation + '%, ' + Math.max(28, typePalette.lightness - 18) + '%, 0.42)',
+                        color: typePalette.ink
+                    });
+                    $button.on('click', function() {
+                        setDataExplorerFilters({ type: row.key, context: column.key });
+                    });
+                }
+                $button.append('<span class="beta-data-explorer-matrix-hit-count">' + betaEscapeHtml(count) + '</span>');
+                $cell.append($button);
+                $target.append($cell);
+            });
+        });
+    }
+
+    function renderDataExplorerOverview() {
+        var filteredLeaves = getFilteredDataExplorerLeaves();
+        var aggregates = computeDataExplorerOverviewAggregates(filteredLeaves);
+        _dataExplorerState.overviewAggregates = aggregates;
+        renderDataExplorerSummary({
+            stats: [
+                { label: '<?php echo addslashes(__('Attributes')); ?>', value: aggregates.summary.attributes },
+                { label: '<?php echo addslashes(__('Objects')); ?>', value: aggregates.summary.objects },
+                { label: '<?php echo addslashes(__('Standalone')); ?>', value: aggregates.summary.standalone },
+                { label: '<?php echo addslashes(__('In object')); ?>', value: aggregates.summary.inObject },
+                { label: '<?php echo addslashes(__('IDS')); ?>', value: aggregates.summary.ids },
+                { label: '<?php echo addslashes(__('Correlated')); ?>', value: aggregates.summary.correlated }
+            ],
+            topRegions: normaliseDataExplorerMetricList(aggregates.topTypes || {}, 8)
+        });
+        renderDataExplorerMatrix(aggregates.typeRows);
+        renderDataExplorerTopLists(aggregates.topLists);
     }
 
     function renderCompositionBar() {
@@ -3340,7 +3867,7 @@
             var pixelWidth = (percent / 100) * width;
             var segmentColor = color(d.label);
 
-            var segment = $('<div class="segment" title="' + escapeHtml(d.label) + ' (' + d.value + ', ' + percent.toFixed(2) + '%)"></div>');
+            var segment = $('<div class="segment" title="' + betaEscapeHtml(d.label) + ' (' + d.value + ', ' + percent.toFixed(2) + '%)"></div>');
             segment.css({
                 width: percent + '%',
                 background: segmentColor
@@ -3399,9 +3926,9 @@
             labelGrid.append(labelList);
 
             smallItems.forEach(function(item) {
-                var chip = $('<div class="composition-label-chip" title="' + escapeHtml(item.data.label) + '"></div>');
+                var chip = $('<div class="composition-label-chip" title="' + betaEscapeHtml(item.data.label) + '"></div>');
                 chip.append('<span class="swatch" style="background:' + item.color + ';"></span>');
-                chip.append('<span><strong>' + escapeHtml(item.data.name) + '</strong> (' + item.data.value + ')</span>');
+                chip.append('<span><strong>' + betaEscapeHtml(item.data.name) + '</strong> (' + item.data.value + ')</span>');
                 chip.on('click', function() {
                     filterAttributesByComposition(item.data.type, item.data.name);
                 });
@@ -3419,25 +3946,101 @@
         payload = payload || {};
         var leaves = Array.isArray(payload.leaves) ? payload.leaves : [];
         var root = { name: 'All data', kind: 'root', children: [] };
-        var regionsByKind = {};
+        var standaloneRegion = null;
+        var objectsRegion = {
+            name: '<?php echo addslashes(__('Objects')); ?>',
+            kind: 'region',
+            regionType: 'objects',
+            colourKey: 'objects',
+            children: [],
+            _childrenByType: {}
+        };
+        var objectRegionsByName = {};
+
+        root.children.push(objectsRegion);
+
+        function ensureStandaloneRegion() {
+            if (!standaloneRegion) {
+                standaloneRegion = {
+                    name: '<?php echo addslashes(__('Standalone attributes')); ?>',
+                    kind: 'region',
+                    regionType: 'standalone',
+                    colourKey: 'standalone',
+                    children: [],
+                    _childrenByType: {}
+                };
+                root.children.push(standaloneRegion);
+            }
+            return standaloneRegion;
+        }
+
+        function ensureObjectRegion(objectKey, objectName) {
+            objectKey = String(objectKey || objectName || ('object-' + Object.keys(objectRegionsByName).length));
+            objectName = normaliseExplorerGroupName(objectName, 'Object');
+            if (!objectRegionsByName[objectKey]) {
+                objectRegionsByName[objectKey] = {
+                    name: objectName,
+                    kind: 'type-family',
+                    regionType: 'object',
+                    colourKey: 'object:' + objectName,
+                    children: [],
+                    _childrenByType: {}
+                };
+                objectsRegion.children.push(objectRegionsByName[objectKey]);
+            }
+            return objectRegionsByName[objectKey];
+        }
+
+        function ensureTypeBucket(region, bucketName, options) {
+            options = options || {};
+            bucketName = normaliseExplorerGroupName(bucketName, 'Misc');
+            if (!region._childrenByType[bucketName]) {
+                region._childrenByType[bucketName] = {
+                    name: bucketName,
+                    kind: options.kind || 'type-family',
+                    regionType: region.regionType,
+                    colourKey: options.colourKey || bucketName,
+                    children: [],
+                    _childrenByType: {}
+                };
+                region.children.push(region._childrenByType[bucketName]);
+            }
+            return region._childrenByType[bucketName];
+        }
 
         leaves.forEach(function(leaf, index) {
-            var groupKind = normaliseExplorerGroupName(leaf.groupKind, 'Other');
-            var groupType = normaliseExplorerGroupName(leaf.groupType, 'Misc');
-            if (!regionsByKind[groupKind]) {
-                regionsByKind[groupKind] = { name: groupKind, kind: 'region', regionType: groupKind, children: [], _childrenByType: {} };
-                root.children.push(regionsByKind[groupKind]);
+            var bucket = null;
+            if (leaf.entityType === 'object') {
+                var objectName = normaliseExplorerGroupName(leaf.objectName || leaf.name, 'Object');
+                ensureObjectRegion(leaf.objectKey || leaf.uuid || leaf.id || objectName, objectName);
+                return;
+            } else if (leaf.entityType === 'attribute') {
+                if (leaf.isInObject && leaf.objectName) {
+                    var inferredParentName = normaliseExplorerGroupName(leaf.objectName, 'Object');
+                    var inferredParentRegion = ensureObjectRegion(leaf.objectKey || inferredParentName, inferredParentName);
+                    bucket = ensureTypeBucket(inferredParentRegion, leaf.typeFamily || leaf.type || leaf.groupType, {
+                        kind: 'leaf-group',
+                        colourKey: leaf.colourKey || leaf.typeFamily || leaf.type || leaf.groupType
+                    });
+                } else {
+                    var groupType = normaliseExplorerGroupName(leaf.groupType, 'Misc');
+                    bucket = ensureTypeBucket(ensureStandaloneRegion(), groupType, {
+                        kind: 'type-family',
+                        colourKey: leaf.colourKey || groupType
+                    });
+                }
+            } else {
+                var groupType = normaliseExplorerGroupName(leaf.groupType, 'Misc');
+                bucket = ensureTypeBucket(ensureStandaloneRegion(), groupType, {
+                    kind: 'type-family',
+                    colourKey: leaf.colourKey || groupType
+                });
             }
-            var region = regionsByKind[groupKind];
-            if (!region._childrenByType[groupType]) {
-                region._childrenByType[groupType] = { name: groupType, kind: 'type-family', regionType: groupKind, colourKey: leaf.colourKey || groupType, children: [] };
-                region.children.push(region._childrenByType[groupType]);
-            }
-            region._childrenByType[groupType].children.push({
+            bucket.children.push({
                 name: leaf.label || leaf.name || ('Item ' + (index + 1)),
                 kind: 'leaf',
-                regionType: groupKind,
-                colourKey: leaf.colourKey || groupType,
+                regionType: bucket.regionType,
+                colourKey: leaf.colourKey || bucket.colourKey || bucket.name,
                 size: Math.max(1, Number(leaf.weight) || 1),
                 leaf: leaf,
                 key: (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || index)
@@ -3448,6 +4051,9 @@
             if (!node || !node.children) {
                 return;
             }
+            node.children = node.children.filter(function(child) {
+                return child.kind === 'leaf' || (child.children && child.children.length);
+            });
             delete node._childrenByType;
             node.children.forEach(cleanup);
         }
@@ -3456,17 +4062,32 @@
         return root;
     }
 
-    function getDataExplorerNodeColor(node) {
-        var key = String(node.colourKey || node.name || node.regionType || 'default');
+    function getDataExplorerPalette(key) {
+        key = String(key || 'default');
         var hash = 0;
         for (var i = 0; i < key.length; i++) {
             hash = ((hash << 5) - hash) + key.charCodeAt(i);
             hash |= 0;
         }
         var hue = Math.abs(hash) % 360;
-        if (node.kind === 'region') return 'hsl(' + hue + ', 28%, 52%)';
-        if (node.kind === 'type-family') return 'hsl(' + hue + ', 36%, 68%)';
-        return 'hsl(' + hue + ', 34%, 84%)';
+        return {
+            hue: hue,
+            saturation: 44,
+            lightness: 58,
+            strong: 'hsl(' + hue + ', 46%, 48%)',
+            medium: 'hsl(' + hue + ', 40%, 64%)',
+            soft: 'hsl(' + hue + ', 44%, 92%)',
+            leaf: 'hsl(' + hue + ', 40%, 82%)',
+            ink: 'hsl(' + hue + ', 28%, 22%)'
+        };
+    }
+
+    function getDataExplorerNodeColor(node) {
+        var palette = getDataExplorerPalette(node.colourKey || node.name || node.regionType || 'default');
+        if (node.kind === 'region') return palette.strong;
+        if (node.kind === 'type-family') return palette.medium;
+        if (node.kind === 'leaf-group') return palette.leaf;
+        return palette.soft;
     }
 
     function getDataExplorerNodeText(node) {
@@ -3548,7 +4169,7 @@
         $canvas.html(
             '<div class="beta-data-explorer-loading">'
                 + '<i class="fa fa-spinner fa-spin fa-3x" aria-hidden="true"></i>'
-                + '<div>' + escapeHtml(message || '<?php echo addslashes(__('Loading explorer sample')); ?>') + '</div>'
+                + '<div>' + betaEscapeHtml(message || '<?php echo addslashes(__('Loading explorer sample')); ?>') + '</div>'
             + '</div>'
             + '<div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>'
         );
@@ -3572,12 +4193,21 @@
         if (!attribute) {
             return null;
         }
+        var parentObjectData = parentObject && (parentObject.Object || parentObject) ? (parentObject.Object || parentObject) : null;
         var rawValue = String(attribute.value || '').trim();
         var valuePreviewShort = rawValue.length > 42 ? rawValue.slice(0, 39).trim() + '...' : rawValue;
         var comment = String(attribute.comment || '').trim();
         var commentPreview = comment.length > 48 ? comment.slice(0, 45).trim() + '...' : comment;
         var type = String(attribute.type || 'unknown');
         var typeFamily = type.indexOf('|') !== -1 ? type.split('|', 1)[0] : type;
+        var objectName = parentObjectData && parentObjectData.name ? String(parentObjectData.name) : '';
+        var objectKey = parentObjectData ? String(parentObjectData.uuid || parentObjectData.id || parentObjectData.name || '') : '';
+        var isInObject = !!objectName;
+        if (!isInObject && attribute.object_relation) {
+            objectName = String(attribute.object_name || attribute.objectTypeName || attribute.object_type || 'Object');
+            objectKey = String(attribute.object_uuid || attribute.object_id || objectName || '');
+            isInObject = !!objectName;
+        }
         return {
             id: attribute.id != null ? String(attribute.id) : '',
             uuid: attribute.uuid != null ? String(attribute.uuid) : '',
@@ -3597,7 +4227,9 @@
             weight: 1 + Math.min(rawValue.length, 120) / 90 + Math.min(((attribute.AttributeTag || []).length || 0), 8) * 0.16 + (comment ? 0.4 : 0),
             tags: normaliseDataExplorerTagCollection(attribute.AttributeTag || attribute.Tag || []),
             galaxies: [],
-            objectName: parentObject && parentObject.name ? String(parentObject.name) : '',
+            objectName: objectName,
+            objectKey: objectKey,
+            isInObject: isInObject,
             childCount: 0
         };
     }
@@ -3606,7 +4238,10 @@
         if (!leaf) {
             return;
         }
-        var key = (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || leaf.name || Math.random());
+        var objectScope = leaf.entityType === 'attribute' && (leaf.objectKey || leaf.objectName)
+            ? (':object:' + String(leaf.objectKey || leaf.objectName))
+            : ':top';
+        var key = (leaf.entityType || 'entity') + ':' + (leaf.id || leaf.uuid || leaf.name || Math.random()) + objectScope;
         if (_dataExplorerState.leafKeyMap[key]) {
             return;
         }
@@ -3644,6 +4279,7 @@
             tags: normaliseDataExplorerTagCollection(objectData.AttributeTag || objectData.Tag || []),
             galaxies: [],
             objectName: objectName,
+            objectKey: String(objectData.uuid || objectData.id || objectName),
             childCount: Array.isArray(objectEntry.Attribute || objectData.Attribute) ? (objectEntry.Attribute || objectData.Attribute).length : 0
         };
     }
@@ -3750,20 +4386,12 @@
 
     function renderDataExplorerSummary(payload) {
         var $summary = $('#beta-data-explorer-summary-grid');
-        var $regions = $('#beta-data-explorer-top-regions');
         $summary.empty();
         (payload.stats || []).forEach(function(stat) {
             var card = $('<div class="beta-data-explorer-stat"></div>');
-            card.append('<span class="beta-data-explorer-stat-label">' + escapeHtml(stat.label) + '</span>');
-            card.append('<span class="beta-data-explorer-stat-value">' + escapeHtml(stat.value) + '</span>');
+            card.append('<span class="beta-data-explorer-stat-label">' + betaEscapeHtml(stat.label) + '</span>');
+            card.append('<span class="beta-data-explorer-stat-value">' + betaEscapeHtml(stat.value) + '</span>');
             $summary.append(card);
-        });
-        $regions.empty();
-        (payload.topRegions || []).forEach(function(region) {
-            var item = $('<div class="beta-data-explorer-list-item"></div>');
-            item.append('<span><strong>' + escapeHtml(region.label) + '</strong></span>');
-            item.append('<span>' + escapeHtml(region.count) + '</span>');
-            $regions.append(item);
         });
     }
 
@@ -3773,43 +4401,6 @@
 
     function updateDataExplorerNavigationState() {
         $('#beta-data-explorer-up-level').prop('disabled', !_dataExplorerState.currentNode || !_dataExplorerState.currentNode.parent);
-    }
-
-    function renderDataExplorerDetail(nodeData) {
-        var $target = $('#beta-data-explorer-detail');
-        if (!nodeData || nodeData.kind !== 'leaf' || !nodeData.leaf) {
-            $target.attr('class', 'beta-data-explorer-detail-empty');
-            $target.html('<?php echo addslashes(__('No item selected yet. Drill into a region, then click an individual object or attribute square to inspect tags, galaxies, comments, and raw values.')); ?>');
-            return;
-        }
-        var leaf = nodeData.leaf;
-        var html = '<div class="beta-data-explorer-detail">';
-        html += '<h4>' + escapeHtml(leaf.label || leaf.name) + '</h4>';
-        html += '<div class="beta-data-explorer-detail-meta">';
-        html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.entityType === 'object' ? '<?php echo addslashes(__('Object')); ?>' : '<?php echo addslashes(__('Attribute')); ?>') + '</span>';
-        if (leaf.type) html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.type) + '</span>';
-        if (leaf.category) html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.category) + '</span>';
-        if (leaf.objectName && leaf.entityType === 'attribute') html += '<span class="beta-data-explorer-chip">' + escapeHtml('<?php echo addslashes(__('In object')); ?>: ' + leaf.objectName) + '</span>';
-        if (leaf.childCount) html += '<span class="beta-data-explorer-chip">' + escapeHtml(leaf.childCount + ' <?php echo addslashes(__('children')); ?>') + '</span>';
-        html += '</div>';
-        if (leaf.valuePreview) html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Value')); ?></div><div class="beta-data-explorer-textblock">' + escapeHtml(leaf.valuePreview) + '</div>';
-        if (leaf.comment) html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Comment')); ?></div><div class="beta-data-explorer-textblock">' + escapeHtml(leaf.comment) + '</div>';
-        if (leaf.tags && leaf.tags.length) {
-            html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Tags')); ?></div><div class="beta-data-explorer-taglist">';
-            leaf.tags.forEach(function(tag) { html += '<span class="beta-data-explorer-tag">' + escapeHtml(tag.name) + '</span>'; });
-            html += '</div>';
-        }
-        if (leaf.galaxies && leaf.galaxies.length) {
-            html += '<div class="beta-data-explorer-section-label"><?php echo addslashes(__('Galaxies')); ?></div><div class="beta-data-explorer-taglist">';
-            leaf.galaxies.forEach(function(galaxy) { html += '<span class="beta-data-explorer-tag">' + escapeHtml(galaxy) + '</span>'; });
-            html += '</div>';
-        }
-        if (leaf.id) {
-            html += '<a class="beta-data-explorer-inspect-link" href="#Attribute_' + escapeHtml(leaf.id) + '" onclick="openDataExplorerLeafInDataTab(' + JSON.stringify(leaf.id) + '); return false;"><?php echo addslashes(__('Open in Data tab')); ?></a>';
-        }
-        html += '</div>';
-        $target.attr('class', 'beta-data-explorer-detail');
-        $target.html(html);
     }
 
     function getDataExplorerAncestors(node) {
@@ -3859,7 +4450,7 @@
         var $canvas = $('#beta-data-explorer-canvas');
         var description = node.kind === 'leaf' && node.leaf ? ((node.leaf.valuePreview || node.leaf.comment || '').slice(0, 180)) : '<?php echo addslashes(__('Click to drill into this region.')); ?>';
         var count = node.children ? node.children.length : 1;
-        $tooltip.html('<strong>' + escapeHtml(node.name || '') + '</strong><br>' + escapeHtml(description) + '<br><span style="opacity:.8;">' + escapeHtml(count + ' <?php echo addslashes(__('items')); ?>') + '</span>');
+        $tooltip.html('<strong>' + betaEscapeHtml(node.name || '') + '</strong><br>' + betaEscapeHtml(description) + '<br><span style="opacity:.8;">' + betaEscapeHtml(count + ' <?php echo addslashes(__('items')); ?>') + '</span>');
         var offset = $canvas.offset();
         if (offset) {
             $tooltip.css({ left: (event.pageX - offset.left + 14) + 'px', top: (event.pageY - offset.top + 14) + 'px' });
@@ -3868,6 +4459,10 @@
     }
 
     function hideDataExplorerTooltip() {
+        if (_dataExplorerTooltipFrame) {
+            window.cancelAnimationFrame(_dataExplorerTooltipFrame);
+            _dataExplorerTooltipFrame = null;
+        }
         $('#beta-data-explorer-tooltip').removeClass('is-visible');
     }
 
@@ -3892,23 +4487,29 @@
             if (!datum) {
                 return;
             }
+            var inScope = datum === node || getDataExplorerAncestors(datum).indexOf(node) !== -1 || getDataExplorerAncestors(node).indexOf(datum) !== -1;
+            if (!inScope) {
+                $node.hide();
+                return;
+            }
             var left = (datum.x - focusX) * kx;
             var top = (datum.y - focusY) * ky;
             var width = Math.max(0, datum.dx * kx - 1);
             var height = Math.max(0, datum.dy * ky - 1);
-            $node.stop(true, false).animate({
-                left: left,
-                top: top,
-                width: width,
-                height: height
-            }, 400);
+            var nodeEl = datum._nodeEl || $node.get(0);
+            if (nodeEl) {
+                nodeEl.style.left = left + 'px';
+                nodeEl.style.top = top + 'px';
+                nodeEl.style.width = width + 'px';
+                nodeEl.style.height = height + 'px';
+            }
 
             var visible = datum.x >= focusX && datum.y >= focusY && (datum.x + datum.dx) <= (focusX + focusW) && (datum.y + datum.dy) <= (focusY + focusH);
             $node.toggle(visible && width > 1 && height > 1);
 
-            $node.find('.node-label').css('opacity', width > 90 && height > 28 ? 1 : 0);
-            $node.find('.node-meta').css('opacity', width > 120 && height > 48 ? 0.82 : 0);
-            $node.find('.node-value').css('opacity', width > 150 && height > 64 ? 0.9 : 0);
+            if (datum._labelEl) datum._labelEl.style.opacity = width > 90 && height > 28 ? '1' : '0';
+            if (datum._metaEl) datum._metaEl.style.opacity = width > 120 && height > 48 ? '0.82' : '0';
+            if (datum._valueEl) datum._valueEl.style.opacity = width > 150 && height > 64 ? '0.9' : '0';
         });
         updateDataExplorerStatus((node.name || '<?php echo addslashes(__('Selection')); ?>') + ' • ' + getDataExplorerLeafCount(node) + ' <?php echo addslashes(__('leaf nodes')); ?>');
     }
@@ -3931,7 +4532,8 @@
         }
     }
 
-    function renderDataExplorer() {
+    function renderDataExplorer(animateRefresh) {
+        animateRefresh = !!animateRefresh;
         if (!_dataExplorerState.fullyLoaded) {
             renderDataExplorerLoadingState('<?php echo addslashes(__('Loading full explorer sample')); ?>');
             updateDataExplorerStatus('<?php echo addslashes(__('Loading full explorer sample')); ?>');
@@ -3944,7 +4546,13 @@
         if (!$canvas.length) {
             return;
         }
-        renderDataExplorerSummary(payload);
+        if (animateRefresh) {
+            $canvas.stop(true, true).animate({opacity: 0.2}, 140);
+        } else {
+            $canvas.stop(true, true).css('opacity', 1);
+        }
+        renderDataExplorerOverviewFilters();
+        renderDataExplorerOverview();
         if (!Array.isArray(payload.leaves) || !payload.leaves.length) {
             $canvas.html('<div class="beta-data-explorer-empty"><?php echo addslashes(__('No data available for the explorer sample.')); ?></div>');
             updateDataExplorerStatus('<?php echo addslashes(__('No explorer data')); ?>');
@@ -3957,9 +4565,19 @@
         _dataExplorerState.canvas = $canvas;
         _dataExplorerState.width = $canvas.innerWidth() || 600;
         _dataExplorerState.height = $canvas.innerHeight() || 560;
+        var filteredLeaves = getFilteredDataExplorerLeaves();
         _dataExplorerState.root = buildDataExplorerHierarchy({
-            leaves: (_dataExplorerState.allLeaves || []).slice()
+            leaves: filteredLeaves.slice()
         });
+        if (!filteredLeaves.length || !_dataExplorerState.root.children.length) {
+            $canvas.html('<div class="beta-data-explorer-empty"><?php echo addslashes(__('No data matches the current explorer filters.')); ?></div><div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>');
+            $('#beta-data-explorer-breadcrumbs').empty();
+            updateDataExplorerNavigationState();
+            updateDataExplorerStatus('<?php echo addslashes(__('No explorer data for current slice')); ?>');
+            $canvas.stop(true, true).animate({opacity: 1}, 180);
+            _dataExplorerInitialised = true;
+            return;
+        }
         _dataExplorerState.treemap = d3.layout.treemap()
             .size([_dataExplorerState.width, _dataExplorerState.height])
             .sticky(true)
@@ -3973,86 +4591,124 @@
             return d.depth > 0;
         });
 
+        var maxRenderedNodes = 900;
+        if (_dataExplorerState.nodes.length > maxRenderedNodes) {
+            _dataExplorerState.nodes = _dataExplorerState.nodes.filter(function(d) {
+                return d.depth <= 3 || d.kind !== 'leaf';
+            });
+        }
+
+        var canvasNode = $canvas.get(0);
+        var fragment = document.createDocumentFragment();
         _dataExplorerState.nodes.forEach(function(d) {
             d._key = d.key || d.name + ':' + d.depth + ':' + (d.parent ? d.parent.name : 'root');
             d._leafCount = getDataExplorerLeafCount(d);
-            var $node = $('<div class="beta-data-explorer-node"></div>');
-            $node.css({
-                position: 'absolute',
-                left: d.x + 'px',
-                top: d.y + 'px',
-                width: Math.max(0, d.dx - 1) + 'px',
-                height: Math.max(0, d.dy - 1) + 'px',
-                background: getDataExplorerNodeColor(d),
-                border: '1px solid ' + (d.children ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)'),
-                borderRadius: d.children ? '5px' : '3px',
-                boxSizing: 'border-box',
-                overflow: 'hidden',
-                cursor: 'pointer'
-            });
-            $node.data('nodeData', d);
-            $node.append($('<div class="node-label"></div>').css({
-                position: 'absolute',
-                left: '8px',
-                top: '6px',
-                right: '8px',
-                fontSize: d.kind === 'leaf' ? '11px' : '12px',
-                fontWeight: d.kind === 'leaf' ? 600 : 700,
-                color: d.kind === 'leaf' ? '#24415b' : '#ffffff',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                opacity: d.dx > 90 && d.dy > 28 ? 1 : 0
-            }).text(getDataExplorerNodeText(d)));
-            $node.append($('<div class="node-meta"></div>').css({
-                position: 'absolute',
-                left: '8px',
-                top: '22px',
-                right: '8px',
-                fontSize: '10px',
-                color: d.kind === 'leaf' ? '#46627a' : 'rgba(255,255,255,0.9)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                opacity: d.dx > 120 && d.dy > 48 ? 0.82 : 0
-            }).text(getDataExplorerNodeMetaText(d)));
-            $node.append($('<div class="node-value"></div>').css({
-                position: 'absolute',
-                left: '8px',
-                top: '38px',
-                right: '8px',
-                fontSize: '10px',
-                fontFamily: 'Menlo, Monaco, Consolas, "Liberation Mono", monospace',
-                color: d.kind === 'leaf' ? '#5f7288' : 'rgba(255,255,255,0.82)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                opacity: d.dx > 150 && d.dy > 64 ? 0.9 : 0
-            }).text(getDataExplorerNodeValueText(d)));
-            $node.on('click', function(event) {
+            var nodeEl = document.createElement('div');
+            nodeEl.className = 'beta-data-explorer-node';
+            nodeEl.style.position = 'absolute';
+            nodeEl.style.left = d.x + 'px';
+            nodeEl.style.top = d.y + 'px';
+            nodeEl.style.width = Math.max(0, d.dx - 1) + 'px';
+            nodeEl.style.height = Math.max(0, d.dy - 1) + 'px';
+            nodeEl.style.background = getDataExplorerNodeColor(d);
+            nodeEl.style.border = '1px solid ' + (d.children ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)');
+            nodeEl.style.borderRadius = d.children ? '5px' : '3px';
+            nodeEl.style.boxSizing = 'border-box';
+            nodeEl.style.overflow = 'hidden';
+            nodeEl.style.cursor = 'pointer';
+
+            var labelEl = document.createElement('div');
+            labelEl.className = 'node-label';
+            labelEl.style.position = 'absolute';
+            labelEl.style.left = '8px';
+            labelEl.style.top = '6px';
+            labelEl.style.right = '8px';
+            labelEl.style.fontSize = d.kind === 'leaf' ? '11px' : '12px';
+            labelEl.style.fontWeight = d.kind === 'leaf' ? '600' : '700';
+            labelEl.style.color = d.kind === 'leaf' ? '#24415b' : '#ffffff';
+            labelEl.style.whiteSpace = 'nowrap';
+            labelEl.style.overflow = 'hidden';
+            labelEl.style.textOverflow = 'ellipsis';
+            labelEl.style.opacity = d.dx > 90 && d.dy > 28 ? '1' : '0';
+            labelEl.textContent = getDataExplorerNodeText(d);
+
+            var metaEl = document.createElement('div');
+            metaEl.className = 'node-meta';
+            metaEl.style.position = 'absolute';
+            metaEl.style.left = '8px';
+            metaEl.style.top = '22px';
+            metaEl.style.right = '8px';
+            metaEl.style.fontSize = '10px';
+            metaEl.style.color = d.kind === 'leaf' ? '#46627a' : 'rgba(255,255,255,0.9)';
+            metaEl.style.whiteSpace = 'nowrap';
+            metaEl.style.overflow = 'hidden';
+            metaEl.style.textOverflow = 'ellipsis';
+            metaEl.style.opacity = d.dx > 120 && d.dy > 48 ? '0.82' : '0';
+            metaEl.textContent = getDataExplorerNodeMetaText(d);
+
+            var valueEl = document.createElement('div');
+            valueEl.className = 'node-value';
+            valueEl.style.position = 'absolute';
+            valueEl.style.left = '8px';
+            valueEl.style.top = '38px';
+            valueEl.style.right = '8px';
+            valueEl.style.fontSize = '10px';
+            valueEl.style.fontFamily = 'Menlo, Monaco, Consolas, "Liberation Mono", monospace';
+            valueEl.style.color = d.kind === 'leaf' ? '#5f7288' : 'rgba(255,255,255,0.82)';
+            valueEl.style.whiteSpace = 'nowrap';
+            valueEl.style.overflow = 'hidden';
+            valueEl.style.textOverflow = 'ellipsis';
+            valueEl.style.opacity = d.dx > 150 && d.dy > 64 ? '0.9' : '0';
+            valueEl.textContent = getDataExplorerNodeValueText(d);
+
+            nodeEl.appendChild(labelEl);
+            nodeEl.appendChild(metaEl);
+            nodeEl.appendChild(valueEl);
+            d._nodeEl = nodeEl;
+            d._labelEl = labelEl;
+            d._metaEl = metaEl;
+            d._valueEl = valueEl;
+            $(nodeEl).data('nodeData', d);
+            fragment.appendChild(nodeEl);
+        });
+        canvasNode.appendChild(fragment);
+
+        $canvas.off('.dataExplorerCanvas')
+            .on('click.dataExplorerCanvas', '.beta-data-explorer-node', function(event) {
                 event.stopPropagation();
+                var d = $(this).data('nodeData');
+                if (!d) {
+                    return;
+                }
                 if (d.kind === 'leaf') {
-                    renderDataExplorerDetail(d);
                     updateDataExplorerStatus((d.leaf.label || d.name) + ' • <?php echo addslashes(__('selected')); ?>');
                     return;
                 }
-                renderDataExplorerDetail(null);
                 zoomDataExplorerTo(d);
-            }).on('mousemove', function(event) {
-                showDataExplorerTooltip(event, d);
-            }).on('mouseleave', function() {
+            })
+            .on('mousemove.dataExplorerCanvas', '.beta-data-explorer-node', function(event) {
+                var d = $(this).data('nodeData');
+                if (!d) {
+                    return;
+                }
+                if (_dataExplorerTooltipFrame) {
+                    window.cancelAnimationFrame(_dataExplorerTooltipFrame);
+                }
+                _dataExplorerTooltipFrame = window.requestAnimationFrame(function() {
+                    _dataExplorerTooltipFrame = null;
+                    showDataExplorerTooltip(event, d);
+                });
+            })
+            .on('mouseleave.dataExplorerCanvas', '.beta-data-explorer-node', function() {
                 hideDataExplorerTooltip();
+            })
+            .on('click.dataExplorerCanvas', function() {
+                zoomDataExplorerTo(_dataExplorerState.root);
             });
-            $canvas.append($node);
-        });
-
-        $canvas.off('click.dataExplorerCanvas').on('click.dataExplorerCanvas', function() {
-            renderDataExplorerDetail(null);
-            zoomDataExplorerTo(_dataExplorerState.root);
-        });
         zoomDataExplorerTo(_dataExplorerState.root);
         updateDataExplorerNavigationState();
-        updateDataExplorerStatus((_dataExplorerState.allLeaves || []).length + ' <?php echo addslashes(__('leaf nodes currently rendered')); ?>');
+        updateDataExplorerStatus(filteredLeaves.length + ' <?php echo addslashes(__('leaf nodes currently rendered')); ?>');
+        $canvas.stop(true, true).animate({opacity: 1}, animateRefresh ? 260 : 0);
         _dataExplorerInitialised = true;
     }
 
@@ -4130,14 +4786,12 @@
 
         $('#beta-data-explorer-reset-view').on('click', function() {
             if (_dataExplorerState.root) {
-                renderDataExplorerDetail(null);
                 zoomDataExplorerTo(_dataExplorerState.root);
             }
         });
 
         $('#beta-data-explorer-up-level').on('click', function() {
             if (_dataExplorerState.currentNode && _dataExplorerState.currentNode.parent) {
-                renderDataExplorerDetail(null);
                 zoomDataExplorerTo(_dataExplorerState.currentNode.parent);
             }
         });
@@ -4154,6 +4808,8 @@
         if ($('#attributes').hasClass('active')) {
             renderCompositionBar();
         }
+
+        setDataExplorerView('overview');
 
         // Comments List
         if (commentData && commentData.length > 0) {
