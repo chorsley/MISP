@@ -1887,9 +1887,7 @@
             }
         }
     }
-
     $items = $this->Event->attachRelatedAttributesToItems($items, $event['RelatedAttribute'] ?? []);
-
     // Sort desc by timestamp
     usort($items, function($a, $b) {
         return $b['timestamp'] - $a['timestamp'];
@@ -2600,7 +2598,7 @@
                      }
                      #data-explorer .beta-data-explorer-shell {
                          display: grid;
-                         grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+                         grid-template-columns: minmax(520px, 1.2fr) minmax(360px, 0.8fr);
                          gap: 12px;
                          padding: 10px;
                          align-items: stretch;
@@ -2668,15 +2666,18 @@
                           position: absolute;
                           z-index: 15;
                           pointer-events: none;
-                         max-width: 320px;
-                         padding: 8px 10px;
-                         border-radius: 8px;
-                         background: rgba(21, 34, 49, 0.92);
-                         color: #fff;
-                         font-size: 12px;
-                         line-height: 1.4;
-                         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-                         opacity: 0;
+                          max-width: min(420px, calc(100% - 32px));
+                          min-width: 220px;
+                          padding: 8px 10px;
+                          border-radius: 8px;
+                          background: rgba(21, 34, 49, 0.92);
+                          color: #fff;
+                          font-size: 12px;
+                          line-height: 1.4;
+                          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+                          opacity: 0;
+                          white-space: normal;
+                          word-break: break-word;
                      }
                      #data-explorer .beta-data-explorer-tooltip.is-visible {
                          opacity: 1;
@@ -2687,31 +2688,11 @@
                          flex-direction: column;
                          gap: 10px;
                      }
-                     #data-explorer .beta-data-explorer-summary-grid {
+                     #data-explorer .beta-data-explorer-sidebar {
                          display: flex;
-                         flex-wrap: wrap;
-                         gap: 8px;
-                     }
-                     #data-explorer .beta-data-explorer-stat {
-                         border: 1px solid #deebf6;
-                         border-radius: 999px;
-                         padding: 6px 10px;
-                         background: linear-gradient(180deg, #fcfeff 0%, #f4f9fd 100%);
-                     }
-                     #data-explorer .beta-data-explorer-stat-label {
-                         display: block;
-                         font-size: 11px;
-                         text-transform: uppercase;
-                         letter-spacing: 0.04em;
-                         color: #8091a3;
-                         margin-bottom: 4px;
-                     }
-                     #data-explorer .beta-data-explorer-stat-value {
-                         display: block;
-                         font-size: 16px;
-                         line-height: 1.1;
-                         color: #20364d;
-                         font-weight: 700;
+                         flex-direction: column;
+                         gap: 10px;
+                         min-width: 0;
                      }
                      #data-explorer .beta-data-explorer-list {
                          display: flex;
@@ -2911,6 +2892,32 @@
                          text-transform: uppercase;
                          letter-spacing: 0.04em;
                      }
+                     #data-explorer .beta-data-explorer-matrix-cell.is-summary {
+                         background: linear-gradient(180deg, #fbfdff 0%, #edf5fb 100%);
+                     }
+                     #data-explorer .beta-data-explorer-matrix-summary {
+                         display: flex;
+                         flex-direction: column;
+                         gap: 3px;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-summary-label {
+                         font-size: 10px;
+                         text-transform: uppercase;
+                         letter-spacing: 0.04em;
+                         color: #7a8ea2;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-summary-value {
+                         font-size: 18px;
+                         font-weight: 700;
+                         line-height: 1;
+                         color: #233a52;
+                     }
+                     #data-explorer .beta-data-explorer-matrix-summary-meta {
+                         font-size: 10px;
+                         color: #7a8da0;
+                         text-transform: none;
+                         letter-spacing: 0;
+                     }
                      #data-explorer .beta-data-explorer-matrix-row-header {
                          display: flex;
                          flex-direction: column;
@@ -2929,6 +2936,8 @@
                           display: flex;
                           align-items: center;
                           justify-content: center;
+                          flex-direction: column;
+                          gap: 2px;
                           width: 100%;
                           min-height: 26px;
                           padding: 5px 6px;
@@ -2950,11 +2959,50 @@
                          opacity: 0.45;
                          box-shadow: none;
                       }
-                      #data-explorer .beta-data-explorer-matrix-hit-count {
-                          font-size: 13px;
-                          font-weight: 700;
+                       #data-explorer .beta-data-explorer-matrix-hit-count {
+                           font-size: 13px;
+                           font-weight: 700;
+                           line-height: 1;
+                           text-align: center;
+                       }
+                      #data-explorer .beta-data-explorer-matrix-hit-flags {
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          gap: 6px;
+                          min-height: 10px;
+                          font-size: 9px;
                           line-height: 1;
-                          text-align: center;
+                          opacity: 0.9;
+                      }
+                      #data-explorer .beta-data-explorer-matrix-hit-flag {
+                          display: inline-flex;
+                          align-items: center;
+                          gap: 3px;
+                          white-space: nowrap;
+                      }
+                      #data-explorer .beta-data-explorer-matrix-hit-flags.is-zero {
+                          opacity: 0.45;
+                      }
+                      #data-explorer .beta-data-explorer-legend {
+                          display: inline-flex;
+                          align-items: center;
+                          gap: 10px;
+                          flex-wrap: wrap;
+                          margin-top: 2px;
+                          font-size: 10px;
+                          color: #70859a;
+                      }
+                      #data-explorer .beta-data-explorer-legend-item {
+                          display: inline-flex;
+                          align-items: center;
+                          gap: 5px;
+                      }
+                      #data-explorer .beta-data-explorer-legend-swatch {
+                          width: 8px;
+                          height: 10px;
+                          border-radius: 2px;
+                          display: inline-block;
                       }
                      #data-explorer .beta-data-explorer-toplist {
                          display: grid;
@@ -2978,13 +3026,74 @@
                          flex-direction: column;
                          gap: 5px;
                      }
-                     #data-explorer .beta-data-explorer-toplist-item {
-                         display: flex;
-                         justify-content: space-between;
-                         gap: 8px;
-                         font-size: 11px;
-                         color: #4d647d;
-                     }
+                      #data-explorer .beta-data-explorer-toplist-item {
+                          display: flex;
+                          justify-content: space-between;
+                          gap: 8px;
+                          font-size: 11px;
+                          color: #4d647d;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-item.is-tag {
+                          align-items: center;
+                          gap: 10px;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-tag {
+                          display: flex;
+                          align-items: center;
+                          min-width: 0;
+                          flex: 1 1 auto;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-tag .tag-container {
+                          max-width: 100%;
+                          margin: 0;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-tag .tag-scope-icon,
+                      #data-explorer .beta-data-explorer-toplist-tag .tag {
+                          flex-shrink: 0;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-tag .tag {
+                          min-width: 0;
+                          max-width: 100%;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-score {
+                          border: none;
+                          background: transparent;
+                          padding: 0;
+                          color: #335a7c;
+                          font-size: 11px;
+                          font-weight: 700;
+                          line-height: 1;
+                          cursor: pointer;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-score:hover,
+                      #data-explorer .beta-data-explorer-toplist-score:focus {
+                          color: #173c5d;
+                          text-decoration: underline;
+                          outline: none;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-score[disabled] {
+                          color: #8ea1b5;
+                          cursor: default;
+                          text-decoration: none;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-link {
+                          border: none;
+                          background: transparent;
+                          padding: 0;
+                          color: inherit;
+                          font-size: 11px;
+                          line-height: 1.35;
+                          text-align: left;
+                          cursor: pointer;
+                      }
+                      #data-explorer .beta-data-explorer-toplist-link:hover,
+                      #data-explorer .beta-data-explorer-toplist-link:focus {
+                          color: #173c5d;
+                          text-decoration: underline;
+                          outline: none;
+                      }
                      #data-explorer .beta-data-explorer-overview-card.is-collapsed .beta-data-explorer-overview-card-body {
                          display: none;
                      }
@@ -3033,50 +3142,48 @@
                                        <button type="button" class="beta-data-explorer-button" id="beta-data-explorer-reset-view"><?php echo __('Reset View'); ?></button>
                                    </div>
                                </div>
-                                <div class="beta-data-explorer-shell">
-                                    <div class="beta-data-explorer-workspace">
-                                        <div id="beta-data-explorer-active-filters" class="beta-data-explorer-filter-chips" style="display:none;"></div>
-                                        <div id="beta-data-explorer-summary-grid" class="beta-data-explorer-summary-grid"></div>
-                                        <div class="beta-data-explorer-overview">
-                                            <div class="beta-data-explorer-overview-grid">
-                                                <div class="beta-data-explorer-overview-card">
-                                                    <div class="beta-data-explorer-overview-card-header">
-                                                        <h4 class="beta-data-explorer-overview-card-title"><?php echo __('Type x Context'); ?></h4>
-                                                        <p class="beta-data-explorer-overview-card-subtitle"><?php echo __('Primary filter grid for type, object membership, IDS, correlation, tags, and galaxies.'); ?></p>
-                                                    </div>
-                                                    <div class="beta-data-explorer-overview-card-body">
-                                                        <div id="beta-data-explorer-matrix" class="beta-data-explorer-matrix"></div>
-                                                    </div>
-                                                </div>
-                                                <div class="beta-data-explorer-overview-card">
-                                                    <div class="beta-data-explorer-overview-card-header">
-                                                        <h4 class="beta-data-explorer-overview-card-title"><?php echo __('Top Signals'); ?></h4>
-                                                        <p class="beta-data-explorer-overview-card-subtitle"><?php echo __('Fast ranking of the current slice by type, tags, galaxies, and correlation.'); ?></p>
-                                                    </div>
-                                                    <div class="beta-data-explorer-overview-card-body">
-                                                        <div id="beta-data-explorer-toplists" class="beta-data-explorer-toplist"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="beta-data-explorer-card beta-data-explorer-canvas-card">
-                                        <div class="beta-data-explorer-header">
-                                            <div>
-                                                <h4 class="beta-data-explorer-title" style="font-size: 15px;"><?php echo __('Treemap'); ?></h4>
+                                 <div class="beta-data-explorer-shell">
+                                     <div class="beta-data-explorer-card beta-data-explorer-canvas-card">
+                                         <div class="beta-data-explorer-header">
+                                             <div>
+                                                 <h4 class="beta-data-explorer-title" style="font-size: 15px;"><?php echo __('Treemap'); ?></h4>
                                                 <p class="beta-data-explorer-subtitle"><?php echo __('Animated spatial view of the current slice.'); ?></p>
+                                                <div class="beta-data-explorer-legend">
+                                                    <span class="beta-data-explorer-legend-item"><span class="beta-data-explorer-legend-swatch" style="background: rgba(255, 122, 26, 0.95);"></span><?php echo __('IDS border'); ?></span>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="beta-data-explorer-panel">
                                             <div id="beta-data-explorer-breadcrumbs" class="beta-data-explorer-breadcrumbs"></div>
-                                            <div id="beta-data-explorer-canvas" class="beta-data-explorer-canvas">
-                                                <div id="beta-data-explorer-empty" class="beta-data-explorer-empty"><?php echo __('Treemap will appear here once the explorer sample is loaded.'); ?></div>
-                                                <div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>
-                                            </div>
-                                            <div class="beta-data-explorer-legend-note"><?php echo __('Apply filters from the left pane to reshape the treemap in place. Click a region to drill down and click the background to zoom back out.'); ?></div>
-                                        </div>
-                                    </div>
-                                </div>
+                                             <div id="beta-data-explorer-canvas" class="beta-data-explorer-canvas">
+                                                 <div id="beta-data-explorer-empty" class="beta-data-explorer-empty"><?php echo __('Treemap will appear here once the explorer sample is loaded.'); ?></div>
+                                                 <div id="beta-data-explorer-tooltip" class="beta-data-explorer-tooltip"></div>
+                                             </div>
+                                             <div class="beta-data-explorer-legend-note"><?php echo __('Apply filters from the right pane to reshape the treemap in place. Click a region to drill down and click the background to zoom back out.'); ?></div>
+                                         </div>
+                                     </div>
+                                     <div class="beta-data-explorer-sidebar">
+                                         <div id="beta-data-explorer-active-filters" class="beta-data-explorer-filter-chips" style="display:none;"></div>
+                                         <div class="beta-data-explorer-overview-card">
+                                             <div class="beta-data-explorer-overview-card-header">
+                                                 <h4 class="beta-data-explorer-overview-card-title"><?php echo __('Type x Context'); ?></h4>
+                                                 <p class="beta-data-explorer-overview-card-subtitle"><?php echo __('Primary filter grid for type, object membership, IDS, correlation, tags, and galaxies.'); ?></p>
+                                             </div>
+                                             <div class="beta-data-explorer-overview-card-body">
+                                                 <div id="beta-data-explorer-matrix" class="beta-data-explorer-matrix"></div>
+                                             </div>
+                                         </div>
+                                         <div class="beta-data-explorer-overview-card">
+                                             <div class="beta-data-explorer-overview-card-header">
+                                                 <h4 class="beta-data-explorer-overview-card-title"><?php echo __('Top Signals'); ?></h4>
+                                                 <p class="beta-data-explorer-overview-card-subtitle"><?php echo __('Fast ranking of the current slice by type, tags, galaxies, and correlation.'); ?></p>
+                                             </div>
+                                             <div class="beta-data-explorer-overview-card-body">
+                                                 <div id="beta-data-explorer-toplists" class="beta-data-explorer-toplist"></div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
                            </div>
                       </div>
                   </div>
@@ -3285,7 +3392,7 @@
             } elseif (isset($entity['correlation_count']) && is_numeric($entity['correlation_count'])) {
                 $correlationCount = (int)$entity['correlation_count'];
             }
-            $toIds = !empty($entity['to_ids']);
+            $toIds = !empty($entity['to_ids']) || !empty($entity['toIds']);
             $name = $entityType === 'object'
                 ? (string)($entity['name'] ?? 'Object')
                 : ($value !== '' ? $value : 'Attribute');
@@ -3551,6 +3658,7 @@
             typeRows: {},
             topTypes: {},
             topTags: {},
+            topComments: {},
             topGalaxies: {},
             topCorrelatedTypes: {},
             objects: []
@@ -3609,6 +3717,9 @@
             (leaf.tags || []).forEach(function(tag) {
                 if (tag && tag.name) aggregates.topTags[tag.name] = (aggregates.topTags[tag.name] || 0) + 1;
             });
+            if (leaf.commentPreview) {
+                aggregates.topComments[leaf.commentPreview] = (aggregates.topComments[leaf.commentPreview] || 0) + 1;
+            }
             (leaf.galaxies || []).forEach(function(galaxy) {
                 if (galaxy) aggregates.topGalaxies[galaxy] = (aggregates.topGalaxies[galaxy] || 0) + 1;
             });
@@ -3627,7 +3738,7 @@
         });
         leaves.forEach(function(leaf) {
             if (!leaf || leaf.entityType !== 'attribute' || !leaf.isInObject || !leaf.objectName) return;
-            var objectMatch = ensureObjectBucket('name:' + leaf.objectName, leaf.objectName);
+            var objectMatch = ensureObjectBucket(leaf.objectKey || ('name:' + leaf.objectName), leaf.objectName);
             objectMatch.correlationCount += leaf.correlationCount || 0;
             if (leaf.toIds) objectMatch.idsCount++;
             objectMatch.tagCount += (leaf.tags || []).length;
@@ -3648,6 +3759,7 @@
         aggregates.topLists = {
             types: normaliseDataExplorerMetricList(aggregates.topTypes, 6),
             tags: normaliseDataExplorerMetricList(aggregates.topTags, 6),
+            comments: normaliseDataExplorerMetricList(aggregates.topComments, 6),
             galaxies: normaliseDataExplorerMetricList(aggregates.topGalaxies, 6),
             correlatedTypes: normaliseDataExplorerMetricList(aggregates.topCorrelatedTypes, 6)
         };
@@ -3664,6 +3776,13 @@
         filters = filters || {};
         if (!leaf) return false;
         if (filters.type && String(leaf.typeFamily || leaf.type || '') !== String(filters.type)) return false;
+        if (filters.comment && String(leaf.commentPreview || '') !== String(filters.comment)) return false;
+        if (filters.tag) {
+            var hasTag = (leaf.tags || []).some(function(tag) {
+                return tag && String(tag.name || '') === String(filters.tag);
+            });
+            if (!hasTag) return false;
+        }
         if (filters.context === 'standalone' && (leaf.entityType !== 'attribute' || leaf.isInObject)) return false;
         if (filters.context === 'inObject' && (leaf.entityType !== 'attribute' || !leaf.isInObject)) return false;
         if (filters.context === 'ids' && !leaf.toIds) return false;
@@ -3676,7 +3795,7 @@
     function getFilteredDataExplorerLeaves() {
         var leaves = _dataExplorerState.allLeaves || [];
         var filters = _dataExplorerState.activeFilters || {};
-        if (!filters.type && !filters.context) return leaves.slice();
+        if (!filters.type && !filters.context && !filters.tag && !filters.comment) return leaves.slice();
         return leaves.filter(function(leaf) {
             return dataExplorerLeafMatchesFilters(leaf, filters);
         });
@@ -3712,6 +3831,8 @@
         if (!$target.length) return;
         var chips = [];
         if (filters.type) chips.push({ key: 'type', label: '<?php echo addslashes(__('Type')); ?>: ' + filters.type });
+        if (filters.tag) chips.push({ key: 'tag', label: '<?php echo addslashes(__('Tag')); ?>: ' + filters.tag });
+        if (filters.comment) chips.push({ key: 'comment', label: '<?php echo addslashes(__('Comment')); ?>: ' + filters.comment });
         if (filters.context) {
             var contextLabels = {
                 standalone: '<?php echo addslashes(__('Standalone')); ?>',
@@ -3752,6 +3873,7 @@
         [
             { key: 'types', title: '<?php echo addslashes(__('Top types')); ?>' },
             { key: 'tags', title: '<?php echo addslashes(__('Top tags')); ?>' },
+            { key: 'comments', title: '<?php echo addslashes(__('Top comments')); ?>' },
             { key: 'galaxies', title: '<?php echo addslashes(__('Top galaxies')); ?>' },
             { key: 'correlatedTypes', title: '<?php echo addslashes(__('Top correlated types')); ?>' }
         ].forEach(function(section) {
@@ -3764,8 +3886,40 @@
             } else {
                 items.forEach(function(item) {
                     var $item = $('<div class="beta-data-explorer-toplist-item"></div>');
-                    $item.append('<span>' + betaEscapeHtml(item.label) + '</span>');
-                    $item.append('<span>' + betaEscapeHtml(item.value) + '</span>');
+                    if (section.key === 'tags') {
+                        $item.addClass('is-tag');
+                        var $tagButton = $('<button type="button" class="beta-data-explorer-toplist-link beta-data-explorer-toplist-tag"></button>');
+                        $tagButton.append(buildDataExplorerTopTagHtml(item));
+                        $tagButton.on('click', function() {
+                            applyDataExplorerSignalFilter('tag', item.label);
+                        });
+                        $item.append($tagButton);
+                        var $scoreButton = $('<button type="button" class="beta-data-explorer-toplist-score"></button>');
+                        $scoreButton.text(item.value);
+                        $scoreButton.on('click', function() {
+                            applyDataExplorerSignalFilter('tag', item.label);
+                        });
+                        $item.append($scoreButton);
+                    } else {
+                        var filterKey = section.key === 'types' ? 'type' : (section.key === 'comments' ? 'comment' : null);
+                        if (filterKey) {
+                            var $labelButton = $('<button type="button" class="beta-data-explorer-toplist-link"></button>');
+                            $labelButton.text(item.label);
+                            $labelButton.on('click', function() {
+                                applyDataExplorerSignalFilter(filterKey, item.label);
+                            });
+                            $item.append($labelButton);
+                            var $scoreButtonDefault = $('<button type="button" class="beta-data-explorer-toplist-score"></button>');
+                            $scoreButtonDefault.text(item.value);
+                            $scoreButtonDefault.on('click', function() {
+                                applyDataExplorerSignalFilter(filterKey, item.label);
+                            });
+                            $item.append($scoreButtonDefault);
+                        } else {
+                            $item.append('<span>' + betaEscapeHtml(item.label) + '</span>');
+                            $item.append('<span>' + betaEscapeHtml(item.value) + '</span>');
+                        }
+                    }
                     $list.append($item);
                 });
             }
@@ -3774,14 +3928,71 @@
         });
     }
 
+    function applyDataExplorerSignalFilter(filterKey, value) {
+        var next = $.extend({}, _dataExplorerState.activeFilters || {});
+        next[filterKey] = value;
+        setDataExplorerFilters(next);
+    }
+
+    function buildDataExplorerTopTagHtml(item) {
+        var tag = item || {};
+        var tagColor = String(tag.colour || '#0088cc');
+        var hex = tagColor.replace('#', '');
+        var r = 0;
+        var g = 136;
+        var b = 204;
+        if (/^[0-9a-f]{3}$/i.test(hex)) {
+            r = parseInt(hex[0] + hex[0], 16);
+            g = parseInt(hex[1] + hex[1], 16);
+            b = parseInt(hex[2] + hex[2], 16);
+        } else if (/^[0-9a-f]{6}$/i.test(hex)) {
+            r = parseInt(hex.substring(0, 2), 16);
+            g = parseInt(hex.substring(2, 4), 16);
+            b = parseInt(hex.substring(4, 6), 16);
+        }
+        var rgba = 'rgba(' + r + ', ' + g + ', ' + b + ', 0.7)';
+        var luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+        var iconColor = luminance > 0.5 ? '#000' : '#fff';
+        var scopeIcon = tag.local ? 'user' : 'globe-americas';
+        var html = '';
+        html += '<span class="tag-container nowrap tag-wrapper-beta">';
+        html += '<span class="tag-scope-icon" style="background-color: ' + rgba + '; color: ' + iconColor + '; display: inline-flex; align-items: center; justify-content: center;"><i class="fas fa-' + scopeIcon + '" style="font-size: 11px;"></i></span>';
+        html += '<span class="tag nowrap" style="background-color: transparent; border: 1px solid #d0d0d0; color: #000; border-left: none;">' + betaEscapeHtml(tag.label || '') + '</span>';
+        html += '</span>';
+        return html;
+    }
+
     function renderDataExplorerMatrix(typeRows) {
         var $target = $('#beta-data-explorer-matrix');
         if (!$target.length) return;
         var contextColumns = getDataExplorerContextColumns();
+        var aggregates = _dataExplorerState.overviewAggregates || { summary: {} };
+        var summary = aggregates.summary || {};
+        var totalItems = Number(summary.attributes || 0) + Number(summary.objects || 0);
         $target.empty();
-        $target.append('<div class="beta-data-explorer-matrix-cell is-header"></div>');
+        $target.append(
+            '<div class="beta-data-explorer-matrix-cell is-header is-summary">'
+            + '<div class="beta-data-explorer-matrix-summary">'
+            + '<span class="beta-data-explorer-matrix-summary-label"><?php echo addslashes(__('All data')); ?></span>'
+            + '<span class="beta-data-explorer-matrix-summary-value">' + betaEscapeHtml(totalItems) + '</span>'
+            + '<span class="beta-data-explorer-matrix-summary-meta">' + betaEscapeHtml((summary.attributes || 0) + ' <?php echo addslashes(__('attributes')); ?> / ' + (summary.objects || 0) + ' <?php echo addslashes(__('objects')); ?>') + '</span>'
+            + '</div>'
+            + '</div>'
+        );
         contextColumns.forEach(function(column) {
-            $target.append('<div class="beta-data-explorer-matrix-cell is-header">' + betaEscapeHtml(column.label) + '</div>');
+            var summaryValue = Number(summary[column.key] || 0);
+            var metaLabel = column.key === 'standalone' || column.key === 'inObject'
+                ? '<?php echo addslashes(__('attributes')); ?>'
+                : '<?php echo addslashes(__('matches')); ?>';
+            $target.append(
+                '<div class="beta-data-explorer-matrix-cell is-header is-summary">'
+                + '<div class="beta-data-explorer-matrix-summary">'
+                + '<span class="beta-data-explorer-matrix-summary-label">' + betaEscapeHtml(column.label) + '</span>'
+                + '<span class="beta-data-explorer-matrix-summary-value">' + betaEscapeHtml(summaryValue) + '</span>'
+                + '<span class="beta-data-explorer-matrix-summary-meta">' + betaEscapeHtml(metaLabel) + '</span>'
+                + '</div>'
+                + '</div>'
+            );
         });
         (typeRows || []).forEach(function(row) {
             var typePalette = getDataExplorerPalette('attribute:' + row.key);
@@ -3796,6 +4007,8 @@
             contextColumns.forEach(function(column) {
                 var count = row[column.key] || 0;
                 var intensity = row.total > 0 ? Math.min(1, count / row.total) : 0;
+                var idsCount = column.key === 'ids' ? count : Math.min(count, row.ids || 0);
+                var correlationCount = column.key === 'correlated' ? count : Math.min(count, row.correlated || 0);
                 var $cell = $('<div class="beta-data-explorer-matrix-cell"></div>');
                 var $button = $('<button type="button" class="beta-data-explorer-matrix-hit"></button>');
                 if (!count) {
@@ -3811,6 +4024,14 @@
                     });
                 }
                 $button.append('<span class="beta-data-explorer-matrix-hit-count">' + betaEscapeHtml(count) + '</span>');
+                if (count) {
+                    var flagsClass = (!idsCount && !correlationCount) ? ' is-zero' : '';
+                    var flagsHtml = '<span class="beta-data-explorer-matrix-hit-flags' + flagsClass + '">';
+                    flagsHtml += '<span class="beta-data-explorer-matrix-hit-flag" title="<?php echo addslashes(__('IDS-enabled matches in this bucket')); ?>">I ' + betaEscapeHtml(idsCount) + '</span>';
+                    flagsHtml += '<span class="beta-data-explorer-matrix-hit-flag" title="<?php echo addslashes(__('Correlated matches in this bucket')); ?>">C ' + betaEscapeHtml(correlationCount) + '</span>';
+                    flagsHtml += '</span>';
+                    $button.append(flagsHtml);
+                }
                 $cell.append($button);
                 $target.append($cell);
             });
@@ -3821,17 +4042,6 @@
         var filteredLeaves = getFilteredDataExplorerLeaves();
         var aggregates = computeDataExplorerOverviewAggregates(filteredLeaves);
         _dataExplorerState.overviewAggregates = aggregates;
-        renderDataExplorerSummary({
-            stats: [
-                { label: '<?php echo addslashes(__('Attributes')); ?>', value: aggregates.summary.attributes },
-                { label: '<?php echo addslashes(__('Objects')); ?>', value: aggregates.summary.objects },
-                { label: '<?php echo addslashes(__('Standalone')); ?>', value: aggregates.summary.standalone },
-                { label: '<?php echo addslashes(__('In object')); ?>', value: aggregates.summary.inObject },
-                { label: '<?php echo addslashes(__('IDS')); ?>', value: aggregates.summary.ids },
-                { label: '<?php echo addslashes(__('Correlated')); ?>', value: aggregates.summary.correlated }
-            ],
-            topRegions: normaliseDataExplorerMetricList(aggregates.topTypes || {}, 8)
-        });
         renderDataExplorerMatrix(aggregates.typeRows);
         renderDataExplorerTopLists(aggregates.topLists);
     }
@@ -3975,10 +4185,10 @@
         }
 
         function ensureObjectRegion(objectKey, objectName) {
-            objectKey = String(objectKey || objectName || ('object-' + Object.keys(objectRegionsByName).length));
             objectName = normaliseExplorerGroupName(objectName, 'Object');
-            if (!objectRegionsByName[objectKey]) {
-                objectRegionsByName[objectKey] = {
+            var objectNameKey = String(objectName);
+            if (!objectRegionsByName[objectNameKey]) {
+                objectRegionsByName[objectNameKey] = {
                     name: objectName,
                     kind: 'type-family',
                     regionType: 'object',
@@ -3986,9 +4196,24 @@
                     children: [],
                     _childrenByType: {}
                 };
-                objectsRegion.children.push(objectRegionsByName[objectKey]);
+                objectsRegion.children.push(objectRegionsByName[objectNameKey]);
             }
-            return objectRegionsByName[objectKey];
+
+            var objectGroup = objectRegionsByName[objectNameKey];
+            var objectInstanceKey = String(objectKey || ('object-' + Object.keys(objectGroup._childrenByType).length));
+            if (!objectGroup._childrenByType[objectInstanceKey]) {
+                objectGroup._childrenByType[objectInstanceKey] = {
+                    name: objectName,
+                    kind: 'object-instance',
+                    regionType: 'object',
+                    colourKey: 'object:' + objectName,
+                    children: [],
+                    _childrenByType: {}
+                };
+                objectGroup.children.push(objectGroup._childrenByType[objectInstanceKey]);
+            }
+
+            return objectGroup._childrenByType[objectInstanceKey];
         }
 
         function ensureTypeBucket(region, bucketName, options) {
@@ -4090,6 +4315,36 @@
         return palette.soft;
     }
 
+    function parseDataExplorerHslColour(value) {
+        var match = String(value || '').match(/hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)/i);
+        if (!match) {
+            return null;
+        }
+        return {
+            h: Number(match[1]) || 0,
+            s: Number(match[2]) || 0,
+            l: Number(match[3]) || 0
+        };
+    }
+
+    function getDataExplorerObjectInstanceBorder(node) {
+        var palette = getDataExplorerPalette(node.colourKey || node.name || node.regionType || 'default');
+        return 'hsla(' + palette.hue + ', 30%, 48%, 0.88)';
+    }
+
+    function getDataExplorerObjectInstanceHeaderStyle(node) {
+        var parsed = parseDataExplorerHslColour(getDataExplorerNodeColor(node));
+        var hue = parsed ? parsed.h : 210;
+        var saturation = parsed ? parsed.s : 40;
+        var lightness = parsed ? parsed.l : 64;
+        var isLight = lightness >= 72;
+        return {
+            background: 'hsla(' + hue + ', ' + Math.max(24, saturation - 10) + '%, ' + (isLight ? Math.max(26, lightness - 42) : Math.max(18, lightness - 26)) + '%, 0.96)',
+            color: isLight ? '#f9fcff' : '#102538',
+            borderBottom: '1px solid hsla(' + hue + ', ' + Math.max(18, saturation - 14) + '%, ' + (isLight ? Math.max(40, lightness - 28) : Math.max(28, lightness - 18)) + '%, 0.55)'
+        };
+    }
+
     function getDataExplorerNodeText(node) {
         if (node.kind === 'leaf' && node.leaf) {
             if (node.leaf.entityType === 'object') {
@@ -4097,7 +4352,26 @@
             }
             return node.leaf.valuePreviewShort || node.leaf.valuePreview || node.name;
         }
+        if (node.kind === 'object-instance') {
+            return '';
+        }
         return node.name || '';
+    }
+
+    function getDataExplorerCompactNodeText(node) {
+        var text = String(getDataExplorerNodeText(node) || '').trim();
+        if (!text) {
+            return '';
+        }
+        if (node.kind === 'leaf') {
+            var compact = text.replace(/^[^a-zA-Z0-9]+/, '');
+            if (!compact && node.leaf) {
+                compact = String(node.leaf.type || node.leaf.name || '');
+            }
+            compact = compact.replace(/^[^a-zA-Z0-9]+/, '');
+            return compact.slice(0, 2);
+        }
+        return text.slice(0, 2);
     }
 
     function getDataExplorerNodeMetaText(node) {
@@ -4200,6 +4474,17 @@
         var commentPreview = comment.length > 48 ? comment.slice(0, 45).trim() + '...' : comment;
         var type = String(attribute.type || 'unknown');
         var typeFamily = type.indexOf('|') !== -1 ? type.split('|', 1)[0] : type;
+        var correlationCount = 0;
+        if (Array.isArray(attribute.RelatedAttribute)) {
+            correlationCount = attribute.RelatedAttribute.length;
+        } else if (Array.isArray(attribute.correlations)) {
+            correlationCount = attribute.correlations.length;
+        } else if (attribute.correlation_count != null && !isNaN(Number(attribute.correlation_count))) {
+            correlationCount = Number(attribute.correlation_count) || 0;
+        } else if (attribute.correlationCount != null && !isNaN(Number(attribute.correlationCount))) {
+            correlationCount = Number(attribute.correlationCount) || 0;
+        }
+        var toIds = !!(attribute.to_ids || attribute.toIds);
         var objectName = parentObjectData && parentObjectData.name ? String(parentObjectData.name) : '';
         var objectKey = parentObjectData ? String(parentObjectData.uuid || parentObjectData.id || parentObjectData.name || '') : '';
         var isInObject = !!objectName;
@@ -4230,7 +4515,9 @@
             objectName: objectName,
             objectKey: objectKey,
             isInObject: isInObject,
-            childCount: 0
+            childCount: 0,
+            correlationCount: correlationCount,
+            toIds: toIds
         };
     }
 
@@ -4259,6 +4546,17 @@
         }
         var objectName = String(objectData.name || 'Object');
         var comment = String(objectData.comment || '').trim();
+        var correlationCount = 0;
+        if (Array.isArray(objectData.RelatedAttribute)) {
+            correlationCount = objectData.RelatedAttribute.length;
+        } else if (Array.isArray(objectData.correlations)) {
+            correlationCount = objectData.correlations.length;
+        } else if (objectData.correlation_count != null && !isNaN(Number(objectData.correlation_count))) {
+            correlationCount = Number(objectData.correlation_count) || 0;
+        } else if (objectData.correlationCount != null && !isNaN(Number(objectData.correlationCount))) {
+            correlationCount = Number(objectData.correlationCount) || 0;
+        }
+        var toIds = !!(objectData.to_ids || objectData.toIds);
         return {
             id: objectData.id != null ? String(objectData.id) : '',
             uuid: objectData.uuid != null ? String(objectData.uuid) : '',
@@ -4280,7 +4578,9 @@
             galaxies: [],
             objectName: objectName,
             objectKey: String(objectData.uuid || objectData.id || objectName),
-            childCount: Array.isArray(objectEntry.Attribute || objectData.Attribute) ? (objectEntry.Attribute || objectData.Attribute).length : 0
+            childCount: Array.isArray(objectEntry.Attribute || objectData.Attribute) ? (objectEntry.Attribute || objectData.Attribute).length : 0,
+            correlationCount: correlationCount,
+            toIds: toIds
         };
     }
 
@@ -4384,17 +4684,6 @@
         fetchDataExplorerPage(1);
     }
 
-    function renderDataExplorerSummary(payload) {
-        var $summary = $('#beta-data-explorer-summary-grid');
-        $summary.empty();
-        (payload.stats || []).forEach(function(stat) {
-            var card = $('<div class="beta-data-explorer-stat"></div>');
-            card.append('<span class="beta-data-explorer-stat-label">' + betaEscapeHtml(stat.label) + '</span>');
-            card.append('<span class="beta-data-explorer-stat-value">' + betaEscapeHtml(stat.value) + '</span>');
-            $summary.append(card);
-        });
-    }
-
     function updateDataExplorerStatus(text) {
         $('#beta-data-explorer-status').text(text);
     }
@@ -4450,10 +4739,30 @@
         var $canvas = $('#beta-data-explorer-canvas');
         var description = node.kind === 'leaf' && node.leaf ? ((node.leaf.valuePreview || node.leaf.comment || '').slice(0, 180)) : '<?php echo addslashes(__('Click to drill into this region.')); ?>';
         var count = node.children ? node.children.length : 1;
-        $tooltip.html('<strong>' + betaEscapeHtml(node.name || '') + '</strong><br>' + betaEscapeHtml(description) + '<br><span style="opacity:.8;">' + betaEscapeHtml(count + ' <?php echo addslashes(__('items')); ?>') + '</span>');
+        var flagBits = [];
+        if (node.kind === 'leaf' && node.leaf && node.leaf.toIds) flagBits.push('<?php echo addslashes(__('IDS')); ?>');
+        var flagLine = flagBits.length ? ('<br><span style="opacity:.82;">' + betaEscapeHtml(flagBits.join(' • ')) + '</span>') : '';
+        $tooltip.html('<strong>' + betaEscapeHtml(node.name || '') + '</strong><br>' + betaEscapeHtml(description) + '<br><span style="opacity:.8;">' + betaEscapeHtml(count + ' <?php echo addslashes(__('items')); ?>') + '</span>' + flagLine);
         var offset = $canvas.offset();
         if (offset) {
-            $tooltip.css({ left: (event.pageX - offset.left + 14) + 'px', top: (event.pageY - offset.top + 14) + 'px' });
+            var canvasWidth = $canvas.innerWidth() || 0;
+            var canvasHeight = $canvas.innerHeight() || 0;
+            var tooltipWidth = Math.min(420, Math.max(220, Math.floor(canvasWidth * 0.34)));
+            $tooltip.css({ left: '16px', top: '16px', width: tooltipWidth + 'px' });
+            var tooltipHeight = $tooltip.outerHeight() || 0;
+            var pointerX = event.pageX - offset.left;
+            var pointerY = event.pageY - offset.top;
+            var centeredLeft = Math.round((canvasWidth - tooltipWidth) / 2);
+            var left = Math.max(16, Math.min(canvasWidth - tooltipWidth - 16, centeredLeft));
+            var top = pointerY < (canvasHeight * 0.45)
+                ? Math.max(16, canvasHeight - tooltipHeight - 16)
+                : 16;
+            if (pointerX < canvasWidth * 0.2) {
+                left = Math.max(16, left - Math.round(canvasWidth * 0.12));
+            } else if (pointerX > canvasWidth * 0.8) {
+                left = Math.min(canvasWidth - tooltipWidth - 16, left + Math.round(canvasWidth * 0.12));
+            }
+            $tooltip.css({ left: left + 'px', top: top + 'px' });
         }
         $tooltip.addClass('is-visible');
     }
@@ -4507,7 +4816,15 @@
             var visible = datum.x >= focusX && datum.y >= focusY && (datum.x + datum.dx) <= (focusX + focusW) && (datum.y + datum.dy) <= (focusY + focusH);
             $node.toggle(visible && width > 1 && height > 1);
 
-            if (datum._labelEl) datum._labelEl.style.opacity = width > 90 && height > 28 ? '1' : '0';
+            if (datum._labelEl) {
+                var compactText = getDataExplorerCompactNodeText(datum);
+                var fullText = getDataExplorerNodeText(datum);
+                var useCompact = !!compactText && (width <= 52 || height <= 16);
+                datum._labelEl.textContent = useCompact ? compactText : fullText;
+                datum._labelEl.style.opacity = compactText && width > 14 && height > 10 ? '1' : (width > 52 && height > 16 ? '1' : '0');
+                datum._labelEl.style.fontSize = useCompact ? '9px' : (datum.kind === 'leaf' ? '10px' : '11px');
+                datum._labelEl.style.letterSpacing = useCompact ? '-0.01em' : '0';
+            }
             if (datum._metaEl) datum._metaEl.style.opacity = width > 120 && height > 48 ? '0.82' : '0';
             if (datum._valueEl) datum._valueEl.style.opacity = width > 150 && height > 64 ? '0.9' : '0';
         });
@@ -4611,32 +4928,56 @@
             nodeEl.style.width = Math.max(0, d.dx - 1) + 'px';
             nodeEl.style.height = Math.max(0, d.dy - 1) + 'px';
             nodeEl.style.background = getDataExplorerNodeColor(d);
-            nodeEl.style.border = '1px solid ' + (d.children ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)');
+            var isIdsLeaf = d.kind === 'leaf' && d.leaf && d.leaf.toIds;
+            var isObjectInstance = d.kind === 'object-instance';
+            nodeEl.style.border = isIdsLeaf
+                ? '2px solid rgba(255, 122, 26, 0.98)'
+                : (isObjectInstance
+                    ? '2px solid ' + getDataExplorerObjectInstanceBorder(d)
+                    : '1px solid ' + (d.children ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)'));
             nodeEl.style.borderRadius = d.children ? '5px' : '3px';
             nodeEl.style.boxSizing = 'border-box';
             nodeEl.style.overflow = 'hidden';
             nodeEl.style.cursor = 'pointer';
+            if (isObjectInstance) {
+                nodeEl.style.boxShadow = 'inset 0 0 0 1px rgba(255,255,255,0.42)';
+            }
 
             var labelEl = document.createElement('div');
             labelEl.className = 'node-label';
             labelEl.style.position = 'absolute';
-            labelEl.style.left = '8px';
-            labelEl.style.top = '6px';
-            labelEl.style.right = '8px';
-            labelEl.style.fontSize = d.kind === 'leaf' ? '11px' : '12px';
+            labelEl.style.left = isObjectInstance ? '0' : '6px';
+            labelEl.style.top = isObjectInstance ? '0' : '5px';
+            labelEl.style.right = isObjectInstance ? '0' : '6px';
+            labelEl.style.fontSize = d.kind === 'leaf' ? '10px' : '11px';
             labelEl.style.fontWeight = d.kind === 'leaf' ? '600' : '700';
             labelEl.style.color = d.kind === 'leaf' ? '#24415b' : '#ffffff';
             labelEl.style.whiteSpace = 'nowrap';
             labelEl.style.overflow = 'hidden';
             labelEl.style.textOverflow = 'ellipsis';
-            labelEl.style.opacity = d.dx > 90 && d.dy > 28 ? '1' : '0';
-            labelEl.textContent = getDataExplorerNodeText(d);
+            labelEl.style.lineHeight = d.kind === 'leaf' ? '1.15' : '1.1';
+            var fullLabelText = getDataExplorerNodeText(d);
+            var compactLabelText = getDataExplorerCompactNodeText(d);
+            var shouldUseCompactLabel = !!compactLabelText && (d.dx <= 52 || d.dy <= 16);
+            labelEl.style.opacity = compactLabelText && d.dx > 14 && d.dy > 10 ? '1' : (d.dx > 52 && d.dy > 16 ? '1' : '0');
+            labelEl.style.fontSize = shouldUseCompactLabel ? '9px' : (d.kind === 'leaf' ? '10px' : '11px');
+            labelEl.style.letterSpacing = shouldUseCompactLabel ? '-0.01em' : '0';
+            if (isObjectInstance) {
+                var headerStyle = getDataExplorerObjectInstanceHeaderStyle(d);
+                labelEl.style.padding = '4px 7px 5px';
+                labelEl.style.minHeight = '18px';
+                labelEl.style.background = headerStyle.background;
+                labelEl.style.color = headerStyle.color;
+                labelEl.style.borderBottom = headerStyle.borderBottom;
+                labelEl.style.boxSizing = 'border-box';
+            }
+            labelEl.textContent = shouldUseCompactLabel ? compactLabelText : fullLabelText;
 
             var metaEl = document.createElement('div');
             metaEl.className = 'node-meta';
             metaEl.style.position = 'absolute';
             metaEl.style.left = '8px';
-            metaEl.style.top = '22px';
+            metaEl.style.top = isObjectInstance ? '24px' : '22px';
             metaEl.style.right = '8px';
             metaEl.style.fontSize = '10px';
             metaEl.style.color = d.kind === 'leaf' ? '#46627a' : 'rgba(255,255,255,0.9)';

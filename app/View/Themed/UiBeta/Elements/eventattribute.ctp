@@ -8,9 +8,7 @@
     $betaTotalPages = $paging['pageCount'] ?? 1;
     $betaShowStart = ($betaTotalAttributes > 0) ? ($betaCurrentPage - 1) * $betaPageSize + 1 : 0;
     $betaShowEnd = min($betaCurrentPage * $betaPageSize, $betaTotalAttributes);
-
     $items = $this->Event->attachRelatedAttributesToItems($items, $event['RelatedAttribute'] ?? []);
-
     $buildWarningPopoverContent = function ($warnings) {
         $content = '';
         foreach ($warnings as $warning) {
