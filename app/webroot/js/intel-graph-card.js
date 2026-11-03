@@ -171,6 +171,7 @@
                     countEl.textContent = graphs.length
                         ? graphs.length + (graphs.length === 1 ? ' workspace' : ' workspaces') + ' on this ' + config.targetName
                         : 'No workspace on this ' + config.targetName;
+                    root.classList.toggle('is-panel-empty', !graphs.length);
                     body.textContent = '';
                     if (!graphs.length) {
                         var empty = el('div', 'd-flex flex-column align-items-center justify-content-center text-muted py-4 px-3 text-center');
@@ -185,6 +186,7 @@
                 })
                 .catch(function () {
                     countEl.textContent = '';
+                    root.classList.remove('is-panel-empty');
                     body.textContent = '';
                     var err = el('div', 'text-center text-muted py-4 small');
                     err.appendChild(icon('fas fa-exclamation-triangle me-2'));

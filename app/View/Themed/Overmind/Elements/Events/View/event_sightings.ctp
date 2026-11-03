@@ -55,15 +55,21 @@ $advUrl   = $baseurl . '/sightings/advanced/' . $eventId . '/event';
             .then(function (html) {
                 body.innerHTML = html;
                 var root = body.querySelector('[data-sighting-total]');
-                if (root && countEl) {
-                    var total = parseInt(root.getAttribute('data-sighting-total'), 10);
-                    countEl.textContent = total === 0 ? msgNone : msgSome.replace('%s', total);
+                var card = document.getElementById('sightings-card');
+                if (root) {
+                    var total = parseInt(root.getAttribute('data-sighting-total'), 10) || 0;
+                    if (countEl) {
+                        countEl.textContent = total === 0 ? msgNone : msgSome.replace('%s', total);
+                    }
+                    if (card) { card.classList.toggle('is-panel-empty', total === 0); }
                 }
             })
             .catch(function () {
                 body.innerHTML = '<div class="text-center text-muted py-4 small">'
                     + '<i class="fas fa-exclamation-triangle me-2"></i>' + msgFail + '</div>';
                 if (countEl) countEl.textContent = '';
+                var card = document.getElementById('sightings-card');
+                if (card) { card.classList.remove('is-panel-empty'); }
             });
     }
 

@@ -45,11 +45,25 @@ $reportSub = function (array $row) use ($extensionEvents, $data, $eventId) {
         'timestamp' => $row['timestamp'] ?? 0,
     ]);
 };
+$externalLinkItems = '';
+foreach ($externalAnalysisLinks ?? [] as $row) {
+    $a = $row['Attribute'] ?? $row;
+    if (empty($a['value']) || !preg_match('#^https?://#i', $a['value'])) {
+        continue;
+    }
+    $externalLinkItems .= sprintf(
+        '<a class="eo-report-link" href="%s" target="_blank" rel="noopener noreferrer" title="%s">'
+        . '<i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>%s</a>',
+        h($a['value']),
+        h(!empty($a['comment']) ? $a['comment'] : $a['value']),
+        h($a['value'])
+    );
+}
 ?>
 <div class="row g-3 mb-3 eo-row">
 
     <div class="col-12<?= $graphCompact ? '' : ' col-xl-5' ?> d-flex" data-eo-col="report">
-        <div class="card shadow-sm eo-card w-100" id="eo-report-card"
+        <div class="card shadow-sm eo-card w-100<?= (empty($report) && $externalLinkItems === '') ? ' is-report-empty' : '' ?>" id="eo-report-card"
              <?php if (!empty($report)): ?>
              data-eo-report-id="<?= (int)$report['id'] ?>"
              data-eo-event-id="<?= $reportEventId ?>"
@@ -108,9 +122,20 @@ $reportSub = function (array $row) use ($extensionEvents, $data, $eventId) {
                 <?php else: ?>
                     <div class="eo-figure"><b><?= $reportCount ?></b> <?= h(__n('report', 'reports', $reportCount)) ?></div>
                 <?php endif; ?>
+                <?php if (empty($report) && $canAddReport): ?>
+                    <a href="<?= h($addReportUrl) ?>" class="btn btn-sm btn-report flex-shrink-0"
+                       onclick="event.preventDefault(); openModal('<?= h($addReportUrl) ?>');">
+                        <i class="fas fa-pen me-1"></i><?= __('Write a report') ?>
+                    </a>
+                <?php endif; ?>
             </div>
 
             <?php if (!empty($report)): ?>
+                <?php if ($externalLinkItems !== ''): ?>
+                    <div class="eo-report-links">
+                        <?= $externalLinkItems ?>
+                    </div>
+                <?php endif; ?>
                 <div class="eo-report-body">
                     <div class="eo-report-clamp">
                         <div class="markdown-preview-body" data-eo-report-preview>
@@ -127,19 +152,12 @@ $reportSub = function (array $row) use ($extensionEvents, $data, $eventId) {
                     </button>
                 </div>
             <?php else: ?>
-                <?php if ($canAddReport): ?>
-                    <div class="eo-prompt" style="--eo-prompt:var(--bs-report);">
-                        <div class="eo-prompt-text">
-                            <div class="eo-prompt-title"><?= __('No report yet') ?></div>
-                            <p><?= __('A report tells the story behind the indicators: what happened, how it was found and what to do about it.') ?></p>
+                <?php if ($externalLinkItems !== ''): ?>
+                    <div class="eo-report-empty">
+                        <div class="eo-report-links eo-report-links-inline">
+                            <?= $externalLinkItems ?>
                         </div>
-                        <a href="<?= h($addReportUrl) ?>" class="btn btn-sm btn-report"
-                           onclick="event.preventDefault(); openModal('<?= h($addReportUrl) ?>');">
-                            <i class="fas fa-pen me-1"></i><?= __('Write a report') ?>
-                        </a>
                     </div>
-                <?php else: ?>
-                    <p class="eo-empty"><?= __('This event has no report.') ?></p>
                 <?php endif; ?>
             <?php endif; ?>
         </div>
@@ -147,7 +165,7 @@ $reportSub = function (array $row) use ($extensionEvents, $data, $eventId) {
 
     <div class="col-12<?= $graphCompact ? '' : ' col-xl-7' ?> d-flex" data-eo-col="graph">
         <?php if ($graphFoldable && $canAddReport): ?>
-            <div class="eo-prompt eo-graph-strip w-100<?= $graphCompact ? '' : ' d-none' ?>" style="--eo-prompt:var(--bs-correlation);" data-eo-graph-strip>
+            <div class="eo-prompt eo-prompt-compact eo-graph-strip w-100<?= $graphCompact ? '' : ' d-none' ?>" style="--eo-prompt:var(--bs-correlation);" data-eo-graph-strip>
                 <div class="misp-icon-tile eo-tile eo-tile-sm" style="--tile:var(--bs-correlation);--tile-bg:color-mix(in srgb, var(--bs-correlation) 12%, transparent);">
                     <i class="fas fa-circle-nodes"></i>
                 </div>
@@ -186,6 +204,9 @@ $reportSub = function (array $row) use ($extensionEvents, $data, $eventId) {
                     <div class="eo-card-title"><?= __('Event graph') ?></div>
                     <div class="eo-card-sub text-truncate" data-eo-graph-sub></div>
                 </div>
+                <?php if ($structureEmpty && $canAddReport): ?>
+                    <?= $graphHintAction() ?>
+                <?php endif; ?>
                 <div class="eo-switch" role="group" aria-label="<?= h(__('Graph source')) ?>">
                     <div class="dropdown d-inline-flex">
                         <button type="button" data-eo-graph-mode="saved" disabled
@@ -210,17 +231,10 @@ $reportSub = function (array $row) use ($extensionEvents, $data, $eventId) {
                 <div class="eo-graph-canvas" data-eo-graph-canvas="structure"></div>
                 <div class="eo-graph-canvas d-none" data-eo-graph-canvas="saved"></div>
                 <div class="eo-graph-message d-none" data-eo-graph-message></div>
-                <?php if ($canAddReport): ?>
-                    <div class="eo-prompt d-none" style="--eo-prompt:var(--bs-correlation);" data-eo-graph-empty>
-                        <div class="eo-prompt-text">
-                            <div class="eo-prompt-title"><?= h($graphHint['title']) ?></div>
-                            <p><?= h($graphHint['text']) ?></p>
-                        </div>
-                        <?= $graphHintAction() ?>
-                    </div>
-                <?php else: ?>
-                    <p class="eo-empty d-none" data-eo-graph-empty><?= h($graphHint['reader']) ?></p>
-                <?php endif; ?>
+                <div class="eo-graph-placeholder d-none" data-eo-graph-empty>
+                    <i class="fas fa-circle-nodes" aria-hidden="true"></i>
+                    <?= $canAddReport ? __('Add related objects to see an event graph') : h($graphHint['reader']) ?>
+                </div>
             </div>
         </div>
     </div>

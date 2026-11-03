@@ -44,19 +44,6 @@
     min-width: 0;
 }
 
-.eh-eyebrow {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: .3rem .45rem;
-    margin-bottom: .35rem;
-    font-size: .68rem;
-    font-weight: 700;
-    letter-spacing: .055em;
-    text-transform: uppercase;
-    color: var(--bs-secondary-color);
-}
-
 .eh-title {
     margin: 0;
     font-size: clamp(1.35rem, 2.1vw, 1.95rem);
@@ -203,7 +190,7 @@
    bottom, filled a shade darker than the panel. */
 .eh-details-toggle {
     display: flex;
-    width: auto;
+    width: calc(100% + 2.3rem);
     margin: 0 -1.15rem;
     align-items: center;
     justify-content: center;
@@ -442,6 +429,7 @@
 
     .eh-details-toggle {
         margin: 0 -.9rem;
+        width: calc(100% + 1.8rem);
         padding: .34rem .9rem;
     }
 

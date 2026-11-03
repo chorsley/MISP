@@ -248,10 +248,6 @@ $ownership = $ownership ?? [];
     <header class="eh">
         <div class="eh-main">
             <div class="eh-identity" data-tour="page-title">
-                <div class="eh-eyebrow">
-                    <span><?= __('Event') ?></span>
-                </div>
-
                 <h1 class="eh-title"><?= h($event['info'] ?? '') ?></h1>
             </div>
 

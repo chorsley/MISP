@@ -2619,6 +2619,18 @@ class EventsController extends AppController
         $this->set('sharingGroupOrgCount', $sharingGroupOrgCount);
         $this->set('distributionOutliers', $this->Event->distributionOutliers($user, $event));
 
+        // External analysis links (category "External analysis", type link/url)
+        // surface as clickable URLs in the event's Report card.
+        $this->set('externalAnalysisLinks', $this->Event->Attribute->fetchAttributesSimple($user, [
+            'conditions' => [
+                'Attribute.event_id' => (int)$event['Event']['id'],
+                'Attribute.deleted' => 0,
+                'Attribute.category' => 'External analysis',
+                'Attribute.type' => ['link', 'url'],
+            ],
+            'fields' => ['Attribute.id', 'Attribute.value', 'Attribute.type', 'Attribute.comment', 'Attribute.distribution'],
+        ]));
+
         $this->set('analysisLevels',
             $this->Event->analysisLevels
         );

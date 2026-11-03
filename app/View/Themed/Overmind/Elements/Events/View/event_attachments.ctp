@@ -76,7 +76,8 @@ $mayModify = $this->Acl->canModifyEvent($data);
             var dlBtn = document.getElementById(uid + '-dl-all');
             if (filter) { filter.classList.toggle('d-none', total <= 3); }
             if (dlBtn) { dlBtn.classList.toggle('d-none', total <= 1); }
-            body.classList.toggle('my-auto', total === 0);
+            var card = document.getElementById('attachment-card');
+            if (card) { card.classList.toggle('is-panel-empty', total === 0); }
         })
         .catch(function () {
             body.innerHTML =
@@ -85,6 +86,8 @@ $mayModify = $this->Acl->canModifyEvent($data);
                 + <?= json_encode(__('Could not load attachments.')) ?>
                 + '</div>';
             if (countEl) { countEl.textContent = ''; }
+            var card = document.getElementById('attachment-card');
+            if (card) { card.classList.remove('is-panel-empty'); }
         });
 
     function setCount(total, visible) {

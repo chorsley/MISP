@@ -42,8 +42,25 @@ $thread = $this->element('AnalystData/thread', [
     'showEmpty' => false,
 ]);
 $hasThread = trim($thread) !== '';
+$isEmpty = !$hasThread && empty($confidence);
+
+$addMenu = '';
+if ($canAdd) {
+    $addMenu = '<div class="dropdown flex-shrink-0">'
+        . '<button type="button" class="btn btn-sm btn-outline-analystData dropdown-toggle d-inline-flex align-items-center gap-1" data-bs-toggle="dropdown" aria-expanded="false" title="' . h(__('Add analyst data')) . '">'
+        . '<i class="fas fa-plus"></i><span class="eo-btn-label">' . h(__('Add')) . '</span>'
+        . '</button>'
+        . '<ul class="dropdown-menu dropdown-menu-end">'
+        . '<li><button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="openModal(\'' . h($addUrl('Note')) . '\')">'
+        . '<i class="misp-icon misp-icon-analyst-note misp-simple"></i>' . h(__('Note')) . '</button></li>'
+        . '<li><button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="openModal(\'' . h($addUrl('Opinion')) . '\')">'
+        . '<i class="misp-icon misp-icon-analyst-opinion misp-simple"></i>' . h(__('Opinion')) . '</button></li>'
+        . '<li><button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="openModal(\'' . h($addUrl('Relationship')) . '\')">'
+        . '<i class="fas fa-diagram-project"></i>' . h(__('Relationship')) . '</button></li>'
+        . '</ul></div>';
+}
 ?>
-<div class="card shadow-sm eo-card eo-assessment w-100" id="analyst-data-card">
+<div class="card shadow-sm eo-card eo-assessment w-100<?= $isEmpty ? ' is-panel-empty' : '' ?>" id="analyst-data-card">
     <div class="eo-card-head">
         <div class="misp-icon-tile eo-tile" style="--tile:var(--bs-analystData);--tile-bg:color-mix(in srgb, var(--bs-analystData) 12%, transparent);">
             <i class="fas fa-scale-balanced"></i>
@@ -52,6 +69,8 @@ $hasThread = trim($thread) !== '';
             <div class="eo-card-title"><?= __('Assessment') ?></div>
             <?php if (!empty($facts)): ?>
                 <div class="eo-card-sub eo-assessment-facts"><?= implode('', $facts) ?></div>
+            <?php elseif ($isEmpty): ?>
+                <div class="eo-card-sub"><?= __('No notes, opinions or relationships yet') ?></div>
             <?php endif; ?>
         </div>
         <?php if ($hasThread || !empty($confidence)): ?>
@@ -61,30 +80,7 @@ $hasThread = trim($thread) !== '';
                        placeholder="<?= h(__('Filter notes, opinions…')) ?>" aria-label="<?= h(__('Filter analyst data')) ?>" autocomplete="off">
             </div>
         <?php endif; ?>
-        <?php if ($canAdd): ?>
-            <div class="dropdown flex-shrink-0">
-                <button type="button" class="btn btn-sm btn-outline-analystData dropdown-toggle d-inline-flex align-items-center gap-1" data-bs-toggle="dropdown" aria-expanded="false" title="<?= h(__('Add analyst data')) ?>">
-                    <i class="fas fa-plus"></i><span class="eo-btn-label"><?= __('Add') ?></span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="openModal('<?= h($addUrl('Note')) ?>')">
-                            <i class="misp-icon misp-icon-analyst-note misp-simple"></i><?= __('Note') ?>
-                        </button>
-                    </li>
-                    <li>
-                        <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="openModal('<?= h($addUrl('Opinion')) ?>')">
-                            <i class="misp-icon misp-icon-analyst-opinion misp-simple"></i><?= __('Opinion') ?>
-                        </button>
-                    </li>
-                    <li>
-                        <button type="button" class="dropdown-item d-flex align-items-center gap-2" onclick="openModal('<?= h($addUrl('Relationship')) ?>')">
-                            <i class="fas fa-diagram-project"></i><?= __('Relationship') ?>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        <?php endif; ?>
+        <?= $addMenu ?>
     </div>
 
     <?php if (!empty($confidence)): ?>
@@ -100,8 +96,5 @@ $hasThread = trim($thread) !== '';
     <?php endif; ?>
     <?php if ($hasThread || !empty($confidence)): ?>
         <div class="eo-empty d-none" data-eo-assessment-none><?= __('No analyst data matches.') ?></div>
-    <?php endif; ?>
-    <?php if (!$hasThread): ?>
-        <?= $this->element('AnalystData/empty', ['class' => 'flex-grow-1']) ?>
     <?php endif; ?>
 </div>

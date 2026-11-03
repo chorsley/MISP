@@ -74,10 +74,13 @@ $attrsUrl = h($baseurl . '/events/viewAttributes/' . $eventId);
     }
 
     function setCount(total) {
-        if (!countEl) { return; }
-        countEl.textContent = total === 0
-            ? L_NONE
-            : total + ' ' + (total === 1 ? L_ONE : L_MANY);
+        if (countEl) {
+            countEl.textContent = total === 0
+                ? L_NONE
+                : total + ' ' + (total === 1 ? L_ONE : L_MANY);
+        }
+        var card = document.getElementById('warninglist-card');
+        if (card) { card.classList.toggle('is-panel-empty', total === 0); }
     }
 
     function showFlaggedAttributes(warninglistId) {

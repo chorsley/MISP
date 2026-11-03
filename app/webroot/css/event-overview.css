@@ -52,6 +52,26 @@
     border-top: 1px solid var(--bs-border-color); min-height: 2.4rem;
 }
 .eo-empty { margin: 0; padding: 1rem; color: var(--bs-secondary-color); font-size: .88rem; }
+
+/* An empty panel keeps its header — so it still reads as that panel — and
+   drops everything below it. It also stops stretching to a taller neighbour
+   (the attachment/assessment and report/graph pairs sit in flex rows), and
+   sits back at reduced opacity so the eye goes to panels with data. */
+.card.is-panel-empty {
+    align-self: flex-start;
+    margin-bottom: .5rem !important;
+    border-color: var(--bs-border-color-translucent);
+    box-shadow: none;
+    background: transparent;
+    opacity: .5;
+}
+.card.is-panel-empty:hover,
+.card.is-panel-empty:focus-within { opacity: 1; }
+.card.is-panel-empty > :not(.p-3):not(.eo-card-head) { display: none; }
+.card.is-panel-empty > .p-3,
+.card.is-panel-empty > .eo-card-head { border-bottom: 0; }
+.card.is-panel-empty > .p-3 { padding: .55rem .75rem; }
+
 .eo-prompt {
     display: flex; align-items: center; gap: .75rem 1.25rem; flex-wrap: wrap; margin: .85rem 1rem 1rem; padding: .85rem 1rem;
     border: 1px dashed color-mix(in srgb, var(--eo-prompt) 45%, transparent); border-radius: .6rem;
@@ -61,6 +81,36 @@
 .eo-prompt-title { font-weight: 600; font-size: .9rem; color: var(--bs-emphasis-color); }
 .eo-prompt p { margin: .15rem 0 0; font-size: .82rem; line-height: 1.45; color: var(--bs-secondary-color); }
 .eo-prompt .btn { flex-shrink: 0; }
+
+/* Report / graph prompts: keep the action, drop the prose, tighten the box. */
+.eo-prompt.eo-prompt-compact { margin: .55rem .75rem .65rem; padding: .55rem .7rem; gap: .5rem .8rem; }
+.eo-prompt.eo-prompt-compact .eo-prompt-text p { display: none; }
+.eo-prompt.eo-prompt-compact .eo-prompt-title { font-size: .85rem; }
+
+/* External analysis links surfaced from the event's attributes. */
+.eo-report-links {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .85rem;
+    padding: .5rem 1rem; border-bottom: 1px solid var(--bs-border-color); font-size: .82rem;
+}
+.eo-report-link {
+    display: inline-flex; align-items: center; gap: .3rem;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: var(--bs-link-color); text-decoration: none;
+}
+.eo-report-link i { font-size: .7em; opacity: .7; }
+.eo-report-link:hover, .eo-report-link:focus-visible { text-decoration: underline; }
+.eo-report-links.eo-report-links-inline { border-bottom: 0; padding: .45rem 0 0; }
+.eo-report-empty { padding: .6rem 1rem .8rem; }
+/* No body at all: the head's rule would double the card's own bottom edge. */
+.card.is-report-empty > .eo-card-head { border-bottom: 0; }
+
+/* The graph with nothing to draw: a quiet line, the action lives in the head. */
+.eo-graph-placeholder {
+    display: flex; align-items: center; justify-content: center; gap: .45rem;
+    padding: 1.5rem 1rem; color: var(--bs-secondary-color); font-size: .85rem;
+    text-align: center;
+}
+.eo-graph-placeholder i { opacity: .6; }
 
 /* report */
 .eo-report-body { flex: 1 1 auto; }

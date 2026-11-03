@@ -73,6 +73,8 @@ $mayAdd    = $this->Acl->canAccess('collectionElements', 'addElementToCollection
                 if (!Array.isArray(collections)) { collections = []; }
 
                 var total = collections.length;
+                var card = document.getElementById('collections-card');
+                if (card) { card.classList.toggle('is-panel-empty', total === 0); }
                 if (countEl) {
                     countEl.textContent = total === 0
                         ? <?= json_encode(__('Not part of any collection')) ?>

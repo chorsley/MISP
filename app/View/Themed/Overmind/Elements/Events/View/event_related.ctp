@@ -51,22 +51,26 @@ $fetchUrl = h($baseurl . '/events/viewRelatedEvents/' . $eventId);
             document.getElementById(uid + '-body').innerHTML = html;
             var root = document.getElementById(uid + '-body')
                 .querySelector('[data-related-count]');
-            if (root && countEl) {
+            var card = document.getElementById('related-card');
+            if (root) {
                 var total = parseInt(
                     root.getAttribute('data-related-count'), 10
-                );
-                countEl.textContent = total === 0
-                    ? <?= json_encode(__('No correlations')) ?>
-                    : total + ' ' + (
-                        total === 1
-                            ? <?= json_encode(__('related event')) ?>
-                            : <?= json_encode(__('related events')) ?>
-                    );
+                ) || 0;
+                if (countEl) {
+                    countEl.textContent = total === 0
+                        ? <?= json_encode(__('No correlations')) ?>
+                        : total + ' ' + (
+                            total === 1
+                                ? <?= json_encode(__('related event')) ?>
+                                : <?= json_encode(__('related events')) ?>
+                        );
+                }
+                if (card) { card.classList.toggle('is-panel-empty', total === 0); }
             }
 
             var rows = document.getElementById(uid + '-body')
                 .querySelectorAll('.related-event-row');
-            var limit = 5;
+            var limit = 1;
             if (rows.length > limit) {
                 for (var i = limit; i < rows.length; i++) {
                     rows[i].classList.add('d-none');
@@ -107,6 +111,8 @@ $fetchUrl = h($baseurl . '/events/viewRelatedEvents/' . $eventId);
                 + <?= json_encode(__('Could not load related events.')) ?>
                 + '</div>';
             if (countEl) { countEl.textContent = ''; }
+            var card = document.getElementById('related-card');
+            if (card) { card.classList.remove('is-panel-empty'); }
         });
 }());
 </script>
