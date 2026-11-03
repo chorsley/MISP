@@ -1,0 +1,631 @@
+/* Overmind event header — /events/view */
+
+/* The event's metadata reads as one bounded block: a faint tint of the event
+   hue inside a thick frame only a shade darker than the fill, so it separates
+   from the event data below at a glance. */
+.eh {
+    --eh-panel-bg: var(--bs-tertiary-bg);
+    --eh-panel-line: var(--bs-border-color);
+    --eh-panel-edge: rgba(0, 0, 0, .28);
+    --eh-bar: var(--bs-secondary-bg);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    margin: .75rem 0 1rem;
+    padding: 1rem 1.15rem 0;
+    background: var(--eh-panel-bg);
+    border: 10px solid var(--eh-panel-edge);
+    border-radius: 1.15rem;
+}
+
+/* Tint toward the event colour where color-mix is available; the tokens above
+   stay as the plain-surface fallback. The thick edge and the inner rule are
+   just a darker shade of the block's own fill, so the frame is felt rather
+   than seen. The bar is the same idea, for the disclosure at the foot. */
+@supports (background: color-mix(in srgb, red, blue)) {
+    .eh {
+        --eh-panel-bg: color-mix(in srgb, var(--bs-event, var(--bs-primary)) 9%, var(--bs-body-bg));
+        --eh-panel-line: color-mix(in srgb, #000 10%, var(--eh-panel-bg));
+        --eh-panel-edge: color-mix(in srgb, #000 16%, var(--eh-panel-bg));
+        --eh-bar: color-mix(in srgb, #000 7%, var(--eh-panel-bg));
+    }
+}
+
+/* ── identity, title, ownership ─────────────────────────────── */
+.eh-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem 1.5rem;
+}
+
+.eh-identity {
+    flex: 1 1 30rem;
+    min-width: 0;
+}
+
+.eh-eyebrow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .3rem .45rem;
+    margin-bottom: .35rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.eh-title {
+    margin: 0;
+    font-size: clamp(1.35rem, 2.1vw, 1.95rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.015em;
+    color: var(--bs-emphasis-color);
+    overflow-wrap: anywhere;
+}
+
+/* The date cells use the card's label-over-content pattern: an uppercase head
+   and a value under it, divided by rules. */
+.eh-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .35rem 0;
+    min-width: 0;
+}
+
+.eh-cell {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+    padding: 0 1rem;
+}
+
+.eh-cell:first-child {
+    padding-left: 0;
+}
+
+.eh-cell + .eh-cell {
+    border-left: 1px solid var(--bs-border-color);
+}
+
+.eh-cell-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.eh-cell-value {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .82rem;
+    color: var(--bs-emphasis-color);
+}
+
+.eh-cell-value i {
+    font-size: .85em;
+    opacity: .7;
+}
+
+/* The published cell carries its state colour on the icon. */
+.eh-cell.is-published .eh-cell-value i {
+    color: var(--misp-tone-green-fg, #157347);
+    opacity: 1;
+}
+
+.eh-cell.is-pending .eh-cell-value i {
+    color: var(--misp-tone-orange-fg, #b35c00);
+    opacity: 1;
+}
+
+/* Humanised timestamps; clicking copies the full value. */
+.eh-stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: copy;
+}
+
+.eh-stamp:hover,
+.eh-stamp:focus-visible {
+    color: var(--bs-emphasis-color);
+}
+
+.eh-stamp:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+    border-radius: .2rem;
+}
+
+/* ── actions ────────────────────────────────────────────────── */
+.eh-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .4rem;
+    flex: 0 0 auto;
+}
+
+.eh-actions .btn {
+    --bs-btn-font-size: .84rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    white-space: nowrap;
+}
+
+.eh-actions .btn-group .btn {
+    justify-content: flex-start;
+}
+
+.eh-actions .eh-add-main {
+    gap: .45rem;
+}
+
+.eh-icon-btn {
+    width: 2.15rem;
+    height: 2.15rem;
+    padding: 0;
+}
+
+.eh-actions .dropdown-menu {
+    min-width: 13rem;
+}
+
+.eh-actions .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .1rem;
+    font-size: .875rem;
+}
+
+/* ── details toggle ─────────────────────────────────────────── */
+.eh-details {
+    margin-top: .2rem;
+}
+
+/* The disclosure is the block's foot: full-bleed to the frame, flush to the
+   bottom, filled a shade darker than the panel. */
+.eh-details-toggle {
+    display: flex;
+    width: auto;
+    margin: 0 -1.15rem;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    padding: .38rem 1.15rem;
+    border: 0;
+    border-top: 1px solid var(--eh-panel-line);
+    border-radius: 0 0 .52rem .52rem;
+    background: var(--eh-bar);
+    color: var(--bs-secondary-color);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    line-height: 1.2;
+    transition: color .12s, background-color .12s;
+}
+
+.eh-details-toggle:hover,
+.eh-details-toggle:focus-visible {
+    color: var(--bs-emphasis-color);
+    background: var(--eh-panel-line);
+}
+
+.eh-details-toggle:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: -2px;
+}
+
+.eh-chevron {
+    font-size: .62rem;
+    transition: transform .15s;
+}
+
+.eh-details-toggle:not(.collapsed) .eh-chevron {
+    transform: rotate(180deg);
+}
+
+/* Pulled open, the block simply grows: the content sits above the foot, the
+   line of the panel's deeper hue marking where the foot begins. */
+.eh-details-body {
+    padding: .2rem 0 .4rem;
+}
+
+.eh-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 1rem 1.5rem;
+}
+
+.eh-details-section {
+    min-width: 0;
+}
+
+.eh-details-label {
+    margin: 0 0 .4rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.eh-dl {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
+    gap: .25rem .65rem;
+    margin: 0;
+    font-size: .82rem;
+}
+
+.eh-dl dt {
+    color: var(--bs-secondary-color);
+    font-weight: 500;
+}
+
+.eh-dl dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.eh-value {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .82rem;
+    font-weight: 500;
+}
+
+.eh-value > i {
+    font-size: .8em;
+}
+
+.eh-value.is-warning {
+    color: var(--bs-warning-text-emphasis);
+}
+
+.eh-value.is-danger {
+    color: var(--bs-danger);
+}
+
+.eh-muted {
+    color: var(--bs-secondary-color);
+}
+
+.eh-inline-link {
+    color: var(--bs-link-color);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.eh-inline-link:hover,
+.eh-inline-link:focus-visible {
+    text-decoration: underline;
+}
+
+/* ── related events ─────────────────────────────────────────── */
+.eh-details-extensions {
+    margin-top: 1rem;
+}
+
+.eh-ext-list {
+    display: grid;
+    gap: .45rem;
+}
+
+.eh-ext-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .35rem .75rem;
+    padding: .5rem .6rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .45rem;
+    background: var(--bs-body-bg);
+}
+
+.eh-ext-kind {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.eh-ext-links {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: .3rem .6rem;
+    min-width: 0;
+}
+
+.eh-ext-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .35rem;
+    min-width: 0;
+    text-decoration: none;
+}
+
+.eh-ext-id {
+    color: var(--bs-secondary-color);
+    font-family: var(--bs-font-monospace);
+    font-size: .74rem;
+}
+
+.eh-ext-info {
+    max-width: 24rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--bs-emphasis-color);
+    font-weight: 500;
+}
+
+.eh-ext-org {
+    color: var(--bs-secondary-color);
+    font-size: .74rem;
+}
+
+.eh-ext-link:hover .eh-ext-info,
+.eh-ext-link:focus-visible .eh-ext-info {
+    text-decoration: underline;
+}
+
+.eh-ext-toggle {
+    margin-left: auto;
+    padding: .12rem .5rem;
+    font-size: .74rem;
+}
+
+/* ── activity fragment ──────────────────────────────────────── */
+.eh-details-activity {
+    margin-top: 1rem;
+    padding-top: .9rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+/* ── responsive ─────────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+    .eh-main {
+        flex-direction: column;
+    }
+
+    .eh-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .eh-actions .eh-add {
+        flex: 1 1 auto;
+    }
+
+    .eh-actions .eh-add .eh-add-main {
+        flex: 1 1 auto;
+    }
+
+    .eh-ext-toggle {
+        margin-left: 0;
+    }
+
+    .eh-ext-info {
+        max-width: 16rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .eh {
+        padding: .85rem .9rem 0;
+    }
+
+    .eh-states {
+        gap: .45rem .9rem;
+    }
+
+    .eh-details-toggle {
+        margin: 0 -.9rem;
+        padding: .34rem .9rem;
+    }
+
+    .eh-actions .btn > span:not(.visually-hidden) {
+        max-width: 9rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* The strips: the ownership row and the state meters share one surface, so the
+   organisation strip highlights the middle of the block and the states read as
+   a strip attached under it. */
+.eh-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .4rem 0;
+    padding: .5rem .8rem;
+    border: 1px solid var(--eh-panel-line);
+    border-radius: .6rem;
+    background: var(--bs-body-bg);
+}
+
+/* Organisation/distribution/markings flow beside the dates; the meters take
+   their own line under them. */
+.eh-ownership {
+    flex: 1 1 30rem;
+    min-width: 0;
+    padding-right: 1rem;
+}
+
+/* The rule between the marking column and the first date cell. */
+.eh-ownership + .eh-meta {
+    padding-left: 1rem;
+    border-left: 1px solid var(--bs-border-color);
+}
+
+/* Upstream's ownership card, drawn inside a strip: strip its own chrome. The
+   `!important` beats the card's own `mb-3` / `shadow-sm` utilities, whose
+   margin was the whitespace under the strip. */
+.eh .ownership-card {
+    margin: 0 !important;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none !important;
+    background: transparent;
+}
+
+.eh .ownership-card > .card-body {
+    padding: 0 !important;
+    gap: .35rem .8rem !important;
+}
+
+/* Compact the embedded card: smaller tiles, names and internal rhythm. */
+.eh .ownership-card .rounded-3 {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: .95rem !important;
+    border-radius: .4rem !important;
+}
+
+.eh .ownership-card .ownership-org-name {
+    font-size: .95rem !important;
+}
+
+.eh .ownership-card .ownership-dist .fw-bold {
+    font-size: .95rem !important;
+}
+
+.eh .ownership-card .mt-2 {
+    margin-top: .3rem !important;
+}
+
+/* ── state meters ───────────────────────────────────────────── */
+.eh-states {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .55rem 1.4rem;
+    margin-top: .1rem;
+    padding-top: .5rem;
+    border-top: 1px solid var(--eh-panel-line);
+}
+
+.eh-meter {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    min-width: 0;
+}
+
+.eh-meter-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.eh-meter-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--eh-panel-line);
+    border-radius: 999px;
+    background: var(--bs-tertiary-bg);
+}
+
+/* One segment per possible state; every label shows, the active one in tone. */
+.eh-seg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .55rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    font-size: .72rem;
+    font-weight: 500;
+    line-height: 1;
+    opacity: .65;
+    white-space: nowrap;
+}
+
+.eh-seg.is-on {
+    padding: 0 .6rem;
+    border: 1px solid var(--seg-border, var(--bs-border-color));
+    background: var(--seg-bg, var(--bs-secondary-bg));
+    color: var(--seg-fg, var(--bs-emphasis-color));
+    font-weight: 600;
+    opacity: 1;
+}
+
+.eh-seg.is-neutral {
+    --seg-bg: var(--bs-secondary-bg);
+    --seg-fg: var(--bs-emphasis-color);
+    --seg-border: var(--bs-border-color);
+}
+
+.eh-seg.is-green {
+    --seg-bg: var(--misp-tone-green-bg, rgba(25, 135, 84, .12));
+    --seg-fg: var(--misp-tone-green-fg, #157347);
+    --seg-border: var(--misp-tone-green-border, rgba(25, 135, 84, .3));
+}
+
+.eh-seg.is-red {
+    --seg-bg: var(--misp-tone-red-bg, rgba(220, 53, 69, .1));
+    --seg-fg: var(--misp-tone-red-fg, #b02a37);
+    --seg-border: var(--misp-tone-red-border, rgba(220, 53, 69, .25));
+}
+
+.eh-seg.is-orange {
+    --seg-bg: var(--misp-tone-orange-bg, rgba(253, 126, 20, .12));
+    --seg-fg: var(--misp-tone-orange-fg, #b35c00);
+    --seg-border: var(--misp-tone-orange-border, rgba(253, 126, 20, .3));
+}
+
+.eh-seg.is-yellow {
+    --seg-bg: var(--misp-tone-yellow-bg, rgba(255, 193, 7, .16));
+    --seg-fg: var(--misp-tone-yellow-fg, #7a5c00);
+    --seg-border: var(--misp-tone-yellow-border, rgba(255, 193, 7, .35));
+}
+
+.eh-seg.is-blue {
+    --seg-bg: var(--misp-tone-blue-bg, rgba(13, 110, 253, .1));
+    --seg-fg: var(--misp-tone-blue-fg, #0a58ca);
+    --seg-border: var(--misp-tone-blue-border, rgba(13, 110, 253, .25));
+}
+
+/* ── tab strip alignment ────────────────────────────────────── */
+/* The event view stacks the header block, the tab strip and the tiles on one
+   column. view_layout's strip bleeds a gutter past the container on each side,
+   which puts it out of line with the block and the tiles; pull it back onto
+   the same column, close its ends with a stroke and give the first tab a
+   little breathing room from the left edge. */
+.ov-view-tabs {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    border-left: 1px solid var(--bs-border-color-translucent);
+    border-right: 1px solid var(--bs-border-color-translucent);
+}

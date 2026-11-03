@@ -575,7 +575,7 @@
             container.dataset.ifpOrigin = unfilteredUrl(container);
         });
         reopenTab();
-        if (!document.querySelector('.eo-card')) return;
+        if (!document.querySelector('#tab-general')) return;
         document.querySelectorAll('#eo-context-card, #eo-inventory-card, #eo-object-views')
             .forEach(loadFragment);
         document.querySelectorAll('[data-eo-fragment-lazy]').forEach(function (el) {

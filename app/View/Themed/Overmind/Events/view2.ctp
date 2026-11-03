@@ -1,46 +1,12 @@
 <?php
-    $headerTitle = __('') . ($event['Event']['info'] ?? '');
-    $headerDescription = '';
-    $headerActions = [];
-
-    $canEdit = $isSiteAdmin || $this->Acl->canModifyEvent($event);
-    if ($canEdit) {
-        $headerActions[] = [
-            'type' => 'modal',
-            'tab' => 'attributes',
-            'label' => __('Add attribute'),
-            'icon' => 'plus',
-            'url' => sprintf('%s/attributes/add/%s', $baseurl, h($event['Event']['id'])),
-        ];
-
-        $headerActions[] = [
-            'type' => 'modal',
-            'tab' => 'objects',
-            'label' => __('Add object'),
-            'icon' => 'plus',
-            'url' => sprintf('%s/objects/add/%s', $baseurl, h($event['Event']['id'])),
-        ];
-
-        $headerActions[] = [
-            'type' => 'modal',
-            'tab' => 'reports',
-            'label' => __('Add report'),
-            'icon' => 'plus',
-            'url' => sprintf('%s/event_reports/add/%s', $baseurl, h($event['Event']['id'])),
-        ];
-    }
-
-    $this->set('headerTitle', $headerTitle);
-    $this->set('headerIdentity', $event['Event']);
-    $this->set('headerTimestamps', $event['Event']);
-    $this->set('headerDescription', $headerDescription);
-    $this->set('headerActions', $headerActions);
+    // The event header is drawn by Events/View/event_header below.
+    $this->set('hideHeaderSection', true);
 
     $viewJs = ['markdown-it', 'font-awesome-helper', 'misp-report-markdown', 'event-report-reader', 'Chart.min',
         'event-overview', 'misp-matrix', 'misp-brush', 'misp-timeline', 'event-seen-timeline', 'tile-drawer',
         'event-object-views', 'objects-index'];
-    $viewCss = ['event-overview', 'misp-matrix', 'misp-brush', 'misp-timeline', 'value-widgets', 'tile-drawer',
-        'event-object-views', 'objects-index', 'attributes-index', 'event-reports-index',
+    $viewCss = ['event-overview', 'event-header', 'misp-matrix', 'misp-brush', 'misp-timeline', 'value-widgets',
+        'tile-drawer', 'event-object-views', 'objects-index', 'attributes-index', 'event-reports-index',
         'event-correlations'];
     if (Configure::read('Plugin.Geolocation_enabled')) {
         $viewJs = array_merge($viewJs, ['leaflet', 'object-map']);
@@ -51,20 +17,7 @@
         'css' => $viewCss,
     ]);
 
-    // Extended / extending view: say so, and carry the mode into every lazy
-    // tab so a tab load never drops back to the atomic view.
-    echo $this->element('Events/View/extension_banner');
     $extensionSuffix = $extensionSuffix ?? '';
-
-    $searchFor = $this->request->params['named']['searchFor'] ?? '';
-    $distributionFilter = $this->request->params['named']['distribution'] ?? '';
-    $listSuffix = $extensionSuffix
-        . ($searchFor !== '' ? '/searchFor:' . rawurlencode($searchFor) : '')
-        . ($distributionFilter !== '' ? '/distribution:' . (int)$distributionFilter : '');
-    $objectFilter = (int)($this->request->params['named']['object'] ?? 0);
-    $objectsSuffix = $listSuffix . ($objectFilter > 0 ? '/object:' . $objectFilter : '');
-    $focusTab = $focusTab ?? null;
-    $focusSuffix = $focusTab ? '/focus:' . rawurlencode($this->request->params['named']['focus']) : '';
 
     // What is shared more narrowly than the event: one chip per level and
     // kind, each opening its tab filtered to that level.
@@ -91,23 +44,45 @@
         return $a['level'] - $b['level'];
     });
 
+    // Who made the event, who holds it and how far it travels is drawn inside
+    // the header now, so the layout's ownership card is not asked for.
+    $ownership = [
+        'orgc' => $event['Orgc'] ?? [],
+        'org' => $event['Org'] ?? [],
+        'user' => $event['User'] ?? [],
+        'contributors' => $contributors ?? [],
+        'distribution' => $event['Event']['distribution'] ?? null,
+        'sharingGroup' => ($event['SharingGroup'] ?? [])
+            + (isset($sharingGroupOrgCount) ? ['org_count' => $sharingGroupOrgCount] : []),
+        'markings' => ($overviewMarkings ?? []) + ($this->Acl->canModifyTag($event)
+            ? ['editUrl' => $baseurl . '/events/editEventTags/' . $event['Event']['id']]
+            : []),
+        'outliers' => $outliers,
+    ];
+
+    echo $this->element('Events/View/event_header', [
+        'data' => $event,
+        'ownership' => $ownership,
+    ]);
+
+    // Extended / extending view: say so, and carry the mode into every lazy
+    // tab so a tab load never drops back to the atomic view.
+    echo $this->element('Events/View/extension_banner');
+
+    $searchFor = $this->request->params['named']['searchFor'] ?? '';
+    $distributionFilter = $this->request->params['named']['distribution'] ?? '';
+    $listSuffix = $extensionSuffix
+        . ($searchFor !== '' ? '/searchFor:' . rawurlencode($searchFor) : '')
+        . ($distributionFilter !== '' ? '/distribution:' . (int)$distributionFilter : '');
+    $objectFilter = (int)($this->request->params['named']['object'] ?? 0);
+    $objectsSuffix = $listSuffix . ($objectFilter > 0 ? '/object:' . $objectFilter : '');
+    $focusTab = $focusTab ?? null;
+    $focusSuffix = $focusTab ? '/focus:' . rawurlencode($this->request->params['named']['focus']) : '';
+
     echo $this->element('genericElementsBS5/Layout/view_layout',
     [
         'data' => $event,
         'report' => $event['EventReport'] ?? null,
-        'ownership' => [
-            'orgc' => $event['Orgc'] ?? [],
-            'org' => $event['Org'] ?? [],
-            'user' => $event['User'] ?? [],
-            'contributors' => $contributors ?? [],
-            'distribution' => $event['Event']['distribution'] ?? null,
-            'sharingGroup' => ($event['SharingGroup'] ?? [])
-                + (isset($sharingGroupOrgCount) ? ['org_count' => $sharingGroupOrgCount] : []),
-            'markings' => ($overviewMarkings ?? []) + ($this->Acl->canModifyTag($event)
-                ? ['editUrl' => $baseurl . '/events/editEventTags/' . $event['Event']['id']]
-                : []),
-            'outliers' => $outliers,
-        ],
         'tabs' => [
             [
                 'id' => 'general',
@@ -116,11 +91,9 @@
 
                 // Content
                 'left' => [
-                    'Events/View/overview_band',
                     'Events/View/overview_story',
                     'Events/View/overview_facts',
                     'Events/View/overview_annex',
-                    'Events/View/overview_details',
                 ],
                 'right' => [
                     'Events/View/event_warnings',
