@@ -21,6 +21,7 @@
 
     function init(card) {
         var cmd = card.querySelector('.lb-cmd');
+        var isOverlay = card.classList.contains('is-overlay');
         card.setAttribute('data-launch-bar', 'ready');
         if (!cmd) {
             return;
@@ -126,6 +127,12 @@
             filter();
         });
         input.addEventListener('keydown', function (e) {
+            if (isOverlay && e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                closeOverlay();
+                return;
+            }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (menu.hidden) {
@@ -158,13 +165,16 @@
             }
         });
 
-        cmd.querySelector('.lb-tog').addEventListener('click', function () {
-            if (menu.hidden) {
-                input.focus();
-            } else {
-                close(false);
-            }
-        });
+        var tog = cmd.querySelector('.lb-tog');
+        if (tog) {
+            tog.addEventListener('click', function () {
+                if (menu.hidden) {
+                    input.focus();
+                } else {
+                    close(false);
+                }
+            });
+        }
 
         items.forEach(function (item) {
             item.addEventListener('mousemove', function () {
@@ -180,12 +190,15 @@
                 setTimeout(function () {
                     close(true);
                     input.blur();
+                    if (isOverlay) {
+                        closeOverlay();
+                    }
                 }, 0);
             });
         });
 
         document.addEventListener('mousedown', function (e) {
-            if (!cmd.contains(e.target)) {
+            if (!isOverlay && !cmd.contains(e.target)) {
                 close(false);
             }
         });
@@ -194,14 +207,92 @@
         cmd.addEventListener('onboarding:reveal', function (e) {
             var item = e.target.closest('.lb-item');
             if (item) {
+                if (isOverlay) {
+                    openOverlay();
+                }
                 open();
                 setActive(item);
             }
         });
     }
 
+    function overlayEl() {
+        return document.querySelector('.ea-overlay');
+    }
+
+    function openOverlay() {
+        var el = overlayEl();
+        if (!el || !el.hidden) {
+            return;
+        }
+        var menu = el.querySelector('.lb-menu');
+        var cmd = el.querySelector('.lb-cmd');
+        var input = el.querySelector('.lb-input');
+        if (menu) { menu.hidden = false; }
+        if (cmd) { cmd.classList.add('is-open'); }
+        el.hidden = false;
+        if (input) {
+            input.value = '';
+            input.dispatchEvent(new Event('input'));
+            input.focus();
+        }
+    }
+
+    function closeOverlay() {
+        var el = overlayEl();
+        if (el) {
+            el.hidden = true;
+        }
+    }
+
+    // The event actions palette, once: opened from the header trigger or the
+    // keyboard, closed from its backdrop, its close button or Escape.
+    var overlayWired = false;
+    function wireOverlay() {
+        if (overlayWired || !overlayEl()) {
+            return;
+        }
+        overlayWired = true;
+
+        var mac = /Mac|iPhone|iPad|iPod/.test(navigator.platform || '')
+            || /Mac OS X/.test(navigator.userAgent || '');
+        document.querySelectorAll('[data-ea-kbd]').forEach(function (k) {
+            k.textContent = mac ? '\u2318K' : 'Ctrl K';
+        });
+
+        document.addEventListener('click', function (e) {
+            var t = e.target;
+            if (!t || typeof t.closest !== 'function') {
+                return;
+            }
+            if (t.closest('[data-event-actions-open]')) {
+                e.preventDefault();
+                openOverlay();
+                return;
+            }
+            if (t.closest('[data-ea-close]')) {
+                e.preventDefault();
+                closeOverlay();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+                var tag = (e.target.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+                    return;
+                }
+                e.preventDefault();
+                openOverlay();
+            } else if (e.key === 'Escape') {
+                closeOverlay();
+            }
+        });
+    }
+
     function initAll() {
         document.querySelectorAll('[data-launch-bar]:not([data-launch-bar="ready"])').forEach(init);
+        wireOverlay();
     }
 
     if (document.readyState === 'loading') {

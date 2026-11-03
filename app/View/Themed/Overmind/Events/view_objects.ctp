@@ -17,9 +17,21 @@ foreach (($this->request->params['named'] ?? []) as $namedKey => $namedValue) {
 }
 $this->Paginator->options(['url' => $paginatorUrl]);
 
+$tabActions = [];
+if (!empty($isSiteAdmin) || $this->Acl->canModifyEvent($event)) {
+    $addUrl = $baseurl . '/objects/add/' . $event['Event']['id'];
+    $tabActions[] = [
+        'url'     => $addUrl,
+        'label'   => __('Add object'),
+        'icon'    => 'fas fa-plus',
+        'onclick' => "event.preventDefault(); openModal('" . $addUrl . "');",
+    ];
+}
+
 echo $this->element('Objects/index', [
     'objects' => $objects,
-    'show_event_id' => false
+    'show_event_id' => false,
+    'tabActions' => $tabActions,
 ]);
 echo $this->element('Events/View/list_focus', ['focusId' => $focusId ?? null]);
 ?>

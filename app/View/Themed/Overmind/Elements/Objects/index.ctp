@@ -24,6 +24,10 @@ $canEdit = isset($event)
     ? $this->Acl->canModifyEvent($event)
     : false;
 
+// Inline filter-bar actions handed in by the caller (the event tabs offer
+// "Add object" beside the filters). Empty for the instance-wide index.
+$tabActions = $tabActions ?? [];
+
 // Tag/galaxy "+" buttons on object attributes follow the event's tag-modify
 // rights (galaxy clusters are attached as tags, so they share the permission).
 $canTagObj = isset($event)
@@ -372,6 +376,7 @@ $indexData = ['data' => [
                     'data' => $objects,
                     'filter_bar' => [
                         'base_url' => $baseurl . $objectsUrl,
+                        'actions' => $tabActions,
                         'chips' => [
                             'labels' => [
                                 'deleted' => __('Deleted'),

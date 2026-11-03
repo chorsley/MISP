@@ -60,9 +60,32 @@
         'outliers' => $outliers,
     ];
 
+    // One action registry, rendered by three surfaces: the header (status +
+    // primary + palette trigger), the docked palette in the General column, and
+    // the palette overlay the header opens from any tab.
+    App::uses('EventActions', 'Tools');
+    $eventActions = EventActions::build([
+        'baseurl' => $baseurl,
+        'event' => $event['Event'],
+        'orgc' => $event['Orgc'] ?? [],
+        'me' => $me ?? [],
+        'isSiteAdmin' => !empty($isSiteAdmin),
+        'isAclDelegate' => !empty($isAclDelegate),
+        'isAclPublish' => !empty($isAclPublish),
+        'delegationRequest' => $delegationRequest ?? null,
+        'canEdit' => !empty($isSiteAdmin) || $this->Acl->canModifyEvent($event),
+        'mayPublish' => !empty($isSiteAdmin)
+            || ($this->Acl->canModifyEvent($event) && $this->Acl->canPublishEvent($event)),
+        'canCollection' => $this->Acl->canAccess('collectionElements', 'addElementToCollection'),
+        'canWorkspace' => $this->Acl->canAccess('workspaces', 'addNodes'),
+        'canAi' => $this->Acl->canAccess('events', 'aiActions'),
+        'hostOrgUser' => !empty($hostOrgUser),
+    ]);
+
     echo $this->element('Events/View/event_header', [
         'data' => $event,
         'ownership' => $ownership,
+        'eventActions' => $eventActions,
     ]);
 
     // Extended / extending view: say so, and carry the mode into every lazy
@@ -96,14 +119,13 @@
                     'Events/View/overview_annex',
                 ],
                 'right' => [
+                    'Events/View/event_collections',
+                    'Events/View/event_graphs',
                     'Events/View/event_warnings',
-                    'Events/View/event_actions',
                     'Events/View/event_matrix',
                     'Events/View/event_warninglists',
                     'Events/View/event_sightings',
                     'Events/View/event_related',
-                    'Events/View/event_collections',
-                    'Events/View/event_graphs',
                 ]
             ],
             [
@@ -197,5 +219,11 @@
     ]);
 
     echo $this->element('Events/View/report_reader');
+
+    // The actions palette overlay: the same registry as the docked copy, opened
+    // by the header trigger (or the keyboard) from any tab.
+    echo $this->element('Events/View/event_actions_palette', [
+        'eventActions' => $eventActions,
+    ]);
 ?>
 

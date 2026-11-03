@@ -34,6 +34,12 @@
  * - 'columns' => int     tiles per row (default 4)
  * - 'autoPin' => bool    when no action is pinned, every non-destructive
  *                        action is a tile (default true)
+ * - 'variant' => string  'card' (default) or 'overlay' (a fixed dialog)
+ * - 'withTour' => bool   emit the onboarding tour anchors (default: true for
+ *                        'card', false for 'overlay')
+ * - 'showStatus' => bool draw the publication strip (status + primary
+ *                        publish); false makes the primary publish an ordinary
+ *                        entry instead (default true)
  */
 
 App::uses('CakeTime', 'Utility');
@@ -42,6 +48,20 @@ $actions = $actions ?? [];
 $maxTiles = $maxTiles ?? 8;
 $columns = $columns ?? 4;
 $autoPin = $autoPin ?? true;
+
+// 'card' (default) is the docked launch bar; 'overlay' wraps the same content
+// in a fixed dialog opened from the header. Tour anchors ride on whichever
+// copy the caller asks for via $withTour (default: the card), so the
+// onboarding tour never lands on a hidden overlay unless the caller says so.
+$variant = $variant ?? 'card';
+$isOverlay = $variant === 'overlay';
+$withTour = $withTour ?? !$isOverlay;
+
+// The publication strip (status + primary publish) is the card's own chrome.
+// A caller that carries the publish control elsewhere (the event header's
+// switch) asks for it to be dropped; the publish action then just joins the
+// ordinary list.
+$showStatus = $showStatus ?? true;
 
 $groups = [];
 $current = null;
@@ -60,6 +80,10 @@ foreach ($actions as $action) {
         continue;
     }
     $groups[$current ?? ''][] = $action;
+}
+
+if (!$showStatus) {
+    $primary = null;
 }
 
 $candidates = [];
@@ -143,14 +167,14 @@ $well = function (array $action, $badge = false) use ($tone) {
 };
 
 // A tour anchor goes on the menu copy only when no tile or status button carries it.
-$menuItem = function (array $action, $class = '') use ($link, $well, $tiles, $primary) {
+$menuItem = function (array $action, $class = '') use ($link, $well, $tiles, $primary, $withTour) {
     $label = $action['label'] ?? '';
     return $link(
         $action,
         trim('lb-item ' . $class),
         $well($action) . '<span class="lb-lbl">' . h($label) . '</span>'
             . ($class === 'lb-del' ? '<span class="lb-del-hint">' . __('permanent') . '</span>' : ''),
-        $action !== $primary && !in_array($action, $tiles, true),
+        $withTour && $action !== $primary && !in_array($action, $tiles, true),
         ['role' => 'option', 'tabindex' => '-1', 'data-label' => $label]
     );
 };
@@ -169,8 +193,21 @@ $ago = function ($stamp) {
     return CakeTime::timeAgoInWords($stamp, ['end' => '+100 years', 'accuracy' => ['year' => 'year', 'month' => 'month', 'week' => 'week', 'day' => 'day']]);
 };
 ?>
-<div class="card shadow-sm mb-3 lb-card" data-tour="quick-actions" data-launch-bar>
-    <?php if (!empty($status) || $primary !== null): ?>
+<?php if ($isOverlay): ?>
+<div class="ea-overlay" data-event-actions hidden>
+    <div class="ea-overlay-backdrop" data-ea-close></div>
+    <div class="ea-panel" role="dialog" aria-modal="true" aria-label="<?= h(__('Event actions')) ?>">
+        <div class="ea-panel-head">
+            <span class="ea-panel-title"><i class="fas fa-bolt" aria-hidden="true"></i><?= __('Event actions') ?></span>
+            <button type="button" class="ea-close" data-ea-close aria-label="<?= h(__('Close')) ?>">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="lb-card is-overlay" data-launch-bar>
+<?php else: ?>
+<div class="card shadow-sm mb-3 lb-card"<?= $withTour ? ' data-tour="quick-actions"' : '' ?> data-launch-bar>
+<?php endif; ?>
+    <?php if ($showStatus && (!empty($status) || $primary !== null)): ?>
         <div class="lb-seg<?= $primary === null ? ' is-solo' : '' ?>" role="group" aria-label="<?= __('Publication') ?>">
             <span class="lb-status <?= $statusClass ?>"<?= $statusTitle !== '' ? ' title="' . h($statusTitle) . '"' : '' ?>>
                 <span class="lb-dot" aria-hidden="true"></span>
@@ -197,7 +234,7 @@ $ago = function ($stamp) {
                     'lb-pri ' . (!empty($primary['warning']) ? 'is-undo' : 'is-go'),
                     '<i class="' . h($primary['icon'] ?? '') . '" aria-hidden="true"></i>'
                         . '<span>' . h($primary['short'] ?? $primary['label'] ?? '') . '</span>',
-                    true,
+                    $withTour,
                     ['title' => $primary['label'] ?? '']
                 ) ?>
             <?php endif; ?>
@@ -212,7 +249,7 @@ $ago = function ($stamp) {
                     'lb-tile',
                     $well($action, true)
                         . '<span class="lb-tile-lbl">' . h($action['short'] ?? $action['label'] ?? '') . '</span>',
-                    true,
+                    $withTour,
                     ['title' => $action['label'] ?? '', 'aria-label' => $action['label'] ?? '']
                 ) ?>
             <?php endforeach; ?>
@@ -224,19 +261,21 @@ $ago = function ($stamp) {
     <?php endif; ?>
 
     <?php if ($hasMenu): ?>
-        <div class="lb-cmd">
+        <div class="lb-cmd<?= $isOverlay ? ' is-open' : '' ?>">
             <div class="lb-field">
                 <span class="lb-bolt" aria-hidden="true"><i class="fas fa-bolt"></i></span>
                 <input type="text" class="lb-input" role="combobox" autocomplete="off" spellcheck="false"
-                       aria-expanded="false" aria-autocomplete="list"
+                       aria-expanded="<?= $isOverlay ? 'true' : 'false' ?>" aria-autocomplete="list"
                        aria-label="<?= __('All actions, type to filter') ?>"
-                       placeholder="<?= __('All actions — type to filter') ?>">
+                       placeholder="<?= $isOverlay ? __('Search actions…') : __('All actions — type to filter') ?>">
                 <span class="lb-count" aria-hidden="true"><?= $total ?></span>
-                <button type="button" class="lb-tog" tabindex="-1" aria-label="<?= __('Show all actions') ?>">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
+                <?php if (!$isOverlay): ?>
+                    <button type="button" class="lb-tog" tabindex="-1" aria-label="<?= __('Show all actions') ?>">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                <?php endif; ?>
             </div>
-            <div class="lb-menu" hidden>
+            <div class="lb-menu"<?= $isOverlay ? '' : ' hidden' ?>>
                 <div class="lb-list" role="listbox" aria-label="<?= __('Actions') ?>">
                     <?php foreach ($groups as $label => $groupActions): ?>
                         <div class="lb-grp">
@@ -266,6 +305,11 @@ $ago = function ($stamp) {
         </div>
     <?php endif; ?>
 </div>
+<?php if ($isOverlay): ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 <?php
 echo $this->element('genericElements/assetLoader', [
     'css' => ['launch-bar'],

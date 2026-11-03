@@ -13,7 +13,20 @@ if (!empty($extending)) {
 $this->Paginator->options(['url' => $paginatorUrl]);
 ?>
 
-<?php echo $this->element('EventReports/index', [
+<?php
+$tabActions = [];
+if (!empty($isSiteAdmin) || $this->Acl->canModifyEvent($event)) {
+    $addUrl = $baseurl . '/event_reports/add/' . $event['Event']['id'];
+    $tabActions[] = [
+        'url'     => $addUrl,
+        'label'   => __('Add report'),
+        'icon'    => 'fas fa-plus',
+        'onclick' => "event.preventDefault(); openModal('" . $addUrl . "');",
+    ];
+}
+
+echo $this->element('EventReports/index', [
     'reports' => $reports,
     'eventView' => true,
+    'tabActions' => $tabActions,
 ]); ?>

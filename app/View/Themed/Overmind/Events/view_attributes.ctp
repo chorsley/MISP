@@ -51,9 +51,21 @@ $this->Paginator->options(['url' => $paginatorUrl]);
 <?php endif; ?>
 
 <?php
+$tabActions = [];
+if (!empty($isSiteAdmin) || $this->Acl->canModifyEvent($event)) {
+    $addUrl = $baseurl . '/attributes/add/' . $event['Event']['id'];
+    $tabActions[] = [
+        'url'     => $addUrl,
+        'label'   => __('Add attribute'),
+        'icon'    => 'fas fa-plus',
+        'onclick' => "event.preventDefault(); openModal('" . $addUrl . "');",
+    ];
+}
+
 echo $this->element('Attributes/index', [
     'attributes'    => $attributes,
     'show_event_id' => false,
+    'tabActions'    => $tabActions,
 ]);
 echo $this->element('Events/View/list_focus', ['focusId' => $focusId ?? null]);
 ?>

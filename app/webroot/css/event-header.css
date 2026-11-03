@@ -144,6 +144,7 @@
     justify-content: flex-end;
     flex-wrap: wrap;
     gap: .4rem;
+    margin-left: auto;
     flex: 0 0 auto;
 }
 
@@ -152,33 +153,176 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-height: 2.15rem;
     gap: .4rem;
     white-space: nowrap;
 }
 
-.eh-actions .btn-group .btn {
-    justify-content: flex-start;
-}
-
-.eh-actions .eh-add-main {
-    gap: .45rem;
-}
-
-.eh-icon-btn {
-    width: 2.15rem;
+/* The header carries the state, the one state-changing action and the palette
+   trigger. The Published switch is an iOS-style toggle — shown once — that
+   reflects the event's publication state and opens the publish/unpublish
+   dialog. Everything else the event can do lives in the palette. */
+.eh-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
     height: 2.15rem;
-    padding: 0;
+    padding: 0 .6rem 0 .4rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color .12s;
 }
 
-.eh-actions .dropdown-menu {
-    min-width: 13rem;
+.eh-switch:hover {
+    border-color: var(--bs-secondary-color);
 }
 
-.eh-actions .dropdown-item {
+.eh-switch:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+.eh-switch-track {
+    position: relative;
+    flex: none;
+    width: 34px;
+    height: 19px;
+    border-radius: 999px;
+    background: var(--bs-secondary-bg);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06);
+    transition: background-color .16s;
+}
+
+.eh-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    transition: transform .16s;
+}
+
+.eh-switch.is-on .eh-switch-track {
+    background: var(--misp-tone-green-fg, #157347);
+}
+
+.eh-switch.is-on .eh-switch-knob {
+    transform: translateX(15px);
+}
+
+.eh-switch.is-pending .eh-switch-track {
+    background: var(--misp-tone-orange-fg, #b35c00);
+}
+
+.eh-switch-text {
+    line-height: 1;
+}
+
+.eh-actions-trigger {
+    gap: .4rem;
+}
+
+.eh-actions-kbd {
+    margin-left: .1rem;
+    padding: 0 .3rem;
+    border: 1px solid var(--bs-border-color);
+    border-bottom-width: 2px;
+    border-radius: .3rem;
+    background: var(--bs-body-bg);
+    color: var(--bs-secondary-color);
+    font-family: inherit;
+    font-size: .66rem;
+    font-weight: 600;
+    line-height: 15px;
+}
+
+/* Palette overlay: the launch bar in a fixed dialog, opened from the header on
+   any tab. */
+.ea-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1055;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8vh 1rem 1rem;
+}
+
+.ea-overlay[hidden] {
+    display: none;
+}
+
+.ea-overlay-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(var(--bs-body-color-rgb), .35);
+}
+
+.ea-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(56rem, 100%);
+    max-height: min(44rem, 86vh);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .8rem;
+    background: var(--bs-body-bg);
+    box-shadow: 0 24px 60px -12px rgba(var(--bs-body-color-rgb), .45);
+    overflow: hidden;
+}
+
+[data-bs-theme=dark] .ea-panel {
+    background: var(--bs-secondary-bg);
+}
+
+.ea-panel-head {
     display: flex;
     align-items: center;
-    gap: .1rem;
-    font-size: .875rem;
+    gap: .5rem;
+    padding: .65rem .9rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+}
+
+.ea-panel-title {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .85rem;
+    font-weight: 700;
+}
+
+.ea-panel-title i {
+    color: var(--misp-accent);
+}
+
+.ea-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    border-radius: .4rem;
+    background: transparent;
+    color: var(--bs-secondary-color);
+}
+
+.ea-close:hover,
+.ea-close:focus-visible {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
 }
 
 /* ── details toggle ─────────────────────────────────────────── */
@@ -401,11 +545,7 @@
         justify-content: flex-start;
     }
 
-    .eh-actions .eh-add {
-        flex: 1 1 auto;
-    }
-
-    .eh-actions .eh-add .eh-add-main {
+    .eh-actions-trigger {
         flex: 1 1 auto;
     }
 
@@ -438,24 +578,35 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
+    .eh-actions-kbd {
+        display: none;
+    }
 }
 
-/* The strips: the ownership row and the state meters share one surface, so the
-   organisation strip highlights the middle of the block and the states read as
-   a strip attached under it. */
+/* One bounded surface holding two rows: the grey identity band (organisation,
+   markings, dates) and, under it, the state meters with the controls. The
+   tint sets the identity row apart from the command row. */
 .eh-strip {
+    border: 1px solid var(--eh-panel-line);
+    border-radius: .6rem;
+    background: var(--bs-body-bg);
+    overflow: hidden;
+}
+
+/* The organisation/marking column and the date cells share the grey top band;
+   the state meters and the controls sit on the panel surface below, so the
+   identity row and the command row read as two distinct strips. */
+.eh-strip-main {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: .4rem 0;
     padding: .5rem .8rem;
-    border: 1px solid var(--eh-panel-line);
-    border-radius: .6rem;
-    background: var(--bs-body-bg);
+    background: var(--bs-tertiary-bg);
 }
 
-/* Organisation/distribution/markings flow beside the dates; the meters take
-   their own line under them. */
+/* Organisation/distribution/markings flow beside the dates. */
 .eh-ownership {
     flex: 1 1 30rem;
     min-width: 0;
@@ -506,14 +657,22 @@
 
 /* ── state meters ───────────────────────────────────────────── */
 .eh-states {
-    flex: 1 1 100%;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: .55rem 1.4rem;
-    margin-top: .1rem;
-    padding-top: .5rem;
+    padding: .55rem .8rem;
     border-top: 1px solid var(--eh-panel-line);
+}
+
+/* The state meters sit on the left of the control rail; the published switch
+   and the actions trigger push to the right of the same row. */
+.eh-meters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .55rem 1.4rem;
+    min-width: 0;
 }
 
 .eh-meter {

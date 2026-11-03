@@ -624,6 +624,9 @@ $filterBar = [
         ],
     ],
 ];
+// Inline filter-bar actions handed in by the caller (the event tab offers
+// "Add attribute" beside the filters). Empty for the instance-wide index.
+$filterBar['actions'] = $tabActions ?? [];
 if ($inEventView) {
     $filterBar['base_url'] = $baseurl . '/events/viewAttributes/' . $event['Event']['id'] . ($extensionSuffix ?? '');
 } else {

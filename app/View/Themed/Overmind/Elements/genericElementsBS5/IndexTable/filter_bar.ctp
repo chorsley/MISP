@@ -66,6 +66,46 @@ if ($pickerBarOn) {
     $filter_bar['children'] = $children;
 }
 
+/*
+ * Optional inline actions: full buttons that sit at the head of the filter
+ * bar, ahead of the search field, instead of on a row of their own (the event
+ * tabs use them to offer "Add object" / "Add attribute" / "Add report" as the
+ * most prominent control on the tab). Empty for every caller that does not
+ * pass them, so their bar is unchanged.
+ */
+$renderBarActions = function () use ($filter_bar) {
+    $actions = $filter_bar['actions'] ?? [];
+    if (empty($actions)) {
+        return '';
+    }
+    $html = '';
+    foreach ($actions as $action) {
+        $attrs = [
+            'href'  => $action['url'] ?? '#',
+            'class' => trim(($action['class'] ?? 'ifp-action') . ' flex-shrink-0'),
+        ];
+        $title = $action['title'] ?? ($action['label'] ?? '');
+        if ($title !== '') {
+            $attrs['title'] = $title;
+        }
+        if (!empty($action['id'])) {
+            $attrs['id'] = $action['id'];
+        }
+        if (!empty($action['onclick'])) {
+            $attrs['onclick'] = $action['onclick'];
+        }
+        $rendered = '';
+        foreach ($attrs as $name => $value) {
+            $rendered .= sprintf(' %s="%s"', $name, h($value));
+        }
+        $icon = empty($action['icon'])
+            ? ''
+            : '<i class="' . h($action['icon']) . '" aria-hidden="true"></i>';
+        $html .= '<a' . $rendered . '>' . $icon . '<span>' . h($action['label'] ?? '') . '</span></a>';
+    }
+    return $html;
+};
+
 // The action this bar drives — pagination/search/filter URLs are built against
 // `<item_url>/<action>`. Defaults to 'index';
 $filterAction = $filter_bar['action'] ?? 'index';
@@ -357,6 +397,8 @@ if ($pickerMode) {
 
 <?php if ($pickerMode): ?>
 
+    <?= $renderBarActions() ?>
+
     <?php if ($searchChild): ?>
         <?php
         $mode = $searchChild['mode'] ?? 'quickFilter';
@@ -512,6 +554,8 @@ if ($pickerMode) {
 
 
 <?php else: ?>
+
+    <?= $renderBarActions() ?>
 
     <?php foreach ($filter_bar['children'] as $child): ?>
 

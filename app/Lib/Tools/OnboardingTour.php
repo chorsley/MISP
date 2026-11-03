@@ -658,8 +658,7 @@ class OnboardingTour
                 'optional' => true,
                 'title' => __('At a glance'),
                 'body' => '<p>' . __('Analysis and threat level as the author '
-                    . 'set them, whether it is published, the period it covers '
-                    . 'and what it is made of.') . '</p>',
+                    . 'set them, the period it covers and what it is made of.') . '</p>',
             ],
             [
                 'pageMatch' => self::EVENT_VIEW_MATCH,
@@ -922,8 +921,9 @@ class OnboardingTour
                 'placement' => 'left',
                 'title' => __('Quick actions'),
                 'body' => '<p>' . __('Everything you can do to this event in '
-                    . 'one column: add data, populate it from a report, export '
-                    . 'it, publish it.') . '</p>',
+                    . 'one palette: add data, populate it from a report, export '
+                    . 'it, publish it. Open it from here, or with the keyboard '
+                    . 'shortcut on the button.') . '</p>',
             ],
             [
                 'pageMatch' => self::EVENT_VIEW_MATCH,

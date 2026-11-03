@@ -83,6 +83,23 @@
 .ifp-fbtn .ifp-caret { font-size: .6rem; opacity: .7; transition: transform .15s ease; }
 .ifp-fbtn[aria-expanded="true"] .ifp-caret { transform: rotate(180deg); }
 
+/* An inline primary action in the bar (e.g. "Add object" on the event tabs):
+   sized to sit flush with the search field and the Filters button. */
+.ifp-action {
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+    height: 40px; padding: 0 16px; border-radius: .6rem;
+    border: 1px solid var(--bs-primary); background: var(--bs-primary); color: #fff;
+    font-size: .9rem; font-weight: 600; white-space: nowrap; text-decoration: none;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+.ifp-action > i { font-size: .85rem; }
+.ifp-action:hover, .ifp-action:focus-visible {
+    background: color-mix(in srgb, var(--bs-primary) 85%, #000);
+    border-color: color-mix(in srgb, var(--bs-primary) 85%, #000);
+    color: #fff;
+}
+.ifp-action:focus-visible { outline: 0; box-shadow: 0 0 0 .22rem color-mix(in srgb, var(--bs-primary) 25%, transparent); }
+
 /* View controls: fold everything, table or cards */
 .ifp-end { margin-left: auto; display: flex; gap: 10px; align-items: center; }
 .ifp-tools {

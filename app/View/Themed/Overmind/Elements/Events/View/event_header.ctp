@@ -10,7 +10,9 @@
  * Read from the view: $baseurl, $analysisLevels, $orgGrading, $contributors,
  * $overviewMarkings, $sharingGroupOrgCount, $extended, $extending.
  *
- * Expects: $data — the event array.
+ * Expects: $data — the event array; $eventActions — the action registry built
+ * by view2 (the header draws its status, its primary action and its palette
+ * trigger from it).
  */
 
 App::uses('CakeTime', 'Utility');
@@ -67,26 +69,19 @@ $analysisTone = [
 ][$analysisValue] ?? 'is-initial';
 
 if (!$isPublished) {
-    $publicationTone = 'is-unpublished';
     $publicationLabel = __('Unpublished');
 } elseif ($hasPending) {
-    $publicationTone = 'is-pending';
     $publicationLabel = __('Changes pending');
 } else {
-    $publicationTone = 'is-published';
     $publicationLabel = __('Published');
 }
-$publicationSegTone = $hasPending ? 'is-orange' : ($isPublished ? 'is-green' : 'is-neutral');
 
 /*
- * The three event states render as compact meters: one segment per possible
- * value, every segment labelled, the active one carried in its tone colour so
- * the current state reads at a glance.
+ * The event states render as compact meters: one segment per possible value,
+ * every segment labelled, the active one carried in its tone colour so the
+ * current state reads at a glance. Publication is not one of them any more —
+ * the Published switch in the header carries it.
  */
-$publicationStates = [
-    ['id' => 'off', 'label' => __('Unpublished'), 'tone' => 'is-neutral'],
-    ['id' => 'on', 'label' => __('Published'), 'tone' => 'is-green'],
-];
 $threatStates = [
     ['id' => 3, 'label' => __('Low'), 'tone' => 'is-yellow'],
     ['id' => 2, 'label' => __('Medium'), 'tone' => 'is-orange'],
@@ -182,27 +177,6 @@ $ownerDiffers = !empty($org['id']) && (int)$org['id'] !== (int)($orgc['id'] ?? 0
 $markings = $overviewMarkings ?? ['declared' => [], 'present' => [], 'absent' => []];
 $hasMarkings = !empty($markings['declared']);
 
-$canEdit = $isSiteAdmin || $this->Acl->canModifyEvent($data);
-$canPublish = $this->Acl->canPublishEvent($data);
-$mayPublish = $isSiteAdmin || ($canEdit && $canPublish);
-
-$modal = function ($url, $size = null) {
-    return 'event.preventDefault(); openModal(\'' . h($url) . '\''
-        . ($size === null ? '' : ', \'' . h($size) . '\'')
-        . ');';
-};
-
-$addAttributeUrl = $baseurl . '/attributes/add/' . $eventId;
-$addObjectUrl = $baseurl . '/objects/add/' . $eventId;
-$addReportUrl = $baseurl . '/event_reports/add/' . $eventId;
-$addAttachmentUrl = $baseurl . '/attributes/add_attachment/' . $eventId;
-$editUrl = $baseurl . '/events/edit/' . $eventId;
-$publishUrl = $baseurl . '/events/publish/' . $eventId;
-$unpublishUrl = $baseurl . '/events/unpublish/' . $eventId;
-$deleteUrl = $baseurl . '/events/delete/' . $eventId;
-$downloadUrl = $baseurl . '/events/exportChoice/' . $eventId;
-$contactUrl = $baseurl . '/events/contact/' . $eventId;
-
 $modeUrl = function ($extendedOn, $extendingOn) use ($baseurl, $eventId) {
     return $baseurl . '/events/view/' . $eventId
         . ($extendedOn ? '/extended:1' : '')
@@ -250,160 +224,69 @@ $ownership = $ownership ?? [];
             <div class="eh-identity" data-tour="page-title">
                 <h1 class="eh-title"><?= h($event['info'] ?? '') ?></h1>
             </div>
-
-            <div class="eh-actions" data-tour="page-actions">
-                <?php if ($canEdit): ?>
-                    <div class="btn-group eh-add" role="group">
-                        <a class="btn btn-primary eh-add-main"
-                           href="<?= h($addAttributeUrl) ?>"
-                           title="<?= h(__('Add attribute')) ?>"
-                           onclick="<?= h($modal($addAttributeUrl)) ?>">
-                            <i class="fas fa-plus" aria-hidden="true"></i>
-                            <span><?= __('Add attribute') ?></span>
-                        </a>
-                        <button type="button"
-                                class="btn btn-primary dropdown-toggle dropdown-toggle-split"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                aria-label="<?= h(__('More add actions')) ?>">
-                            <span class="visually-hidden"><?= __('More add actions') ?></span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                            <li>
-                                <a class="dropdown-item" href="<?= h($addAttributeUrl) ?>" onclick="<?= h($modal($addAttributeUrl)) ?>">
-                                    <i class="misp-icon misp-icon-attribute misp-simple me-2"></i><?= __('Attribute') ?>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= h($addObjectUrl) ?>" onclick="<?= h($modal($addObjectUrl)) ?>">
-                                    <i class="misp-icon misp-icon-object misp-simple me-2"></i><?= __('Object') ?>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= h($addReportUrl) ?>" onclick="<?= h($modal($addReportUrl)) ?>">
-                                    <i class="misp-icon misp-icon-report misp-simple me-2"></i><?= __('Report') ?>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?= h($addAttachmentUrl) ?>" onclick="<?= h($modal($addAttachmentUrl)) ?>">
-                                    <i class="fas fa-paperclip me-2"></i><?= __('Attachment') ?>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <a class="btn btn-outline-secondary eh-icon-btn"
-                       href="<?= h($editUrl) ?>"
-                       title="<?= h(__('Edit event')) ?>"
-                       aria-label="<?= h(__('Edit event')) ?>"
-                       onclick="<?= h($modal($editUrl)) ?>">
-                        <i class="fas fa-pen" aria-hidden="true"></i>
-                    </a>
-                <?php endif; ?>
-
-                <?php if ($mayPublish && (!$isPublished || $hasPending)): ?>
-                    <a class="btn btn-success"
-                       href="#"
-                       title="<?= h(__('Publish event')) ?>"
-                       onclick="<?= h($modal($publishUrl, 'md')) ?>">
-                        <i class="fas fa-upload" aria-hidden="true"></i>
-                        <span><?= __('Publish') ?></span>
-                    </a>
-                <?php elseif ($mayPublish && $isPublished): ?>
-                    <a class="btn btn-outline-secondary"
-                       href="#"
-                       title="<?= h(__('Unpublish event')) ?>"
-                       onclick="<?= h($modal($unpublishUrl, 'md')) ?>">
-                        <i class="fas fa-eye-slash" aria-hidden="true"></i>
-                        <span><?= __('Unpublish') ?></span>
-                    </a>
-                <?php endif; ?>
-
-                <div class="dropdown">
-                    <button type="button"
-                            class="btn btn-outline-secondary eh-icon-btn"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
-                            aria-label="<?= h(__('More actions')) ?>">
-                        <i class="fas fa-ellipsis" aria-hidden="true"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                        <li>
-                            <a class="dropdown-item" href="#" onclick="<?= h($modal($downloadUrl, 'md')) ?>">
-                                <i class="fas fa-download me-2"></i><?= __('Download as') ?>
-                            </a>
-                        </li>
-                        <?php if (!empty($data['Orgc']['local'])): ?>
-                            <li>
-                                <a class="dropdown-item" href="#" onclick="<?= h($modal($contactUrl, 'md')) ?>">
-                                    <i class="fas fa-envelope me-2"></i><?= __('Contact reporter') ?>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                        <?php if ($this->Acl->canAccess('collectionElements', 'addElementToCollection')): ?>
-                            <li>
-                                <a class="dropdown-item"
-                                   href="#"
-                                   onclick="<?= h($modal($baseurl . '/collectionElements/addElementToCollection/Event/' . $eventUuid, 'xl')) ?>">
-                                    <i class="fas fa-folder-plus me-2"></i><?= __('Add to collection') ?>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                        <?php if ($this->Acl->canAccess('workspaces', 'addNodes')): ?>
-                            <li>
-                                <a class="dropdown-item"
-                                   href="#"
-                                   data-intel-graph-add="<?= h(json_encode([[
-                                       'type' => 'Event',
-                                       'uuid' => $eventUuid,
-                                       'label' => $event['info'] ?? '',
-                                   ]])) ?>">
-                                    <i class="misp-icon misp-icon-analyst-graph misp-simple me-2"></i><?= __('Add to workspace') ?>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                        <?php if ($canEdit): ?>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="#" onclick="<?= h($modal($deleteUrl, 'md')) ?>">
-                                    <i class="fas fa-trash me-2"></i><?= __('Delete event') ?>
-                                </a>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-            </div>
         </div>
 
         <div class="eh-strip">
-            <?php if (!empty($ownership)): ?>
-                <div class="eh-ownership">
-                    <?= $this->element('genericElementsBS5/Cards/ownership_card', $ownership) ?>
-                </div>
-            <?php endif; ?>
+            <div class="eh-strip-main">
+                <?php if (!empty($ownership)): ?>
+                    <div class="eh-ownership">
+                        <?= $this->element('genericElementsBS5/Cards/ownership_card', $ownership) ?>
+                    </div>
+                <?php endif; ?>
 
-            <div class="eh-meta">
-                <div class="eh-cell">
-                    <span class="eh-cell-label"><?= __('Event date') ?></span>
-                    <span class="eh-cell-value">
-                        <i class="fas fa-calendar-day" aria-hidden="true"></i>
-                        <?= !empty($event['date']) ? h($event['date']) : '<span class="eh-muted">' . __('—') . '</span>' ?>
-                    </span>
-                </div>
-                <div class="eh-cell <?= $hasPending ? 'is-pending' : ($isPublished ? 'is-published' : '') ?>">
-                    <span class="eh-cell-label"><?= __('Published') ?></span>
-                    <span class="eh-cell-value"><?= $stamp($lastPublished, __('Published'), 'fa-paper-plane') ?></span>
-                </div>
-                <div class="eh-cell">
-                    <span class="eh-cell-label"><?= __('Last mod') ?></span>
-                    <span class="eh-cell-value"><?= $stamp($lastModified, __('Last mod'), 'fa-pen') ?></span>
+                <div class="eh-meta">
+                    <div class="eh-cell">
+                        <span class="eh-cell-label"><?= __('Event date') ?></span>
+                        <span class="eh-cell-value">
+                            <i class="fas fa-calendar-day" aria-hidden="true"></i>
+                            <?= !empty($event['date']) ? h($event['date']) : '<span class="eh-muted">' . __('—') . '</span>' ?>
+                        </span>
+                    </div>
+                    <div class="eh-cell <?= $hasPending ? 'is-pending' : ($isPublished ? 'is-published' : '') ?>">
+                        <span class="eh-cell-label"><?= __('Published') ?></span>
+                        <span class="eh-cell-value"><?= $stamp($lastPublished, __('Published'), 'fa-paper-plane') ?></span>
+                    </div>
+                    <div class="eh-cell">
+                        <span class="eh-cell-label"><?= __('Last mod') ?></span>
+                        <span class="eh-cell-value"><?= $stamp($lastModified, __('Last mod'), 'fa-pen') ?></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="eh-states" data-tour="event-general">
-                <?= $meter(__('Publication'), $publicationStates, $isPublished ? 'on' : 'off', $publicationLabel, $publicationSegTone) ?>
-                <?= $meter(__('Threat'), $threatStates, $threatLevelId) ?>
-                <?= $meter(__('Analysis'), $analysisStates, $analysisValue) ?>
+            <div class="eh-states">
+                <span class="eh-meters" data-tour="event-general">
+                    <?= $meter(__('Threat'), $threatStates, $threatLevelId) ?>
+                    <?= $meter(__('Analysis'), $analysisStates, $analysisValue) ?>
+                </span>
+
+                <div class="eh-actions" data-tour="page-actions">
+                    <?php $primary = $eventActions['primary'] ?? null; ?>
+                    <?php if (!empty($primary)): ?>
+                        <button type="button"
+                                class="eh-switch<?= $isPublished ? ' is-on' : ' is-off' ?><?= $hasPending ? ' is-pending' : '' ?>"
+                                role="switch"
+                                aria-checked="<?= $isPublished ? 'true' : 'false' ?>"
+                                <?= !empty($primary['onclick']) ? 'onclick="' . h($primary['onclick']) . '"' : '' ?>
+                                title="<?= h($hasPending
+                                    ? __('Published; changes made since are not published yet — click to publish them')
+                                    : $primary['label'])
+                                ?>">
+                            <span class="eh-switch-track" aria-hidden="true"><span class="eh-switch-knob"></span></span>
+                            <span class="eh-switch-text"><?= $isPublished ? __('Published') : __('Unpublished') ?></span>
+                        </button>
+                    <?php endif; ?>
+
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary eh-actions-trigger"
+                            data-event-actions-open
+                            data-tour="quick-actions"
+                            aria-haspopup="dialog"
+                            title="<?= h(__('All actions')) ?>">
+                        <i class="fas fa-bolt" aria-hidden="true"></i>
+                        <span><?= __('Actions') ?></span>
+                        <kbd class="eh-actions-kbd" aria-hidden="true" data-ea-kbd>⌘K</kbd>
+                    </button>
+                </div>
             </div>
         </div>
 

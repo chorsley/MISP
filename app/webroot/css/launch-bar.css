@@ -479,3 +479,25 @@
     text-align: center;
     box-shadow: none;
 }
+
+/* Overlay variant: the same card inside the event actions dialog. The menu is
+   always open and flows in the panel rather than floating under the field. */
+.lb-card.is-overlay {
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+.lb-card.is-overlay .lb-menu {
+    position: static;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.lb-card.is-overlay .lb-list {
+    max-height: none;
+    overflow: visible;
+}

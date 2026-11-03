@@ -4,6 +4,10 @@
 // merged set, so a foreign one wears its origin event's accent.
 $extensionEvents = $extensionEvents ?? [];
 $inExtensionView = count($extensionEvents) > 1;
+
+// Inline filter-bar actions handed in by the caller (the event tab offers
+// "Add report" beside the filters). Empty for the instance-wide index.
+$tabActions = $tabActions ?? [];
 $reportOrigin = function ($row) use ($extensionEvents) {
     $originId = (int)Hash::get($row, 'EventReport.event_id');
     $origin = $extensionEvents[$originId] ?? null;
@@ -269,6 +273,7 @@ echo $this->element('genericElementsBS5/IndexTable/scaffold', [
             'cards_per_row' => ['' => 1, 'lg' => 2, 'xxl' => 3],
             'filter_bar' => [
                 'pull' => 'right',
+                'actions' => $tabActions,
                 // The event's Reports tab reloads itself and searches with `searchFor:`.
                 'base_url' => empty($eventView)
                     ? null
